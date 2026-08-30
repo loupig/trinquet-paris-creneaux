@@ -44,19 +44,20 @@
   }
 
   header {
-    background: var(--text);
-    color: #fff;
-    padding: 18px 16px 16px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
   }
   header h1 {
     margin: 0;
     font-size: 17px;
     font-weight: 700;
+    color: var(--text);
   }
   header p {
     margin: 4px 0 0;
     font-size: 12px;
-    color: #b9bbcf;
+    color: var(--muted);
   }
 
   main {
@@ -70,10 +71,18 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    font-size: 11px;
-    color: var(--muted);
     padding: 6px 4px 14px;
     flex-wrap: wrap;
+  }
+  .status-primary {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .status-secondary {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
   }
   .status-bar button {
     border: 1px solid var(--border);
@@ -182,6 +191,37 @@
     padding: 40px 20px;
   }
 
+  .skeleton-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .skeleton-card-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .skeleton-row {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .skeleton-row:last-child { border-bottom: none; }
+  .skeleton-bar {
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ececef 25%, #f6f6f8 37%, #ececef 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-bar { animation: none; }
+  }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -203,7 +243,7 @@
     margin: 4px 0 0;
     font-size: 11px;
   }
-  .source-link a { color: #cdd6f7; }
+  .source-link a { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -216,7 +256,7 @@
 
 <main>
   <div class="status-bar">
-    <span id="statusText">Chargement…</span>
+    <div id="statusText" class="status-primary">Chargement…</div>
     <button id="refreshBtn" type="button">Rafraîchir</button>
   </div>
 
@@ -520,6 +560,23 @@
     return e;
   }
 
+  function renderSkeleton(container) {
+    container.innerHTML = "";
+    for (var i = 0; i < 3; i++) {
+      var card = el("div", { class: "skeleton-card" });
+      var header = el("div", { class: "skeleton-card-header" });
+      header.appendChild(el("div", { class: "skeleton-bar", style: "width:55%" }));
+      card.appendChild(header);
+      var rowCount = i === 0 ? 7 : 2;
+      for (var r = 0; r < rowCount; r++) {
+        var row = el("div", { class: "skeleton-row" });
+        row.appendChild(el("div", { class: "skeleton-bar", style: "width:" + (40 + (r % 3) * 15) + "%" }));
+        card.appendChild(row);
+      }
+      container.appendChild(card);
+    }
+  }
+
   function renderBanner(container, kind, title, message) {
     var b = el("div", { class: "banner " + kind });
     b.appendChild(el("strong", { text: title }));
@@ -595,6 +652,21 @@
     return formatTime(d.getTime());
   }
 
+  function renderStatus(container, outcome) {
+    container.innerHTML = "";
+    var syncTime = formatSync(outcome.data.lastSync);
+    var pageLine = "Page consultée à " + formatTime(outcome.data.fetchedAt) + (outcome.fromCache && !outcome.stale ? " (cache)" : "");
+
+    if (syncTime) {
+      // La date utile pour l'utilisateur — quand la ligue a mis à jour ses
+      // données — prime visuellement sur l'heure technique de consultation.
+      container.appendChild(el("div", { class: "status-primary", text: "Ligue synchronisée le " + syncTime }));
+      container.appendChild(el("div", { class: "status-secondary", text: pageLine }));
+    } else {
+      container.appendChild(el("div", { class: "status-primary", text: pageLine }));
+    }
+  }
+
   function run(forceRefresh) {
     var statusText = document.getElementById("statusText");
     var bannerSlot = document.getElementById("banner-slot");
@@ -602,7 +674,12 @@
     bannerSlot.innerHTML = "";
     statusText.textContent = "Chargement…";
 
+    // Le skeleton n'apparaît que si le chargement dépasse 150ms, pour éviter
+    // un flash inutile quand la réponse vient du cache (quasi instantané).
+    var skeletonTimer = setTimeout(function () { renderSkeleton(results); }, 150);
+
     loadData(forceRefresh).then(function (outcome) {
+      clearTimeout(skeletonTimer);
       var today = startOfDay(new Date());
       var clubMap = buildClubMap(outcome.data.clubs);
       var occupancy = computeOccupancy(outcome.data.rencontres, clubMap, today);
@@ -618,14 +695,12 @@
         );
       }
 
-      var syncTime = formatSync(outcome.data.lastSync);
-      var statusParts = [];
-      if (syncTime) statusParts.push("Ligue synchronisée le " + syncTime);
-      statusParts.push("Page consultée à " + formatTime(outcome.data.fetchedAt) + (outcome.fromCache && !outcome.stale ? " (cache)" : ""));
-      statusText.textContent = statusParts.join(" · ");
+      renderStatus(statusText, outcome);
     }).catch(function (err) {
+      clearTimeout(skeletonTimer);
       results.innerHTML = "";
-      statusText.textContent = "Échec du chargement";
+      statusText.innerHTML = "";
+      statusText.appendChild(el("div", { class: "status-primary", text: "Échec du chargement" }));
       renderBanner(
         bannerSlot, "error", "Impossible d'afficher les créneaux",
         (err && err.message ? err.message : String(err)) +
