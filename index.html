@@ -336,7 +336,7 @@
       if (!json || typeof json !== "object") throw new Error("Réponse API illisible (format inattendu)");
       if (json.error) throw new Error("Erreur API : " + json.error);
       if (!Array.isArray(json.data)) throw new Error("Réponse API sans champ 'data' exploitable");
-      return json.data;
+      return json;
     });
   }
 
@@ -347,10 +347,15 @@
     var clubsPromise = fetchJson(buildUrl("clubs", {}));
 
     return Promise.all(rencontresPromises.concat([clubsPromise])).then(function (results) {
-      var clubsData = results.pop();
+      var clubsJson = results.pop();
       var merged = {};
-      results.forEach(function (rows) {
-        rows.forEach(function (row) {
+      var lastSync = null;
+      results.forEach(function (json) {
+        // Les 3 variantes lisent le même fichier rencontres.json côté
+        // Apps Script : leur lastSync est identique. Absent sur un
+        // déploiement pas encore mis à jour avec ce champ.
+        if (json.lastSync) lastSync = json.lastSync;
+        json.data.forEach(function (row) {
           if (matchesTrinquetParis(row.lieu_renc) && row.oid) {
             merged[row.oid] = row;
           }
@@ -365,7 +370,7 @@
         throw new Error("0 rencontre reçue pour le Trinquet Paris 75016 — résultat suspect, données non affichées par sécurité.");
       }
 
-      return { rencontres: rencontres, clubs: clubsData, fetchedAt: Date.now() };
+      return { rencontres: rencontres, clubs: clubsJson.data, fetchedAt: Date.now(), lastSync: lastSync };
     });
   }
 
@@ -583,6 +588,13 @@
     return d.toLocaleDateString("fr-FR") + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   }
 
+  function formatSync(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return formatTime(d.getTime());
+  }
+
   function run(forceRefresh) {
     var statusText = document.getElementById("statusText");
     var bannerSlot = document.getElementById("banner-slot");
@@ -606,7 +618,11 @@
         );
       }
 
-      statusText.textContent = "Données du " + formatTime(outcome.data.fetchedAt) + (outcome.fromCache && !outcome.stale ? " (cache)" : "");
+      var syncTime = formatSync(outcome.data.lastSync);
+      var statusParts = [];
+      if (syncTime) statusParts.push("Ligue synchronisée le " + syncTime);
+      statusParts.push("Page consultée à " + formatTime(outcome.data.fetchedAt) + (outcome.fromCache && !outcome.stale ? " (cache)" : ""));
+      statusText.textContent = statusParts.join(" · ");
     }).catch(function (err) {
       results.innerHTML = "";
       statusText.textContent = "Échec du chargement";
