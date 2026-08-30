@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créneaux libres — Trinquet Paris 75016</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #767986;
+    --border: #e6e7eb;
+    --free-bg: #e8f7ee;
+    --free-text: #1e7a43;
+    --free-border: #b9e6cc;
+    --busy-bg: #fdecec;
+    --busy-text: #b3261e;
+    --busy-border: #f5c2c0;
+    --notice-bg: #fff6e0;
+    --notice-text: #8a6300;
+    --notice-border: #f0dd9a;
+    --serie-bg: #eef1fb;
+    --serie-text: #2f5ce0;
+    --serie-border: #cdd6f7;
+    --warn-bg: #fff3cd;
+    --warn-text: #7a5b00;
+    --warn-border: #f0dd9a;
+    --error-bg: #fdecec;
+    --error-text: #8a1c16;
+    --error-border: #f5c2c0;
+    --accent: #2f5ce0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  header {
+    background: var(--text);
+    color: #fff;
+    padding: 18px 16px 16px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #b9bbcf;
+  }
+
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 14px 12px 60px;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 4px 14px;
+    flex-wrap: wrap;
+  }
+  .status-bar button {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+  .status-bar button:active { background: #eef1fb; }
+
+  .banner {
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    border: 1px solid;
+  }
+  .banner.error {
+    background: var(--error-bg);
+    color: var(--error-text);
+    border-color: var(--error-border);
+  }
+  .banner.warn {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-color: var(--warn-border);
+  }
+  .banner strong { display: block; margin-bottom: 4px; }
+
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .day-card-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .day-card-header .date-label {
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: capitalize;
+  }
+  .day-card-header .day-name {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .slot-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .slot-row:last-child { border-bottom: none; }
+
+  .slot-hour {
+    flex: 0 0 44px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .slot-pill {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .slot-pill.free { background: var(--free-bg); color: var(--free-text); border: 1px solid var(--free-border); }
+  .slot-pill.busy { background: var(--busy-bg); color: var(--busy-text); border: 1px solid var(--busy-border); }
+  .slot-pill.serie { background: var(--serie-bg); color: var(--serie-text); border: 1px solid var(--serie-border); }
+
+  .slot-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .slot-info .match-line { color: var(--text); font-weight: 600; }
+
+  .off-grid-note {
+    padding: 8px 14px 10px;
+    font-size: 11px;
+    color: var(--notice-text);
+    background: var(--notice-bg);
+    border-top: 1px dashed var(--notice-border);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px 20px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 4px 4px 14px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 3px;
+  }
+  .legend i.free { background: var(--free-text); }
+  .legend i.busy { background: var(--busy-text); }
+
+  .source-link {
+    margin: 4px 0 0;
+    font-size: 11px;
+  }
+  .source-link a { color: #cdd6f7; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Créneaux libres — Trinquet Paris (75016)</h1>
+  <p>Championnat Trinquet Pala Gomme Pleine — 2ème série · Ligue d'Île-de-France</p>
+  <p class="source-link">Source officielle des données : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">lidfpb.euskalpilota.fr</a></p>
+</header>
+
+<main>
+  <div class="status-bar">
+    <span id="statusText">Chargement…</span>
+    <button id="refreshBtn" type="button">Rafraîchir</button>
+  </div>
+
+  <div class="legend">
+    <span><i class="free"></i>Libre</span>
+    <span><i class="busy"></i>Occupé</span>
+  </div>
+
+  <div id="banner-slot"></div>
+  <div id="results"></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // Configuration
+  // ---------------------------------------------------------------
+  var API_BASE = "https://script.google.com/macros/s/AKfycbwL4HBCk4nQA9JJAq0JQupE_n3VRuLwAzQ5hd7I12q1adRhitRdKdr1PDuHT1A4BWsm/exec";
+  var CACHE_KEY = "lidfpb_trinquet_paris_cache_v1";
+  var CACHE_TTL_MS = 5 * 60 * 1000;      // cache navigateur de quelques minutes
+  var WEEKS_AHEAD = 12;                  // horizon d'affichage (~3 mois)
+
+  // Grille fixe du trinquet. Clé = Date.getDay() (0=dimanche ... 5=vendredi).
+  var GRID = {
+    5: [21, 22],                  // Vendredi
+    0: [14, 15, 16, 17, 20, 21, 22] // Dimanche
+  };
+
+  // Catégorie -> Série (Cat 1 = Série 1, Cat 2 = Série 2, etc.)
+  var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
+
+  // Libellés lieu_renc connus qui désignent le Trinquet Paris 75016
+  // (dérivés en inspectant l'ensemble des valeurs distinctes du champ lieu_renc
+  // au 30/08/2026 — à mettre à jour si un nouveau format apparaît, cf. règle
+  // matchesTrinquetParis ci-dessous qui sert de garde-fou en plus).
+  var LIEU_VARIANTS = [
+    "PARIS (Trinquet Paris - 75016)",
+    "PARIS (Trinquet de Paris - 75016)",
+    "PARIS (Trinquet de Paris - 750" // variante tronquée vue sur d'anciennes lignes
+  ];
+
+  // Règle large de sécurité : capte "trinquet" + "paris" en excluant
+  // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
+  // Fronton PB13, Chiquito de Cambo). Utilisée en double-vérification
+  // sur les données reçues, même après filtrage exact côté API.
+  function matchesTrinquetParis(lieu) {
+    if (!lieu) return false;
+    var s = lieu.toUpperCase();
+    if (s.indexOf("TRINQUET") === -1) return false;
+    if (s.indexOf("PARIS") === -1) return false;
+    if (s.indexOf("CAVALERIE") !== -1) return false;
+    if (s.indexOf("75015") !== -1) return false;
+    if (s.indexOf("PB13") !== -1 || s.indexOf("PB 13") !== -1) return false;
+    if (s.indexOf("CHIQUITO") !== -1) return false;
+    return true;
+  }
+
+  // ---------------------------------------------------------------
+  // Parsing des dates / heures du format LIDFPB
+  // ---------------------------------------------------------------
+  // date_renc : "JMMAAAA" ou "JJMMAAAA" — le mois est toujours sur 2
+  // chiffres, seul le jour peut être sur 1 chiffre.
+  function parseDateRenc(raw) {
+    if (!raw) return null;
+    var s = String(raw).trim();
+    if (!/^\d{7,8}$/.test(s)) return null;
+    if (s.length === 7) s = "0" + s;
+    var day = parseInt(s.slice(0, 2), 10);
+    var month = parseInt(s.slice(2, 4), 10);
+    var year = parseInt(s.slice(4, 8), 10);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    // Garde-fou anti coquille de saisie (ex: "2106" au lieu de "2016").
+    var nowYear = new Date().getFullYear();
+    if (year < nowYear - 2 || year > nowYear + 4) return null;
+    var d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+    return d;
+  }
+
+  // heure_renc : "H", "HH", "HMM", "HHMM" (ex: "930", "2100", "2045").
+  function parseHeureRenc(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d{1,4}$/.test(s)) return null;
+    s = s.padStart(4, "0");
+    var hour = parseInt(s.slice(0, 2), 10);
+    var minute = parseInt(s.slice(2, 4), 10);
+    if (hour > 23 || minute > 59) return null;
+    return { hour: hour, minute: minute };
+  }
+
+  function dateKey(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  // ---------------------------------------------------------------
+  // Récupération des données (avec cache navigateur)
+  // ---------------------------------------------------------------
+  function buildUrl(table, params) {
+    var url = API_BASE + "?table=" + encodeURIComponent(table);
+    for (var k in params) {
+      url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+    }
+    return url;
+  }
+
+  function fetchJson(url) {
+    return fetch(url, { method: "GET" }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status + " sur l'API");
+      return res.json();
+    }).then(function (json) {
+      if (!json || typeof json !== "object") throw new Error("Réponse API illisible (format inattendu)");
+      if (json.error) throw new Error("Erreur API : " + json.error);
+      if (!Array.isArray(json.data)) throw new Error("Réponse API sans champ 'data' exploitable");
+      return json.data;
+    });
+  }
+
+  function fetchLiveData() {
+    var rencontresPromises = LIEU_VARIANTS.map(function (lieu) {
+      return fetchJson(buildUrl("rencontres", { lieu_renc: lieu }));
+    });
+    var clubsPromise = fetchJson(buildUrl("clubs", {}));
+
+    return Promise.all(rencontresPromises.concat([clubsPromise])).then(function (results) {
+      var clubsData = results.pop();
+      var merged = {};
+      results.forEach(function (rows) {
+        rows.forEach(function (row) {
+          if (matchesTrinquetParis(row.lieu_renc) && row.oid) {
+            merged[row.oid] = row;
+          }
+        });
+      });
+      var rencontres = Object.keys(merged).map(function (k) { return merged[k]; });
+
+      if (rencontres.length === 0) {
+        // Le trinquet a un historique de milliers de rencontres : un résultat
+        // vide signifie très probablement un problème (API, filtre, format),
+        // jamais que "tout est libre".
+        throw new Error("0 rencontre reçue pour le Trinquet Paris 75016 — résultat suspect, données non affichées par sécurité.");
+      }
+
+      return { rencontres: rencontres, clubs: clubsData, fetchedAt: Date.now() };
+    });
+  }
+
+  function loadData(forceRefresh) {
+    var cachedRaw = null;
+    try { cachedRaw = localStorage.getItem(CACHE_KEY); } catch (e) { /* stockage indisponible, on continue sans cache */ }
+    var cached = null;
+    if (cachedRaw) {
+      try { cached = JSON.parse(cachedRaw); } catch (e) { cached = null; }
+    }
+
+    var fresh = cached && (Date.now() - cached.fetchedAt) < CACHE_TTL_MS;
+    if (fresh && !forceRefresh) {
+      return Promise.resolve({ data: cached, stale: false, fromCache: true });
+    }
+
+    return fetchLiveData().then(function (data) {
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) { /* quota localStorage dépassé : tant pis, pas bloquant */ }
+      return { data: data, stale: false, fromCache: false };
+    }).catch(function (err) {
+      if (cached) {
+        // On a déjà des données valides précédemment récupérées : on les
+        // affiche avec un bandeau d'avertissement plutôt qu'un écran vide.
+        return { data: cached, stale: true, error: err, fromCache: true };
+      }
+      throw err;
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Calcul des créneaux occupés
+  // ---------------------------------------------------------------
+  function buildClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      if (c["comité"] && c["club"]) {
+        map[ligue + comite + club] = c["Nom club"] || (ligue + comite + club);
+      }
+      // Cas particulier : équipes placeholder ("à désigner", "forfait")
+      // référencées dans les rencontres par leur ancien code court
+      // (no_club_old), hors du schéma ligue+comité+club habituel.
+      if (c["no_club_old"]) {
+        map[String(c["no_club_old"])] = c["Nom club"] || c["no_club_old"];
+      }
+    });
+    return map;
+  }
+
+  function clubLabel(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var eq = String(equipe || "").trim();
+    return eq ? (name + " (éq. " + eq + ")") : name;
+  }
+
+  // Détermine la date "effective" d'occupation d'une rencontre : si elle a
+  // été reportée (date_rep renseignée et différente de date_renc), c'est
+  // date_rep qui compte, pas date_renc — cf. consigne métier explicite.
+  function effectiveDate(row) {
+    var original = parseDateRenc(row.date_renc);
+    var reported = parseDateRenc(row.date_rep);
+    if (reported && (!original || reported.getTime() !== original.getTime())) {
+      return reported;
+    }
+    return original;
+  }
+
+  function computeOccupancy(rencontres, clubMap, today) {
+    var occupied = {};   // "YYYY-MM-DD|HH" -> info rencontre
+    var offGrid = {};    // "YYYY-MM-DD" -> [ { heure, info } ]
+
+    rencontres.forEach(function (row) {
+      var d = effectiveDate(row);
+      if (!d || d < today) return;
+      var weekday = d.getDay();
+      var hours = GRID[weekday];
+      if (!hours) return; // pas un jour joué au trinquet, hors-sujet
+
+      var t = parseHeureRenc(row.heure_renc);
+      var label = clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis);
+      var catRaw = String(row["Catégorie"] || "").trim();
+      var serie = SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?"));
+      var meta = row.Poule ? ("Poule " + row.Poule) : "";
+
+      if (!t || hours.indexOf(t.hour) === -1) {
+        var key = dateKey(d);
+        if (!offGrid[key]) offGrid[key] = [];
+        offGrid[key].push({
+          heureRaw: row.heure_renc || "(non précisée)",
+          label: label,
+          serie: serie,
+          meta: meta
+        });
+        return;
+      }
+
+      var slotKey = dateKey(d) + "|" + t.hour;
+      // Si deux lignes tombent sur le même créneau (doublon de données), on
+      // garde la première : le créneau est de toute façon occupé.
+      if (!occupied[slotKey]) {
+        occupied[slotKey] = { label: label, serie: serie, meta: meta, heure: t.hour };
+      }
+    });
+
+    return { occupied: occupied, offGrid: offGrid };
+  }
+
+  // ---------------------------------------------------------------
+  // Génération des dates à venir de la grille
+  // ---------------------------------------------------------------
+  function upcomingGridDates(today) {
+    var dates = [];
+    var d = new Date(today);
+    var limit = new Date(today);
+    limit.setDate(limit.getDate() + WEEKS_AHEAD * 7);
+    while (d <= limit) {
+      if (GRID.hasOwnProperty(d.getDay())) {
+        dates.push(new Date(d));
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return dates;
+  }
+
+  // ---------------------------------------------------------------
+  // Rendu
+  // ---------------------------------------------------------------
+  var DAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  var MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+  function formatDate(d) {
+    return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (k === "class") e.className = attrs[k];
+        else if (k === "text") e.textContent = attrs[k];
+        else e.setAttribute(k, attrs[k]);
+      }
+    }
+    (children || []).forEach(function (c) { e.appendChild(c); });
+    return e;
+  }
+
+  function renderBanner(container, kind, title, message) {
+    var b = el("div", { class: "banner " + kind });
+    b.appendChild(el("strong", { text: title }));
+    b.appendChild(document.createTextNode(message));
+    container.appendChild(b);
+  }
+
+  function renderResults(dates, occupancy) {
+    var results = document.getElementById("results");
+    results.innerHTML = "";
+
+    if (dates.length === 0) {
+      results.appendChild(el("div", { class: "empty-state", text: "Aucune date à venir dans l'horizon affiché." }));
+      return;
+    }
+
+    dates.forEach(function (d) {
+      var key = dateKey(d);
+      var hours = GRID[d.getDay()];
+      var card = el("div", { class: "day-card" });
+      var header = el("div", { class: "day-card-header" });
+      header.appendChild(el("span", { class: "date-label", text: formatDate(d) }));
+      card.appendChild(header);
+
+      hours.forEach(function (h) {
+        var info = occupancy.occupied[key + "|" + h];
+        var row = el("div", { class: "slot-row" });
+        row.appendChild(el("span", { class: "slot-hour", text: h + "h" }));
+
+        if (info) {
+          row.appendChild(el("span", { class: "slot-pill busy", text: "Occupé" }));
+          row.appendChild(el("span", { class: "slot-pill serie", text: info.serie }));
+          var infoBox = el("span", { class: "slot-info" });
+          infoBox.appendChild(el("span", { class: "match-line", text: info.label }));
+          if (info.meta) {
+            infoBox.appendChild(document.createElement("br"));
+            infoBox.appendChild(document.createTextNode(info.meta));
+          }
+          row.appendChild(infoBox);
+        } else {
+          row.appendChild(el("span", { class: "slot-pill free", text: "Libre" }));
+        }
+
+        card.appendChild(row);
+      });
+
+      var offGridList = occupancy.offGrid[key];
+      if (offGridList && offGridList.length) {
+        var note = el("div", { class: "off-grid-note" });
+        var text = "⚠ " + offGridList.length + " rencontre(s) ce jour-là à une heure hors grille standard (";
+        text += offGridList.map(function (o) { return o.heureRaw + " — " + o.serie + " — " + o.label; }).join(" ; ");
+        text += ") — à vérifier manuellement.";
+        note.textContent = text;
+        card.appendChild(note);
+      }
+
+      results.appendChild(card);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Orchestration
+  // ---------------------------------------------------------------
+  function formatTime(ts) {
+    var d = new Date(ts);
+    return d.toLocaleDateString("fr-FR") + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function run(forceRefresh) {
+    var statusText = document.getElementById("statusText");
+    var bannerSlot = document.getElementById("banner-slot");
+    var results = document.getElementById("results");
+    bannerSlot.innerHTML = "";
+    statusText.textContent = "Chargement…";
+
+    loadData(forceRefresh).then(function (outcome) {
+      var today = startOfDay(new Date());
+      var clubMap = buildClubMap(outcome.data.clubs);
+      var occupancy = computeOccupancy(outcome.data.rencontres, clubMap, today);
+      var dates = upcomingGridDates(today);
+
+      renderResults(dates, occupancy);
+
+      if (outcome.stale) {
+        renderBanner(
+          bannerSlot, "warn", "Données non rafraîchies",
+          "Le dernier appel à l'API a échoué (" + outcome.error.message + "). " +
+          "Les créneaux affichés datent du " + formatTime(outcome.data.fetchedAt) + " et peuvent être obsolètes."
+        );
+      }
+
+      statusText.textContent = "Données du " + formatTime(outcome.data.fetchedAt) + (outcome.fromCache && !outcome.stale ? " (cache)" : "");
+    }).catch(function (err) {
+      results.innerHTML = "";
+      statusText.textContent = "Échec du chargement";
+      renderBanner(
+        bannerSlot, "error", "Impossible d'afficher les créneaux",
+        (err && err.message ? err.message : String(err)) +
+        " — par sécurité, aucune grille n'est affichée : elle serait potentiellement fausse (créneaux réellement occupés non pris en compte)."
+      );
+    });
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
+  run(false);
+})();
+</script>
+</body>
+</html>
