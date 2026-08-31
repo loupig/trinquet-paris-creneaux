@@ -840,10 +840,14 @@
 
     var daysCard = el("div", { class: "recap-card" });
     daysCard.appendChild(el("div", { class: "recap-title", text: "Jours avec des créneaux libres" }));
+    // Au moins 2 créneaux libres : le 22h seul ne compte pas (quasi toujours
+    // libre, ça rendrait la liste presque inutile).
+    var MIN_FREE_SLOTS_FOR_RECAP = 2;
     var freeDays = dates.filter(function (d) {
       var key = dateKey(d);
       var hours = GRID[d.getDay()];
-      return hours.some(function (h) { return !occupancy.occupied[key + "|" + h]; });
+      var freeCount = hours.filter(function (h) { return !occupancy.occupied[key + "|" + h]; }).length;
+      return freeCount >= MIN_FREE_SLOTS_FOR_RECAP;
     });
     if (freeDays.length === 0) {
       daysCard.appendChild(el("div", { class: "recap-empty", text: "Aucun créneau libre dans l'horizon affiché." }));
