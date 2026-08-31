@@ -129,8 +129,7 @@ voudrait construire autre chose avec les mêmes données.
   résout que les joueurs des clubs du comité — un club adverse hors
   comité, ou une équipe qui n'a pas encore déclaré sa composition à la
   ligue, affichera "composition non disponible".
-- **Niveau de la partie (Poule / Qualification)** : déduit du champ
-  `Poule` de l'API (vide = Qualification, sinon "Poule N"), faute de
-  libellé explicite fourni par la ligue pour la phase. Cette
-  interprétation n'est pas garantie si la ligue introduit d'autres
-  phases (barrages, finale...).
+- **Niveau de la partie** : le champ `Phase` de l'API (1 à 12) est traduit
+  en clair via `PHASE_LABELS` dans `index.html` (Poules, Barrage,
+  1/32e... jusqu'à Finale), mapping communiqué par la ligue. En phase de
+  poules, "Poule N" (champ `Poule`) est affiché plutôt que "Poules".

@@ -553,6 +553,23 @@
   // Catégorie -> Série (Cat 1 = Série 1, Cat 2 = Série 2, etc.)
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
 
+  // Phase -> libellé (communiqué par la ligue, indépendant de row.Poule qui
+  // n'est renseigné qu'en phase de poules).
+  var PHASE_LABELS = {
+    "1": "Poules",
+    "2": "Barrage",
+    "3": "Barrage 1er tour",
+    "4": "Barrage 2e tour",
+    "5": "Barrage 3e tour",
+    "6": "Barrage maintien",
+    "7": "1/32e de finale",
+    "8": "1/16e de finale",
+    "9": "1/8e de finale",
+    "10": "1/4 de finale",
+    "11": "1/2 finale",
+    "12": "Finale"
+  };
+
   // Libellés lieu_renc connus qui désignent le Trinquet Paris 75016
   // (dérivés en inspectant l'ensemble des valeurs distinctes du champ lieu_renc
   // au 30/08/2026 — à mettre à jour si un nouveau format apparaît, cf. règle
@@ -849,10 +866,11 @@
       var catRaw = String(row["Catégorie"] || "").trim();
       var serie = SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?"));
       var serieClass = "serie" + (/^\d+$/.test(catRaw) ? ("-" + catRaw) : "");
-      // Le niveau de la partie (phase de poule ou qualification) est affiché
-      // pour inciter à venir voir la partie ; row.Poule est vide en phase de
-      // qualification (Phase != "1" dans les données observées).
-      var meta = row.Poule ? ("Poule " + row.Poule) : "Qualification";
+      // Le niveau de la partie est affiché pour inciter à venir voir la
+      // partie : "Poule N" en phase de poules (row.Poule renseigné),
+      // sinon le libellé de la phase (barrage, 1/4, 1/2, finale...).
+      var phaseRaw = String(row.Phase || "").trim();
+      var meta = row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "");
 
       var slotKey = dateKey(d) + "|" + t.hour;
       // Si deux lignes tombent sur le même créneau (doublon de données), on
@@ -981,8 +999,8 @@
   // Construit la cellule cliquable d'un créneau (libre ou occupé) et le
   // panneau de détail associé (composition d'équipe ou message de
   // proposition), affiché sous le tableau sur toute sa largeur au clic.
-  // La cellule affiche d'emblée le niveau de la partie (Poule/Qualification)
-  // pour inciter à venir voir la partie ; les noms des joueurs restent
+  // La cellule affiche d'emblée le niveau de la partie (Poule N ou phase
+  // finale) pour inciter à venir voir la partie ; les noms des joueurs restent
   // masqués par défaut (secondaires quand on cherche un créneau) et
   // n'apparaissent que dans le détail, au clic.
   function buildSlotCell(d, h, info) {

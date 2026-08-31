@@ -52,6 +52,7 @@ Calendrier des rencontres. Champs utiles :
 | Champ | Description |
 |---|---|
 | `Compétition`, `Catégorie`, `Poule` | Identifiants de compétition/série/poule |
+| `Phase` | Phase de la compétition, numérotée 1 à 12 : 1 Poules, 2 Barrage, 3 Barrage 1er tour, 4 Barrage 2e tour, 5 Barrage 3e tour, 6 Barrage maintien, 7 1/32e de finale, 8 1/16e de finale, 9 1/8e de finale, 10 1/4 de finale, 11 1/2 finale, 12 Finale. `Poule` n'est renseigné qu'en phase 1 |
 | `club_rec`, `equip_rec` | Club/équipe recevant — code club **concaténé** `ligue+comité+club` (ex: `"3750030"`) |
 | `club_vis`, `equip_vis` | Idem pour le club/équipe visiteur |
 | `lieu_renc` | Libellé du lieu (texte libre, plusieurs variantes possibles pour un même lieu) |
