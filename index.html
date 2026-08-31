@@ -69,25 +69,22 @@
     padding: 14px 12px 60px;
   }
 
-  .status-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px 4px 14px;
-    flex-wrap: wrap;
-  }
-  .status-primary {
+  .sync-info {
+    padding: 10px 4px 4px;
     font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .status-secondary {
-    font-size: 11px;
     color: var(--muted);
-    margin-top: 1px;
+    line-height: 1.5;
   }
-  .status-bar button {
+  .sync-info p { margin: 0 0 4px; }
+  .sync-info a { color: var(--accent); }
+  .sync-info strong { color: var(--text); }
+
+  .actions-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 6px 4px 14px;
+  }
+  .actions-row button {
     border: 1px solid var(--border);
     background: #fff;
     color: var(--accent);
@@ -96,7 +93,7 @@
     padding: 6px 12px;
     border-radius: 8px;
   }
-  .status-bar button:active { background: #eef1fb; }
+  .actions-row button:active { background: #eef1fb; }
 
   .banner {
     border-radius: 10px;
@@ -263,12 +260,6 @@
   }
   .legend i.free { background: var(--free-text); }
   .legend i.busy { background: var(--busy-text); }
-
-  .source-link {
-    margin: 4px 0 0;
-    font-size: 11px;
-  }
-  .source-link a { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -276,12 +267,15 @@
 <header>
   <h1>Créneaux libres — Trinquet Paris (75016)</h1>
   <p>Championnat Trinquet Pala Gomme Pleine — 2ème série · Ligue d'Île-de-France</p>
-  <p class="source-link">Source officielle des données : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">lidfpb.euskalpilota.fr</a></p>
 </header>
 
 <main>
-  <div class="status-bar">
-    <div id="statusText" class="status-primary">Chargement…</div>
+  <div class="sync-info">
+    <p>Les données de cette page proviennent du <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a>, seule source de vérité.</p>
+    <p>Elles sont synchronisées toutes les heures.</p>
+    <p>Dernière synchronisation : <strong id="lastSyncText">chargement…</strong></p>
+  </div>
+  <div class="actions-row">
     <button id="refreshBtn" type="button">Rafraîchir</button>
   </div>
 
@@ -787,27 +781,12 @@
     return formatTime(d.getTime());
   }
 
-  function renderStatus(container, outcome) {
-    container.innerHTML = "";
-    var syncTime = formatSync(outcome.data.lastSync);
-    var pageLine = "Page consultée à " + formatTime(outcome.data.fetchedAt) + (outcome.fromCache && !outcome.stale ? " (cache)" : "");
-
-    if (syncTime) {
-      // La date utile pour l'utilisateur — quand la ligue a mis à jour ses
-      // données — prime visuellement sur l'heure technique de consultation.
-      container.appendChild(el("div", { class: "status-primary", text: "Ligue synchronisée le " + syncTime }));
-      container.appendChild(el("div", { class: "status-secondary", text: pageLine }));
-    } else {
-      container.appendChild(el("div", { class: "status-primary", text: pageLine }));
-    }
-  }
-
   function run(forceRefresh) {
-    var statusText = document.getElementById("statusText");
+    var lastSyncText = document.getElementById("lastSyncText");
     var bannerSlot = document.getElementById("banner-slot");
     var results = document.getElementById("results");
     bannerSlot.innerHTML = "";
-    statusText.textContent = "Chargement…";
+    lastSyncText.textContent = "chargement…";
 
     // Le skeleton n'apparaît que si le chargement dépasse 150ms, pour éviter
     // un flash inutile quand la réponse vient du cache (quasi instantané).
@@ -835,12 +814,11 @@
         );
       }
 
-      renderStatus(statusText, outcome);
+      lastSyncText.textContent = formatSync(outcome.data.lastSync) || "information indisponible";
     }).catch(function (err) {
       clearTimeout(skeletonTimer);
       results.innerHTML = "";
-      statusText.innerHTML = "";
-      statusText.appendChild(el("div", { class: "status-primary", text: "Échec du chargement" }));
+      lastSyncText.textContent = "échec du chargement";
       renderBanner(
         bannerSlot, "error", "Impossible d'afficher les créneaux",
         (err && err.message ? err.message : String(err)) +
