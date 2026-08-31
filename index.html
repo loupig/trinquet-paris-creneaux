@@ -190,6 +190,16 @@
     white-space: nowrap;
   }
 
+  .whatsapp-link {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: #25D366;
+    text-decoration: none;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
   .roster-detail {
     padding: 8px 14px 10px 58px;
     font-size: 12px;
@@ -845,6 +855,13 @@
     return DAY_NAMES_SHORT[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES_SHORT[d.getMonth()];
   }
 
+  // Lien "click to chat" WhatsApp sans numéro : ouvre un sélecteur de
+  // contact/discussion côté utilisateur plutôt que d'imposer un destinataire.
+  function buildWhatsappLink(d, hour) {
+    var message = "Le créneau du " + formatDate(d) + " à " + hour + "h est disponible au Trinquet Paris, ça vous convient ?";
+    return "https://api.whatsapp.com/send?text=" + encodeURIComponent(message);
+  }
+
   function el(tag, attrs, children) {
     var e = document.createElement(tag);
     if (attrs) {
@@ -1009,6 +1026,13 @@
           }
         } else {
           row.appendChild(el("span", { class: "slot-pill free", text: "Libre" }));
+          row.appendChild(el("a", {
+            class: "whatsapp-link",
+            href: buildWhatsappLink(d, h),
+            target: "_blank",
+            rel: "noopener",
+            text: "WhatsApp"
+          }));
         }
 
         card.appendChild(row);
