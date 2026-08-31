@@ -23,14 +23,31 @@ Au chargement, la page :
    - Vendredi : 21h, 22h
    - Dimanche : 14h, 15h, 16h, 17h, 20h, 21h, 22h
 3. Pour chaque date à venir, calcule créneaux libres = grille − créneaux
-   occupés, et affiche qui occupe chaque créneau pris (série, équipes).
-4. Source officielle des données : https://lidfpb.euskalpilota.fr/rencontres.php
+   occupés.
+4. Sur un créneau pris, un clic déplie la composition des deux équipes
+   (jointure rencontres → engagements → licencies, noms uniquement — voir
+   [RGPD et données joueurs](#rgpd-et-données-joueurs)).
+5. Sur un créneau libre, un clic déplie un message de proposition
+   pré-rempli, avec un bouton "Envoyer via WhatsApp" (sans numéro imposé,
+   l'utilisateur choisit le destinataire) et un bouton "Copier le texte"
+   pour l'envoyer autrement (SMS...).
+
+En haut de page : rappel de la grille, avancement du championnat par série
+(parties jouées / total, tous lieux confondus), et liste des prochains
+jours ayant au moins 2 créneaux libres (le 22h seul ne compte pas, il est
+presque toujours libre). Des filtres (jour, créneau horaire, "libre
+uniquement") permettent de restreindre la liste principale ; ils sont
+mémorisés dans le navigateur d'une visite à l'autre.
+
+Source officielle des données : https://lidfpb.euskalpilota.fr/rencontres.php
 
 Les données sont mises en cache dans le navigateur ~5 minutes pour éviter
 un appel API à chaque rechargement (bouton "Rafraîchir" pour forcer un
-appel immédiat). Si l'API échoue ou renvoie un résultat vide/inattendu, la
-page affiche un message d'erreur explicite plutôt qu'une grille vide — une
-grille vide serait interprétée à tort comme "tout est libre".
+appel immédiat). La page affiche aussi la date de dernière synchronisation
+de l'API avec le site de la ligue (distincte de l'heure de consultation).
+Si l'API échoue ou renvoie un résultat vide/inattendu, la page affiche un
+message d'erreur explicite plutôt qu'une grille vide — une grille vide
+serait interprétée à tort comme "tout est libre".
 
 ## Mettre à jour le site
 
@@ -41,7 +58,9 @@ git push
 ```
 
 GitHub Pages redéploie automatiquement (~30s à 2min) à chaque push sur
-`main`.
+`main`. Penser à mettre à jour le numéro de version dans le pied de page
+(`Version AAAA.MM.JJ`) à chaque changement — pas de build ici pour le
+faire automatiquement.
 
 ## Configuration
 
@@ -51,24 +70,45 @@ Les principaux réglages sont regroupés en haut de la balise `<script>` dans
 | Constante | Rôle |
 |---|---|
 | `API_BASE` | URL de l'API Apps Script |
-| `CACHE_TTL_MS` | Durée du cache navigateur |
-| `WEEKS_AHEAD` | Horizon d'affichage (12 semaines par défaut) |
+| `CACHE_TTL_MS` | Durée du cache navigateur pour les données |
+| `FILTER_CACHE_KEY` | Clé localStorage pour les filtres mémorisés |
+| `WEEKS_AHEAD` | Horizon d'affichage |
 | `GRID` | Grille de créneaux du trinquet, par jour de semaine |
 | `SERIE_LABELS` | Correspondance Catégorie → Série affichée |
 | `LIEU_VARIANTS` | Libellés `lieu_renc` interrogés côté API pour ce trinquet |
 | `matchesTrinquetParis()` | Filtre de sécurité (double vérification côté client) |
 
+## RGPD et données joueurs
+
+La table `licencies` de l'API contient, à la source, des données sensibles
+(date de naissance, adresse postale, y compris pour des mineurs). Le
+scraper Apps Script (voir plus bas) filtre ça **avant** l'écriture sur
+Drive : seuls `Numéro club`, `Licence`, `nom`, `prenom` sont conservés, et
+uniquement pour les clubs du comité — jamais l'adresse ou la date de
+naissance, à aucun moment exposées par l'API.
+
+## Backend (Apps Script)
+
+Le scraper + l'API REST tournent sur un script Google Apps Script séparé,
+**volontairement non versionné** dans ce dépôt public (le fichier contient
+par endroits des identifiants de connexion au site de la ligue). Il vit en
+local sur la machine de développement, dans `apps-script/Code.gs` (ignoré
+par `.gitignore`). À versionner séparément, dans un dépôt privé, le jour où
+c'est fait proprement.
+
 ## Limites connues
 
 - **Libellés de lieu** : l'API ne permet qu'un filtre par égalité exacte
   (pas de "contient"). `LIEU_VARIANTS` liste les libellés `lieu_renc`
-  connus pour ce trinquet (vérifiés en clair sur l'ensemble des données au
-  30/08/2026). Si l'API introduit un nouveau format de libellé jamais vu,
-  il faudra l'ajouter à cette liste.
+  connus pour ce trinquet. Si l'API introduit un nouveau format de libellé
+  jamais vu, il faudra l'ajouter à cette liste.
 - **Heures hors grille** : une rencontre dont l'heure ne tombe pas sur un
-  créneau standard (ex: rencontre à 18h un dimanche) n'est pas assignée à
-  un créneau automatiquement — elle est signalée sous forme de note
-  "à vérifier manuellement" sur la date concernée.
+  créneau standard (ex: rencontre à 18h un dimanche) est ignorée — elle
+  n'occupe aucun de nos créneaux, ça ne concerne pas cet outil.
 - **Report de partie** : si `date_rep` est renseigné et différent de
   `date_renc`, c'est la nouvelle date qui compte pour l'occupation du
   créneau (l'heure d'origine est supposée conservée).
+- **Compositions incomplètes** : la jointure engagements/licencies ne
+  résout que les joueurs des clubs du comité — un club adverse hors
+  comité, ou une équipe qui n'a pas encore déclaré sa composition à la
+  ligue, affichera "composition non disponible".
