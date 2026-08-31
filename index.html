@@ -488,6 +488,7 @@
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
   var CACHE_KEY = "lidfpb_trinquet_paris_cache_v1";
+  var FILTER_CACHE_KEY = "lidfpb_trinquet_paris_filters_v1";
   var CACHE_TTL_MS = 5 * 60 * 1000;      // cache navigateur de quelques minutes
   var WEEKS_AHEAD = 15;                  // horizon d'affichage (~4 mois)
 
@@ -504,6 +505,28 @@
     hours: { 14: true, 15: true, 16: true, 17: true, 20: true, 21: true, 22: true },
     onlyFree: false
   };
+
+  // Persistance des filtres entre deux visites (localStorage uniquement,
+  // rien n'est envoyé au serveur). Best-effort : si le stockage est
+  // indisponible ou le contenu invalide, on reste sur les valeurs par
+  // défaut ci-dessus sans bloquer la page.
+  function loadFilterState() {
+    try {
+      var raw = localStorage.getItem(FILTER_CACHE_KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (saved && saved.days && saved.hours) {
+        filterState.days = saved.days;
+        filterState.hours = saved.hours;
+        filterState.onlyFree = !!saved.onlyFree;
+      }
+    } catch (e) { /* stockage indisponible ou corrompu : on garde les valeurs par défaut */ }
+  }
+
+  function saveFilterState() {
+    try { localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(filterState)); } catch (e) { /* quota dépassé ou stockage désactivé : tant pis, pas bloquant */ }
+  }
+
   // Dernier jeu de données rendu, pour pouvoir ré-afficher au changement de
   // filtre sans refaire un appel réseau.
   var lastDates = null;
@@ -1187,6 +1210,8 @@
   }
 
   function setupFilters() {
+    loadFilterState();
+
     document.querySelectorAll("#filterDays .filter-chip").forEach(function (chip) {
       var day = Number.parseInt(chip.getAttribute("data-day"), 10);
       chip.classList.toggle("active", !!filterState.days[day]);
@@ -1194,6 +1219,7 @@
         filterState.days[day] = !filterState.days[day];
         chip.classList.toggle("active", filterState.days[day]);
         updateHourChipsVisibility();
+        saveFilterState();
         rerenderIfLoaded();
       });
     });
@@ -1205,12 +1231,15 @@
       chip.addEventListener("click", function () {
         filterState.hours[hour] = !filterState.hours[hour];
         chip.classList.toggle("active", filterState.hours[hour]);
+        saveFilterState();
         rerenderIfLoaded();
       });
     });
 
+    document.getElementById("filterOnlyFree").checked = filterState.onlyFree;
     document.getElementById("filterOnlyFree").addEventListener("change", function (e) {
       filterState.onlyFree = e.target.checked;
+      saveFilterState();
       rerenderIfLoaded();
     });
   }
