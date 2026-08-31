@@ -297,6 +297,8 @@
     white-space: nowrap;
   }
   .recap-empty { font-size: 12px; color: var(--muted); }
+  .grid-info-line { font-size: 13px; margin: 0 0 4px; }
+  .grid-info-line:last-of-type { margin-bottom: 8px; }
 
   .fab-row {
     position: fixed;
@@ -360,6 +362,14 @@
 </header>
 
 <main>
+  <!-- Grille en dur, doit rester cohérente avec la constante GRID du script -->
+  <div class="recap-card">
+    <div class="recap-title">Créneaux mis à disposition par la ligue au Trinquet Paris</div>
+    <p class="grid-info-line">Vendredi : 21h, 22h</p>
+    <p class="grid-info-line">Dimanche : 14h, 15h, 16h, 17h, 20h, 21h, 22h</p>
+    <p class="recap-empty">Cette page indique uniquement l'occupation de ces créneaux — elle ne permet pas de réserver.</p>
+  </div>
+
   <div class="sync-info">
     <p>Les données de cette page proviennent du <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a>, seule source de vérité.</p>
     <p>Elles sont synchronisées toutes les heures.</p>
