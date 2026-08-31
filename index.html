@@ -409,9 +409,63 @@
   }
   .legend i.free { background: var(--free-text); }
   .legend i.busy { background: var(--busy-text); }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 46, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .modal-box {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 22px 20px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .modal-box h2 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--text);
+  }
+  .modal-box p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .modal-box a { color: var(--accent); }
+  .modal-box button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-box button:active { opacity: 0.85; }
 </style>
 </head>
 <body>
+
+<div id="welcomeModal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <h2>À quoi sert cette page ?</h2>
+    <p>Elle sert à repérer les créneaux <strong>disponibles</strong> au Trinquet Paris (75016).</p>
+    <p><strong>On ne peut pas réserver un créneau sur ce site.</strong></p>
+    <p>Seul le <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site officiel de la ligue</a> fait foi.</p>
+    <button id="welcomeOkBtn" type="button">J'ai compris</button>
+  </div>
+</div>
 
 <header>
   <h1>Créneaux libres — Trinquet Paris (75016)</h1>  
@@ -1244,10 +1298,26 @@
     });
   }
 
+  // Popup d'accueil à la première visite, pour clarifier ce que fait (et
+  // ne fait pas) la page. Ne réapparaît plus une fois validé (localStorage).
+  var WELCOME_SEEN_KEY = "lidfpb_trinquet_paris_welcome_seen_v1";
+  function setupWelcomeModal() {
+    var modal = document.getElementById("welcomeModal");
+    var okBtn = document.getElementById("welcomeOkBtn");
+    var alreadySeen = false;
+    try { alreadySeen = localStorage.getItem(WELCOME_SEEN_KEY) === "1"; } catch (e) { /* stockage indisponible : on affiche le popup à chaque fois, tant pis */ }
+    if (!alreadySeen) modal.hidden = false;
+    okBtn.addEventListener("click", function () {
+      modal.hidden = true;
+      try { localStorage.setItem(WELCOME_SEEN_KEY, "1"); } catch (e) { /* pas grave si ça ne persiste pas */ }
+    });
+  }
+
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
   document.getElementById("backToTopBtn").addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+  setupWelcomeModal();
   setupFilters();
   run(false);
 })();
