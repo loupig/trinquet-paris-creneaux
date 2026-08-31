@@ -517,10 +517,19 @@
     return map;
   }
 
+  // Les numéros de licence ne sont pas formatés pareil selon la table
+  // source : "058863" dans licencies, "58863" dans engagements. On
+  // compare toujours la forme sans zéros de tête.
+  function normalizeLicence(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d+$/.test(s)) return s;
+    return String(Number.parseInt(s, 10));
+  }
+
   function buildLicenceMap(licenciesData) {
     var map = {};
     (licenciesData || []).forEach(function (l) {
-      var licence = String(l["Licence"] || "").trim();
+      var licence = normalizeLicence(l["Licence"]);
       if (!licence) return;
       var prenom = (l["prenom"] || "").trim();
       var nom = (l["nom"] || "").trim();
@@ -544,7 +553,7 @@
     (engagementsData || []).forEach(function (e) {
       var key = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
       var licences = LICENCE_COLUMNS
-        .map(function (col) { return String(e[col] || "").trim(); })
+        .map(function (col) { return normalizeLicence(e[col]); })
         .filter(function (v) { return v; });
       if (licences.length) index[key] = licences;
     });
