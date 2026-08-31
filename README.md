@@ -32,22 +32,29 @@ Au chargement, la page :
    l'utilisateur choisit le destinataire) et un bouton "Copier le texte"
    pour l'envoyer autrement (SMS...).
 
-En haut de page : rappel de la grille, avancement du championnat par série
-(parties jouées / total, tous lieux confondus), et liste des prochains
-jours ayant au moins 2 créneaux libres (le 22h seul ne compte pas, il est
-presque toujours libre). Des filtres (jour, créneau horaire, "libre
+En haut de page : rappel de la grille fixe et rappel que la page ne sert
+qu'à repérer l'occupation de ces créneaux (pas à réserver — seul le site
+de la ligue fait foi). Des filtres (jour, créneau horaire, "libre
 uniquement") permettent de restreindre la liste principale ; ils sont
-mémorisés dans le navigateur d'une visite à l'autre.
+mémorisés dans le navigateur d'une visite à l'autre. Deux boutons flottants
+en bas de page : un raccourci vers le site de la ligue, et un retour en
+haut de page.
 
 Source officielle des données : https://lidfpb.euskalpilota.fr/rencontres.php
 
 Les données sont mises en cache dans le navigateur ~5 minutes pour éviter
 un appel API à chaque rechargement (bouton "Rafraîchir" pour forcer un
-appel immédiat). La page affiche aussi la date de dernière synchronisation
-de l'API avec le site de la ligue (distincte de l'heure de consultation).
-Si l'API échoue ou renvoie un résultat vide/inattendu, la page affiche un
-message d'erreur explicite plutôt qu'une grille vide — une grille vide
-serait interprétée à tort comme "tout est libre".
+appel immédiat). Si l'API échoue ou renvoie un résultat vide/inattendu, la
+page affiche un message d'erreur explicite plutôt qu'une grille vide — une
+grille vide serait interprétée à tort comme "tout est libre".
+
+**Choix délibéré : pas de popup.** Un popup d'accueil et un popup d'info
+optionnel (bouton "?") ont été essayés puis retirés — leur bouton de
+fermeture restait bloqué chez au moins un utilisateur, cause jamais
+identifiée malgré plusieurs mécanismes de secours (clic en dehors, touche
+Échap). Tout le contenu explicatif reste affiché en permanence dans les
+cartes du haut de page plutôt que dans un élément qui peut potentiellement
+se bloquer.
 
 ## Mettre à jour le site
 
