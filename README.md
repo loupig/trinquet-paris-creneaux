@@ -96,6 +96,9 @@ local sur la machine de développement, dans `apps-script/Code.gs` (ignoré
 par `.gitignore`). À versionner séparément, dans un dépôt privé, le jour où
 c'est fait proprement.
 
+L'API REST qu'il expose est documentée dans [`API.md`](API.md), pour qui
+voudrait construire autre chose avec les mêmes données.
+
 ## Limites connues
 
 - **Libellés de lieu** : l'API ne permet qu'un filtre par égalité exacte
