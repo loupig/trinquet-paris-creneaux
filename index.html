@@ -294,28 +294,31 @@
     font-size: 12px;
     color: var(--text);
   }
-  .grid-compact-row {
-    display: flex;
+  .grid-align {
+    display: grid;
+    grid-template-columns: 62px repeat(7, 1fr);
     align-items: center;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin: 0 0 6px;
+    gap: 4px;
+    margin: 8px 0;
   }
-  .grid-compact-row:last-of-type { margin-bottom: 8px; }
-  .grid-compact-day {
-    flex: 0 0 60px;
+  .grid-align-head {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-align: center;
+    padding-bottom: 2px;
+  }
+  .grid-align-day {
     font-size: 11px;
     font-weight: 700;
-    color: var(--text);
   }
-  .grid-compact-chip {
-    background: var(--serie1-bg);
+  .grid-align-cell {
+    text-align: center;
+    font-size: 13px;
+    line-height: 1;
     color: var(--serie1-text);
-    border: 1px solid var(--serie1-border);
-    border-radius: 20px;
-    padding: 3px 9px;
-    font-size: 11px;
-    font-weight: 700;
   }
 
   .fab-row {
@@ -401,20 +404,33 @@
   <!-- Grille en dur, doit rester cohérente avec la constante GRID du script -->
   <div class="recap-card">
     <div class="recap-title">Créneaux mis à disposition par la ligue au Trinquet Paris 16</div>
-    <div class="grid-compact-row">
-      <span class="grid-compact-day">Vendredi</span>
-      <span class="grid-compact-chip">21h</span>
-      <span class="grid-compact-chip">22h</span>
-    </div>
-    <div class="grid-compact-row">
-      <span class="grid-compact-day">Dimanche</span>
-      <span class="grid-compact-chip">14h</span>
-      <span class="grid-compact-chip">15h</span>
-      <span class="grid-compact-chip">16h</span>
-      <span class="grid-compact-chip">17h</span>
-      <span class="grid-compact-chip">20h</span>
-      <span class="grid-compact-chip">21h</span>
-      <span class="grid-compact-chip">22h</span>
+    <div class="grid-align">
+      <div></div>
+      <div class="grid-align-head">14h</div>
+      <div class="grid-align-head">15h</div>
+      <div class="grid-align-head">16h</div>
+      <div class="grid-align-head">17h</div>
+      <div class="grid-align-head">20h</div>
+      <div class="grid-align-head">21h</div>
+      <div class="grid-align-head">22h</div>
+
+      <div class="grid-align-day">Vendredi</div>
+      <div class="grid-align-cell"></div>
+      <div class="grid-align-cell"></div>
+      <div class="grid-align-cell"></div>
+      <div class="grid-align-cell"></div>
+      <div class="grid-align-cell"></div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
+
+      <div class="grid-align-day">Dimanche</div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
+      <div class="grid-align-cell">●</div>
     </div>
     <p class="recap-empty">Cette page indique uniquement l'occupation de ces créneaux — elle ne permet pas de réserver.</p>
     <p class="recap-empty">Les parties jouées ailleurs, ou à un autre horaire que ceux ci-dessus, n'apparaissent pas ici.</p>
