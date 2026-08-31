@@ -179,8 +179,8 @@
   }
   .slot-info .match-line { color: var(--text); font-weight: 600; }
 
-  .slot-row.has-roster { cursor: pointer; }
-  .slot-row.has-roster:active { background: var(--bg); }
+  .slot-row.expandable { cursor: pointer; }
+  .slot-row.expandable:active { background: var(--bg); }
 
   .roster-toggle {
     flex: 0 0 auto;
@@ -190,15 +190,27 @@
     white-space: nowrap;
   }
 
-  .whatsapp-link {
-    flex: 0 0 auto;
-    font-size: 11px;
-    font-weight: 600;
-    color: #25D366;
-    text-decoration: none;
-    white-space: nowrap;
-    margin-left: auto;
+  .proposal-text {
+    margin: 0 0 8px;
+    line-height: 1.4;
   }
+  .proposal-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .proposal-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+  }
+  .proposal-btn.whatsapp { color: #25D366; border-color: #25D366; }
+  .proposal-btn.copy { color: var(--accent); }
 
   .roster-detail {
     padding: 8px 14px 10px 58px;
@@ -402,7 +414,8 @@
 <body>
 
 <header>
-  <h1>Créneaux libres — Trinquet Paris (75016) — Ligue d'Île-de-France</h1>
+  <h1>Créneaux libres — Trinquet Paris (75016)</h1>  
+  <h1>Ligue d'Île-de-France</h1>
 </header>
 
 <main>
@@ -857,10 +870,13 @@
     return DAY_NAMES_SHORT[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES_SHORT[d.getMonth()];
   }
 
+  function buildProposalMessage(d, hour) {
+    return "Le créneau du " + formatDate(d) + " à " + hour + "h est disponible au Trinquet Paris, ça vous convient ?";
+  }
+
   // Lien "click to chat" WhatsApp sans numéro : ouvre un sélecteur de
   // contact/discussion côté utilisateur plutôt que d'imposer un destinataire.
-  function buildWhatsappLink(d, hour) {
-    var message = "Le créneau du " + formatDate(d) + " à " + hour + "h est disponible au Trinquet Paris, ça vous convient ?";
+  function buildWhatsappLink(message) {
     return "https://api.whatsapp.com/send?text=" + encodeURIComponent(message);
   }
 
@@ -1009,7 +1025,7 @@
           var hasRoster = (info.rosterRec && info.rosterRec.length) || (info.rosterVis && info.rosterVis.length);
           if (hasRoster) {
             var toggle = el("span", { class: "roster-toggle", text: "Joueurs ▸" });
-            row.classList.add("has-roster");
+            row.classList.add("expandable");
             row.appendChild(toggle);
 
             var detail = el("div", { class: "roster-detail" });
@@ -1028,13 +1044,49 @@
           }
         } else {
           row.appendChild(el("span", { class: "slot-pill free", text: "Libre" }));
-          row.appendChild(el("a", {
-            class: "whatsapp-link",
-            href: buildWhatsappLink(d, h),
+
+          var proposalToggle = el("span", { class: "roster-toggle", text: "Proposer le créneau ▸" });
+          row.classList.add("expandable");
+          row.appendChild(proposalToggle);
+
+          var message = buildProposalMessage(d, h);
+          var proposalDetail = el("div", { class: "roster-detail" });
+          proposalDetail.hidden = true;
+          proposalDetail.appendChild(el("p", { class: "proposal-text", text: message }));
+          var actions = el("div", { class: "proposal-actions" });
+          actions.appendChild(el("a", {
+            class: "proposal-btn whatsapp",
+            href: buildWhatsappLink(message),
             target: "_blank",
             rel: "noopener",
-            text: "WhatsApp"
+            text: "Envoyer via WhatsApp"
           }));
+          var copyBtn = el("button", { type: "button", class: "proposal-btn copy", text: "Copier le texte" });
+          copyBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var btn = e.currentTarget;
+            var restore = btn.textContent;
+            var onDone = function (ok) {
+              btn.textContent = ok ? "Copié !" : "Échec de la copie";
+              setTimeout(function () { btn.textContent = restore; }, 1500);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(message).then(function () { onDone(true); }).catch(function () { onDone(false); });
+            } else {
+              onDone(false);
+            }
+          });
+          actions.appendChild(copyBtn);
+          proposalDetail.appendChild(actions);
+
+          row.addEventListener("click", function () {
+            proposalDetail.hidden = !proposalDetail.hidden;
+            proposalToggle.textContent = proposalDetail.hidden ? "Proposer le créneau ▸" : "Proposer le créneau ▾";
+          });
+
+          card.appendChild(row);
+          card.appendChild(proposalDetail);
+          return;
         }
 
         card.appendChild(row);
