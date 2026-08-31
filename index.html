@@ -327,6 +327,22 @@
   }
   .fab-btn:active { opacity: 0.85; }
 
+  .league-link-btn {
+    position: fixed;
+    left: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    background: #CE1126;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 24px;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    z-index: 50;
+  }
+  .league-link-btn:active { opacity: 0.85; }
+
   footer {
     text-align: center;
     padding: 20px 4px 10px;
@@ -394,8 +410,8 @@
   </footer>
 </main>
 
+<a class="league-link-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
 <div class="fab-row">
-  <a class="fab-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener" aria-label="Ouvrir le site de la ligue">↗</a>
   <button id="backToTopBtn" class="fab-btn" type="button" aria-label="Remonter en haut de la page">↑</button>
 </div>
 
@@ -409,7 +425,7 @@
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
   var CACHE_KEY = "lidfpb_trinquet_paris_cache_v1";
   var CACHE_TTL_MS = 5 * 60 * 1000;      // cache navigateur de quelques minutes
-  var WEEKS_AHEAD = 18;                  // horizon d'affichage (~4 mois)
+  var WEEKS_AHEAD = 15;                  // horizon d'affichage (~4 mois)
 
   // Grille fixe du trinquet. Clé = Date.getDay() (0=dimanche ... 5=vendredi).
   var GRID = {
