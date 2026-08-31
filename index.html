@@ -38,6 +38,11 @@
 
   * { box-sizing: border-box; }
 
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
   body {
     margin: 0;
     background: var(--bg);
@@ -244,6 +249,82 @@
     100% { background-position: 0 50%; }
   }
 
+  .recap-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .recap-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .recap-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    padding: 3px 0;
+  }
+  .recap-dot {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .recap-dot.serie-1 { background: var(--serie1-text); }
+  .recap-dot.serie-2 { background: var(--serie2-text); }
+
+  .recap-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .recap-day-chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--serie1-bg);
+    border: 1px solid var(--serie1-border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .recap-empty { font-size: 12px; color: var(--muted); }
+
+  #backToTopBtn {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    z-index: 50;
+    cursor: pointer;
+  }
+  #backToTopBtn:active { opacity: 0.85; }
+
+  footer {
+    text-align: center;
+    padding: 20px 4px 10px;
+  }
+  footer a {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -279,6 +360,8 @@
     <button id="refreshBtn" type="button">Rafraîchir</button>
   </div>
 
+  <div id="recap"></div>
+
   <div class="legend">
     <span><i class="free"></i>Libre</span>
     <span><i class="busy"></i>Occupé</span>
@@ -286,7 +369,13 @@
 
   <div id="banner-slot"></div>
   <div id="results"></div>
+
+  <footer>
+    <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a>
+  </footer>
 </main>
+
+<button id="backToTopBtn" type="button" aria-label="Remonter en haut de la page">↑</button>
 
 <script>
 (function () {
@@ -409,8 +498,13 @@
     // silence (pas de noms de joueurs) plutôt que de bloquer toute la page.
     var engagementsPromise = fetchJson(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
     var licenciesPromise = fetchJson(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
+    // Toutes les rencontres de la compétition en cours, tous lieux confondus
+    // (l'API applique automatiquement le filtre NO_COMPET) — sert uniquement
+    // au récap d'avancement du championnat, pas au calcul des créneaux.
+    var seasonPromise = fetchJson(buildUrl("rencontres", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all(rencontresPromises.concat([clubsPromise, engagementsPromise, licenciesPromise])).then(function (results) {
+    return Promise.all(rencontresPromises.concat([clubsPromise, engagementsPromise, licenciesPromise, seasonPromise])).then(function (results) {
+      var seasonJson = results.pop();
       var licenciesJson = results.pop();
       var engagementsJson = results.pop();
       var clubsJson = results.pop();
@@ -441,6 +535,7 @@
         clubs: clubsJson.data,
         engagements: engagementsJson.data,
         licencies: licenciesJson.data,
+        seasonRencontres: seasonJson.data,
         fetchedAt: Date.now(),
         lastSync: lastSync
       };
@@ -659,9 +754,15 @@
   // ---------------------------------------------------------------
   var DAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   var MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  var DAY_NAMES_SHORT = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+  var MONTH_NAMES_SHORT = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 
   function formatDate(d) {
     return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function formatDateShort(d) {
+    return DAY_NAMES_SHORT[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES_SHORT[d.getMonth()];
   }
 
   function el(tag, attrs, children) {
@@ -701,6 +802,61 @@
     container.appendChild(b);
   }
 
+  // Catégorie -> { total, joue } sur l'ensemble de la compétition en cours,
+  // tous lieux confondus (indépendant du Trinquet Paris).
+  function computeSeasonStats(seasonRencontres) {
+    var stats = {};
+    (seasonRencontres || []).forEach(function (row) {
+      var cat = String(row["Catégorie"] || "").trim();
+      if (!cat) return;
+      if (!stats[cat]) stats[cat] = { total: 0, joue: 0 };
+      stats[cat].total++;
+      if (String(row.report || "").trim()) stats[cat].joue++;
+    });
+    return stats;
+  }
+
+  function renderRecap(dates, occupancy, seasonStats) {
+    var container = document.getElementById("recap");
+    container.innerHTML = "";
+
+    var progressCard = el("div", { class: "recap-card" });
+    progressCard.appendChild(el("div", { class: "recap-title", text: "Avancement du championnat" }));
+    var catKeys = Object.keys(seasonStats).sort();
+    if (catKeys.length === 0) {
+      progressCard.appendChild(el("div", { class: "recap-empty", text: "Données d'avancement indisponibles." }));
+    } else {
+      catKeys.forEach(function (cat) {
+        var s = seasonStats[cat];
+        var serieLabel = SERIE_LABELS[cat] || ("Catégorie " + cat);
+        var dotClass = /^\d+$/.test(cat) ? ("serie-" + cat) : "";
+        var row = el("div", { class: "recap-row" });
+        row.appendChild(el("span", { class: "recap-dot " + dotClass }));
+        row.appendChild(document.createTextNode(serieLabel + " : " + s.joue + " / " + s.total + " parties jouées"));
+        progressCard.appendChild(row);
+      });
+    }
+    container.appendChild(progressCard);
+
+    var daysCard = el("div", { class: "recap-card" });
+    daysCard.appendChild(el("div", { class: "recap-title", text: "Jours avec des créneaux libres" }));
+    var freeDays = dates.filter(function (d) {
+      var key = dateKey(d);
+      var hours = GRID[d.getDay()];
+      return hours.some(function (h) { return !occupancy.occupied[key + "|" + h]; });
+    });
+    if (freeDays.length === 0) {
+      daysCard.appendChild(el("div", { class: "recap-empty", text: "Aucun créneau libre dans l'horizon affiché." }));
+    } else {
+      var daysList = el("div", { class: "recap-days" });
+      freeDays.forEach(function (d) {
+        daysList.appendChild(el("a", { class: "recap-day-chip", href: "#day-" + dateKey(d), text: formatDateShort(d) }));
+      });
+      daysCard.appendChild(daysList);
+    }
+    container.appendChild(daysCard);
+  }
+
   function renderResults(dates, occupancy) {
     var results = document.getElementById("results");
     results.innerHTML = "";
@@ -713,7 +869,7 @@
     dates.forEach(function (d) {
       var key = dateKey(d);
       var hours = GRID[d.getDay()];
-      var card = el("div", { class: "day-card" });
+      var card = el("div", { class: "day-card", id: "day-" + key });
       var header = el("div", { class: "day-card-header" });
       header.appendChild(el("span", { class: "date-label", text: formatDate(d) }));
       card.appendChild(header);
@@ -814,6 +970,7 @@
       var dates = upcomingGridDates(today);
 
       renderResults(dates, occupancy);
+      renderRecap(dates, occupancy, computeSeasonStats(outcome.data.seasonRencontres));
 
       if (outcome.stale) {
         renderBanner(
@@ -837,6 +994,9 @@
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
+  document.getElementById("backToTopBtn").addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
   run(false);
 })();
 </script>
