@@ -21,9 +21,12 @@
     --notice-bg: #fff6e0;
     --notice-text: #8a6300;
     --notice-border: #f0dd9a;
-    --serie-bg: #eef1fb;
-    --serie-text: #2f5ce0;
-    --serie-border: #cdd6f7;
+    --serie1-bg: #eef1fb;
+    --serie1-text: #2f5ce0;
+    --serie1-border: #cdd6f7;
+    --serie2-bg: #e6f7f6;
+    --serie2-text: #0f766e;
+    --serie2-border: #b8e6e2;
     --warn-bg: #fff3cd;
     --warn-text: #7a5b00;
     --warn-border: #f0dd9a;
@@ -165,7 +168,9 @@
   }
   .slot-pill.free { background: var(--free-bg); color: var(--free-text); border: 1px solid var(--free-border); }
   .slot-pill.busy { background: var(--busy-bg); color: var(--busy-text); border: 1px solid var(--busy-border); }
-  .slot-pill.serie { background: var(--serie-bg); color: var(--serie-text); border: 1px solid var(--serie-border); }
+  .slot-pill.serie { background: #eef0f2; color: var(--muted); border: 1px solid var(--border); }
+  .slot-pill.serie-1 { background: var(--serie1-bg); color: var(--serie1-text); border: 1px solid var(--serie1-border); }
+  .slot-pill.serie-2 { background: var(--serie2-bg); color: var(--serie2-text); border: 1px solid var(--serie2-border); }
 
   .slot-info {
     flex: 1 1 auto;
@@ -495,6 +500,7 @@
       var label = clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis);
       var catRaw = String(row["Catégorie"] || "").trim();
       var serie = SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?"));
+      var serieClass = "serie" + (/^\d+$/.test(catRaw) ? ("-" + catRaw) : "");
       var meta = row.Poule ? ("Poule " + row.Poule) : "";
 
       if (!t || hours.indexOf(t.hour) === -1) {
@@ -513,7 +519,7 @@
       // Si deux lignes tombent sur le même créneau (doublon de données), on
       // garde la première : le créneau est de toute façon occupé.
       if (!occupied[slotKey]) {
-        occupied[slotKey] = { label: label, serie: serie, meta: meta, heure: t.hour };
+        occupied[slotKey] = { label: label, serie: serie, serieClass: serieClass, meta: meta, heure: t.hour };
       }
     });
 
@@ -608,7 +614,7 @@
 
         if (info) {
           row.appendChild(el("span", { class: "slot-pill busy", text: "Occupé" }));
-          row.appendChild(el("span", { class: "slot-pill serie", text: info.serie }));
+          row.appendChild(el("span", { class: "slot-pill " + info.serieClass, text: info.serie }));
           var infoBox = el("span", { class: "slot-info" });
           infoBox.appendChild(el("span", { class: "match-line", text: info.label }));
           if (info.meta) {
