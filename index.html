@@ -18,9 +18,6 @@
     --busy-bg: #fdecec;
     --busy-text: #b3261e;
     --busy-border: #f5c2c0;
-    --notice-bg: #fff6e0;
-    --notice-text: #8a6300;
-    --notice-border: #f0dd9a;
     --serie1-bg: #eef1fb;
     --serie1-text: #2f5ce0;
     --serie1-border: #cdd6f7;
@@ -200,14 +197,6 @@
     border-bottom: 1px solid var(--border);
   }
   .roster-line { line-height: 1.5; }
-
-  .off-grid-note {
-    padding: 8px 14px 10px;
-    font-size: 11px;
-    color: var(--notice-text);
-    background: var(--notice-bg);
-    border-top: 1px dashed var(--notice-border);
-  }
 
   .empty-state {
     text-align: center;
@@ -715,7 +704,6 @@
 
   function computeOccupancy(rencontres, joinCtx, today) {
     var occupied = {};   // "YYYY-MM-DD|HH" -> info rencontre
-    var offGrid = {};    // "YYYY-MM-DD" -> [ { heure, info } ]
     var clubMap = joinCtx.clubMap;
 
     rencontres.forEach(function (row) {
@@ -726,6 +714,10 @@
       if (!hours) return; // pas un jour joué au trinquet, hors-sujet
 
       var t = parseHeureRenc(row.heure_renc);
+      // Une rencontre à une heure hors grille standard (ex: 18h un dimanche)
+      // ne concerne pas cet outil : elle n'occupe aucun de nos créneaux.
+      if (!t || hours.indexOf(t.hour) === -1) return;
+
       var labelRec = clubLabel(clubMap, row.club_rec, row.equip_rec);
       var labelVis = clubLabel(clubMap, row.club_vis, row.equip_vis);
       var label = labelRec + " vs " + labelVis;
@@ -733,18 +725,6 @@
       var serie = SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?"));
       var serieClass = "serie" + (/^\d+$/.test(catRaw) ? ("-" + catRaw) : "");
       var meta = row.Poule ? ("Poule " + row.Poule) : "";
-
-      if (!t || hours.indexOf(t.hour) === -1) {
-        var key = dateKey(d);
-        if (!offGrid[key]) offGrid[key] = [];
-        offGrid[key].push({
-          heureRaw: row.heure_renc || "(non précisée)",
-          label: label,
-          serie: serie,
-          meta: meta
-        });
-        return;
-      }
 
       var slotKey = dateKey(d) + "|" + t.hour;
       // Si deux lignes tombent sur le même créneau (doublon de données), on
@@ -764,7 +744,7 @@
       }
     });
 
-    return { occupied: occupied, offGrid: offGrid };
+    return { occupied: occupied };
   }
 
   // ---------------------------------------------------------------
@@ -959,16 +939,6 @@
 
         card.appendChild(row);
       });
-
-      var offGridList = occupancy.offGrid[key];
-      if (offGridList && offGridList.length) {
-        var note = el("div", { class: "off-grid-note" });
-        var text = "⚠ " + offGridList.length + " rencontre(s) ce jour-là à une heure hors grille standard (";
-        text += offGridList.map(function (o) { return o.heureRaw + " — " + o.serie + " — " + o.label; }).join(" ; ");
-        text += ") — à vérifier manuellement.";
-        note.textContent = text;
-        card.appendChild(note);
-      }
 
       results.appendChild(card);
     });
