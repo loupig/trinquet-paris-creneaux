@@ -302,8 +302,38 @@
     font-size: 12px;
     color: var(--text);
   }
-  .grid-info-line { font-size: 13px; margin: 0 0 4px; }
-  .grid-info-line:last-of-type { margin-bottom: 8px; }
+  .grid-table {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr;
+    gap: 6px;
+    margin: 10px 0;
+  }
+  .grid-table-head {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-align: center;
+  }
+  .grid-hour-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 4px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .grid-cell {
+    border-radius: 8px;
+    padding: 6px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid;
+  }
+  .grid-cell.on { background: var(--serie1-bg); color: var(--serie1-text); border-color: var(--serie1-border); }
+  .grid-cell.off { background: transparent; border: 1px dashed var(--border); color: var(--muted); font-weight: 400; }
 
   .fab-row {
     position: fixed;
@@ -388,8 +418,39 @@
   <!-- Grille en dur, doit rester cohérente avec la constante GRID du script -->
   <div class="recap-card">
     <div class="recap-title">Créneaux mis à disposition par la ligue au Trinquet Paris 16</div>
-    <p class="grid-info-line">Vendredi : 21h, 22h</p>
-    <p class="grid-info-line">Dimanche : 14h, 15h, 16h, 17h, 20h, 21h, 22h</p>
+    <div class="grid-table">
+      <div class="grid-table-head"></div>
+      <div class="grid-table-head">Vendredi</div>
+      <div class="grid-table-head">Dimanche</div>
+
+      <div class="grid-hour-label">14h</div>
+      <div class="grid-cell off">—</div>
+      <div class="grid-cell on">Ouvert</div>
+
+      <div class="grid-hour-label">15h</div>
+      <div class="grid-cell off">—</div>
+      <div class="grid-cell on">Ouvert</div>
+
+      <div class="grid-hour-label">16h</div>
+      <div class="grid-cell off">—</div>
+      <div class="grid-cell on">Ouvert</div>
+
+      <div class="grid-hour-label">17h</div>
+      <div class="grid-cell off">—</div>
+      <div class="grid-cell on">Ouvert</div>
+
+      <div class="grid-hour-label">20h</div>
+      <div class="grid-cell off">—</div>
+      <div class="grid-cell on">Ouvert</div>
+
+      <div class="grid-hour-label">21h</div>
+      <div class="grid-cell on">Ouvert</div>
+      <div class="grid-cell on">Ouvert</div>
+
+      <div class="grid-hour-label">22h</div>
+      <div class="grid-cell on">Ouvert</div>
+      <div class="grid-cell on">Ouvert</div>
+    </div>
     <p class="recap-empty">Cette page indique uniquement l'occupation de ces créneaux — elle ne permet pas de réserver.</p>
     <p class="recap-empty">Les parties jouées ailleurs, ou à un autre horaire que ceux ci-dessus, n'apparaissent pas ici.</p>
   </div>
