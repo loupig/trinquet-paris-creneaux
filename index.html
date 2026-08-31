@@ -366,10 +366,16 @@
   }
   .fab-btn:active { opacity: 0.85; }
 
-  .league-link-btn {
+  .league-link-wrap {
     position: fixed;
     left: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 50;
+  }
+  .league-link-btn {
     background: #CE1126;
     color: #fff;
     font-size: 12px;
@@ -378,9 +384,67 @@
     border-radius: 24px;
     text-decoration: none;
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-    z-index: 50;
   }
   .league-link-btn:active { opacity: 0.85; }
+
+  .info-btn {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  .info-btn:active { opacity: 0.85; }
+
+  .info-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 46, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .info-box {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 22px 20px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .info-box h2 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--text);
+  }
+  .info-box p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .info-box a { color: var(--accent); }
+  .info-close-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .info-close-btn:active { opacity: 0.85; }
 
   footer {
     text-align: center;
@@ -474,7 +538,20 @@
   </footer>
 </main>
 
-<a class="league-link-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
+<div class="league-link-wrap">
+  <a class="league-link-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
+  <button id="infoBtn" class="info-btn" type="button" aria-label="À propos de cette page">?</button>
+</div>
+
+<div id="infoPopup" class="info-overlay" hidden>
+  <div class="info-box">
+    <h2>À quoi sert cette page ?</h2>
+    <p>Elle sert à repérer les créneaux <strong>disponibles</strong> au Trinquet Paris (75016). <strong>On ne peut pas réserver un créneau sur ce site.</strong></p>
+    <p>Seul le <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site officiel de la ligue</a> fait foi.</p>
+    <p>Les parties jouées ailleurs, ou à un autre horaire que ceux de la grille du trinquet, n'apparaissent pas ici.</p>
+    <button id="infoCloseBtn" class="info-close-btn" type="button">Fermer</button>
+  </div>
+</div>
 <div class="fab-row">
   <button id="backToTopBtn" class="fab-btn" type="button" aria-label="Remonter en haut de la page">↑</button>
 </div>
@@ -1232,10 +1309,24 @@
     });
   }
 
+  // Popup d'info optionnel (bouton "?"), jamais affiché automatiquement.
+  // Trois façons indépendantes de le fermer, pour éviter de reproduire le
+  // souci du précédent popup d'accueil (bloqué chez un utilisateur, cause
+  // jamais identifiée).
+  function setupInfoPopup() {
+    var popup = document.getElementById("infoPopup");
+    function closePopup() { popup.hidden = true; }
+    document.getElementById("infoBtn").addEventListener("click", function () { popup.hidden = false; });
+    document.getElementById("infoCloseBtn").addEventListener("click", closePopup);
+    popup.addEventListener("click", function (e) { if (e.target === popup) closePopup(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !popup.hidden) closePopup(); });
+  }
+
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
   document.getElementById("backToTopBtn").addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+  setupInfoPopup();
   setupFilters();
   run(false);
 })();
