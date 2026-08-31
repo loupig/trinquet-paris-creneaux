@@ -181,6 +181,26 @@
   }
   .slot-info .match-line { color: var(--text); font-weight: 600; }
 
+  .slot-row.has-roster { cursor: pointer; }
+  .slot-row.has-roster:active { background: var(--bg); }
+
+  .roster-toggle {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .roster-detail {
+    padding: 8px 14px 10px 58px;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .roster-line { line-height: 1.5; }
+
   .off-grid-note {
     padding: 8px 14px 10px;
     font-size: 11px;
@@ -390,8 +410,15 @@
       return fetchJson(buildUrl("rencontres", { lieu_renc: lieu }));
     });
     var clubsPromise = fetchJson(buildUrl("clubs", {}));
+    // Les compositions d'équipe sont un bonus d'affichage, pas une donnée de
+    // sécurité comme les créneaux : si cet appel échoue, on dégrade en
+    // silence (pas de noms de joueurs) plutôt que de bloquer toute la page.
+    var engagementsPromise = fetchJson(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
+    var licenciesPromise = fetchJson(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all(rencontresPromises.concat([clubsPromise])).then(function (results) {
+    return Promise.all(rencontresPromises.concat([clubsPromise, engagementsPromise, licenciesPromise])).then(function (results) {
+      var licenciesJson = results.pop();
+      var engagementsJson = results.pop();
       var clubsJson = results.pop();
       var merged = {};
       var lastSync = null;
@@ -415,7 +442,14 @@
         throw new Error("0 rencontre reçue pour le Trinquet Paris 75016 — résultat suspect, données non affichées par sécurité.");
       }
 
-      return { rencontres: rencontres, clubs: clubsJson.data, fetchedAt: Date.now(), lastSync: lastSync };
+      return {
+        rencontres: rencontres,
+        clubs: clubsJson.data,
+        engagements: engagementsJson.data,
+        licencies: licenciesJson.data,
+        fetchedAt: Date.now(),
+        lastSync: lastSync
+      };
     });
   }
 
@@ -473,6 +507,67 @@
     return eq ? (name + " (éq. " + eq + ")") : name;
   }
 
+  // rencontres utilise un code concaténé ("3750030" = ligue+comité+club),
+  // tandis qu'engagements/licencies utilisent le format "Numéro club" du
+  // site ("03-750-030"). Cette table fait la conversion entre les deux.
+  function buildNumeroClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      if (c["comité"] && c["club"] && c["Numéro club"]) {
+        map[ligue + comite + club] = c["Numéro club"];
+      }
+    });
+    return map;
+  }
+
+  function buildLicenceMap(licenciesData) {
+    var map = {};
+    (licenciesData || []).forEach(function (l) {
+      var licence = String(l["Licence"] || "").trim();
+      if (!licence) return;
+      var prenom = (l["prenom"] || "").trim();
+      var nom = (l["nom"] || "").trim();
+      map[licence] = (prenom + " " + nom).trim();
+    });
+    return map;
+  }
+
+  // Les en-têtes exportées par le site source contiennent littéralement
+  // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite
+  // via fromCharCode pour éviter qu'un éditeur ne la décode en un vrai
+  // espace insécable Unicode.
+  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
+  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
+
+  // Clé : "NuméroClub|Catégorie|Equipe" -> liste des numéros de licence de
+  // l'équipe (composition déclarée en engagements, pas forcément les 2
+  // joueurs qui jouent précisément cette rencontre-là).
+  function buildEngagementsIndex(engagementsData) {
+    var index = {};
+    (engagementsData || []).forEach(function (e) {
+      var key = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      var licences = LICENCE_COLUMNS
+        .map(function (col) { return String(e[col] || "").trim(); })
+        .filter(function (v) { return v; });
+      if (licences.length) index[key] = licences;
+    });
+    return index;
+  }
+
+  function getRoster(engagementsIndex, licenceMap, numeroClubMap, clubCode, categorie, equipe) {
+    var numeroClub = numeroClubMap[clubCode];
+    if (!numeroClub) return null;
+    var key = [numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|");
+    var licences = engagementsIndex[key];
+    if (!licences) return null;
+    return licences
+      .map(function (lic) { return licenceMap[lic]; })
+      .filter(function (nom) { return !!nom; });
+  }
+
   // Détermine la date "effective" d'occupation d'une rencontre : si elle a
   // été reportée (date_rep renseignée et différente de date_renc), c'est
   // date_rep qui compte, pas date_renc — cf. consigne métier explicite.
@@ -485,9 +580,10 @@
     return original;
   }
 
-  function computeOccupancy(rencontres, clubMap, today) {
+  function computeOccupancy(rencontres, joinCtx, today) {
     var occupied = {};   // "YYYY-MM-DD|HH" -> info rencontre
     var offGrid = {};    // "YYYY-MM-DD" -> [ { heure, info } ]
+    var clubMap = joinCtx.clubMap;
 
     rencontres.forEach(function (row) {
       var d = effectiveDate(row);
@@ -497,7 +593,9 @@
       if (!hours) return; // pas un jour joué au trinquet, hors-sujet
 
       var t = parseHeureRenc(row.heure_renc);
-      var label = clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis);
+      var labelRec = clubLabel(clubMap, row.club_rec, row.equip_rec);
+      var labelVis = clubLabel(clubMap, row.club_vis, row.equip_vis);
+      var label = labelRec + " vs " + labelVis;
       var catRaw = String(row["Catégorie"] || "").trim();
       var serie = SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?"));
       var serieClass = "serie" + (/^\d+$/.test(catRaw) ? ("-" + catRaw) : "");
@@ -519,7 +617,17 @@
       // Si deux lignes tombent sur le même créneau (doublon de données), on
       // garde la première : le créneau est de toute façon occupé.
       if (!occupied[slotKey]) {
-        occupied[slotKey] = { label: label, serie: serie, serieClass: serieClass, meta: meta, heure: t.hour };
+        occupied[slotKey] = {
+          label: label,
+          labelRec: labelRec,
+          labelVis: labelVis,
+          rosterRec: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
+          rosterVis: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
+          serie: serie,
+          serieClass: serieClass,
+          meta: meta,
+          heure: t.hour
+        };
       }
     });
 
@@ -622,6 +730,27 @@
             infoBox.appendChild(document.createTextNode(info.meta));
           }
           row.appendChild(infoBox);
+
+          var hasRoster = (info.rosterRec && info.rosterRec.length) || (info.rosterVis && info.rosterVis.length);
+          if (hasRoster) {
+            var toggle = el("span", { class: "roster-toggle", text: "Joueurs ▸" });
+            row.classList.add("has-roster");
+            row.appendChild(toggle);
+
+            var detail = el("div", { class: "roster-detail" });
+            detail.hidden = true;
+            detail.appendChild(el("div", { class: "roster-line", text: info.labelRec + " : " + (info.rosterRec && info.rosterRec.length ? info.rosterRec.join(", ") : "composition non disponible") }));
+            detail.appendChild(el("div", { class: "roster-line", text: info.labelVis + " : " + (info.rosterVis && info.rosterVis.length ? info.rosterVis.join(", ") : "composition non disponible") }));
+
+            row.addEventListener("click", function () {
+              detail.hidden = !detail.hidden;
+              toggle.textContent = detail.hidden ? "Joueurs ▸" : "Joueurs ▾";
+            });
+
+            card.appendChild(row);
+            card.appendChild(detail);
+            return;
+          }
         } else {
           row.appendChild(el("span", { class: "slot-pill free", text: "Libre" }));
         }
@@ -687,8 +816,13 @@
     loadData(forceRefresh).then(function (outcome) {
       clearTimeout(skeletonTimer);
       var today = startOfDay(new Date());
-      var clubMap = buildClubMap(outcome.data.clubs);
-      var occupancy = computeOccupancy(outcome.data.rencontres, clubMap, today);
+      var joinCtx = {
+        clubMap: buildClubMap(outcome.data.clubs),
+        numeroClubMap: buildNumeroClubMap(outcome.data.clubs),
+        licenceMap: buildLicenceMap(outcome.data.licencies),
+        engagementsIndex: buildEngagementsIndex(outcome.data.engagements)
+      };
+      var occupancy = computeOccupancy(outcome.data.rencontres, joinCtx, today);
       var dates = upcomingGridDates(today);
 
       renderResults(dates, occupancy);
