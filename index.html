@@ -272,23 +272,6 @@
     color: var(--text);
     margin-bottom: 8px;
   }
-  .recap-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text);
-    padding: 3px 0;
-  }
-  .recap-dot {
-    display: inline-block;
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    flex: 0 0 auto;
-  }
-  .recap-dot.serie-1 { background: var(--serie1-text); }
-  .recap-dot.serie-2 { background: var(--serie2-text); }
-
   .recap-empty { font-size: 12px; color: var(--muted); }
 
   .filter-group {
@@ -418,8 +401,6 @@
   <div class="actions-row">
     <button id="refreshBtn" type="button">Rafraîchir</button>
   </div>
-
-  <div id="recap"></div>
 
   <div class="legend">
     <span><i class="free"></i>Libre</span>
@@ -618,13 +599,8 @@
     // silence (pas de noms de joueurs) plutôt que de bloquer toute la page.
     var engagementsPromise = fetchJson(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
     var licenciesPromise = fetchJson(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
-    // Toutes les rencontres de la compétition en cours, tous lieux confondus
-    // (l'API applique automatiquement le filtre NO_COMPET) — sert uniquement
-    // au récap d'avancement du championnat, pas au calcul des créneaux.
-    var seasonPromise = fetchJson(buildUrl("rencontres", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all(rencontresPromises.concat([clubsPromise, engagementsPromise, licenciesPromise, seasonPromise])).then(function (results) {
-      var seasonJson = results.pop();
+    return Promise.all(rencontresPromises.concat([clubsPromise, engagementsPromise, licenciesPromise])).then(function (results) {
       var licenciesJson = results.pop();
       var engagementsJson = results.pop();
       var clubsJson = results.pop();
@@ -655,7 +631,6 @@
         clubs: clubsJson.data,
         engagements: engagementsJson.data,
         licencies: licenciesJson.data,
-        seasonRencontres: seasonJson.data,
         fetchedAt: Date.now(),
         lastSync: lastSync
       };
@@ -917,42 +892,6 @@
     container.appendChild(b);
   }
 
-  // Catégorie -> { total, joue } sur l'ensemble de la compétition en cours,
-  // tous lieux confondus (indépendant du Trinquet Paris).
-  function computeSeasonStats(seasonRencontres) {
-    var stats = {};
-    (seasonRencontres || []).forEach(function (row) {
-      var cat = String(row["Catégorie"] || "").trim();
-      if (!cat) return;
-      if (!stats[cat]) stats[cat] = { total: 0, joue: 0 };
-      stats[cat].total++;
-      if (String(row.report || "").trim()) stats[cat].joue++;
-    });
-    return stats;
-  }
-
-  function renderRecap(dates, occupancy, seasonStats) {
-    var container = document.getElementById("recap");
-    container.innerHTML = "";
-
-    var progressCard = el("div", { class: "recap-card" });
-    progressCard.appendChild(el("div", { class: "recap-title", text: "Avancement du championnat" }));
-    var catKeys = Object.keys(seasonStats).sort();
-    if (catKeys.length === 0) {
-      progressCard.appendChild(el("div", { class: "recap-empty", text: "Données d'avancement indisponibles." }));
-    } else {
-      catKeys.forEach(function (cat) {
-        var s = seasonStats[cat];
-        var serieLabel = SERIE_LABELS[cat] || ("Catégorie " + cat);
-        var dotClass = /^\d+$/.test(cat) ? ("serie-" + cat) : "";
-        var row = el("div", { class: "recap-row" });
-        row.appendChild(el("span", { class: "recap-dot " + dotClass }));
-        row.appendChild(document.createTextNode(serieLabel + " : " + s.joue + " / " + s.total + " parties jouées"));
-        progressCard.appendChild(row);
-      });
-    }
-    container.appendChild(progressCard);
-  }
 
   function renderResults(dates, occupancy) {
     var results = document.getElementById("results");
@@ -1109,7 +1048,6 @@
       lastDates = dates;
       lastOccupancy = occupancy;
       renderResults(dates, occupancy);
-      renderRecap(dates, occupancy, computeSeasonStats(outcome.data.seasonRencontres));
 
       if (outcome.stale) {
         renderBanner(
