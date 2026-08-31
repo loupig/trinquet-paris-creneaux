@@ -44,9 +44,11 @@ Source officielle des données : https://lidfpb.euskalpilota.fr/rencontres.php
 
 Les données sont mises en cache dans le navigateur ~5 minutes pour éviter
 un appel API à chaque rechargement (bouton "Rafraîchir" pour forcer un
-appel immédiat). Si l'API échoue ou renvoie un résultat vide/inattendu, la
-page affiche un message d'erreur explicite plutôt qu'une grille vide — une
-grille vide serait interprétée à tort comme "tout est libre".
+appel immédiat). La page affiche aussi la date de dernière synchronisation
+de l'API avec le site de la ligue (distincte de l'heure de consultation).
+Si l'API échoue ou renvoie un résultat vide/inattendu, la page affiche un
+message d'erreur explicite plutôt qu'une grille vide — une grille vide
+serait interprétée à tort comme "tout est libre".
 
 **Choix délibéré : pas de popup.** Un popup d'accueil et un popup d'info
 optionnel (bouton "?") ont été essayés puis retirés — leur bouton de
