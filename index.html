@@ -397,6 +397,7 @@
   <div class="sync-info">
     <p>Les données de cette page proviennent du <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a>, seule source de vérité.</p>
     <p>Elles sont synchronisées toutes les heures.</p>
+    <p>Dernière synchronisation : <strong id="lastSyncText">chargement…</strong></p>
   </div>
   <div class="actions-row">
     <button id="refreshBtn" type="button">Rafraîchir</button>
@@ -1024,10 +1025,19 @@
     return d.toLocaleDateString("fr-FR") + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   }
 
+  function formatSync(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return formatTime(d.getTime());
+  }
+
   function run(forceRefresh) {
+    var lastSyncText = document.getElementById("lastSyncText");
     var bannerSlot = document.getElementById("banner-slot");
     var results = document.getElementById("results");
     bannerSlot.innerHTML = "";
+    lastSyncText.textContent = "chargement…";
 
     // Le skeleton n'apparaît que si le chargement dépasse 150ms, pour éviter
     // un flash inutile quand la réponse vient du cache (quasi instantané).
@@ -1056,9 +1066,12 @@
           "Les créneaux affichés datent du " + formatTime(outcome.data.fetchedAt) + " et peuvent être obsolètes."
         );
       }
+
+      lastSyncText.textContent = formatSync(outcome.data.lastSync) || "information indisponible";
     }).catch(function (err) {
       clearTimeout(skeletonTimer);
       results.innerHTML = "";
+      lastSyncText.textContent = "échec du chargement";
       renderBanner(
         bannerSlot, "error", "Impossible d'afficher les créneaux",
         (err && err.message ? err.message : String(err)) +
