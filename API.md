@@ -100,9 +100,3 @@ avoir retiré les zéros de tête.
 
 Pour faire le lien entre les deux, il faut passer par la table `clubs`
 (non documentée ici) ou reconstruire soi-même la correspondance.
-
-## Documentation intégrée au script
-
-L'API expose aussi `?doc=1` (ex: `<API_BASE>?doc=1`), qui affiche une page
-HTML de documentation générée par le script lui-même — mais elle peut être
-en décalage avec ce fichier (mise à jour manuelle, pas automatique).
