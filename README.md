@@ -24,10 +24,15 @@ Au chargement, la page :
    - Dimanche : 14h, 15h, 16h, 17h, 20h, 21h, 22h
 3. Pour chaque date à venir, calcule créneaux libres = grille − créneaux
    occupés.
-4. Sur un créneau pris, un clic déplie la composition des deux équipes
-   (jointure rencontres → engagements → licencies, noms uniquement — voir
+4. Affiche les créneaux sous forme de tableau par week-end (une colonne
+   Vendredi, une colonne Dimanche, une ligne par heure) plutôt qu'en liste :
+   les heures communes aux deux jours sont ainsi alignées visuellement.
+5. Sur un créneau pris, la case affiche d'emblée la série et le niveau de
+   la partie (Poule ou Qualification), pour inciter à venir la voir ; un
+   clic déplie en plus la composition des deux équipes (jointure rencontres
+   → engagements → licencies, noms uniquement — voir
    [RGPD et données joueurs](#rgpd-et-données-joueurs)).
-5. Sur un créneau libre, un clic déplie un message de proposition
+6. Sur un créneau libre, un clic déplie un message de proposition
    pré-rempli, avec un bouton "Envoyer via WhatsApp" (sans numéro imposé,
    l'utilisateur choisit le destinataire) et un bouton "Copier le texte"
    pour l'envoyer autrement (SMS...).
@@ -124,3 +129,8 @@ voudrait construire autre chose avec les mêmes données.
   résout que les joueurs des clubs du comité — un club adverse hors
   comité, ou une équipe qui n'a pas encore déclaré sa composition à la
   ligue, affichera "composition non disponible".
+- **Niveau de la partie (Poule / Qualification)** : déduit du champ
+  `Poule` de l'API (vide = Qualification, sinon "Poule N"), faute de
+  libellé explicite fourni par la ligue pour la phase. Cette
+  interprétation n'est pas garantie si la ligue introduit d'autres
+  phases (barrages, finale...).

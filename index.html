@@ -123,72 +123,73 @@
     margin-bottom: 12px;
     overflow: hidden;
   }
-  .day-card-header {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-  .day-card-header .date-label {
-    font-weight: 700;
-    font-size: 14px;
-    text-transform: capitalize;
-  }
-  .day-card-header .day-name {
-    font-size: 11px;
-    color: var(--muted);
-  }
 
-  .slot-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
+  .slot-grid {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
   }
-  .slot-row:last-child { border-bottom: none; }
-
-  .slot-hour {
-    flex: 0 0 44px;
-    font-weight: 700;
-    font-size: 13px;
+  .grid-head {
+    text-align: center;
+    padding-bottom: 4px;
   }
-
-  .slot-pill {
-    flex: 0 0 auto;
+  .grid-head-day {
     font-size: 10px;
     font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    white-space: nowrap;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
-  .slot-pill.free { background: var(--free-bg); color: var(--free-text); border: 1px solid var(--free-border); }
-  .slot-pill.busy { background: var(--busy-bg); color: var(--busy-text); border: 1px solid var(--busy-border); }
-  .slot-pill.serie { background: #eef0f2; color: var(--muted); border: 1px solid var(--border); }
-  .slot-pill.serie-1 { background: var(--serie1-bg); color: var(--serie1-text); border: 1px solid var(--serie1-border); }
-  .slot-pill.serie-2 { background: var(--serie2-bg); color: var(--serie2-text); border: 1px solid var(--serie2-border); }
-
-  .slot-info {
-    flex: 1 1 auto;
-    min-width: 0;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.35;
-  }
-  .slot-info .match-line { color: var(--text); font-weight: 600; }
-
-  .slot-row.expandable { cursor: pointer; }
-  .slot-row.expandable:active { background: var(--bg); }
-
-  .roster-toggle {
-    flex: 0 0 auto;
+  .grid-head-date {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--accent);
-    white-space: nowrap;
+    color: var(--muted);
   }
+  .grid-hour {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 4px;
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  .slot-cell {
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid;
+  }
+  .slot-cell.free { background: var(--free-bg); color: var(--free-text); border-color: var(--free-border); }
+  .slot-cell.busy { background: var(--busy-bg); color: var(--busy-text); border-color: var(--busy-border); }
+  .slot-cell.empty { background: transparent; border: 1px dashed var(--border); color: var(--muted); font-weight: 400; cursor: default; }
+  .slot-cell.open { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .slot-cell-serie {
+    margin-top: 3px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .slot-cell.serie-1 .slot-cell-serie { color: var(--serie1-text); }
+  .slot-cell.serie-2 .slot-cell-serie { color: var(--serie2-text); }
+  .slot-cell-meta {
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  .slot-detail {
+    grid-column: 1 / -1;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .slot-detail .match-line { font-weight: 600; margin-bottom: 4px; }
+  .roster-line { line-height: 1.5; }
 
   .proposal-text {
     margin: 0 0 8px;
@@ -211,15 +212,6 @@
   }
   .proposal-btn.whatsapp { color: #25D366; border-color: #25D366; }
   .proposal-btn.copy { color: var(--accent); }
-
-  .roster-detail {
-    padding: 8px 14px 10px 58px;
-    font-size: 12px;
-    color: var(--text);
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-  .roster-line { line-height: 1.5; }
 
   .empty-state {
     text-align: center;
@@ -857,7 +849,10 @@
       var catRaw = String(row["Catégorie"] || "").trim();
       var serie = SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?"));
       var serieClass = "serie" + (/^\d+$/.test(catRaw) ? ("-" + catRaw) : "");
-      var meta = row.Poule ? ("Poule " + row.Poule) : "";
+      // Le niveau de la partie (phase de poule ou qualification) est affiché
+      // pour inciter à venir voir la partie ; row.Poule est vide en phase de
+      // qualification (Phase != "1" dans les données observées).
+      var meta = row.Poule ? ("Poule " + row.Poule) : "Qualification";
 
       var slotKey = dateKey(d) + "|" + t.hour;
       // Si deux lignes tombent sur le même créneau (doublon de données), on
@@ -905,6 +900,34 @@
 
   function formatDate(d) {
     return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function formatShortDate(d) {
+    return d.getDate() + " " + MONTH_NAMES[d.getMonth()];
+  }
+
+  // Regroupe les dates de la grille par week-end : un Vendredi est associé
+  // au Dimanche qui le suit 2 jours plus tard (même round), pour permettre
+  // un affichage en tableau avec les heures de Vendredi et Dimanche
+  // superposées. Un jour sans pendant (ex: Vendredi en fin d'horizon
+  // d'affichage) forme un groupe à une seule colonne.
+  function groupIntoWeekends(dates) {
+    var groups = [];
+    var i = 0;
+    while (i < dates.length) {
+      var d = dates[i];
+      var next = dates[i + 1];
+      if (d.getDay() === 5 && next && next.getDay() === 0 && Math.round((next - d) / 86400000) === 2) {
+        groups.push({ 5: d, 0: next });
+        i += 2;
+      } else {
+        var group = {};
+        group[d.getDay()] = d;
+        groups.push(group);
+        i += 1;
+      }
+    }
+    return groups;
   }
 
   function buildProposalMessage(d, hour) {
@@ -955,117 +978,131 @@
   }
 
 
+  // Construit la cellule cliquable d'un créneau (libre ou occupé) et le
+  // panneau de détail associé (composition d'équipe ou message de
+  // proposition), affiché sous le tableau sur toute sa largeur au clic.
+  // La cellule affiche d'emblée le niveau de la partie (Poule/Qualification)
+  // pour inciter à venir voir la partie ; les noms des joueurs restent
+  // masqués par défaut (secondaires quand on cherche un créneau) et
+  // n'apparaissent que dans le détail, au clic.
+  function buildSlotCell(d, h, info) {
+    var cell = el("div", { class: "slot-cell " + (info ? "busy " + info.serieClass : "free") });
+    cell.appendChild(el("div", { text: info ? "Occupé" : "Libre" }));
+    if (info) {
+      cell.appendChild(el("div", { class: "slot-cell-serie", text: info.serie }));
+      if (info.meta) cell.appendChild(el("div", { class: "slot-cell-meta", text: info.meta }));
+    }
+
+    var detail = el("div", { class: "slot-detail" });
+    detail.hidden = true;
+
+    if (info) {
+      detail.appendChild(el("div", { class: "match-line", text: info.label }));
+      var hasRoster = (info.rosterRec && info.rosterRec.length) || (info.rosterVis && info.rosterVis.length);
+      if (hasRoster) {
+        detail.appendChild(el("div", { class: "roster-line", text: info.labelRec + " : " + (info.rosterRec && info.rosterRec.length ? info.rosterRec.join(", ") : "composition non disponible") }));
+        detail.appendChild(el("div", { class: "roster-line", text: info.labelVis + " : " + (info.rosterVis && info.rosterVis.length ? info.rosterVis.join(", ") : "composition non disponible") }));
+      }
+    } else {
+      var message = buildProposalMessage(d, h);
+      detail.appendChild(el("p", { class: "proposal-text", text: message }));
+      var actions = el("div", { class: "proposal-actions" });
+      actions.appendChild(el("a", {
+        class: "proposal-btn whatsapp",
+        href: buildWhatsappLink(message),
+        target: "_blank",
+        rel: "noopener",
+        text: "Envoyer via WhatsApp"
+      }));
+      var copyBtn = el("button", { type: "button", class: "proposal-btn copy", text: "Copier le texte" });
+      copyBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var btn = e.currentTarget;
+        var restore = btn.textContent;
+        var onDone = function (ok) {
+          btn.textContent = ok ? "Copié !" : "Échec de la copie";
+          setTimeout(function () { btn.textContent = restore; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(message).then(function () { onDone(true); }).catch(function () { onDone(false); });
+        } else {
+          onDone(false);
+        }
+      });
+      actions.appendChild(copyBtn);
+      detail.appendChild(actions);
+    }
+
+    cell.addEventListener("click", function () {
+      detail.hidden = !detail.hidden;
+      cell.classList.toggle("open", !detail.hidden);
+    });
+
+    return { cell: cell, detail: detail };
+  }
+
+  // Affiche les créneaux sous forme de tableau par week-end : une colonne
+  // par jour actif (Vendredi/Dimanche), une ligne par heure, pour que les
+  // heures communes (14h, 21h...) soient alignées visuellement entre les
+  // deux jours plutôt qu'en liste séquentielle.
   function renderResults(dates, occupancy) {
     var results = document.getElementById("results");
     results.innerHTML = "";
 
-    var visibleDates = dates.filter(function (d) { return filterState.days[d.getDay()]; });
+    var activeDays = [5, 0].filter(function (day) { return filterState.days[day]; });
 
-    if (visibleDates.length === 0) {
+    if (activeDays.length === 0) {
       results.appendChild(el("div", { class: "empty-state", text: "Aucune date ne correspond aux filtres." }));
       return;
     }
 
+    var groups = groupIntoWeekends(dates);
     var anyCardShown = false;
 
-    visibleDates.forEach(function (d) {
-      var key = dateKey(d);
-      var hours = GRID[d.getDay()].filter(function (h) { return filterState.hours[h]; });
-      if (hours.length === 0) return;
+    groups.forEach(function (group) {
+      var cols = activeDays.filter(function (day) { return group[day]; });
+      if (cols.length === 0) return;
 
-      var card = el("div", { class: "day-card", id: "day-" + key });
-      var header = el("div", { class: "day-card-header" });
-      header.appendChild(el("span", { class: "date-label", text: formatDate(d) }));
-      card.appendChild(header);
+      var rowHours = [];
+      cols.forEach(function (day) {
+        GRID[day].forEach(function (h) {
+          if (filterState.hours[h] && rowHours.indexOf(h) === -1) rowHours.push(h);
+        });
+      });
+      if (rowHours.length === 0) return;
+      rowHours.sort(function (a, b) { return a - b; });
+
+      var card = el("div", { class: "day-card" });
+      var table = el("div", { class: "slot-grid", style: "grid-template-columns: 40px repeat(" + cols.length + ", 1fr);" });
+
+      table.appendChild(el("div", { class: "grid-head" }));
+      cols.forEach(function (day) {
+        var head = el("div", { class: "grid-head" });
+        head.appendChild(el("div", { class: "grid-head-day", text: day === 5 ? "Vendredi" : "Dimanche" }));
+        head.appendChild(el("div", { class: "grid-head-date", text: formatShortDate(group[day]) }));
+        table.appendChild(head);
+      });
 
       var hasFreeSlot = false;
 
-      hours.forEach(function (h) {
-        var info = occupancy.occupied[key + "|" + h];
-        if (!info) hasFreeSlot = true;
-        var row = el("div", { class: "slot-row" });
-        row.appendChild(el("span", { class: "slot-hour", text: h + "h" }));
+      rowHours.forEach(function (h) {
+        table.appendChild(el("div", { class: "grid-hour", text: h + "h" }));
 
-        if (info) {
-          row.appendChild(el("span", { class: "slot-pill busy", text: "Occupé" }));
-          row.appendChild(el("span", { class: "slot-pill " + info.serieClass, text: info.serie }));
-          var infoBox = el("span", { class: "slot-info" });
-          infoBox.appendChild(el("span", { class: "match-line", text: info.label }));
-          if (info.meta) {
-            infoBox.appendChild(document.createElement("br"));
-            infoBox.appendChild(document.createTextNode(info.meta));
-          }
-          row.appendChild(infoBox);
-
-          var hasRoster = (info.rosterRec && info.rosterRec.length) || (info.rosterVis && info.rosterVis.length);
-          if (hasRoster) {
-            var toggle = el("span", { class: "roster-toggle", text: "Joueurs ▸" });
-            row.classList.add("expandable");
-            row.appendChild(toggle);
-
-            var detail = el("div", { class: "roster-detail" });
-            detail.hidden = true;
-            detail.appendChild(el("div", { class: "roster-line", text: info.labelRec + " : " + (info.rosterRec && info.rosterRec.length ? info.rosterRec.join(", ") : "composition non disponible") }));
-            detail.appendChild(el("div", { class: "roster-line", text: info.labelVis + " : " + (info.rosterVis && info.rosterVis.length ? info.rosterVis.join(", ") : "composition non disponible") }));
-
-            row.addEventListener("click", function () {
-              detail.hidden = !detail.hidden;
-              toggle.textContent = detail.hidden ? "Joueurs ▸" : "Joueurs ▾";
-            });
-
-            card.appendChild(row);
-            card.appendChild(detail);
+        cols.forEach(function (day) {
+          var d = group[day];
+          if (GRID[day].indexOf(h) === -1) {
+            table.appendChild(el("div", { class: "slot-cell empty", text: "—" }));
             return;
           }
-        } else {
-          row.appendChild(el("span", { class: "slot-pill free", text: "Libre" }));
-
-          var proposalToggle = el("span", { class: "roster-toggle", text: "Proposer le créneau ▸" });
-          row.classList.add("expandable");
-          row.appendChild(proposalToggle);
-
-          var message = buildProposalMessage(d, h);
-          var proposalDetail = el("div", { class: "roster-detail" });
-          proposalDetail.hidden = true;
-          proposalDetail.appendChild(el("p", { class: "proposal-text", text: message }));
-          var actions = el("div", { class: "proposal-actions" });
-          actions.appendChild(el("a", {
-            class: "proposal-btn whatsapp",
-            href: buildWhatsappLink(message),
-            target: "_blank",
-            rel: "noopener",
-            text: "Envoyer via WhatsApp"
-          }));
-          var copyBtn = el("button", { type: "button", class: "proposal-btn copy", text: "Copier le texte" });
-          copyBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            var btn = e.currentTarget;
-            var restore = btn.textContent;
-            var onDone = function (ok) {
-              btn.textContent = ok ? "Copié !" : "Échec de la copie";
-              setTimeout(function () { btn.textContent = restore; }, 1500);
-            };
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(message).then(function () { onDone(true); }).catch(function () { onDone(false); });
-            } else {
-              onDone(false);
-            }
-          });
-          actions.appendChild(copyBtn);
-          proposalDetail.appendChild(actions);
-
-          row.addEventListener("click", function () {
-            proposalDetail.hidden = !proposalDetail.hidden;
-            proposalToggle.textContent = proposalDetail.hidden ? "Proposer le créneau ▸" : "Proposer le créneau ▾";
-          });
-
-          card.appendChild(row);
-          card.appendChild(proposalDetail);
-          return;
-        }
-
-        card.appendChild(row);
+          var info = occupancy.occupied[dateKey(d) + "|" + h];
+          if (!info) hasFreeSlot = true;
+          var built = buildSlotCell(d, h, info);
+          table.appendChild(built.cell);
+          table.appendChild(built.detail);
+        });
       });
+
+      card.appendChild(table);
 
       if (filterState.onlyFree && !hasFreeSlot) return;
 
