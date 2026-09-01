@@ -195,6 +195,12 @@
     margin: 0 0 8px;
     line-height: 1.4;
   }
+  .proposal-hint {
+    margin: 0 0 8px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+  }
   .proposal-actions {
     display: flex;
     gap: 8px;
@@ -409,6 +415,7 @@
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
   </div>
   <p class="header-sync">Réservés par la ligue aux parties de championnat, pas à un usage libre.</p>
+  <p class="header-sync">Cette page se contente d'afficher l'occupation des créneaux — elle n'a aucun effet sur le site de la ligue.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
@@ -1016,6 +1023,7 @@
     } else {
       var message = buildProposalMessage(d, h);
       detail.appendChild(el("p", { class: "proposal-text", text: message }));
+      detail.appendChild(el("p", { class: "proposal-hint", text: "À envoyer vous-même à l'adversaire — ce site ne réserve rien, c'est juste un message pré-rempli." }));
       var actions = el("div", { class: "proposal-actions" });
       actions.appendChild(el("a", {
         class: "proposal-btn whatsapp",

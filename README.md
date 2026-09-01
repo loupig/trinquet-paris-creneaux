@@ -35,12 +35,16 @@ Au chargement, la page :
 6. Sur un créneau libre, un clic déplie un message de proposition
    pré-rempli, avec un bouton "Envoyer via WhatsApp" (sans numéro imposé,
    l'utilisateur choisit le destinataire) et un bouton "Copier le texte"
-   pour l'envoyer autrement (SMS...).
+   pour l'envoyer autrement (SMS...). Une précision rappelle que c'est à
+   l'utilisateur d'envoyer ce message à l'adversaire — la page elle-même
+   ne réserve rien (retour d'expérience : plusieurs joueurs avaient cru
+   qu'un message partait automatiquement vers l'auteur du site).
 
 Le bandeau d'en-tête (fixe même au scroll) regroupe les messages
 condensés : rappel que ces créneaux sont réservés au championnat (pas
-à un usage libre), source des données (site de la ligue) et date de
-dernière synchronisation, et le bouton "Rafraîchir" (à droite du
+à un usage libre) et que la page n'a aucun effet sur le site de la
+ligue (simple lecture), source des données (site de la ligue) et date
+de dernière synchronisation, et le bouton "Rafraîchir" (à droite du
 titre) pour forcer un appel API immédiat — sinon les données sont
 mises en cache dans le navigateur ~5 minutes pour éviter un appel à
 chaque rechargement. En haut de page : rappel de la grille fixe et
