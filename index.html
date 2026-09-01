@@ -475,7 +475,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.08.31</p>
+    <p>Version 2026.09.01</p>
   </footer>
 </main>
 
@@ -503,12 +503,13 @@
     0: [14, 15, 16, 17, 20, 21, 22] // Dimanche
   };
 
-  // État des filtres d'affichage (tout actif par défaut = comportement
-  // inchangé). Modifié par les clics sur les chips, lu par renderResults().
+  // État des filtres d'affichage. onlyFree démarre à true pour mettre en
+  // avant les créneaux libres dès l'arrivée sur le site ; loadFilterState()
+  // écrase ces valeurs par défaut si l'utilisateur a déjà un choix enregistré.
   var filterState = {
     days: { 5: true, 0: true },
     hours: { 14: true, 15: true, 16: true, 17: true, 20: true, 21: true, 22: true },
-    onlyFree: false
+    onlyFree: true
   };
 
   // Persistance des filtres entre deux visites (localStorage uniquement,
