@@ -164,7 +164,12 @@
   }
   .slot-cell.free { background: var(--free-bg); color: var(--free-text); border-color: var(--free-border); }
   .slot-cell.busy { background: var(--busy-bg); color: var(--busy-text); border-color: var(--busy-border); }
-  .slot-cell.empty { background: transparent; border: 1px dashed var(--border); color: var(--muted); font-weight: 400; cursor: default; }
+  .slot-cell.empty {
+    background: transparent;
+    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--border) calc(50% - 1px), var(--border) calc(50% + 1px), transparent calc(50% + 1px));
+    border: 1px dashed var(--border);
+    cursor: default;
+  }
   .slot-cell.open { outline: 2px solid var(--accent); outline-offset: 1px; }
   .slot-cell-serie {
     margin-top: 3px;
@@ -331,6 +336,11 @@
     line-height: 1;
     color: var(--serie1-text);
   }
+  .grid-align-cell.off {
+    font-size: 10px;
+    color: var(--busy-text);
+    opacity: 0.7;
+  }
 
   .fab-row {
     position: fixed;
@@ -434,11 +444,11 @@
       <div class="grid-align-head">22h</div>
 
       <div class="grid-align-day">Vendredi</div>
-      <div class="grid-align-cell"></div>
-      <div class="grid-align-cell"></div>
-      <div class="grid-align-cell"></div>
-      <div class="grid-align-cell"></div>
-      <div class="grid-align-cell"></div>
+      <div class="grid-align-cell off">✕</div>
+      <div class="grid-align-cell off">✕</div>
+      <div class="grid-align-cell off">✕</div>
+      <div class="grid-align-cell off">✕</div>
+      <div class="grid-align-cell off">✕</div>
       <div class="grid-align-cell">●</div>
       <div class="grid-align-cell">●</div>
 
@@ -1115,7 +1125,7 @@
         cols.forEach(function (day) {
           var d = group[day];
           if (GRID[day].indexOf(h) === -1) {
-            table.appendChild(el("div", { class: "slot-cell empty", text: "—" }));
+            table.appendChild(el("div", { class: "slot-cell empty" }));
             return;
           }
           var info = occupancy.occupied[dateKey(d) + "|" + h];
