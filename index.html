@@ -258,12 +258,19 @@
     padding: 12px 14px;
     margin-bottom: 10px;
   }
+  .recap-card.featured {
+    background: var(--serie1-bg);
+    border: 1px solid var(--serie1-border);
+    border-left: 4px solid var(--accent);
+    box-shadow: 0 2px 10px rgba(47, 92, 224, 0.12);
+  }
   .recap-title {
     font-size: 12px;
     font-weight: 700;
     color: var(--text);
     margin-bottom: 8px;
   }
+  .recap-card.featured .recap-title { font-size: 14px; }
   .recap-empty { font-size: 12px; color: var(--muted); }
 
   .filter-group {
@@ -400,7 +407,7 @@
 
 <main>
   <!-- Grille en dur, doit rester cohérente avec la constante GRID du script -->
-  <div class="recap-card">
+  <div class="recap-card featured">
     <div class="recap-title">Créneaux de championnat réservés par la ligue au Trinquet Paris 16</div>
     <div class="grid-align">
       <div></div>
@@ -430,7 +437,7 @@
       <div class="grid-align-cell">●</div>
       <div class="grid-align-cell">●</div>
     </div>
-    <p class="recap-empty">Ces créneaux sont réservés par la ligue aux parties de championnat (Série 1 et 2) — ce ne sont pas des créneaux ouverts à un autre usage.</p>
+    <p class="recap-empty">Ces créneaux sont réservés par la ligue aux parties de championnat — ce ne sont pas des créneaux ouverts à un autre usage.</p>
     <p class="recap-empty">Cette page indique seulement lesquels sont libres de partie programmée, pour aider à replanifier une rencontre reportée — elle ne permet pas de réserver.</p>
     <p class="recap-empty">Les parties jouées ailleurs, ou à un autre horaire que ceux ci-dessus, n'apparaissent pas ici.</p>
   </div>
