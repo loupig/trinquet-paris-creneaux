@@ -39,9 +39,12 @@ Au chargement, la page :
 
 En haut de page : rappel de la grille fixe et rappel que la page ne sert
 qu'à repérer l'occupation de ces créneaux (pas à réserver — seul le site
-de la ligue fait foi). Des filtres (jour, créneau horaire, "libre
-uniquement") permettent de restreindre la liste principale ; ils sont
-mémorisés dans le navigateur d'une visite à l'autre. Deux boutons flottants
+de la ligue fait foi), ainsi qu'un rappel de la procédure de report
+(accord avec l'adversaire, puis déclaration à l'organisateur au plus
+tard 7 jours avant la date initiale). Des filtres (jour, créneau
+horaire, "libre uniquement", coché par défaut) permettent de
+restreindre la liste principale ; ils sont mémorisés dans le navigateur
+d'une visite à l'autre. Deux boutons flottants
 en bas de page : un raccourci vers le site de la ligue, et un retour en
 haut de page.
 
