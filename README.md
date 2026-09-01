@@ -37,18 +37,18 @@ Au chargement, la page :
    l'utilisateur choisit le destinataire) et un bouton "Copier le texte"
    pour l'envoyer autrement (SMS...).
 
-Le bandeau d'en-tête (fixe même au scroll) regroupe tous les messages
-condensés : rappel de la procédure de report (accord avec l'adversaire,
-puis déclaration à l'organisateur sous 7 jours), source des données
-(site de la ligue) et date de dernière synchronisation, et le bouton
-"Rafraîchir" (à droite du titre) pour forcer un appel API immédiat —
-sinon les données sont mises en cache dans le navigateur ~5 minutes
-pour éviter un appel à chaque rechargement. En haut de page : rappel de
-la grille fixe et rappel que la page ne sert qu'à repérer l'occupation
-de ces créneaux (pas à réserver — seul le site de la ligue fait foi).
-Des filtres (jour, créneau horaire, "libre uniquement", coché par
-défaut) permettent de restreindre la liste principale ; ils sont
-mémorisés dans le navigateur d'une visite à l'autre. Deux boutons
+Le bandeau d'en-tête (fixe même au scroll) regroupe les messages
+condensés : rappel que ces créneaux sont réservés au championnat (pas
+à un usage libre), source des données (site de la ligue) et date de
+dernière synchronisation, et le bouton "Rafraîchir" (à droite du
+titre) pour forcer un appel API immédiat — sinon les données sont
+mises en cache dans le navigateur ~5 minutes pour éviter un appel à
+chaque rechargement. En haut de page : rappel de la grille fixe et
+rappel que la page ne sert qu'à repérer l'occupation de ces créneaux
+(pas à réserver — seul le site de la ligue fait foi). Des filtres
+(jour, créneau horaire, "libre uniquement", coché par défaut)
+permettent de restreindre la liste principale ; ils sont mémorisés
+dans le navigateur d'une visite à l'autre. Deux boutons
 flottants en bas de page : un raccourci vers le site de la ligue, et un
 retour en haut de page.
 
