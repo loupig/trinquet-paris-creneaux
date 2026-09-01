@@ -1121,6 +1121,12 @@
       rowHours.forEach(function (h) {
         table.appendChild(el("div", { class: "grid-hour", text: h + "h" }));
 
+        // Les cases de la ligne sont toutes ajoutées d'abord pour garder
+        // l'alignement de la grille CSS ; les panneaux de détail (pleine
+        // largeur) ne sont ajoutés qu'ensuite, sinon un détail ouvert casse
+        // le placement des cases suivantes de la même ligne.
+        var rowDetails = [];
+
         cols.forEach(function (day) {
           var d = group[day];
           if (GRID[day].indexOf(h) === -1) {
@@ -1131,8 +1137,10 @@
           if (!info) hasFreeSlot = true;
           var built = buildSlotCell(d, h, info);
           table.appendChild(built.cell);
-          table.appendChild(built.detail);
+          rowDetails.push(built.detail);
         });
+
+        rowDetails.forEach(function (detail) { table.appendChild(detail); });
       });
 
       card.appendChild(table);
