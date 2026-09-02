@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programme du championnat — LIDFPB</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #767986;
+    --border: #e6e7eb;
+    --serie1-bg: #eef1fb;
+    --serie1-text: #2f5ce0;
+    --serie1-border: #cdd6f7;
+    --serie2-bg: #f3ecfb;
+    --serie2-text: #7c3aed;
+    --serie2-border: #ddc8f0;
+    --warn-bg: #fff3cd;
+    --warn-text: #7a5b00;
+    --warn-border: #f0dd9a;
+    --error-bg: #fdecec;
+    --error-text: #8a1c16;
+    --error-border: #f5c2c0;
+    --accent: #2f5ce0;
+    --played-text: #767986;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .header-refresh {
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin-top: 1px;
+  }
+  .header-refresh:active { background: #eef1fb; }
+  header .header-sync {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  header .header-sync a { color: var(--accent); }
+  header .header-sync strong { color: var(--text); }
+
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 14px 12px 60px;
+  }
+
+  .banner {
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    border: 1px solid;
+  }
+  .banner.error {
+    background: var(--error-bg);
+    color: var(--error-text);
+    border-color: var(--error-border);
+  }
+  .banner.warn {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-color: var(--warn-border);
+  }
+  .banner strong { display: block; margin-bottom: 4px; }
+
+  .recap-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .recap-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .filter-chip {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .filter-chip.active.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
+  .filter-chip.active.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
+  .filter-chip.active { color: var(--accent); background: var(--serie1-bg); border-color: var(--serie1-border); }
+
+  .filter-subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 10px 0 6px;
+  }
+  .filter-subtitle:first-child { margin-top: 0; }
+
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .day-card-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+  }
+  .day-card.today .day-card-head {
+    color: var(--accent);
+    background: var(--serie1-bg);
+  }
+
+  .match-item {
+    border-bottom: 1px solid var(--border);
+  }
+  .match-item:last-child { border-bottom: none; }
+  .match-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .match-row-time {
+    flex: 0 0 34px;
+    font-weight: 700;
+  }
+  .match-row-main { flex: 1 1 auto; min-width: 0; }
+  .match-row-teams { font-weight: 600; }
+  .match-row-meta {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .match-row-meta .serie-1 { color: var(--serie1-text); font-weight: 700; }
+  .match-row-meta .serie-2 { color: var(--serie2-text); font-weight: 700; }
+  .match-row-score {
+    flex: 0 0 auto;
+    font-weight: 700;
+    color: var(--played-text);
+  }
+
+  .match-detail {
+    padding: 0 14px 12px;
+    font-size: 12px;
+  }
+  .match-detail .roster-line {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+  .match-detail .roster-empty { color: var(--muted); }
+  .wa-icon {
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px 20px;
+  }
+
+  .skeleton-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .skeleton-card-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .skeleton-row {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .skeleton-row:last-child { border-bottom: none; }
+  .skeleton-bar {
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ececef 25%, #f6f6f8 37%, #ececef 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-bar { animation: none; }
+  }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
+  .fab-row {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 50;
+  }
+  .fab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  .fab-btn:active { opacity: 0.85; }
+
+  .league-link-btn {
+    position: fixed;
+    left: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    background: #CE1126;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 24px;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    z-index: 50;
+  }
+  .league-link-btn:active { opacity: 0.85; }
+
+  footer {
+    text-align: center;
+    padding: 20px 4px 10px;
+  }
+  footer p {
+    margin: 0 0 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <h1>Programme du championnat — Trinquet Pala Gomme Pleine</h1>
+      <h1>Ligue d'Île-de-France</h1>
+    </div>
+    <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
+  </div>
+  <p class="header-sync">Toutes les rencontres de Série 1 et Série 2, tous lieux confondus — à venir et déjà jouées.</p>
+  <p class="header-sync">Cette page se contente d'afficher le calendrier communiqué par la ligue — elle n'a aucun effet sur le site de la ligue.</p>
+  <p class="header-sync">Voir aussi : <a href="index.html">créneaux libres au Trinquet Paris</a></p>
+  <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
+</header>
+
+<main>
+  <div class="recap-card">
+    <div class="recap-title">Filtres</div>
+    <div class="filter-subtitle">Série</div>
+    <div class="filter-group" id="filterSeries">
+      <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
+      <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
+    </div>
+    <div class="filter-subtitle">Lieu</div>
+    <div class="filter-group" id="filterLieux"></div>
+    <div class="filter-subtitle">Phase</div>
+    <div class="filter-group" id="filterPhases"></div>
+  </div>
+
+  <div id="banner-slot"></div>
+  <div id="results"></div>
+
+  <footer>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
+    <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
+    <p>Version 2026.09.02</p>
+  </footer>
+</main>
+
+<a class="league-link-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
+<div class="fab-row">
+  <button id="backToTopBtn" class="fab-btn" type="button" aria-label="Remonter en haut de la page">↑</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // Configuration
+  // ---------------------------------------------------------------
+  var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
+  var CACHE_KEY = "lidfpb_programme_cache_v1";
+  var FILTER_CACHE_KEY = "lidfpb_programme_filters_v1";
+  var CACHE_TTL_MS = 5 * 60 * 1000;
+
+  var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
+
+  var PHASE_LABELS = {
+    "1": "Poules",
+    "2": "Barrage",
+    "3": "Barrage 1er tour",
+    "4": "Barrage 2e tour",
+    "5": "Barrage 3e tour",
+    "6": "Barrage maintien",
+    "7": "1/32e de finale",
+    "8": "1/16e de finale",
+    "9": "1/8e de finale",
+    "10": "1/4 de finale",
+    "11": "1/2 finale",
+    "12": "Finale"
+  };
+
+  var filterState = {
+    series: { "1": true, "2": true },
+    lieux: {},
+    phases: {}
+  };
+
+  function loadFilterState() {
+    try {
+      var raw = localStorage.getItem(FILTER_CACHE_KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (saved && saved.series) filterState.series = saved.series;
+      if (saved && saved.lieux) filterState.lieux = saved.lieux;
+      if (saved && saved.phases) filterState.phases = saved.phases;
+    } catch (e) { /* stockage indisponible ou corrompu : on garde les valeurs par défaut */ }
+  }
+
+  function saveFilterState() {
+    try { localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(filterState)); } catch (e) { /* quota dépassé ou stockage désactivé : tant pis, pas bloquant */ }
+  }
+
+  var lastMatches = null;
+
+  // ---------------------------------------------------------------
+  // Parsing des dates / heures du format LIDFPB (identique à index.html)
+  // ---------------------------------------------------------------
+  function parseDateRenc(raw) {
+    if (!raw) return null;
+    var s = String(raw).trim();
+    if (!/^\d{7,8}$/.test(s)) return null;
+    if (s.length === 7) s = "0" + s;
+    var day = parseInt(s.slice(0, 2), 10);
+    var month = parseInt(s.slice(2, 4), 10);
+    var year = parseInt(s.slice(4, 8), 10);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    var nowYear = new Date().getFullYear();
+    if (year < nowYear - 2 || year > nowYear + 4) return null;
+    var d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+    return d;
+  }
+
+  function parseHeureRenc(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d{1,4}$/.test(s)) return null;
+    s = s.padStart(4, "0");
+    var hour = parseInt(s.slice(0, 2), 10);
+    var minute = parseInt(s.slice(2, 4), 10);
+    if (hour > 23 || minute > 59) return null;
+    return { hour: hour, minute: minute };
+  }
+
+  function dateKey(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  // Date "effective" d'une rencontre : si reportée (date_rep renseignée et
+  // différente de date_renc), c'est cette nouvelle date qui compte.
+  function effectiveDate(row) {
+    var original = parseDateRenc(row.date_renc);
+    var reported = parseDateRenc(row.date_rep);
+    if (reported && (!original || reported.getTime() !== original.getTime())) {
+      return reported;
+    }
+    return original;
+  }
+
+  // ---------------------------------------------------------------
+  // Récupération des données (avec cache navigateur)
+  // ---------------------------------------------------------------
+  function buildUrl(table, params) {
+    var url = API_BASE + "?table=" + encodeURIComponent(table);
+    for (var k in params) {
+      url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+    }
+    return url;
+  }
+
+  function fetchJson(url) {
+    return fetch(url, { method: "GET" }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status + " sur l'API");
+      return res.json();
+    }).then(function (json) {
+      if (!json || typeof json !== "object") throw new Error("Réponse API illisible (format inattendu)");
+      if (json.error) throw new Error("Erreur API : " + json.error);
+      if (!Array.isArray(json.data)) throw new Error("Réponse API sans champ 'data' exploitable");
+      return json;
+    });
+  }
+
+  function fetchLiveData() {
+    // Pas de filtre lieu_renc ici : on veut tous les lieux, contrairement à
+    // index.html qui ne s'intéresse qu'au Trinquet Paris.
+    var rencontresPromise = fetchJson(buildUrl("rencontres", {}));
+    var clubsPromise = fetchJson(buildUrl("clubs", {}));
+    // Compositions et contacts sont un bonus d'affichage, pas une donnée
+    // essentielle comme le calendrier : si l'appel échoue, on dégrade en
+    // silence (pas de noms/contacts) plutôt que de bloquer toute la page.
+    var engagementsPromise = fetchJson(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
+    var licenciesPromise = fetchJson(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
+
+    return Promise.all([rencontresPromise, clubsPromise, engagementsPromise, licenciesPromise]).then(function (results) {
+      var rencontresJson = results[0];
+      var clubsJson = results[1];
+      var engagementsJson = results[2];
+      var licenciesJson = results[3];
+
+      // Seules Série 1 et Série 2 concernent ce championnat (cf. SERIE_LABELS) ;
+      // toute autre catégorie éventuelle est hors périmètre de cette page.
+      var rencontres = rencontresJson.data.filter(function (row) {
+        var cat = String(row["Catégorie"] || "").trim();
+        return SERIE_LABELS.hasOwnProperty(cat) && row.oid;
+      });
+
+      return {
+        rencontres: rencontres,
+        clubs: clubsJson.data,
+        engagements: engagementsJson.data,
+        licencies: licenciesJson.data,
+        fetchedAt: Date.now(),
+        lastSync: rencontresJson.lastSync || null
+      };
+    });
+  }
+
+  function loadData(forceRefresh) {
+    var cachedRaw = null;
+    try { cachedRaw = localStorage.getItem(CACHE_KEY); } catch (e) { /* stockage indisponible, on continue sans cache */ }
+    var cached = null;
+    if (cachedRaw) {
+      try { cached = JSON.parse(cachedRaw); } catch (e) { cached = null; }
+    }
+
+    var fresh = cached && (Date.now() - cached.fetchedAt) < CACHE_TTL_MS;
+    if (fresh && !forceRefresh) {
+      return Promise.resolve({ data: cached, stale: false, fromCache: true });
+    }
+
+    return fetchLiveData().then(function (data) {
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) { /* quota localStorage dépassé : tant pis, pas bloquant */ }
+      return { data: data, stale: false, fromCache: false };
+    }).catch(function (err) {
+      if (cached) {
+        return { data: cached, stale: true, error: err, fromCache: true };
+      }
+      throw err;
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Mise en forme des rencontres
+  // ---------------------------------------------------------------
+  function buildClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      if (c["comité"] && c["club"]) {
+        map[ligue + comite + club] = c["Nom club"] || (ligue + comite + club);
+      }
+      if (c["no_club_old"]) {
+        map[String(c["no_club_old"])] = c["Nom club"] || c["no_club_old"];
+      }
+    });
+    return map;
+  }
+
+  function clubLabel(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var eq = String(equipe || "").trim();
+    return eq ? (name + " (éq. " + eq + ")") : name;
+  }
+
+  function hasScore(row) {
+    var cr = String(row.score_cr == null ? "" : row.score_cr).trim();
+    var cv = String(row.score_cv == null ? "" : row.score_cv).trim();
+    return cr !== "" && cv !== "";
+  }
+
+  // rencontres utilise un code concaténé ("3750030" = ligue+comité+club),
+  // tandis qu'engagements/licencies utilisent le format "Numéro club" du
+  // site ("03-750-030"). Cette table fait la conversion entre les deux.
+  function buildNumeroClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      if (c["comité"] && c["club"] && c["Numéro club"]) {
+        map[ligue + comite + club] = c["Numéro club"];
+      }
+    });
+    return map;
+  }
+
+  // Les numéros de licence ne sont pas formatés pareil selon la table
+  // source : "058863" dans licencies, "58863" dans engagements. On
+  // compare toujours la forme sans zéros de tête.
+  function normalizeLicence(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d+$/.test(s)) return s;
+    return String(Number.parseInt(s, 10));
+  }
+
+  function buildLicenceMap(licenciesData) {
+    var map = {};
+    (licenciesData || []).forEach(function (l) {
+      var licence = normalizeLicence(l["Licence"]);
+      if (!licence) return;
+      var prenom = (l["prenom"] || "").trim();
+      var nom = (l["nom"] || "").trim();
+      map[licence] = (prenom + " " + nom).trim();
+    });
+    return map;
+  }
+
+  // Les en-têtes exportées par le site source contiennent littéralement
+  // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite
+  // via fromCharCode pour éviter qu'un éditeur ne la décode en un vrai
+  // espace insécable Unicode.
+  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
+  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
+
+  // Clé : "NuméroClub|Catégorie|Equipe" -> composition (licences) + contact
+  // du responsable déclarés à la ligue pour cette équipe.
+  function buildEngagementsIndex(engagementsData) {
+    var index = {};
+    (engagementsData || []).forEach(function (e) {
+      var key = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      var licences = LICENCE_COLUMNS
+        .map(function (col) { return normalizeLicence(e[col]); })
+        .filter(function (v) { return v; });
+      var responsable = String(e["Responsable"] || "").trim();
+      var tel = String(e["Tél1. Resp."] || "").trim() || String(e["Tél2. Resp."] || "").trim();
+      if (licences.length || responsable || tel) {
+        index[key] = { licences: licences, responsable: responsable, tel: tel };
+      }
+    });
+    return index;
+  }
+
+  function getRoster(engagementsIndex, licenceMap, numeroClubMap, clubCode, categorie, equipe) {
+    var numeroClub = numeroClubMap[clubCode];
+    if (!numeroClub) return null;
+    var key = [numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|");
+    var entry = engagementsIndex[key];
+    if (!entry || !entry.licences.length) return null;
+    return entry.licences
+      .map(function (lic) { return licenceMap[lic]; })
+      .filter(function (nom) { return !!nom; });
+  }
+
+  function getContact(engagementsIndex, numeroClubMap, clubCode, categorie, equipe) {
+    var numeroClub = numeroClubMap[clubCode];
+    if (!numeroClub) return null;
+    var key = [numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|");
+    var entry = engagementsIndex[key];
+    if (!entry || !entry.tel) return null;
+    return { responsable: entry.responsable, tel: entry.tel };
+  }
+
+  // Numéros saisis dans des formats variés ("06 12 34 56 78", "06.12.34.56.78",
+  // parfois avec indicatif). wa.me exige un format international sans "0"
+  // initial ni séparateurs.
+  function normalizePhoneForWhatsapp(raw) {
+    var digits = String(raw || "").replace(/\D/g, "");
+    if (!digits) return null;
+    if (digits.slice(0, 2) === "33") return digits;
+    if (digits.length === 10 && digits[0] === "0") return "33" + digits.slice(1);
+    if (digits.length === 9) return "33" + digits;
+    return digits.length >= 8 ? digits : null;
+  }
+
+  // Construit la liste des rencontres exploitables (date/heure valides),
+  // triée chronologiquement — passées et à venir mélangées, comme un
+  // calendrier de championnat classique.
+  function buildMatchList(rencontres, clubMap, joinCtx) {
+    var matches = [];
+    rencontres.forEach(function (row) {
+      var d = effectiveDate(row);
+      var t = parseHeureRenc(row.heure_renc);
+      if (!d || !t) return; // date/heure illisible : rencontre ignorée plutôt qu'affichée à tort
+
+      var catRaw = String(row["Catégorie"] || "").trim();
+      var phaseRaw = String(row.Phase || "").trim();
+      var meta = row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "");
+
+      var labelRec = clubLabel(clubMap, row.club_rec, row.equip_rec);
+      var labelVis = clubLabel(clubMap, row.club_vis, row.equip_vis);
+
+      matches.push({
+        date: d,
+        hour: t.hour,
+        minute: t.minute,
+        serie: catRaw,
+        serieLabel: SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?")),
+        teams: labelRec + " vs " + labelVis,
+        labelRec: labelRec,
+        labelVis: labelVis,
+        rosterRec: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
+        rosterVis: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
+        contactRec: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
+        contactVis: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
+        lieu: String(row.lieu_renc || "").trim() || "Lieu non précisé",
+        phaseRaw: phaseRaw || "?",
+        meta: meta,
+        score: hasScore(row) ? (row.score_cr + " - " + row.score_cv) : null
+      });
+    });
+
+    matches.sort(function (a, b) {
+      var dd = a.date.getTime() - b.date.getTime();
+      if (dd !== 0) return dd;
+      var hh = a.hour * 60 + a.minute - (b.hour * 60 + b.minute);
+      return hh;
+    });
+
+    return matches;
+  }
+
+  // ---------------------------------------------------------------
+  // Rendu
+  // ---------------------------------------------------------------
+  var DAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  var MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+  function formatDate(d) {
+    return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function formatHour(hour, minute) {
+    return minute ? (hour + "h" + String(minute).padStart(2, "0")) : (hour + "h");
+  }
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (k === "class") e.className = attrs[k];
+        else if (k === "text") e.textContent = attrs[k];
+        else e.setAttribute(k, attrs[k]);
+      }
+    }
+    (children || []).forEach(function (c) { e.appendChild(c); });
+    return e;
+  }
+
+  function renderSkeleton(container) {
+    container.innerHTML = "";
+    for (var i = 0; i < 4; i++) {
+      var card = el("div", { class: "skeleton-card" });
+      var header = el("div", { class: "skeleton-card-header" });
+      header.appendChild(el("div", { class: "skeleton-bar", style: "width:45%" }));
+      card.appendChild(header);
+      for (var r = 0; r < 2; r++) {
+        var row = el("div", { class: "skeleton-row" });
+        row.appendChild(el("div", { class: "skeleton-bar", style: "width:" + (40 + (r % 3) * 15) + "%" }));
+        card.appendChild(row);
+      }
+      container.appendChild(card);
+    }
+  }
+
+  function renderBanner(container, kind, title, message) {
+    var b = el("div", { class: "banner " + kind });
+    b.appendChild(el("strong", { text: title }));
+    b.appendChild(document.createTextNode(message));
+    container.appendChild(b);
+  }
+
+  // Icônes (pas de gros bouton) devant le nom de l'équipe, affichées
+  // seulement si un responsable avec un numéro déclaré à la ligue est
+  // exploitable (cf. normalizePhoneForWhatsapp) — ces numéros sont déjà
+  // publiés en clair sur le site de la ligue, ce n'est donc pas une
+  // nouvelle exposition de donnée, juste un raccourci vers un contact
+  // déjà public.
+  function buildContactIcons(label, contact) {
+    if (!contact || !contact.tel) return [];
+    var number = normalizePhoneForWhatsapp(contact.tel);
+    if (!number) return [];
+    var who = label + (contact.responsable ? " (" + contact.responsable + ")" : "");
+    return [
+      el("a", {
+        class: "wa-icon", href: "https://wa.me/" + number, target: "_blank", rel: "noopener",
+        title: "WhatsApp " + who, "aria-label": "WhatsApp " + who, text: "💬"
+      }),
+      el("a", {
+        class: "wa-icon", href: "tel:+" + number,
+        title: "Appeler " + who, "aria-label": "Appeler " + who, text: "📞"
+      })
+    ];
+  }
+
+  function buildMatchDetail(match) {
+    var detail = el("div", { class: "match-detail" });
+    detail.hidden = true;
+
+    [
+      { label: match.labelRec, roster: match.rosterRec, contact: match.contactRec },
+      { label: match.labelVis, roster: match.rosterVis, contact: match.contactVis }
+    ].forEach(function (side) {
+      var hasRoster = side.roster && side.roster.length;
+      var line = el("div", { class: "roster-line" + (hasRoster ? "" : " roster-empty") });
+      buildContactIcons(side.label, side.contact).forEach(function (icon) { line.appendChild(icon); });
+      line.appendChild(document.createTextNode(side.label + " : " + (hasRoster ? side.roster.join(", ") : "composition non disponible")));
+      detail.appendChild(line);
+    });
+
+    return detail;
+  }
+
+  function buildMatchRow(match) {
+    var item = el("div", { class: "match-item" });
+    var row = el("div", { class: "match-row" });
+    row.appendChild(el("div", { class: "match-row-time", text: formatHour(match.hour, match.minute) }));
+
+    var main = el("div", { class: "match-row-main" });
+    main.appendChild(el("div", { class: "match-row-teams", text: match.teams }));
+    var metaParts = [];
+    metaParts.push({ text: match.serieLabel, cls: "serie-" + match.serie });
+    if (match.meta) metaParts.push({ text: match.meta, cls: null });
+    if (match.lieu) metaParts.push({ text: match.lieu, cls: null });
+    var meta = el("div", { class: "match-row-meta" });
+    metaParts.forEach(function (part, idx) {
+      if (idx > 0) meta.appendChild(document.createTextNode(" · "));
+      meta.appendChild(el("span", { class: part.cls || "", text: part.text }));
+    });
+    main.appendChild(meta);
+    row.appendChild(main);
+
+    if (match.score) row.appendChild(el("div", { class: "match-row-score", text: match.score }));
+
+    var detail = buildMatchDetail(match);
+    row.addEventListener("click", function () {
+      detail.hidden = !detail.hidden;
+    });
+
+    item.appendChild(row);
+    item.appendChild(detail);
+    return item;
+  }
+
+  // (Re)construit les chips d'un filtre dont les valeurs possibles dépendent
+  // des données reçues (lieu, phase) — contrairement aux chips Série, fixes.
+  // Une valeur jamais vue dans stateObj est considérée active par défaut.
+  function renderDynamicChipGroup(containerId, values, stateObj) {
+    var container = document.getElementById(containerId);
+    container.innerHTML = "";
+    values.forEach(function (v) {
+      if (!Object.prototype.hasOwnProperty.call(stateObj, v.key)) stateObj[v.key] = true;
+      var chip = el("button", { type: "button", class: "filter-chip" + (stateObj[v.key] ? " active" : ""), text: v.label });
+      chip.addEventListener("click", function () {
+        stateObj[v.key] = !stateObj[v.key];
+        chip.classList.toggle("active", stateObj[v.key]);
+        saveFilterState();
+        rerenderIfLoaded();
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function distinctLieux(matches) {
+    var seen = {};
+    matches.forEach(function (m) { seen[m.lieu] = true; });
+    return Object.keys(seen).sort(function (a, b) { return a.localeCompare(b, "fr"); })
+      .map(function (lieu) { return { key: lieu, label: lieu }; });
+  }
+
+  function distinctPhases(matches) {
+    var seen = {};
+    matches.forEach(function (m) { seen[m.phaseRaw] = true; });
+    return Object.keys(seen).sort(function (a, b) { return (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0); })
+      .map(function (phaseRaw) { return { key: phaseRaw, label: PHASE_LABELS[phaseRaw] || ("Phase " + phaseRaw) }; });
+  }
+
+  function renderResults(matches, today) {
+    var results = document.getElementById("results");
+    results.innerHTML = "";
+
+    var activeSeries = Object.keys(filterState.series).filter(function (s) { return filterState.series[s]; });
+    var filtered = matches.filter(function (m) {
+      return activeSeries.indexOf(m.serie) !== -1 &&
+        filterState.lieux[m.lieu] !== false &&
+        filterState.phases[m.phaseRaw] !== false;
+    });
+
+    if (filtered.length === 0) {
+      results.appendChild(el("div", { class: "empty-state", text: "Aucune rencontre ne correspond aux filtres." }));
+      return;
+    }
+
+    var todayKey = dateKey(today);
+    var currentGroup = null;
+    var currentKey = null;
+    var todayCard = null;
+
+    filtered.forEach(function (match) {
+      var key = dateKey(match.date);
+      if (key !== currentKey) {
+        currentKey = key;
+        var isToday = key === todayKey;
+        currentGroup = el("div", { class: "day-card" + (isToday ? " today" : "") });
+        currentGroup.appendChild(el("div", { class: "day-card-head", text: formatDate(match.date) }));
+        results.appendChild(currentGroup);
+        // Repère la première carte à partir d'aujourd'hui pour y amener la
+        // vue au chargement — sinon on atterrit tout en haut du calendrier,
+        // potentiellement des mois de résultats passés avant la 1re rencontre à venir.
+        if (!todayCard && match.date >= today) todayCard = currentGroup;
+      }
+      currentGroup.appendChild(buildMatchRow(match));
+    });
+
+    if (todayCard) todayCard.scrollIntoView({ block: "start" });
+  }
+
+  // ---------------------------------------------------------------
+  // Orchestration
+  // ---------------------------------------------------------------
+  function formatTime(ts) {
+    var d = new Date(ts);
+    return d.toLocaleDateString("fr-FR") + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function formatSync(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return formatTime(d.getTime());
+  }
+
+  function run(forceRefresh) {
+    var lastSyncText = document.getElementById("lastSyncText");
+    var bannerSlot = document.getElementById("banner-slot");
+    var results = document.getElementById("results");
+    bannerSlot.innerHTML = "";
+    lastSyncText.textContent = "chargement…";
+
+    var skeletonTimer = setTimeout(function () { renderSkeleton(results); }, 150);
+
+    loadData(forceRefresh).then(function (outcome) {
+      clearTimeout(skeletonTimer);
+      var today = startOfDay(new Date());
+      var clubMap = buildClubMap(outcome.data.clubs);
+      var joinCtx = {
+        numeroClubMap: buildNumeroClubMap(outcome.data.clubs),
+        licenceMap: buildLicenceMap(outcome.data.licencies),
+        engagementsIndex: buildEngagementsIndex(outcome.data.engagements)
+      };
+      var matches = buildMatchList(outcome.data.rencontres, clubMap, joinCtx);
+
+      lastMatches = matches;
+      // Les valeurs possibles de lieu/phase dépendent des données reçues :
+      // les chips sont reconstruites à partir de l'ensemble complet des
+      // rencontres (non filtré), pour ne jamais perdre une valeur en cours
+      // de route ; l'état actif de chaque valeur est conservé via filterState.
+      renderDynamicChipGroup("filterLieux", distinctLieux(matches), filterState.lieux);
+      renderDynamicChipGroup("filterPhases", distinctPhases(matches), filterState.phases);
+      saveFilterState();
+      renderResults(matches, today);
+
+      if (outcome.stale) {
+        renderBanner(
+          bannerSlot, "warn", "Données non rafraîchies",
+          "Le dernier appel à l'API a échoué (" + outcome.error.message + "). " +
+          "Le programme affiché date du " + formatTime(outcome.data.fetchedAt) + " et peut être obsolète."
+        );
+      }
+
+      lastSyncText.textContent = formatSync(outcome.data.lastSync) || "information indisponible";
+    }).catch(function (err) {
+      clearTimeout(skeletonTimer);
+      results.innerHTML = "";
+      lastSyncText.textContent = "échec du chargement";
+      renderBanner(
+        bannerSlot, "error", "Impossible d'afficher le programme",
+        (err && err.message ? err.message : String(err)) +
+        " — par sécurité, aucun calendrier n'est affiché : il serait potentiellement incomplet."
+      );
+    });
+  }
+
+  function rerenderIfLoaded() {
+    if (lastMatches) renderResults(lastMatches, startOfDay(new Date()));
+  }
+
+  function setupFilters() {
+    loadFilterState();
+
+    document.querySelectorAll("#filterSeries .filter-chip").forEach(function (chip) {
+      var serie = chip.getAttribute("data-serie");
+      chip.classList.toggle("active", !!filterState.series[serie]);
+      chip.addEventListener("click", function () {
+        filterState.series[serie] = !filterState.series[serie];
+        chip.classList.toggle("active", filterState.series[serie]);
+        saveFilterState();
+        rerenderIfLoaded();
+      });
+    });
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
+  document.getElementById("backToTopBtn").addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  setupFilters();
+  run(false);
+})();
+</script>
+</body>
+</html>
