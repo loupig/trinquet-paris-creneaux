@@ -19,12 +19,14 @@
     --busy-bg: #fdecec;
     --busy-text: #b3261e;
     --busy-border: #f5c2c0;
-    --serie1-bg: #eef1fb;
-    --serie1-text: #2f5ce0;
-    --serie1-border: #cdd6f7;
-    --serie2-bg: #f3ecfb;
-    --serie2-text: #7c3aed;
-    --serie2-border: #ddc8f0;
+    --serie1-bg: #e3f6f4;
+    --serie1-text: #0f766e;
+    --serie1-border: #b7e6e0;
+    --serie2-bg: #fef3e2;
+    --serie2-text: #b45309;
+    --serie2-border: #f6d9a8;
+    --accent-bg: #eef1fb;
+    --accent-border: #cdd6f7;
     --warn-bg: #fff3cd;
     --warn-text: #7a5b00;
     --warn-border: #f0dd9a;
@@ -270,8 +272,8 @@
     margin-bottom: 10px;
   }
   .recap-card.featured {
-    background: var(--serie1-bg);
-    border: 1px solid var(--serie1-border);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-left: 4px solid var(--accent);
     box-shadow: 0 2px 10px rgba(47, 92, 224, 0.12);
   }
@@ -302,8 +304,8 @@
   }
   .filter-chip.active {
     color: var(--accent);
-    background: var(--serie1-bg);
-    border-color: var(--serie1-border);
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
   }
   .filter-checkbox {
     display: flex;
@@ -334,7 +336,7 @@
     text-align: center;
     font-size: 13px;
     line-height: 1;
-    color: var(--serie1-text);
+    color: var(--accent);
   }
   .grid-align-cell.off {
     font-size: 10px;
