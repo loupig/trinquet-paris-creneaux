@@ -871,7 +871,7 @@
       .map(function (phaseRaw) { return { key: phaseRaw, label: PHASE_LABELS[phaseRaw] || ("Phase " + phaseRaw) }; });
   }
 
-  function renderResults(matches, today, scrollToToday) {
+  function renderResults(matches, today) {
     var results = document.getElementById("results");
     results.innerHTML = "";
 
@@ -890,7 +890,6 @@
     var todayKey = dateKey(today);
     var currentGroup = null;
     var currentKey = null;
-    var todayCard = null;
 
     filtered.forEach(function (match) {
       var key = dateKey(match.date);
@@ -900,17 +899,9 @@
         currentGroup = el("div", { class: "day-card" + (isToday ? " today" : "") });
         currentGroup.appendChild(el("div", { class: "day-card-head", text: formatDate(match.date) }));
         results.appendChild(currentGroup);
-        // Repère la première carte à partir d'aujourd'hui pour y amener la
-        // vue au chargement — sinon on atterrit tout en haut du calendrier,
-        // potentiellement des mois de résultats passés avant la 1re rencontre à venir.
-        if (!todayCard && match.date >= today) todayCard = currentGroup;
       }
       currentGroup.appendChild(buildMatchRow(match));
     });
-
-    // Uniquement au premier affichage : un clic sur un filtre ne doit pas
-    // faire sauter la page, seulement mettre à jour la liste sur place.
-    if (scrollToToday && todayCard) todayCard.scrollIntoView({ block: "start" });
   }
 
   // ---------------------------------------------------------------
@@ -956,7 +947,7 @@
       renderDynamicChipGroup("filterLieux", distinctLieux(matches), filterState.lieux);
       renderDynamicChipGroup("filterPhases", distinctPhases(matches), filterState.phases);
       saveFilterState();
-      renderResults(matches, today, true);
+      renderResults(matches, today);
 
       if (outcome.stale) {
         renderBanner(
