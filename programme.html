@@ -871,7 +871,7 @@
       .map(function (phaseRaw) { return { key: phaseRaw, label: PHASE_LABELS[phaseRaw] || ("Phase " + phaseRaw) }; });
   }
 
-  function renderResults(matches, today) {
+  function renderResults(matches, today, scrollToToday) {
     var results = document.getElementById("results");
     results.innerHTML = "";
 
@@ -908,7 +908,9 @@
       currentGroup.appendChild(buildMatchRow(match));
     });
 
-    if (todayCard) todayCard.scrollIntoView({ block: "start" });
+    // Uniquement au premier affichage : un clic sur un filtre ne doit pas
+    // faire sauter la page, seulement mettre à jour la liste sur place.
+    if (scrollToToday && todayCard) todayCard.scrollIntoView({ block: "start" });
   }
 
   // ---------------------------------------------------------------
@@ -954,7 +956,7 @@
       renderDynamicChipGroup("filterLieux", distinctLieux(matches), filterState.lieux);
       renderDynamicChipGroup("filterPhases", distinctPhases(matches), filterState.phases);
       saveFilterState();
-      renderResults(matches, today);
+      renderResults(matches, today, true);
 
       if (outcome.stale) {
         renderBanner(
