@@ -224,10 +224,15 @@
   .match-detail .roster-empty { color: var(--muted); }
   .wa-icon {
     flex: 0 0 auto;
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
     line-height: 1;
     text-decoration: none;
   }
+  .wa-icon svg { display: block; }
+  .wa-icon.icon-whatsapp { color: #25D366; }
+  .wa-icon.icon-sms { color: var(--accent); }
+  .wa-icon.icon-tel { color: var(--accent); }
 
   .empty-state {
     text-align: center;
@@ -771,6 +776,19 @@
     container.appendChild(b);
   }
 
+  // Pictogrammes SVG inline (pas de dépendance externe, cf. philosophie du
+  // site) pour bien distinguer les 3 canaux de contact au premier coup d'œil.
+  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/><path d="M12.05 2C6.53 2 2.05 6.48 2.05 12c0 1.77.46 3.5 1.35 5.02L2 22l5.11-1.34a9.95 9.95 0 0 0 4.94 1.31c5.52 0 10-4.48 10-10S17.57 2 12.05 2zm0 18.16a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.09.81.82-3.01-.19-.3a8.13 8.13 0 0 1-1.25-4.34c0-4.5 3.66-8.16 8.16-8.16 2.18 0 4.23.85 5.77 2.39a8.1 8.1 0 0 1 2.39 5.77c0 4.5-3.66 8.16-8.16 8.16z"/></svg>';
+  var ICON_SVG_SMS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>';
+  var ICON_SVG_TEL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+
+  function buildIconLink(iconClass, svg, href, title, openInNewTab) {
+    var a = el("a", { class: "wa-icon " + iconClass, href: href, title: title, "aria-label": title });
+    if (openInNewTab) { a.target = "_blank"; a.rel = "noopener"; }
+    a.innerHTML = svg;
+    return a;
+  }
+
   // Icônes (pas de gros bouton) devant le nom de l'équipe, affichées
   // seulement si un responsable avec un numéro déclaré à la ligue est
   // exploitable (cf. normalizePhoneForWhatsapp) — ces numéros sont déjà
@@ -783,14 +801,9 @@
     if (!number) return [];
     var who = label + (contact.responsable ? " (" + contact.responsable + ")" : "");
     return [
-      el("a", {
-        class: "wa-icon", href: "https://wa.me/" + number, target: "_blank", rel: "noopener",
-        title: "WhatsApp " + who, "aria-label": "WhatsApp " + who, text: "💬"
-      }),
-      el("a", {
-        class: "wa-icon", href: "tel:+" + number,
-        title: "Appeler " + who, "aria-label": "Appeler " + who, text: "📞"
-      })
+      buildIconLink("icon-whatsapp", ICON_SVG_WHATSAPP, "https://wa.me/" + number, "WhatsApp " + who, true),
+      buildIconLink("icon-sms", ICON_SVG_SMS, "sms:+" + number, "SMS " + who, false),
+      buildIconLink("icon-tel", ICON_SVG_TEL, "tel:+" + number, "Appeler " + who, false)
     ];
   }
 
