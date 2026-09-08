@@ -12,7 +12,9 @@ créneaux libres à la main.
 ## Pages
 
 Trois pages statiques indépendantes, sans build ni dépendance, chacune avec
-son CSS et son JS inline :
+son CSS et son JS inline. Un menu à deux entrées (« Créneaux libres » /
+« Programme »), en haut de chaque page dans le bandeau fixe, signale les deux
+destinations principales et met en évidence celle où l'on se trouve :
 
 - [`index.html`](index.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.
