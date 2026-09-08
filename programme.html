@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Programme du championnat — LIDFPB</title>
+<title>Programme des championnats — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <style>
   :root {
@@ -332,12 +332,12 @@
 <header>
   <div class="header-top">
     <div>
-      <h1>Programme du championnat — Trinquet Pala Gomme Pleine</h1>
+      <h1>Programme des championnats</h1>
       <h1>Ligue d'Île-de-France</h1>
     </div>
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
   </div>
-  <p class="header-sync">Toutes les rencontres de Série 1 et Série 2, tous lieux confondus — à venir et déjà jouées.</p>
+  <p class="header-sync">Toutes les rencontres, tous lieux confondus, à venir et déjà jouées.</p>
   <p class="header-sync">Cette page se contente d'afficher le calendrier communiqué par la ligue — elle n'a aucun effet sur le site de la ligue.</p>
   <p class="header-sync">Voir aussi : <a href="index.html">créneaux libres au Trinquet Paris</a></p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
@@ -355,6 +355,10 @@
     <div class="filter-group" id="filterLieux"></div>
     <div class="filter-subtitle">Phase</div>
     <div class="filter-group" id="filterPhases"></div>
+    <div class="filter-subtitle">Affichage</div>
+    <div class="filter-group" id="filterPeriode">
+      <button type="button" class="filter-chip" id="chipHidePast">Masquer les parties passées</button>
+    </div>
   </div>
 
   <div id="banner-slot"></div>
@@ -363,7 +367,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.02</p>
+    <p>Version 2026.09.08</p>
   </footer>
 </main>
 
@@ -386,6 +390,13 @@
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
 
+  // L'API ne renvoie que les codes de compétition et de spécialité ; les
+  // libellés lisibles viennent des listes déroulantes du site de la ligue
+  // (rencontres.php). Un code inconnu est simplement omis du message plutôt
+  // qu'affiché en clair : mieux vaut une phrase plus courte qu'un numéro.
+  var COMPET_LABELS = { "20270301": "Championnat 2026-2027" };
+  var SPEC_LABELS = { "2": "Trinquet / P.G Pleine Masculin" };
+
   var PHASE_LABELS = {
     "1": "Poules",
     "2": "Barrage",
@@ -404,7 +415,8 @@
   var filterState = {
     series: { "1": true, "2": true },
     lieux: {},
-    phases: {}
+    phases: {},
+    hidePast: false
   };
 
   function loadFilterState() {
@@ -415,6 +427,7 @@
       if (saved && saved.series) filterState.series = saved.series;
       if (saved && saved.lieux) filterState.lieux = saved.lieux;
       if (saved && saved.phases) filterState.phases = saved.phases;
+      if (saved && typeof saved.hidePast === "boolean") filterState.hidePast = saved.hidePast;
     } catch (e) { /* stockage indisponible ou corrompu : on garde les valeurs par défaut */ }
   }
 
@@ -423,6 +436,10 @@
   }
 
   var lastMatches = null;
+
+  // Libellé de repli quand la ligue n'a pas encore renseigné le lieu : sert
+  // aussi de sentinelle pour ne pas l'écrire dans le message WhatsApp.
+  var LIEU_INCONNU = "Lieu non précisé";
 
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à index.html)
@@ -690,6 +707,8 @@
       if (!d || !t) return; // date/heure illisible : rencontre ignorée plutôt qu'affichée à tort
 
       var catRaw = String(row["Catégorie"] || "").trim();
+      var competRaw = String(row["Compétition"] || "").trim();
+      var specRaw = String(row["Spécialité"] || "").trim();
       var phaseRaw = String(row.Phase || "").trim();
       var meta = row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "");
 
@@ -702,6 +721,8 @@
         minute: t.minute,
         serie: catRaw,
         serieLabel: SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?")),
+        competLabel: COMPET_LABELS[competRaw] || "",
+        specLabel: SPEC_LABELS[specRaw] || "",
         teams: labelRec + " vs " + labelVis,
         labelRec: labelRec,
         labelVis: labelVis,
@@ -709,7 +730,7 @@
         rosterVis: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
         contactRec: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
         contactVis: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
-        lieu: String(row.lieu_renc || "").trim() || "Lieu non précisé",
+        lieu: String(row.lieu_renc || "").trim() || LIEU_INCONNU,
         phaseRaw: phaseRaw || "?",
         meta: meta,
         score: hasScore(row) ? (row.score_cr + " - " + row.score_cv) : null
@@ -795,29 +816,73 @@
   // publiés en clair sur le site de la ligue, ce n'est donc pas une
   // nouvelle exposition de donnée, juste un raccourci vers un contact
   // déjà public.
-  function buildContactIcons(label, contact) {
+  function buildContactIcons(match, side, other) {
+    var contact = side.contact;
     if (!contact || !contact.tel) return [];
     var number = normalizePhoneForWhatsapp(contact.tel);
     if (!number) return [];
-    var who = label + (contact.responsable ? " (" + contact.responsable + ")" : "");
+    var who = side.label + (contact.responsable ? " (" + contact.responsable + ")" : "");
+    var waHref = "https://wa.me/" + number + "?text=" + encodeURIComponent(buildWhatsappMessage(match, side, other));
     return [
-      buildIconLink("icon-whatsapp", ICON_SVG_WHATSAPP, "https://wa.me/" + number, "WhatsApp " + who, true),
+      buildIconLink("icon-whatsapp", ICON_SVG_WHATSAPP, waHref, "WhatsApp " + who, true),
       buildIconLink("icon-sms", ICON_SVG_SMS, "sms:+" + number, "SMS " + who, false),
       buildIconLink("icon-tel", ICON_SVG_TEL, "tel:+" + number, "Appeler " + who, false)
     ];
+  }
+
+  // "Responsable" est saisi librement par les clubs, sous trois formes
+  // observées : "NOM Prénom" (nom en capitales), "Prénom Nom" en casse
+  // normale, ou le nom seul. On isole le prénom pour un "Bonjour" moins
+  // administratif, en retombant sur la valeur brute dès qu'elle est
+  // ambiguë — mieux vaut un bonjour trop formel qu'un mauvais prénom.
+  function prenomDuResponsable(raw) {
+    var tokens = String(raw || "").trim().split(/\s+/).filter(function (t) { return !!t; });
+    if (!tokens.length) return "";
+    var capitales = tokens.filter(function (t) { return t === t.toUpperCase(); });
+    if (capitales.length === tokens.length) return tokens.join(" ");
+    if (capitales.length === 0) return tokens[0];
+    return tokens.filter(function (t) { return t !== t.toUpperCase(); }).join(" ");
+  }
+
+  // Message de confirmation prérempli, adressé au responsable de "side" et
+  // rappelant les coordonnées de l'équipe adverse. Chaque élément absent des
+  // données de la ligue est simplement omis plutôt qu'affiché à vide.
+  function buildWhatsappMessage(match, side, other) {
+    var resp = prenomDuResponsable((side.contact && side.contact.responsable) || "");
+    var entete = [
+      match.competLabel,
+      match.specLabel,
+      match.serieLabel + (match.meta ? " - " + match.meta : "")
+    ].filter(function (part) { return !!part; }).join(", ");
+    var lieuPart = (match.lieu && match.lieu !== LIEU_INCONNU) ? " à " + match.lieu : "";
+    var blocs = [
+      "Bonjour" + (resp ? " " + resp : "") + ",",
+      entete + " : votre partie " + side.label + " contre " + other.label +
+        " est prévue le " + formatDate(match.date) + " à " + formatHour(match.hour, match.minute) + lieuPart + ".",
+      "Tout est bon de votre côté ?"
+    ];
+    var autreResp = (other.contact && other.contact.responsable) || "";
+    var autreTel = (other.contact && other.contact.tel) || "";
+    if (autreResp || autreTel) {
+      blocs.push("Responsable adverse : " + (autreResp && autreTel ? autreResp + " (" + autreTel + ")" : (autreResp || autreTel)) + ".");
+    }
+    blocs.push("Merci !");
+    return blocs.join("\n\n");
   }
 
   function buildMatchDetail(match) {
     var detail = el("div", { class: "match-detail" });
     detail.hidden = true;
 
-    [
+    var sides = [
       { label: match.labelRec, roster: match.rosterRec, contact: match.contactRec },
       { label: match.labelVis, roster: match.rosterVis, contact: match.contactVis }
-    ].forEach(function (side) {
+    ];
+    sides.forEach(function (side, idx) {
+      var other = sides[1 - idx];
       var hasRoster = side.roster && side.roster.length;
       var line = el("div", { class: "roster-line" + (hasRoster ? "" : " roster-empty") });
-      buildContactIcons(side.label, side.contact).forEach(function (icon) { line.appendChild(icon); });
+      buildContactIcons(match, side, other).forEach(function (icon) { line.appendChild(icon); });
       line.appendChild(document.createTextNode(side.label + " : " + (hasRoster ? side.roster.join(", ") : "composition non disponible")));
       detail.appendChild(line);
     });
@@ -894,10 +959,14 @@
     results.innerHTML = "";
 
     var activeSeries = Object.keys(filterState.series).filter(function (s) { return filterState.series[s]; });
+    // "Passée" s'entend au jour près : une rencontre du jour reste visible
+    // toute la journée, même si son heure est déjà dépassée.
+    var todayTime = today.getTime();
     var filtered = matches.filter(function (m) {
       return activeSeries.indexOf(m.serie) !== -1 &&
         filterState.lieux[m.lieu] !== false &&
-        filterState.phases[m.phaseRaw] !== false;
+        filterState.phases[m.phaseRaw] !== false &&
+        (!filterState.hidePast || m.date.getTime() >= todayTime);
     });
 
     if (filtered.length === 0) {
@@ -1004,6 +1073,15 @@
         saveFilterState();
         rerenderIfLoaded();
       });
+    });
+
+    var hidePastChip = document.getElementById("chipHidePast");
+    hidePastChip.classList.toggle("active", filterState.hidePast);
+    hidePastChip.addEventListener("click", function () {
+      filterState.hidePast = !filterState.hidePast;
+      hidePastChip.classList.toggle("active", filterState.hidePast);
+      saveFilterState();
+      rerenderIfLoaded();
     });
   }
 
