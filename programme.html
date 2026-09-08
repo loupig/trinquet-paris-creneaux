@@ -849,23 +849,37 @@
   // données de la ligue est simplement omis plutôt qu'affiché à vide.
   function buildWhatsappMessage(match, side, other) {
     var resp = prenomDuResponsable((side.contact && side.contact.responsable) || "");
-    var entete = [
-      match.competLabel,
-      match.specLabel,
-      match.serieLabel + (match.meta ? " - " + match.meta : "")
-    ].filter(function (part) { return !!part; }).join(", ");
-    var lieuPart = (match.lieu && match.lieu !== LIEU_INCONNU) ? " à " + match.lieu : "";
+    var lieuConnu = !!match.lieu && match.lieu !== LIEU_INCONNU;
+    var quand = "est prévue le *" + formatDate(match.date) + " à " + formatHour(match.hour, match.minute) + "*";
+
+    var rencontre = ["Votre partie", side.label + " vs " + other.label];
+    // Le point ferme la phrase sur la dernière ligne réellement écrite :
+    // sans lieu connu, c'est la ligne date/heure.
+    rencontre.push(quand + (lieuConnu ? "" : "."));
+    if (lieuConnu) rencontre.push("à " + match.lieu + ".");
+
     var blocs = [
       "Bonjour" + (resp ? " " + resp : "") + ",",
-      entete + " : votre partie " + side.label + " contre " + other.label +
-        " est prévue le " + formatDate(match.date) + " à " + formatHour(match.hour, match.minute) + lieuPart + ".",
+      rencontre.join("\n"),
       "Tout est bon de votre côté ?"
     ];
+
     var autreResp = (other.contact && other.contact.responsable) || "";
     var autreTel = (other.contact && other.contact.tel) || "";
     if (autreResp || autreTel) {
       blocs.push("Responsable adverse : " + (autreResp && autreTel ? autreResp + " (" + autreTel + ")" : (autreResp || autreTel)) + ".");
     }
+
+    // Rappel de contexte en italique WhatsApp (_.._), en fin de message :
+    // utile pour lever une ambiguïté, mais secondaire par rapport à la
+    // question posée.
+    var contexte = [
+      match.competLabel,
+      match.specLabel,
+      match.serieLabel + (match.meta ? " - " + match.meta : "")
+    ].filter(function (part) { return !!part; }).join(", ");
+    if (contexte) blocs.push("_" + contexte + "_");
+
     blocs.push("Merci !");
     return blocs.join("\n\n");
   }
