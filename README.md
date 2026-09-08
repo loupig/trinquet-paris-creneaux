@@ -22,10 +22,12 @@ son CSS et son JS inline :
 - [`report.html`](report.html) — aide au choix d'une date de report. S'ouvre
   depuis le bouton « Chercher une date de report » d'une partie non jouée du
   programme (`report.html?oid=<oid de la rencontre>`), rappelle le créneau
-  d'origine et affiche les créneaux de la grille jusqu'à la fin de la phase
-  en cours, en distinguant libre / occupé / créneau actuel et en signalant
-  les jours où l'une des deux équipes joue déjà, tous lieux confondus. Comme
-  le reste du site, elle n'enregistre rien et ne prévient personne.
+  d'origine et affiche, jusqu'à la fin de la phase en cours, **uniquement les
+  créneaux encore disponibles** de la grille du Trinquet Paris, en signalant
+  les jours où l'une des deux équipes joue déjà, tous lieux confondus. Les
+  créneaux pris sont barrés sans être détaillés : pour savoir qui les occupe,
+  c'est `index.html`. Comme le reste du site, la page n'enregistre rien et ne
+  prévient personne.
 
 ## Fonctionnement
 
@@ -166,6 +168,10 @@ voudrait construire autre chose avec les mêmes données.
   propose que les créneaux de la grille, alors que plusieurs reports réels
   ont visiblement été négociés en dehors (un lundi 18h, un mardi 20h...).
   Un report sur un créneau hors grille se traite hors de cet outil.
+- **Report : une case barrée ne dit pas pourquoi** : un créneau déjà pris et
+  une heure absente de la grille ce jour-là sont rendus à l'identique. La
+  distinction n'aide pas à choisir une date, et `index.html` donne le détail
+  de l'occupation pour qui en a besoin.
 - **Report : horizon des phases finales** : l'horizon s'arrête à la dernière
   date programmée de la phase de la partie. Les phases finales tenant sur une
   seule journée, l'outil retombe alors sur la veille de la phase suivante.

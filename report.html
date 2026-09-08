@@ -16,15 +16,6 @@
     --free-bg: #e8f7ee;
     --free-text: #1e7a43;
     --free-border: #b9e6cc;
-    --busy-bg: #fdecec;
-    --busy-text: #b3261e;
-    --busy-border: #f5c2c0;
-    --serie1-bg: #e3f6f4;
-    --serie1-text: #0f766e;
-    --serie1-border: #b7e6e0;
-    --serie2-bg: #fef3e2;
-    --serie2-text: #b45309;
-    --serie2-border: #f6d9a8;
     --accent-bg: #eef1fb;
     --accent-border: #cdd6f7;
     --warn-bg: #fff3cd;
@@ -198,7 +189,6 @@
   }
   .slot-cell.free { background: var(--free-bg); color: var(--free-text); border-color: var(--free-border); }
   .slot-cell.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); cursor: pointer; }
-  .slot-cell.busy { background: var(--busy-bg); color: var(--busy-text); border-color: var(--busy-border); cursor: pointer; }
   .slot-cell.current {
     background: var(--accent-bg);
     color: var(--accent);
@@ -211,13 +201,6 @@
     border: 1px dashed var(--border);
   }
   .slot-cell.open { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .slot-cell-serie {
-    margin-top: 3px;
-    font-size: 9px;
-    font-weight: 700;
-  }
-  .slot-cell.serie-1 .slot-cell-serie { color: var(--serie1-text); }
-  .slot-cell.serie-2 .slot-cell-serie { color: var(--serie2-text); }
   .slot-cell-meta {
     margin-top: 2px;
     font-size: 9px;
@@ -290,7 +273,6 @@
   }
   .legend i.free { background: var(--free-text); }
   .legend i.warn { background: var(--warn-text); }
-  .legend i.busy { background: var(--busy-text); }
   .legend i.current { background: var(--accent); }
 
   .fab-row {
@@ -369,14 +351,14 @@
   <div class="recap-card">
     <div class="recap-title">Avant d'acter le report</div>
     <p class="recap-empty">Une date repérée ici n'est pas une date actée. Mettez-vous d'accord avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
-    <p class="recap-empty">Seuls les créneaux de la grille de championnat du Trinquet Paris sont proposés (vendredi 21h et 22h, dimanche de 14h à 17h et de 20h à 22h). Un report sur un autre créneau se négocie hors de cet outil, avec le trinquet et la ligue.</p>
+    <p class="recap-empty">Seuls les créneaux encore disponibles sont affichés, sur la grille de championnat du Trinquet Paris (vendredi 21h et 22h, dimanche de 14h à 17h et de 20h à 22h). Pour voir qui occupe les autres créneaux, passez par les <a href="index.html">créneaux libres au Trinquet Paris</a>. Un report sur un créneau hors grille se négocie hors de cet outil, avec le trinquet et la ligue.</p>
   </div>
 
   <div class="legend">
     <span><i class="free"></i>Libre</span>
     <span><i class="warn"></i>Libre, mais une équipe joue déjà ce jour-là</span>
-    <span><i class="busy"></i>Occupé</span>
     <span><i class="current"></i>Créneau actuel</span>
+    <span>Les créneaux barrés sont indisponibles (déjà pris, ou hors grille ce jour-là).</span>
   </div>
 
   <div id="banner-slot"></div>
@@ -651,7 +633,7 @@
   //    on reçoit tous les lieux, le test matchesTrinquetParis est obligatoire ;
   //  - la rencontre qu'on cherche à reporter n'occupe pas son propre créneau,
   //    sinon il s'afficherait "Occupé" au lieu de "Créneau actuel".
-  function computeOccupancy(rencontres, clubMap, today, excludeOid) {
+  function computeOccupancy(rencontres, today, excludeOid) {
     var occupied = {};
     rencontres.forEach(function (row) {
       if (String(row.oid) === excludeOid) return;
@@ -667,17 +649,9 @@
       // même convention qu'index.html.
       if (!t || hours.indexOf(t.hour) === -1) return;
 
-      var slotKey = dateKey(d) + "|" + t.hour;
-      if (occupied[slotKey]) return; // doublon de données : le créneau est occupé de toute façon
-
-      var catRaw = String(row["Catégorie"] || "").trim();
-      var phaseRaw = String(row.Phase || "").trim();
-      occupied[slotKey] = {
-        label: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
-        serie: SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?")),
-        serieClass: "serie" + (/^\d+$/.test(catRaw) ? ("-" + catRaw) : ""),
-        meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "")
-      };
+      // Seule l'occupation compte : la page n'affiche plus les rencontres qui
+      // prennent les créneaux, uniquement ce qui reste disponible.
+      occupied[dateKey(d) + "|" + t.hour] = true;
     });
     return occupied;
   }
@@ -859,21 +833,15 @@
     }
   }
 
-  // Construit la cellule d'un créneau. Seules les cases "occupé" et "conflit"
-  // portent un détail dépliable : une case libre n'a rien de plus à dire.
-  function buildSlotCell(state, info) {
-    var cls = "slot-cell " + state;
-    if (state === "busy" && info && info.serieClass) cls += " " + info.serieClass;
-    var cell = el("div", { class: cls });
+  // Construit la cellule d'un créneau. Un créneau déjà pris est rendu comme
+  // une case barrée muette, au même titre qu'une heure absente de la grille
+  // ce jour-là : la page répond à "où puis-je aller", pas à "qui joue".
+  function buildSlotCell(state) {
+    var cell = el("div", { class: "slot-cell " + state });
 
+    if (state === "empty") return cell;
     if (state === "current") {
       cell.appendChild(el("div", { text: "Créneau actuel" }));
-      return cell;
-    }
-    if (state === "busy") {
-      cell.appendChild(el("div", { text: "Occupé" }));
-      if (info.serie) cell.appendChild(el("div", { class: "slot-cell-serie", text: info.serie }));
-      if (info.meta) cell.appendChild(el("div", { class: "slot-cell-meta", text: info.meta }));
       return cell;
     }
     if (state === "warn") {
@@ -895,16 +863,6 @@
     return detail;
   }
 
-  function buildBusyDetail(info) {
-    var detail = el("div", { class: "slot-detail" });
-    detail.hidden = true;
-    detail.appendChild(el("div", { class: "match-line", text: info.label }));
-    var ligne = [info.serie];
-    if (info.meta) ligne.push(info.meta);
-    detail.appendChild(el("div", { class: "conflict-line", text: ligne.join(" · ") }));
-    return detail;
-  }
-
   function toggleDetail(detail, cell) {
     detail.hidden = !detail.hidden;
     if (cell) cell.classList.toggle("open", !detail.hidden);
@@ -914,31 +872,61 @@
     var results = document.getElementById("results");
     results.innerHTML = "";
 
-    if (dates.length === 0) {
-      results.appendChild(el("div", { class: "empty-state", text: "Aucune date de la grille ne reste disponible sur l'horizon de la phase en cours." }));
-      return;
-    }
-
     var currentKey = (target.date && target.hour !== null) ? (dateKey(target.date) + "|" + target.hour) : null;
+    var rienAProposer = true;
 
     groupIntoWeekends(dates).forEach(function (group) {
       var cols = [5, 0].filter(function (day) { return group[day]; });
 
-      var rowHours = [];
+      var toutesHeures = [];
       cols.forEach(function (day) {
         GRID[day].forEach(function (h) {
-          if (rowHours.indexOf(h) === -1) rowHours.push(h);
+          if (toutesHeures.indexOf(h) === -1) toutesHeures.push(h);
         });
       });
-      rowHours.sort(function (a, b) { return a - b; });
+      toutesHeures.sort(function (a, b) { return a - b; });
+
+      // État de chaque case calculé d'abord : on ne garde ensuite que les
+      // lignes qui offrent au moins une case exploitable, et on ne construit
+      // la carte que si elle en contient au moins une.
+      var etats = {};
+      var heures = [];
+      toutesHeures.forEach(function (h) {
+        var utile = false;
+        cols.forEach(function (day) {
+          var d = group[day];
+          var state;
+          if (GRID[day].indexOf(h) === -1) {
+            state = "empty";                     // pas de créneau ce jour-là
+          } else {
+            var key = dateKey(d) + "|" + h;
+            if (currentKey && key === currentKey) state = "current";
+            else if (occupied[key]) state = "empty";   // déjà pris : case muette
+            else if (busyDays[dateKey(d)]) state = "warn";
+            else state = "free";
+          }
+          etats[day + "|" + h] = state;
+          if (state !== "empty") utile = true;
+        });
+        if (utile) heures.push(h);
+      });
+
+      if (heures.length === 0) return;
+      rienAProposer = false;
 
       var card = el("div", { class: "day-card" });
       var table = el("div", { class: "slot-grid", style: "grid-template-columns: 40px repeat(" + cols.length + ", 1fr);" });
 
-      // Panneau de conflit par jour, ajouté en fin de tableau : le conflit est
-      // une notion de journée, pas de créneau, et il doit rester consultable
-      // même quand toutes les cases du jour sont occupées.
+      // Panneau de conflit par jour : le conflit est une notion de journée,
+      // pas de créneau, et l'en-tête de colonne le porte pour qu'il se voie
+      // avant même de descendre dans les lignes.
       var conflictDetails = {};
+      var jourEnConflit = {};
+      heures.forEach(function (h) {
+        cols.forEach(function (day) {
+          if (etats[day + "|" + h] === "warn") jourEnConflit[dateKey(group[day])] = true;
+        });
+      });
 
       table.appendChild(el("div", { class: "grid-head" }));
       cols.forEach(function (day) {
@@ -946,9 +934,8 @@
         var head = el("div", { class: "grid-head" });
         head.appendChild(el("div", { class: "grid-head-day", text: day === 5 ? "Vendredi" : "Dimanche" }));
         head.appendChild(el("div", { class: "grid-head-date", text: formatShortDate(d) }));
-        var conflits = busyDays[dateKey(d)];
-        if (conflits && conflits.length) {
-          var detail = buildConflictDetail(d, conflits);
+        if (jourEnConflit[dateKey(d)]) {
+          var detail = buildConflictDetail(d, busyDays[dateKey(d)]);
           conflictDetails[dateKey(d)] = detail;
           var badge = el("div", { class: "grid-head-warn", text: "⚠ une équipe joue" });
           badge.addEventListener("click", function () { toggleDetail(detail, null); });
@@ -957,52 +944,31 @@
         table.appendChild(head);
       });
 
-      rowHours.forEach(function (h) {
+      heures.forEach(function (h) {
         table.appendChild(el("div", { class: "grid-hour", text: h + "h" }));
-
-        // Les cases de la ligne sont toutes ajoutées d'abord pour garder
-        // l'alignement de la grille CSS ; les panneaux de détail (pleine
-        // largeur) ne sont ajoutés qu'ensuite, sinon un détail ouvert casse
-        // le placement des cases suivantes de la même ligne.
-        var rowDetails = [];
-
         cols.forEach(function (day) {
-          var d = group[day];
-          if (GRID[day].indexOf(h) === -1) {
-            table.appendChild(el("div", { class: "slot-cell empty" }));
-            return;
-          }
-
-          var key = dateKey(d) + "|" + h;
-          var info = occupied[key];
-          var conflits = busyDays[dateKey(d)];
-          var state = "free";
-          if (currentKey && key === currentKey) state = "current";
-          else if (info) state = "busy";
-          else if (conflits && conflits.length) state = "warn";
-
-          var cell = buildSlotCell(state, info);
-
-          if (state === "busy") {
-            var busyDetail = buildBusyDetail(info);
-            cell.addEventListener("click", function () { toggleDetail(busyDetail, cell); });
-            rowDetails.push(busyDetail);
-          } else if (state === "warn") {
-            var dayDetail = conflictDetails[dateKey(d)];
+          var state = etats[day + "|" + h];
+          var cell = buildSlotCell(state);
+          if (state === "warn") {
+            var dayDetail = conflictDetails[dateKey(group[day])];
             cell.addEventListener("click", function () { toggleDetail(dayDetail, cell); });
           }
-
           table.appendChild(cell);
         });
-
-        rowDetails.forEach(function (detail) { table.appendChild(detail); });
       });
 
+      // Les panneaux de détail (pleine largeur) sont ajoutés en fin de
+      // tableau : placés au milieu d'une ligne, ils en casseraient
+      // l'alignement CSS quand on les ouvre.
       Object.keys(conflictDetails).forEach(function (k) { table.appendChild(conflictDetails[k]); });
 
       card.appendChild(table);
       results.appendChild(card);
     });
+
+    if (rienAProposer) {
+      results.appendChild(el("div", { class: "empty-state", text: "Aucun créneau de la grille n'est disponible d'ici la fin de la phase en cours." }));
+    }
   }
 
   // ---------------------------------------------------------------
@@ -1093,7 +1059,7 @@
 
       var fin = computeHorizon(outcome.data.rencontres, target, today);
       var dates = gridDatesBetween(today, fin);
-      var occupied = computeOccupancy(outcome.data.rencontres, clubMap, today, target.oid);
+      var occupied = computeOccupancy(outcome.data.rencontres, today, target.oid);
       var busyDays = computeTeamBusyDays(outcome.data.rencontres, target.keys, target.oid, clubMap);
 
       renderResults(dates, occupied, busyDays, target);
