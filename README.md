@@ -67,9 +67,8 @@ condensés : rappel que ces créneaux sont réservés au championnat (pas
 à un usage libre) et que la page n'a aucun effet sur le site de la
 ligue (simple lecture), source des données (site de la ligue) et date
 de dernière synchronisation, et le bouton "Rafraîchir" (à droite du
-titre) pour forcer un appel API immédiat — sinon les données sont
-mises en cache dans le navigateur ~5 minutes pour éviter un appel à
-chaque rechargement. En haut de page : rappel de la grille fixe et
+titre) pour forcer un appel API immédiat — voir
+[Cache et temps de chargement](#cache-et-temps-de-chargement). En haut de page : rappel de la grille fixe et
 rappel que la page ne sert qu'à repérer l'occupation de ces créneaux
 (pas à réserver — seul le site de la ligue fait foi). Des filtres
 (jour, créneau horaire, "libre uniquement", coché par défaut)
@@ -113,13 +112,45 @@ Les principaux réglages sont regroupés en haut de la balise `<script>` dans
 | Constante | Rôle |
 |---|---|
 | `API_BASE` | URL de l'API Apps Script |
-| `CACHE_TTL_MS` | Durée du cache navigateur pour les données |
+| `CACHE_TTL_MS` | Au-delà de cette ancienneté, une entrée de cache est revalidée |
+| `API_CACHE_PREFIX` | Préfixe des clés localStorage du cache d'appels API |
 | `FILTER_CACHE_KEY` | Clé localStorage pour les filtres mémorisés |
 | `WEEKS_AHEAD` | Horizon d'affichage |
 | `GRID` | Grille de créneaux du trinquet, par jour de semaine |
 | `SERIE_LABELS` | Correspondance Catégorie → Série affichée |
 | `LIEU_VARIANTS` | Libellés `lieu_renc` interrogés côté API pour ce trinquet |
 | `matchesTrinquetParis()` | Filtre de sécurité (double vérification côté client) |
+
+## Cache et temps de chargement
+
+L'API Apps Script met environ **2 secondes** à répondre avant même de
+transmettre les données : c'est le temps d'exécution du script côté Google
+(démarrage à froid, lecture des fichiers sur Drive), et rien côté navigateur
+ne peut le réduire. Seul un cache côté Apps Script (`CacheService`) attaquerait
+ce plancher.
+
+Le navigateur compense avec deux mécanismes :
+
+- **Un cache indexé par URL de requête**, partagé par les trois pages
+  (`lidfpb_api_v1:<url>`). Les tables communes ne sont récupérées qu'une fois :
+  passer du programme au report ou aux créneaux libres ne refait pas les appels
+  déjà faits. Les appels d'`index.html` filtrés par libellé de lieu gardent
+  leurs propres entrées, leur URL n'étant pas la même.
+- **L'affichage immédiat de ce que le cache sait déjà**, suivi d'une
+  revalidation en arrière-plan si l'entrée a plus de `CACHE_TTL_MS`. La page ne
+  se redessine que si les données ont réellement changé, pour ne pas refermer
+  ce que l'utilisateur venait d'ouvrir. La source ne se synchronisant qu'une
+  fois par nuit, ce cas est rare.
+
+Mesuré sur l'enchaînement programme → report → créneaux libres, cache vide au
+départ : environ **5 s** en tout la première fois, puis **~17 ms** par page.
+Sans ce cache partagé, le même enchaînement coûtait 11,7 s, et le repayait
+intégralement toutes les 5 minutes.
+
+En cas d'échec de l'API, le comportement dépend du cache : avec un cache, la
+page s'affiche et un bandeau orange daté signale que les données n'ont pas pu
+être rafraîchies ; sans cache, un bandeau rouge et aucun contenu — une grille
+vide serait lue comme "tout est libre".
 
 ## RGPD et données joueurs
 

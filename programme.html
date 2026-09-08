@@ -425,7 +425,6 @@
   // Configuration
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
-  var CACHE_KEY = "lidfpb_programme_cache_v1";
   var FILTER_CACHE_KEY = "lidfpb_programme_filters_v1";
   var CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -556,6 +555,60 @@
     return url;
   }
 
+  // ---------------------------------------------------------------
+  // Cache des appels API
+  // ---------------------------------------------------------------
+  // Le cache est indexé par URL de requête, et donc partagé par les trois
+  // pages du site : passer du programme au report ou aux créneaux libres ne
+  // refait pas les appels déjà faits. Les appels filtrés par lieu d'index.html
+  // gardent leurs propres entrées, leur URL n'étant pas la même.
+  var API_CACHE_PREFIX = "lidfpb_api_v1:";
+
+  // Les trois caches par page de la version précédente sont devenus inutiles,
+  // et pèsent chacun jusqu'à ~200 Ko dans le navigateur des visiteurs. On les
+  // efface une fois pour toutes au chargement.
+  ["lidfpb_trinquet_paris_cache_v1", "lidfpb_programme_cache_v1", "lidfpb_report_cache_v1"].forEach(function (cle) {
+    try { localStorage.removeItem(cle); } catch (e) { /* stockage indisponible : rien à nettoyer */ }
+  });
+
+  function readApiCache(url) {
+    try {
+      var raw = localStorage.getItem(API_CACHE_PREFIX + url);
+      if (!raw) return null;
+      var entry = JSON.parse(raw);
+      return (entry && entry.json && entry.fetchedAt) ? entry : null;
+    } catch (e) { return null; }   // stockage indisponible ou entrée corrompue
+  }
+
+  function writeApiCache(url, json) {
+    try {
+      localStorage.setItem(API_CACHE_PREFIX + url, JSON.stringify({ fetchedAt: Date.now(), json: json }));
+    } catch (e) { /* quota dépassé ou stockage désactivé : pas bloquant */ }
+  }
+
+  // Les deux sources acceptées par fetchLiveData. viaCache note au passage
+  // l'entrée la plus ancienne utilisée, pour pouvoir dater ce qui est affiché.
+  //
+  // viaReseau réutilise une entrée encore fraîche plutôt que de la redemander :
+  // quand deux pages partagent une table, la seconde ne repaie pas l'appel que
+  // la première vient de faire. maxAge à 0 force le vrai rechargement.
+  function viaReseau(maxAge) {
+    return function (url) {
+      var entry = readApiCache(url);
+      if (entry && maxAge > 0 && (Date.now() - entry.fetchedAt) < maxAge) return Promise.resolve(entry.json);
+      return fetchJson(url);
+    };
+  }
+
+  function viaCache(holder) {
+    return function (url) {
+      var entry = readApiCache(url);
+      if (!entry) return Promise.reject(new Error("absent du cache"));
+      if (!holder.fetchedAt || entry.fetchedAt < holder.fetchedAt) holder.fetchedAt = entry.fetchedAt;
+      return Promise.resolve(entry.json);
+    };
+  }
+
   function fetchJson(url) {
     return fetch(url, { method: "GET" }).then(function (res) {
       if (!res.ok) throw new Error("HTTP " + res.status + " sur l'API");
@@ -564,20 +617,21 @@
       if (!json || typeof json !== "object") throw new Error("Réponse API illisible (format inattendu)");
       if (json.error) throw new Error("Erreur API : " + json.error);
       if (!Array.isArray(json.data)) throw new Error("Réponse API sans champ 'data' exploitable");
+      writeApiCache(url, json);
       return json;
     });
   }
 
-  function fetchLiveData() {
+  function fetchLiveData(source) {
     // Pas de filtre lieu_renc ici : on veut tous les lieux, contrairement à
     // index.html qui ne s'intéresse qu'au Trinquet Paris.
-    var rencontresPromise = fetchJson(buildUrl("rencontres", {}));
-    var clubsPromise = fetchJson(buildUrl("clubs", {}));
+    var rencontresPromise = source(buildUrl("rencontres", {}));
+    var clubsPromise = source(buildUrl("clubs", {}));
     // Compositions et contacts sont un bonus d'affichage, pas une donnée
     // essentielle comme le calendrier : si l'appel échoue, on dégrade en
     // silence (pas de noms/contacts) plutôt que de bloquer toute la page.
-    var engagementsPromise = fetchJson(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
-    var licenciesPromise = fetchJson(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
+    var engagementsPromise = source(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
+    var licenciesPromise = source(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
 
     return Promise.all([rencontresPromise, clubsPromise, engagementsPromise, licenciesPromise]).then(function (results) {
       var rencontresJson = results[0];
@@ -603,29 +657,13 @@
     });
   }
 
-  function loadData(forceRefresh) {
-    var cachedRaw = null;
-    try { cachedRaw = localStorage.getItem(CACHE_KEY); } catch (e) { /* stockage indisponible, on continue sans cache */ }
-    var cached = null;
-    if (cachedRaw) {
-      try { cached = JSON.parse(cachedRaw); } catch (e) { cached = null; }
-    }
-
-    var fresh = cached && (Date.now() - cached.fetchedAt) < CACHE_TTL_MS;
-    if (fresh && !forceRefresh) {
-      return Promise.resolve({ data: cached, stale: false, fromCache: true });
-    }
-
-    return fetchLiveData().then(function (data) {
-      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) { /* quota localStorage dépassé : tant pis, pas bloquant */ }
-      return { data: data, stale: false, fromCache: false };
-    }).catch(function (err) {
-      if (cached) {
-        return { data: cached, stale: true, error: err, fromCache: true };
-      }
-      throw err;
-    });
+  // Signature bon marché des données : après un rafraîchissement, elle évite
+  // de re-rendre la page si rien n'a changé — la source ne se synchronise
+  // qu'une fois par nuit.
+  function signature(data) {
+    return [data.lastSync, data.rencontres.length, data.clubs.length, data.engagements.length, data.licencies.length].join("|");
   }
+
 
   // ---------------------------------------------------------------
   // Mise en forme des rencontres
@@ -1103,18 +1141,18 @@
     bannerSlot.innerHTML = "";
     lastSyncText.textContent = "chargement…";
 
-    var skeletonTimer = setTimeout(function () { renderSkeleton(results); }, 150);
+    function afficher(data) {
+      bannerSlot.innerHTML = "";
+      lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
 
-    loadData(forceRefresh).then(function (outcome) {
-      clearTimeout(skeletonTimer);
       var today = startOfDay(new Date());
-      var clubMap = buildClubMap(outcome.data.clubs);
+      var clubMap = buildClubMap(data.clubs);
       var joinCtx = {
-        numeroClubMap: buildNumeroClubMap(outcome.data.clubs),
-        licenceMap: buildLicenceMap(outcome.data.licencies),
-        engagementsIndex: buildEngagementsIndex(outcome.data.engagements)
+        numeroClubMap: buildNumeroClubMap(data.clubs),
+        licenceMap: buildLicenceMap(data.licencies),
+        engagementsIndex: buildEngagementsIndex(data.engagements)
       };
-      var matches = buildMatchList(outcome.data.rencontres, clubMap, joinCtx);
+      var matches = buildMatchList(data.rencontres, clubMap, joinCtx);
 
       lastMatches = matches;
       // Les valeurs possibles de lieu/phase dépendent des données reçues :
@@ -1125,25 +1163,51 @@
       renderDynamicChipGroup("filterPhases", distinctPhases(matches), filterState.phases);
       saveFilterState();
       renderResults(matches, today);
+    }
 
-      if (outcome.stale) {
-        renderBanner(
-          bannerSlot, "warn", "Données non rafraîchies",
-          "Le dernier appel à l'API a échoué (" + outcome.error.message + "). " +
-          "Le programme affiché date du " + formatTime(outcome.data.fetchedAt) + " et peut être obsolète."
-        );
-      }
+    // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le
+    //    réseau : l'API met environ deux secondes à répondre, et la source ne
+    //    se synchronise qu'une fois par nuit.
+    var holder = {};
+    var rendu = false;
+    var signatureRendue = null;
 
-      lastSyncText.textContent = formatSync(outcome.data.lastSync) || "information indisponible";
-    }).catch(function (err) {
-      clearTimeout(skeletonTimer);
-      results.innerHTML = "";
-      lastSyncText.textContent = "échec du chargement";
-      renderBanner(
-        bannerSlot, "error", "Impossible d'afficher le programme",
-        (err && err.message ? err.message : String(err)) +
-        " — par sécurité, aucun calendrier n'est affiché : il serait potentiellement incomplet."
-      );
+    fetchLiveData(viaCache(holder)).then(function (data) {
+      afficher(data);
+      rendu = true;
+      signatureRendue = signature(data);
+    }).catch(function () {
+      // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
+    }).then(function () {
+      // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit.
+      if (rendu && !forceRefresh && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
+
+      var skeletonTimer = rendu ? null : setTimeout(function () { renderSkeleton(results); }, 150);
+
+      return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
+        if (skeletonTimer) clearTimeout(skeletonTimer);
+        // Re-rendu uniquement si les données ont bougé : sinon on replierait
+        // les lignes que l'utilisateur vient d'ouvrir pour rien.
+        if (!rendu || signature(data) !== signatureRendue) afficher(data);
+        else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
+      }).catch(function (err) {
+        if (skeletonTimer) clearTimeout(skeletonTimer);
+        var message = err && err.message ? err.message : String(err);
+        if (rendu) {
+          renderBanner(
+            bannerSlot, "warn", "Données non rafraîchies",
+            "Le dernier appel à l'API a échoué (" + message + "). " +
+            "Le programme affiché date du " + formatTime(holder.fetchedAt) + " et peut être obsolète."
+          );
+        } else {
+          results.innerHTML = "";
+          lastSyncText.textContent = "échec du chargement";
+          renderBanner(
+            bannerSlot, "error", "Impossible d'afficher le programme",
+            message + " — par sécurité, aucun calendrier n'est affiché : il serait potentiellement incomplet."
+          );
+        }
+      });
     });
   }
 
