@@ -9,6 +9,24 @@ créneaux libres à la main.
 
 **Site en ligne :** https://loupig.github.io/trinquet-paris-creneaux/
 
+## Pages
+
+Trois pages statiques indépendantes, sans build ni dépendance, chacune avec
+son CSS et son JS inline :
+
+- [`index.html`](index.html) — créneaux libres au Trinquet Paris, en tableau
+  par week-end. C'est la page décrite en détail ci-dessous.
+- [`programme.html`](programme.html) — calendrier complet des championnats,
+  tous lieux et toutes séries, passées et à venir, avec compositions et
+  contacts des responsables d'équipe.
+- [`report.html`](report.html) — aide au choix d'une date de report. S'ouvre
+  depuis le bouton « Chercher une date de report » d'une partie non jouée du
+  programme (`report.html?oid=<oid de la rencontre>`), rappelle le créneau
+  d'origine et affiche les créneaux de la grille jusqu'à la fin de la phase
+  en cours, en distinguant libre / occupé / créneau actuel et en signalant
+  les jours où l'une des deux équipes joue déjà, tous lieux confondus. Comme
+  le reste du site, elle n'enregistre rien et ne prévient personne.
+
 ## Fonctionnement
 
 Tout est dans un seul fichier autonome, [`index.html`](index.html) (HTML +
@@ -140,3 +158,15 @@ voudrait construire autre chose avec les mêmes données.
   en clair via `PHASE_LABELS` dans `index.html` (Poules, Barrage,
   1/32e... jusqu'à Finale), mapping communiqué par la ligue. En phase de
   poules, "Poule N" (champ `Poule`) est affiché plutôt que "Poules".
+- **Report : Trinquet Paris uniquement** : `report.html` ne connaît que la
+  grille du Trinquet Paris. Aucune grille de disponibilité n'existe pour les
+  autres lieux du championnat, donc une partie qui s'y joue n'a pas de bouton
+  de report, et l'URL forcée à la main affiche un avertissement.
+- **Report : créneaux hors grille jamais proposés** : `report.html` ne
+  propose que les créneaux de la grille, alors que plusieurs reports réels
+  ont visiblement été négociés en dehors (un lundi 18h, un mardi 20h...).
+  Un report sur un créneau hors grille se traite hors de cet outil.
+- **Report : horizon des phases finales** : l'horizon s'arrête à la dernière
+  date programmée de la phase de la partie. Les phases finales tenant sur une
+  seule journée, l'outil retombe alors sur la veille de la phase suivante.
+  C'est un choix d'implémentation, pas une règle communiquée par la ligue.

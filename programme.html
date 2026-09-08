@@ -234,6 +234,20 @@
   .wa-icon.icon-sms { color: var(--accent); }
   .wa-icon.icon-tel { color: var(--accent); }
 
+  .report-actions { margin-top: 8px; }
+  .report-btn {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: #fff;
+    border: 1px solid var(--accent-border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+  }
+  .report-btn:active { background: var(--accent-bg); }
+
   .empty-state {
     text-align: center;
     color: var(--muted);
@@ -440,6 +454,21 @@
   // Libellé de repli quand la ligue n'a pas encore renseigné le lieu : sert
   // aussi de sentinelle pour ne pas l'écrire dans le message WhatsApp.
   var LIEU_INCONNU = "Lieu non précisé";
+
+  // Règle large de sécurité : capte "trinquet" + "paris" en excluant
+  // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
+  // Fronton PB13, Chiquito de Cambo). Copie de la fonction d'index.html.
+  function matchesTrinquetParis(lieu) {
+    if (!lieu) return false;
+    var s = lieu.toUpperCase();
+    if (s.indexOf("TRINQUET") === -1) return false;
+    if (s.indexOf("PARIS") === -1) return false;
+    if (s.indexOf("CAVALERIE") !== -1) return false;
+    if (s.indexOf("75015") !== -1) return false;
+    if (s.indexOf("PB13") !== -1 || s.indexOf("PB 13") !== -1) return false;
+    if (s.indexOf("CHIQUITO") !== -1) return false;
+    return true;
+  }
 
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à index.html)
@@ -733,7 +762,8 @@
         lieu: String(row.lieu_renc || "").trim() || LIEU_INCONNU,
         phaseRaw: phaseRaw || "?",
         meta: meta,
-        score: hasScore(row) ? (row.score_cr + " - " + row.score_cv) : null
+        score: hasScore(row) ? (row.score_cr + " - " + row.score_cv) : null,
+        oid: String(row.oid || "")
       });
     });
 
@@ -884,6 +914,13 @@
     return blocs.join("\n\n");
   }
 
+  // Le report ne se conçoit que là où une grille de créneaux existe
+  // (Trinquet Paris, cf. report.html). Une partie passée sans score reste
+  // reportable : c'est même le cas le plus urgent à recaser.
+  function canReport(match) {
+    return !match.score && !!match.oid && matchesTrinquetParis(match.lieu);
+  }
+
   function buildMatchDetail(match) {
     var detail = el("div", { class: "match-detail" });
     detail.hidden = true;
@@ -900,6 +937,18 @@
       line.appendChild(document.createTextNode(side.label + " : " + (hasRoster ? side.roster.join(", ") : "composition non disponible")));
       detail.appendChild(line);
     });
+
+    // Le détail est un frère de la ligne cliquable (cf. buildMatchRow), pas
+    // un enfant : un clic ici ne déclenche donc pas le repli de la ligne.
+    if (canReport(match)) {
+      var actions = el("div", { class: "report-actions" });
+      actions.appendChild(el("a", {
+        class: "report-btn",
+        href: "report.html?oid=" + encodeURIComponent(match.oid),
+        text: "Chercher une date de report"
+      }));
+      detail.appendChild(actions);
+    }
 
     return detail;
   }
