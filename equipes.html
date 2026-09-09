@@ -140,7 +140,30 @@
     margin-bottom: 10px;
   }
   .recap-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .filter-subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    margin: 12px 0 6px;
+  }
+  .filter-subtitle:first-of-type { margin-top: 0; }
   .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* Onze clubs aux noms longs : en pastilles ils rempliraient cinq lignes.
+     Une liste déroulante native tient sur une ligne et se manipule mieux au
+     pouce, et un club à la fois est le besoin réel. */
+  .filter-select {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
   .filter-chip {
     font: inherit;
     font-size: 12px;
@@ -323,11 +346,14 @@
 
 <main>
   <div class="recap-card">
-    <div class="recap-title">Série</div>
+    <div class="recap-title">Filtres</div>
+    <div class="filter-subtitle">Série</div>
     <div class="filter-group" id="filterSeries">
       <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
       <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
     </div>
+    <div class="filter-subtitle">Club</div>
+    <select class="filter-select" id="filterClub" aria-label="Filtrer par club"></select>
   </div>
 
   <div id="banner-slot"></div>
@@ -336,7 +362,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.09</p>
+    <p>Version 2026.09.10</p>
   </footer>
 </main>
 
@@ -373,12 +399,13 @@
     "12": "Finale"
   };
 
-  var filterState = { series: { "1": true, "2": true } };
+  var filterState = { series: { "1": true, "2": true }, club: "" };   // club vide = tous
 
   function loadFilterState() {
     try {
       var saved = JSON.parse(localStorage.getItem(FILTER_CACHE_KEY));
       if (saved && saved.series) filterState.series = saved.series;
+      if (saved && typeof saved.club === "string") filterState.club = saved.club;
     } catch (e) { /* stockage indisponible ou corrompu : valeurs par défaut */ }
   }
 
@@ -712,7 +739,10 @@
     row.appendChild(quand);
 
     var main = el("div", { class: "match-main" });
-    main.appendChild(el("div", { class: "match-opp", text: (m.chezSoi ? "reçoit " : "se déplace chez ") + m.adversaire }));
+    // Pas de "reçoit" / "se déplace" : en Île-de-France tout se joue sur les
+    // mêmes trinquets, la réception ne change rien pour les joueurs. Le champ
+    // chezSoi ne sert plus qu'à orienter le score du bon côté.
+    main.appendChild(el("div", { class: "match-opp", text: "contre " + m.adversaire }));
     var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
     if (meta) main.appendChild(el("div", { class: "match-meta", text: meta }));
     row.appendChild(main);
@@ -754,13 +784,39 @@
     return block;
   }
 
+  function renderClubOptions(teams) {
+    var select = document.getElementById("filterClub");
+    var clubs = [];
+    teams.forEach(function (t) { if (clubs.indexOf(t.clubNom) === -1) clubs.push(t.clubNom); });
+    clubs.sort(function (a, b) { return a.localeCompare(b, "fr"); });
+
+    // Un club mémorisé qui a disparu des données ne doit pas filtrer dans le
+    // vide : on retombe sur "tous les clubs".
+    if (filterState.club && clubs.indexOf(filterState.club) === -1) {
+      filterState.club = "";
+      saveFilterState();
+    }
+
+    select.innerHTML = "";
+    select.appendChild(el("option", { value: "", text: "Tous les clubs (" + clubs.length + ")" }));
+    clubs.forEach(function (c) { select.appendChild(el("option", { value: c, text: c })); });
+    select.value = filterState.club;
+  }
+
   function renderResults(teams) {
     var results = document.getElementById("results");
     results.innerHTML = "";
 
-    var visibles = teams.filter(function (t) { return filterState.series[t.cat]; });
+    var visibles = teams.filter(function (t) {
+      return filterState.series[t.cat] && (!filterState.club || t.clubNom === filterState.club);
+    });
     if (visibles.length === 0) {
-      results.appendChild(el("div", { class: "empty-state", text: "Aucune équipe ne correspond aux filtres." }));
+      results.appendChild(el("div", {
+        class: "empty-state",
+        text: filterState.club
+          ? (filterState.club + " n'a aucune équipe dans les séries sélectionnées.")
+          : "Aucune équipe ne correspond aux filtres."
+      }));
       return;
     }
 
@@ -808,6 +864,7 @@
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       lastTeams = buildTeams(data.rencontres, buildClubMap(data.clubs));
+      renderClubOptions(lastTeams);
       renderResults(lastTeams);
     }
 
@@ -862,6 +919,13 @@
         saveFilterState();
         if (lastTeams) renderResults(lastTeams);
       });
+    });
+
+    var select = document.getElementById("filterClub");
+    select.addEventListener("change", function () {
+      filterState.club = select.value;
+      saveFilterState();
+      if (lastTeams) renderResults(lastTeams);
     });
   }
 

@@ -26,8 +26,14 @@ principales et met en évidence celle où l'on se trouve :
   l'intérieur une section par équipe classée par numéro. Chaque équipe affiche
   sa série, sa poule, son bilan (jouées, gagnées, perdues, à venir) et la liste
   chronologique de ses parties, avec l'adversaire, le lieu, et le score du point
-  de vue de l'équipe — vert si elle l'emporte, rouge sinon. Un filtre par série
-  réduit la liste, mémorisé d'une visite à l'autre.
+  de vue de l'équipe — vert si elle l'emporte, rouge sinon. Deux filtres
+  mémorisés d'une visite à l'autre : la série en pastilles, et le club en liste
+  déroulante (onze clubs aux noms longs rempliraient cinq lignes de pastilles,
+  et un club à la fois est le besoin réel).
+
+  Aucune mention de réception ni de déplacement : en Île-de-France tout se joue
+  sur les mêmes trinquets, la distinction ne veut rien dire pour les joueurs.
+  Elle reste utilisée en interne, uniquement pour orienter le score du bon côté.
 
   Chaque rencontre apparaît deux fois, une fois pour chaque équipe : c'est
   l'intérêt de la vue, et cela porte la page à 158 lignes pour 79 rencontres.
