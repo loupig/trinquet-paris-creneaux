@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compteur de points — LIDFPB</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #767986;
+    --border: #e6e7eb;
+    --accent-bg: #eef1fb;
+    --accent-border: #cdd6f7;
+    --accent: #2f5ce0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header-sync {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+
+  .page-nav {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .page-nav a {
+    flex: 1 1 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    text-decoration: none;
+  }
+  .page-nav a.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+  }
+  .page-nav a:active { background: var(--accent-bg); }
+
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 14px 12px 40px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .card-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
+
+  /* --- Réglages d'équipe --- */
+  .team-setup + .team-setup { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .team-name {
+    display: block;
+    width: 100%;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #fff;
+  }
+  .swatches { display: flex; gap: 6px; margin-top: 8px; }
+  .swatch {
+    flex: 1 1 0;
+    height: 32px;
+    max-width: 64px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
+    padding: 0;
+    cursor: pointer;
+  }
+  .swatch.on { border-color: var(--text); }
+
+  /* --- Tableau de score --- */
+  .scoreboard { display: flex; gap: 10px; margin-bottom: 10px; }
+  .score-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 2px solid;
+    border-radius: 14px;
+    background: var(--card-bg);
+    padding: 14px 8px 16px;
+    text-align: center;
+    cursor: pointer;
+    font: inherit;
+    color: var(--text);
+  }
+  .score-btn:active { transform: scale(0.98); }
+  .score-team {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .score-value {
+    font-size: 54px;
+    font-weight: 800;
+    line-height: 1;
+    margin: 6px 0 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-add { font-size: 12px; font-weight: 700; opacity: 0.75; }
+  .score-serve { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 4px; min-height: 12px; }
+
+  .chrono {
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .actions { display: flex; gap: 8px; }
+  .action-btn {
+    flex: 1 1 0;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 10px;
+    cursor: pointer;
+  }
+  .action-btn:active { background: var(--accent-bg); }
+  .action-btn[disabled] { color: var(--muted); opacity: 0.5; cursor: default; }
+  .action-btn.danger { color: #b3261e; }
+
+  /* --- Graphe --- */
+  .chart-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .chip-group { display: flex; gap: 6px; }
+  .chip {
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 11px;
+    cursor: pointer;
+  }
+  .chip.on {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+  }
+  .chart { width: 100%; height: auto; display: block; }
+  .chart text { font-size: 9px; fill: var(--muted); }
+  .chart .axis { stroke: var(--border); stroke-width: 1; }
+  .chart .zero { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+  .chart-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 28px 10px;
+  }
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .chart-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  footer {
+    text-align: center;
+    padding: 20px 4px 10px;
+  }
+  footer p {
+    margin: 0 0 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Compteur de points</h1>
+  <h1>Ligue d'Île-de-France</h1>
+  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, rien n'est partagé avec la ligue.</p>
+  <nav class="page-nav">
+    <a href="index.html">Créneaux libres</a>
+    <a href="programme.html">Programme</a>
+    <a href="compteur.html" class="active" aria-current="page">Compteur</a>
+  </nav>
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-title">Les deux équipes</div>
+    <div id="setup"></div>
+  </div>
+
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <p class="chrono" id="chrono" hidden></p>
+
+  <div class="actions">
+    <button type="button" class="action-btn" id="undoBtn">Annuler le dernier point</button>
+    <button type="button" class="action-btn danger" id="resetBtn">Nouvelle partie</button>
+  </div>
+
+  <div class="card" style="margin-top:10px">
+    <div class="chart-head">
+      <div class="card-title" style="margin:0">Déroulé de la partie</div>
+      <div class="chip-group" id="chartModes">
+        <button type="button" class="chip on" data-mode="scores">Scores</button>
+        <button type="button" class="chip" data-mode="ecart">Écart</button>
+        <button type="button" class="chip" data-mode="echanges">Échanges</button>
+      </div>
+    </div>
+    <div id="chart"></div>
+    <div class="chart-legend" id="chartLegend"></div>
+  </div>
+
+  <footer>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
+    <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
+    <p>Version 2026.09.09</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "lidfpb_compteur_v1";
+
+  // Les couleurs de l'ikurriña (rouge, vert, blanc), plus le noir. Palette
+  // imposée plutôt qu'un sélecteur libre : deux équipes qui choisiraient deux
+  // teintes voisines rendraient le graphe illisible.
+  //
+  // "fill" sert au fond (pastille, teinte de la carte) et "trait" à tout ce
+  // qui doit rester lisible sur blanc : bordure, texte, courbe. Les deux ne
+  // coïncident pas pour le blanc, invisible sur fond blanc, ni pour le vert
+  // de l'ikurriña, trop clair pour du texte de 12 px.
+  var PALETTE = [
+    { nom: "Rouge", fill: "#CE1126", trait: "#CE1126" },
+    { nom: "Vert",  fill: "#009B48", trait: "#00713a" },
+    { nom: "Blanc", fill: "#ffffff", trait: "#767986" },
+    { nom: "Noir",  fill: "#1a1a2e", trait: "#1a1a2e" }
+  ];
+
+  function entree(fill) {
+    for (var i = 0; i < PALETTE.length; i++) { if (PALETTE[i].fill === fill) return PALETTE[i]; }
+    return PALETTE[0];
+  }
+  function trait(fill) { return entree(fill).trait; }
+
+  // Teinte de fond très légère, tirée de la couleur de l'équipe. Le blanc ne
+  // produit rien de visible, ce qui est cohérent : c'est l'équipe en blanc.
+  function teinte(fill) {
+    var h = fill.replace("#", "");
+    return "rgba(" + parseInt(h.slice(0, 2), 16) + "," + parseInt(h.slice(2, 4), 16) + "," + parseInt(h.slice(4, 6), 16) + ",0.08)";
+  }
+
+  // Tout l'état tient dans la liste ordonnée des points marqués — l'équipe qui
+  // l'emporte (t) et l'instant où il est tombé (at) : les scores, les durées
+  // d'échange, le graphe et l'annulation en découlent, il n'y a donc jamais
+  // deux sources de vérité à resynchroniser.
+  var state = {
+    teams: [
+      { name: "Équipe 1", color: PALETTE[0].fill },
+      { name: "Équipe 2", color: PALETTE[1].fill }
+    ],
+    points: [],
+    mode: "scores"
+  };
+
+  function load() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (!saved) return;
+      if (Array.isArray(saved.teams) && saved.teams.length === 2) {
+        saved.teams.forEach(function (t, i) {
+          if (t && typeof t.name === "string") state.teams[i].name = t.name;
+          if (t && PALETTE.some(function (c) { return c.fill === t.color; })) state.teams[i].color = t.color;
+        });
+      }
+      if (Array.isArray(saved.points)) {
+        // Les parties enregistrées avant l'horodatage stockaient un simple
+        // 0 ou 1 : on les relit sans durée plutôt que de les perdre.
+        state.points = saved.points.map(function (p) {
+          if (p === 0 || p === 1) return { t: p, at: null };
+          if (p && (p.t === 0 || p.t === 1)) return { t: p.t, at: typeof p.at === "number" ? p.at : null };
+          return null;
+        }).filter(Boolean);
+      }
+      if (["scores", "ecart", "echanges"].indexOf(saved.mode) !== -1) state.mode = saved.mode;
+    } catch (e) { /* stockage indisponible ou entrée corrompue : on repart à zéro */ }
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* quota ou stockage désactivé : pas bloquant */ }
+  }
+
+  function scores() {
+    var s = [0, 0];
+    state.points.forEach(function (p) { s[p.t] += 1; });
+    return s;
+  }
+
+  // Durée de l'échange qui a mené à chaque point, en secondes. Le premier
+  // point n'en a pas : on ne sait pas quand la partie a commencé. Une partie
+  // relue depuis une version antérieure à l'horodatage n'en a aucune.
+  function durees() {
+    var d = [];
+    for (var i = 1; i < state.points.length; i++) {
+      var a = state.points[i - 1].at, b = state.points[i].at;
+      d.push((a && b && b > a) ? Math.round((b - a) / 1000) : null);
+    }
+    return d;
+  }
+
+  function formatDuree(sec) {
+    if (sec == null) return "—";
+    if (sec < 60) return sec + " s";
+    var m = Math.floor(sec / 60);
+    if (m < 60) return m + " min" + (sec % 60 ? " " + (sec % 60) + " s" : "");
+    return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0");
+  }
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (k === "class") e.className = attrs[k];
+        else if (k === "text") e.textContent = attrs[k];
+        else e.setAttribute(k, attrs[k]);
+      }
+    }
+    (children || []).forEach(function (c) { e.appendChild(c); });
+    return e;
+  }
+
+  // Les nœuds SVG exigent createElementNS : un createElement("svg") produit un
+  // élément HTML inconnu, qui ne s'affiche pas.
+  function svg(tag, attrs) {
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // ---------------------------------------------------------------
+  // Réglages des équipes
+  // ---------------------------------------------------------------
+  function renderSetup() {
+    var box = document.getElementById("setup");
+    box.innerHTML = "";
+
+    state.teams.forEach(function (team, i) {
+      var ligne = el("div", { class: "team-setup" });
+
+      var champ = el("input", {
+        class: "team-name", type: "text", value: team.name,
+        maxlength: "24", "aria-label": "Nom de l'équipe " + (i + 1)
+      });
+      champ.addEventListener("input", function () {
+        team.name = champ.value;
+        save();
+        renderScoreboard();
+        renderChart();
+      });
+      ligne.appendChild(champ);
+
+      var pastilles = el("div", { class: "swatches" });
+      PALETTE.forEach(function (couleur) {
+        var b = el("button", {
+          type: "button",
+          class: "swatch" + (team.color === couleur.fill ? " on" : ""),
+          style: "background:" + couleur.fill,
+          "aria-label": couleur.nom
+        });
+        b.addEventListener("click", function () {
+          // Deux équipes de la même couleur rendraient le graphe illisible :
+          // l'autre équipe récupère la couleur libérée.
+          var autre = state.teams[1 - i];
+          if (autre.color === couleur.fill) autre.color = team.color;
+          team.color = couleur.fill;
+          save();
+          renderAll();
+        });
+        pastilles.appendChild(b);
+      });
+      ligne.appendChild(pastilles);
+
+      box.appendChild(ligne);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Tableau de score
+  // ---------------------------------------------------------------
+  function renderScoreboard() {
+    var box = document.getElementById("scoreboard");
+    box.innerHTML = "";
+    var s = scores();
+    var dernier = state.points.length ? state.points[state.points.length - 1].t : null;
+
+    state.teams.forEach(function (team, i) {
+      var couleur = trait(team.color);
+      var b = el("button", {
+        type: "button",
+        class: "score-btn",
+        style: "border-color:" + couleur + ";background:" + teinte(team.color),
+        "aria-label": "Ajouter un point à " + (team.name || "l'équipe " + (i + 1))
+      });
+      b.appendChild(el("div", { class: "score-team", style: "color:" + couleur, text: team.name || "Équipe " + (i + 1) }));
+      b.appendChild(el("div", { class: "score-value", style: "color:" + couleur, text: String(s[i]) }));
+      b.appendChild(el("div", { class: "score-add", style: "color:" + couleur, text: "+1" }));
+      b.appendChild(el("div", { class: "score-serve", text: dernier === i ? "dernier point" : "" }));
+      b.addEventListener("click", function () {
+        state.points.push({ t: i, at: Date.now() });
+        save();
+        renderScoreboard();
+        renderChart();
+        majActions();
+        majChrono();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  // Rafraîchi chaque seconde tant qu'une partie est en cours : le temps depuis
+  // le dernier point est la seule valeur qui bouge sans qu'on touche à l'écran.
+  var chronoTimer = null;
+
+  function majChrono() {
+    var box = document.getElementById("chrono");
+    var n = state.points.length;
+    if (n === 0) {
+      box.hidden = true;
+      if (chronoTimer) { clearInterval(chronoTimer); chronoTimer = null; }
+      return;
+    }
+    box.hidden = false;
+
+    var premier = state.points[0].at, dernier = state.points[n - 1].at;
+    var morceaux = [n + " point" + (n > 1 ? "s" : "")];
+    if (premier && dernier && dernier > premier) morceaux.push("partie : " + formatDuree(Math.round((dernier - premier) / 1000)));
+    if (dernier) morceaux.push("dernier point il y a " + formatDuree(Math.max(0, Math.round((Date.now() - dernier) / 1000))));
+    box.textContent = morceaux.join(" · ");
+
+    if (!chronoTimer) chronoTimer = setInterval(majChrono, 1000);
+  }
+
+  function majActions() {
+    var vide = state.points.length === 0;
+    document.getElementById("undoBtn").disabled = vide;
+    document.getElementById("resetBtn").disabled = vide;
+  }
+
+  // ---------------------------------------------------------------
+  // Graphe
+  // ---------------------------------------------------------------
+  // Deux lectures du même déroulé :
+  //  - "scores" : une courbe par équipe. Les deux scores s'additionnant
+  //    toujours au nombre de points joués, les courbes sont symétriques et la
+  //    bande qui les sépare vaut le double de l'écart — bande fine, ça s'est
+  //    resserré ; bande large, ça s'est décroché.
+  //  - "ecart" : la différence seule, autour de zéro. Chaque passage par zéro
+  //    est un changement de leader.
+  var CH = { w: 320, h: 150, gauche: 24, droite: 8, haut: 10, bas: 20 };
+
+  function renderChart() {
+    var box = document.getElementById("chart");
+    var legende = document.getElementById("chartLegend");
+    box.innerHTML = "";
+    legende.innerHTML = "";
+
+    var n = state.points.length;
+    if (n === 0) {
+      box.appendChild(el("div", { class: "chart-empty", text: "Le déroulé apparaîtra dès le premier point marqué." }));
+      return;
+    }
+
+    // Séries cumulées, en partant de 0-0 avant le premier échange.
+    var serieA = [0], serieB = [0], ecart = [0];
+    var a = 0, b = 0;
+    state.points.forEach(function (p) {
+      if (p.t === 0) a += 1; else b += 1;
+      serieA.push(a); serieB.push(b); ecart.push(a - b);
+    });
+
+    var x0 = CH.gauche, x1 = CH.w - CH.droite;
+    var y0 = CH.haut, y1 = CH.h - CH.bas;
+    var px = function (i) { return x0 + (n === 0 ? 0 : (i / n) * (x1 - x0)); };
+
+    var s = svg("svg", {
+      class: "chart",
+      viewBox: "0 0 " + CH.w + " " + CH.h,
+      role: "img",
+      "aria-label": "Évolution du score au fil des points joués"
+    });
+
+    var d = durees();
+    var dConnues = d.filter(function (v) { return v != null; });
+
+    // Le mode Échanges n'a de sens qu'avec des horodatages : une partie relue
+    // d'avant cette version, ou dont on vient d'annuler tous les points sauf
+    // un, n'en a aucun.
+    if (state.mode === "echanges" && dConnues.length === 0) {
+      box.appendChild(el("div", { class: "chart-empty", text: "Pas encore de durée d'échange mesurée : il en faut au moins deux points." }));
+      return;
+    }
+
+    // Une partie comporte des pauses entre les jeux : cadrer sur la plus
+    // longue durée écraserait tous les vrais échanges au ras de l'axe. On
+    // plafonne un peu au-dessus du 90e centile, les rares barres au-dessus
+    // touchent le haut et sont comptées dans le résumé.
+    var trie = dConnues.slice().sort(function (x, y) { return x - y; });
+    var centile = function (q) { return trie.length ? trie[Math.min(trie.length - 1, Math.floor(trie.length * q))] : 0; };
+    var plafond = Math.max(5, Math.ceil(centile(0.9) * 1.2));
+
+    var maxY, minY;
+    if (state.mode === "echanges") { minY = 0; maxY = plafond; }
+    else if (state.mode === "scores") { minY = 0; maxY = Math.max(1, a, b); }
+    else {
+      var amp = Math.max(1, Math.max.apply(null, ecart.map(Math.abs)));
+      minY = -amp; maxY = amp;
+    }
+    var py = function (v) { return y1 - ((v - minY) / (maxY - minY)) * (y1 - y0); };
+
+    // Graduations Y : bornes, plus le zéro en mode écart.
+    var ticks = state.mode === "ecart" ? [minY, 0, maxY] : [0, maxY];
+    ticks.forEach(function (v) {
+      var t = svg("text", { x: x0 - 4, y: py(v) + 3, "text-anchor": "end" });
+      t.textContent = state.mode === "ecart" ? String(Math.abs(v)) : (state.mode === "echanges" ? v + "s" : String(v));
+      s.appendChild(t);
+    });
+
+    s.appendChild(svg("line", { class: "axis", x1: x0, y1: y1, x2: x1, y2: y1 }));
+    s.appendChild(svg("line", { class: "axis", x1: x0, y1: y0, x2: x0, y2: y1 }));
+
+    var pts = function (serie) {
+      return serie.map(function (v, i) { return px(i) + "," + py(v); }).join(" ");
+    };
+
+    if (state.mode === "echanges") {
+      // Une barre par échange, à la couleur de l'équipe qui a pris le point :
+      // les barres hautes sont les points longuement disputés.
+      var largeur = Math.max(1, (x1 - x0) / Math.max(1, d.length) - 1);
+      d.forEach(function (v, i) {
+        if (v == null) return;
+        var hauteur = Math.max(1, y1 - py(Math.min(v, plafond)));
+        s.appendChild(svg("rect", {
+          x: px(i + 1) - largeur / 2, y: y1 - hauteur, width: largeur, height: hauteur,
+          fill: trait(state.teams[state.points[i + 1].t].color), "fill-opacity": "0.85", rx: "1"
+        }));
+      });
+    } else if (state.mode === "scores") {
+      // Bande d'écart : contour de A à l'aller, de B au retour.
+      var contour = serieA.map(function (v, i) { return px(i) + "," + py(v); })
+        .concat(serieB.map(function (v, i) { return px(i) + "," + py(v); }).reverse()).join(" ");
+      s.appendChild(svg("polygon", { points: contour, fill: "var(--text)", "fill-opacity": "0.09" }));
+
+      [[serieA, state.teams[0]], [serieB, state.teams[1]]].forEach(function (paire) {
+        s.appendChild(svg("polyline", {
+          points: pts(paire[0]), fill: "none", stroke: trait(paire[1].color),
+          "stroke-width": "2", "stroke-linejoin": "round", "stroke-linecap": "round",
+          "vector-effect": "non-scaling-stroke"
+        }));
+      });
+    } else {
+      s.appendChild(svg("line", { class: "zero", x1: x0, y1: py(0), x2: x1, y2: py(0) }));
+      // Une seule courbe, mais coloriée par segment : elle prend la couleur de
+      // l'équipe qui mène à ce moment-là.
+      for (var i = 1; i < ecart.length; i++) {
+        var meneur = ecart[i] > 0 ? 0 : (ecart[i] < 0 ? 1 : (ecart[i - 1] > 0 ? 0 : 1));
+        s.appendChild(svg("line", {
+          x1: px(i - 1), y1: py(ecart[i - 1]), x2: px(i), y2: py(ecart[i]),
+          stroke: trait(state.teams[meneur].color), "stroke-width": "2", "stroke-linecap": "round",
+          "vector-effect": "non-scaling-stroke"
+        }));
+      }
+    }
+
+    // Graduations X : début, fin, et le point médian s'il y a la place.
+    var repX = n >= 6 ? [0, Math.round(n / 2), n] : [0, n];
+    repX.forEach(function (i) {
+      var t = svg("text", { x: px(i), y: CH.h - 6, "text-anchor": i === 0 ? "start" : (i === n ? "end" : "middle") });
+      t.textContent = String(i);
+      s.appendChild(t);
+    });
+
+    box.appendChild(s);
+
+    // Légende, avec le fait marquant : le plus gros écart et où il s'est produit.
+    state.teams.forEach(function (team, i) {
+      var nom = team.name || "Équipe " + (i + 1);
+      var sp = el("span");
+      sp.appendChild(el("i", { style: "background:" + team.color + ";box-shadow:inset 0 0 0 1px " + trait(team.color) }));
+      sp.appendChild(document.createTextNode(
+        state.mode === "scores" ? (nom + " : " + (i === 0 ? a : b))
+        : state.mode === "echanges" ? (nom + " : " + (i === 0 ? a : b) + " point" + ((i === 0 ? a : b) > 1 ? "s" : ""))
+        : (nom + " mène " + (i === 0 ? "au-dessus" : "en dessous"))));
+      legende.appendChild(sp);
+    });
+    if (state.mode === "echanges") {
+      // Médiane plutôt que moyenne : une seule pause entre deux jeux suffirait
+      // à fausser une moyenne, pas la médiane.
+      var plusLong = Math.max.apply(null, dConnues);
+      var iLong = d.indexOf(plusLong) + 1;
+      var horsEchelle = dConnues.filter(function (v) { return v > plafond; }).length;
+      var texte = "Échange médian : " + formatDuree(centile(0.5)) +
+                  ". Le plus long : " + formatDuree(plusLong) + ", au " + (iLong + 1) + "e point.";
+      if (horsEchelle) texte += " " + horsEchelle + " au-dessus de l'échelle (pauses entre les jeux).";
+      legende.appendChild(el("span", { text: texte }));
+      return;
+    }
+
+    var maxEcart = 0, iMax = 0;
+    ecart.forEach(function (v, i) { if (Math.abs(v) > Math.abs(maxEcart)) { maxEcart = v; iMax = i; } });
+    var changements = 0;
+    for (var k = 1; k < ecart.length; k++) {
+      if (ecart[k] !== 0 && ecart[k - 1] !== 0 && (ecart[k] > 0) !== (ecart[k - 1] > 0)) changements += 1;
+    }
+    var resume = maxEcart === 0
+      ? "Jamais plus d'un point d'écart."
+      : "Plus gros écart : " + Math.abs(maxEcart) + " point" + (Math.abs(maxEcart) > 1 ? "s" : "") +
+        " pour " + (state.teams[maxEcart > 0 ? 0 : 1].name || "l'équipe " + (maxEcart > 0 ? 1 : 2)) +
+        ", au " + iMax + "e point joué.";
+    if (changements) resume += " " + changements + " changement" + (changements > 1 ? "s" : "") + " de leader.";
+    legende.appendChild(el("span", { text: resume }));
+  }
+
+  function renderAll() {
+    renderSetup();
+    renderScoreboard();
+    renderChart();
+    majActions();
+    majChrono();
+  }
+
+  document.getElementById("undoBtn").addEventListener("click", function () {
+    if (!state.points.length) return;
+    state.points.pop();
+    save();
+    renderScoreboard();
+    renderChart();
+    majActions();
+    majChrono();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    if (!state.points.length) return;
+    var s = scores();
+    // Une partie de trinquet se joue en 40 points : effacer par erreur après
+    // une heure de jeu n'est pas rattrapable, d'où la confirmation.
+    if (!window.confirm("Effacer la partie en cours (" + s[0] + " - " + s[1] + ") ? Les noms et les couleurs sont conservés.")) return;
+    state.points = [];
+    save();
+    renderScoreboard();
+    renderChart();
+    majActions();
+    majChrono();
+  });
+
+  document.querySelectorAll("#chartModes .chip").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      state.mode = chip.getAttribute("data-mode");
+      document.querySelectorAll("#chartModes .chip").forEach(function (c) {
+        c.classList.toggle("on", c.getAttribute("data-mode") === state.mode);
+      });
+      save();
+      renderChart();
+    });
+  });
+
+  load();
+  document.querySelectorAll("#chartModes .chip").forEach(function (c) {
+    c.classList.toggle("on", c.getAttribute("data-mode") === state.mode);
+  });
+  renderAll();
+})();
+</script>
+</body>
+</html>

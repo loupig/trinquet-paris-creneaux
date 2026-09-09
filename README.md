@@ -11,10 +11,10 @@ créneaux libres à la main.
 
 ## Pages
 
-Trois pages statiques indépendantes, sans build ni dépendance, chacune avec
-son CSS et son JS inline. Un menu à deux entrées (« Créneaux libres » /
-« Programme »), en haut de chaque page dans le bandeau fixe, signale les deux
-destinations principales et met en évidence celle où l'on se trouve :
+Quatre pages statiques indépendantes, sans build ni dépendance, chacune avec
+son CSS et son JS inline. Un menu à trois entrées (« Créneaux libres » /
+« Programme » / « Compteur »), en haut de chaque page, signale les destinations
+principales et met en évidence celle où l'on se trouve :
 
 - [`index.html`](index.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.
@@ -30,6 +30,45 @@ destinations principales et met en évidence celle où l'on se trouve :
   créneaux pris sont barrés sans être détaillés : pour savoir qui les occupe,
   c'est `index.html`. Comme le reste du site, la page n'enregistre rien et ne
   prévient personne.
+- [`compteur.html`](compteur.html) — compteur de points pour marquer une
+  partie sur place : deux équipes, un grand bouton par équipe, annulation du
+  dernier point, et un graphe du déroulé. **Seule page qui n'appelle pas
+  l'API** : elle ne lit aucune donnée de la ligue, tout vit dans le
+  `localStorage` du visiteur.
+
+  Les couleurs d'équipe sont limitées aux couleurs de l'ikurriña (rouge, vert,
+  blanc) plus le noir : palette imposée pour que deux équipes ne choisissent
+  pas deux teintes voisines et ne rendent le graphe illisible. Chaque entrée
+  porte une couleur de remplissage (pastille, teinte de carte à 8 %) et une
+  couleur de trait (bordure, texte, courbe). Les deux diffèrent pour le blanc,
+  invisible sur fond blanc, et pour le vert de l'ikurriña, trop clair pour du
+  texte de 12 px : ils passent respectivement en gris et en vert foncé partout
+  où la lisibilité compte.
+
+  Le graphe a deux lectures du même déroulé. En mode « Scores », une courbe par
+  équipe ; les deux scores s'additionnant toujours au nombre de points joués,
+  les courbes sont symétriques et la bande grise qui les sépare vaut le double
+  de l'écart — bande fine, ça s'est resserré, bande large, ça s'est décroché. En
+  mode « Écart », la différence seule autour de zéro, la courbe prenant la
+  couleur de l'équipe qui mène : chaque passage par zéro est un changement de
+  leader. Une ligne de résumé donne le plus gros écart, à quel point du match il
+  est survenu, et le nombre de changements de leader.
+
+  Chaque point est horodaté, ce qui donne un troisième mode, « Échanges » :
+  une barre par point, à la couleur de l'équipe qui l'a emporté, hauteur égale
+  à la durée de l'échange. Une partie comporte des pauses entre les jeux, donc
+  l'échelle est plafonnée un peu au-dessus du 90e centile — sans quoi une seule
+  pause de trois minutes écraserait tous les vrais échanges au ras de l'axe — et
+  le résumé donne la médiane plutôt que la moyenne, pour la même raison. Les
+  rares barres au-delà du plafond touchent le haut et sont comptées à part. Une
+  ligne sous le score rappelle le nombre de points, la durée de la partie et le
+  temps écoulé depuis le dernier point, rafraîchie chaque seconde.
+
+  Tout l'état tient dans la liste ordonnée des points marqués — l'équipe qui
+  l'emporte et l'instant où il est tombé : les scores, les durées, le graphe et
+  l'annulation en découlent, il n'y a jamais deux sources de vérité à
+  resynchroniser. Les parties enregistrées avant l'horodatage se relisent sans
+  durées plutôt que d'être perdues.
 
 ## Fonctionnement
 
