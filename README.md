@@ -11,9 +11,9 @@ créneaux libres à la main.
 
 ## Pages
 
-Quatre pages statiques indépendantes, sans build ni dépendance, chacune avec
-son CSS et son JS inline. Un menu à trois entrées (« Créneaux libres » /
-« Programme » / « Compteur »), en haut de chaque page, signale les destinations
+Cinq pages statiques indépendantes, sans build ni dépendance, chacune avec son
+CSS et son JS inline. Un menu à quatre entrées (« Créneaux » / « Programme » /
+« Équipes » / « Compteur »), en haut de chaque page, signale les destinations
 principales et met en évidence celle où l'on se trouve :
 
 - [`index.html`](index.html) — créneaux libres au Trinquet Paris, en tableau
@@ -21,6 +21,19 @@ principales et met en évidence celle où l'on se trouve :
 - [`programme.html`](programme.html) — calendrier complet des championnats,
   tous lieux et toutes séries, passées et à venir, avec compositions et
   contacts des responsables d'équipe.
+- [`equipes.html`](equipes.html) — les mêmes rencontres, mais vues par équipe
+  plutôt que par date : une carte par club, dans l'ordre alphabétique, et à
+  l'intérieur une section par équipe classée par numéro. Chaque équipe affiche
+  sa série, sa poule, son bilan (jouées, gagnées, perdues, à venir) et la liste
+  chronologique de ses parties, avec l'adversaire, le lieu, et le score du point
+  de vue de l'équipe — vert si elle l'emporte, rouge sinon. Un filtre par série
+  réduit la liste, mémorisé d'une visite à l'autre.
+
+  Chaque rencontre apparaît deux fois, une fois pour chaque équipe : c'est
+  l'intérêt de la vue, et cela porte la page à 158 lignes pour 79 rencontres.
+  L'identité d'une équipe est la clé catégorie + club + numéro ; la catégorie y
+  figure par prudence, rien ne garantissant qu'un club ne réutilise pas un
+  numéro d'équipe d'une série à l'autre.
 - [`report.html`](report.html) — aide au choix d'une date de report. S'ouvre
   depuis le bouton « Chercher une date de report » d'une partie non jouée du
   programme (`report.html?oid=<oid de la rencontre>`), rappelle le créneau

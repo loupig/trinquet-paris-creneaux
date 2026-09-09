@@ -394,6 +394,7 @@
   }
   .page-nav a {
     flex: 1 1 0;
+    min-width: 0;
     text-align: center;
     font-size: 12px;
     font-weight: 600;
@@ -401,8 +402,9 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 7px 10px;
+    padding: 7px 6px;
     text-decoration: none;
+    white-space: nowrap;
   }
   .page-nav a.active {
     color: var(--accent);
@@ -451,8 +453,9 @@
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
   </div>
   <nav class="page-nav">
-    <a href="index.html" class="active" aria-current="page">Créneaux libres</a>
+    <a href="index.html" class="active" aria-current="page">Créneaux</a>
     <a href="programme.html">Programme</a>
+    <a href="equipes.html">Équipes</a>
     <a href="compteur.html">Compteur</a>
   </nav>
   <p class="header-sync">Réservés par la ligue aux parties de championnat, pas à un usage libre.</p>

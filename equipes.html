@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parties par équipe — LIDFPB</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #767986;
+    --border: #e6e7eb;
+    --serie1-bg: #e3f6f4;
+    --serie1-text: #0f766e;
+    --serie1-border: #b7e6e0;
+    --serie2-bg: #fef3e2;
+    --serie2-text: #b45309;
+    --serie2-border: #f6d9a8;
+    --accent-bg: #eef1fb;
+    --accent-border: #cdd6f7;
+    --warn-bg: #fff3cd;
+    --warn-text: #7a5b00;
+    --warn-border: #f0dd9a;
+    --error-bg: #fdecec;
+    --error-text: #8a1c16;
+    --error-border: #f5c2c0;
+    --win-text: #1e7a43;
+    --loss-text: #b3261e;
+    --accent: #2f5ce0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .header-refresh {
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin-top: 1px;
+  }
+  .header-refresh:active { background: #eef1fb; }
+  header .header-sync {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  header .header-sync a { color: var(--accent); }
+  header .header-sync strong { color: var(--text); }
+
+  .page-nav {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .page-nav a {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 6px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .page-nav a.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+  }
+  .page-nav a:active { background: var(--accent-bg); }
+
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 14px 12px 60px;
+  }
+
+  .banner {
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    border: 1px solid;
+  }
+  .banner.error { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
+  .banner.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+  .banner strong { display: block; margin-bottom: 4px; }
+
+  .recap-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .recap-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filter-chip {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .filter-chip.active { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+  .filter-chip.serie-1.active { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
+  .filter-chip.serie-2.active { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
+
+  /* --- Club --- */
+  .club-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .club-head {
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .club-head span { font-weight: 600; color: var(--muted); font-size: 11px; }
+
+  /* --- Équipe --- */
+  .team-block { border-bottom: 1px solid var(--border); }
+  .team-block:last-child { border-bottom: none; }
+  .team-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px 8px;
+  }
+  .team-name { font-size: 13px; font-weight: 700; }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
+  .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
+  .team-poule { font-size: 11px; color: var(--muted); }
+  .team-record {
+    padding: 0 14px 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .team-record b { color: var(--text); font-weight: 700; }
+
+  /* --- Une partie --- */
+  .match-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .match-when {
+    flex: 0 0 74px;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+  .match-when b { display: block; color: var(--text); font-weight: 700; }
+  .match-main { flex: 1 1 auto; min-width: 0; }
+  .match-opp { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .match-meta { font-size: 10px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
+  .match-score {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .match-score.win { color: var(--win-text); }
+  .match-score.loss { color: var(--loss-text); }
+  .match-score.todo { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+  .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
+
+  .skeleton-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .skeleton-card-header { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .skeleton-row { padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .skeleton-row:last-child { border-bottom: none; }
+  .skeleton-bar {
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ececef 25%, #f6f6f8 37%, #ececef 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .skeleton-bar { animation: none; } }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
+  .fab-row {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 50;
+  }
+  .fab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  .fab-btn:active { opacity: 0.85; }
+
+  .league-link-btn {
+    position: fixed;
+    left: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    background: #CE1126;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 24px;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    z-index: 50;
+  }
+  .league-link-btn:active { opacity: 0.85; }
+
+  footer { text-align: center; padding: 20px 4px 10px; }
+  footer p { margin: 0 0 6px; font-size: 11px; color: var(--muted); }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <h1>Parties par équipe</h1>
+      <h1>Ligue d'Île-de-France</h1>
+    </div>
+    <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
+  </div>
+  <p class="header-sync">Toutes les rencontres regroupées par club puis par équipe, jouées et à venir.</p>
+  <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
+  <nav class="page-nav">
+    <a href="index.html">Créneaux</a>
+    <a href="programme.html">Programme</a>
+    <a href="equipes.html" class="active" aria-current="page">Équipes</a>
+    <a href="compteur.html">Compteur</a>
+  </nav>
+</header>
+
+<main>
+  <div class="recap-card">
+    <div class="recap-title">Série</div>
+    <div class="filter-group" id="filterSeries">
+      <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
+      <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
+    </div>
+  </div>
+
+  <div id="banner-slot"></div>
+  <div id="results"></div>
+
+  <footer>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
+    <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
+    <p>Version 2026.09.09</p>
+  </footer>
+</main>
+
+<a class="league-link-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
+<div class="fab-row">
+  <button id="backToTopBtn" class="fab-btn" type="button" aria-label="Remonter en haut de la page">↑</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // Configuration
+  // ---------------------------------------------------------------
+  var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
+  var FILTER_CACHE_KEY = "lidfpb_equipes_filters_v1";
+  var CACHE_TTL_MS = 5 * 60 * 1000;
+
+  var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
+
+  var PHASE_LABELS = {
+    "1": "Poules",
+    "2": "Barrage",
+    "3": "Barrage 1er tour",
+    "4": "Barrage 2e tour",
+    "5": "Barrage 3e tour",
+    "6": "Barrage maintien",
+    "7": "1/32e de finale",
+    "8": "1/16e de finale",
+    "9": "1/8e de finale",
+    "10": "1/4 de finale",
+    "11": "1/2 finale",
+    "12": "Finale"
+  };
+
+  var filterState = { series: { "1": true, "2": true } };
+
+  function loadFilterState() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(FILTER_CACHE_KEY));
+      if (saved && saved.series) filterState.series = saved.series;
+    } catch (e) { /* stockage indisponible ou corrompu : valeurs par défaut */ }
+  }
+
+  function saveFilterState() {
+    try { localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(filterState)); } catch (e) { /* pas bloquant */ }
+  }
+
+  var lastTeams = null;
+
+  // ---------------------------------------------------------------
+  // Parsing des dates / heures du format LIDFPB (identique à index.html)
+  // ---------------------------------------------------------------
+  function parseDateRenc(raw) {
+    if (!raw) return null;
+    var s = String(raw).trim();
+    if (!/^\d{7,8}$/.test(s)) return null;
+    if (s.length === 7) s = "0" + s;
+    var day = parseInt(s.slice(0, 2), 10);
+    var month = parseInt(s.slice(2, 4), 10);
+    var year = parseInt(s.slice(4, 8), 10);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    var nowYear = new Date().getFullYear();
+    if (year < nowYear - 2 || year > nowYear + 4) return null;
+    var d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+    return d;
+  }
+
+  function parseHeureRenc(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d{1,4}$/.test(s)) return null;
+    s = s.padStart(4, "0");
+    var hour = parseInt(s.slice(0, 2), 10);
+    var minute = parseInt(s.slice(2, 4), 10);
+    if (hour > 23 || minute > 59) return null;
+    return { hour: hour, minute: minute };
+  }
+
+  function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  // Date "effective" d'une rencontre : si reportée (date_rep renseignée et
+  // différente de date_renc), c'est cette nouvelle date qui compte.
+  function effectiveDate(row) {
+    var original = parseDateRenc(row.date_renc);
+    var reported = parseDateRenc(row.date_rep);
+    if (reported && (!original || reported.getTime() !== original.getTime())) {
+      return reported;
+    }
+    return original;
+  }
+
+  // ---------------------------------------------------------------
+  // Cache des appels API
+  // ---------------------------------------------------------------
+  // Le cache est indexé par URL de requête, et donc partagé par les pages du
+  // site : arriver ici depuis le programme ne refait pas les appels déjà faits.
+  var API_CACHE_PREFIX = "lidfpb_api_v1:";
+
+  function readApiCache(url) {
+    try {
+      var raw = localStorage.getItem(API_CACHE_PREFIX + url);
+      if (!raw) return null;
+      var entry = JSON.parse(raw);
+      return (entry && entry.json && entry.fetchedAt) ? entry : null;
+    } catch (e) { return null; }   // stockage indisponible ou entrée corrompue
+  }
+
+  function writeApiCache(url, json) {
+    try {
+      localStorage.setItem(API_CACHE_PREFIX + url, JSON.stringify({ fetchedAt: Date.now(), json: json }));
+    } catch (e) { /* quota dépassé ou stockage désactivé : pas bloquant */ }
+  }
+
+  // Les deux sources acceptées par fetchLiveData. viaCache note au passage
+  // l'entrée la plus ancienne utilisée, pour pouvoir dater ce qui est affiché.
+  //
+  // viaReseau réutilise une entrée encore fraîche plutôt que de la redemander :
+  // quand deux pages partagent une table, la seconde ne repaie pas l'appel que
+  // la première vient de faire. maxAge à 0 force le vrai rechargement.
+  function viaReseau(maxAge) {
+    return function (url) {
+      var entry = readApiCache(url);
+      if (entry && maxAge > 0 && (Date.now() - entry.fetchedAt) < maxAge) return Promise.resolve(entry.json);
+      return fetchJson(url);
+    };
+  }
+
+  function viaCache(holder) {
+    return function (url) {
+      var entry = readApiCache(url);
+      if (!entry) return Promise.reject(new Error("absent du cache"));
+      if (!holder.fetchedAt || entry.fetchedAt < holder.fetchedAt) holder.fetchedAt = entry.fetchedAt;
+      return Promise.resolve(entry.json);
+    };
+  }
+
+  function buildUrl(table, params) {
+    var url = API_BASE + "?table=" + encodeURIComponent(table);
+    for (var k in params) {
+      url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+    }
+    return url;
+  }
+
+  function fetchJson(url) {
+    return fetch(url, { method: "GET" }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status + " sur l'API");
+      return res.json();
+    }).then(function (json) {
+      if (!json || typeof json !== "object") throw new Error("Réponse API illisible (format inattendu)");
+      if (json.error) throw new Error("Erreur API : " + json.error);
+      if (!Array.isArray(json.data)) throw new Error("Réponse API sans champ 'data' exploitable");
+      writeApiCache(url, json);
+      return json;
+    });
+  }
+
+  function fetchLiveData(source) {
+    // Pas de filtre lieu : cette page couvre toutes les rencontres, tous lieux.
+    var rencontresPromise = source(buildUrl("rencontres", {}));
+    var clubsPromise = source(buildUrl("clubs", {}));
+
+    return Promise.all([rencontresPromise, clubsPromise]).then(function (results) {
+      var rencontres = results[0].data.filter(function (row) {
+        var cat = String(row["Catégorie"] || "").trim();
+        return SERIE_LABELS.hasOwnProperty(cat) && row.oid;
+      });
+      return {
+        rencontres: rencontres,
+        clubs: results[1].data,
+        fetchedAt: Date.now(),
+        lastSync: results[0].lastSync || null
+      };
+    });
+  }
+
+  // Signature bon marché des données : après un rafraîchissement, elle évite
+  // de re-rendre la page si rien n'a changé — la source ne se synchronise
+  // qu'une fois par nuit.
+  function signature(data) {
+    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
+  }
+
+  // ---------------------------------------------------------------
+  // Jointures
+  // ---------------------------------------------------------------
+  function buildClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      if (c["comité"] && c["club"]) {
+        map[ligue + comite + club] = c["Nom club"] || (ligue + comite + club);
+      }
+      if (c["no_club_old"]) {
+        map[String(c["no_club_old"])] = c["Nom club"] || c["no_club_old"];
+      }
+    });
+    return map;
+  }
+
+  function clubLabel(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var eq = String(equipe || "").trim();
+    return eq ? (name + " (éq. " + eq + ")") : name;
+  }
+
+  function hasScore(row) {
+    var cr = String(row.score_cr == null ? "" : row.score_cr).trim();
+    var cv = String(row.score_cv == null ? "" : row.score_cv).trim();
+    return cr !== "" && cv !== "";
+  }
+
+  // ---------------------------------------------------------------
+  // Construction du récapitulatif par équipe
+  // ---------------------------------------------------------------
+  // Une équipe est identifiée par sa catégorie, son club et son numéro. La
+  // catégorie fait partie de la clé par prudence : rien ne garantit qu'un club
+  // ne réutilisera pas un numéro d'équipe d'une série à l'autre.
+  function teamKey(cat, club, equipe) {
+    return [String(cat || "").trim(), String(club || "").trim(), String(equipe || "").trim()].join("|");
+  }
+
+  function buildTeams(rencontres, clubMap) {
+    var index = {};
+
+    function ajoute(row, chezSoi) {
+      var cat = String(row["Catégorie"] || "").trim();
+      var club = chezSoi ? row.club_rec : row.club_vis;
+      var equipe = chezSoi ? row.equip_rec : row.equip_vis;
+      var cle = teamKey(cat, club, equipe);
+
+      var team = index[cle];
+      if (!team) {
+        team = index[cle] = {
+          cat: cat,
+          serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
+          clubNom: clubMap[club] || ("Club " + club),
+          numero: String(equipe || "").trim(),
+          poule: "",
+          matches: []
+        };
+      }
+      if (!team.poule && row.Poule) team.poule = "Poule " + row.Poule;
+
+      var scoreSoi = null, scoreAdv = null;
+      if (hasScore(row)) {
+        scoreSoi = parseInt(chezSoi ? row.score_cr : row.score_cv, 10);
+        scoreAdv = parseInt(chezSoi ? row.score_cv : row.score_cr, 10);
+      }
+
+      var phaseRaw = String(row.Phase || "").trim();
+      var t = parseHeureRenc(row.heure_renc);
+      team.matches.push({
+        date: effectiveDate(row),
+        hour: t ? t.hour : null,
+        minute: t ? t.minute : 0,
+        chezSoi: chezSoi,
+        adversaire: clubLabel(clubMap, chezSoi ? row.club_vis : row.club_rec, chezSoi ? row.equip_vis : row.equip_rec),
+        lieu: String(row.lieu_renc || "").trim(),
+        meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
+        scoreSoi: scoreSoi,
+        scoreAdv: scoreAdv
+      });
+    }
+
+    rencontres.forEach(function (row) { ajoute(row, true); ajoute(row, false); });
+
+    var teams = Object.keys(index).map(function (k) { return index[k]; });
+
+    teams.forEach(function (team) {
+      // Une rencontre sans date lisible est reléguée en fin de liste plutôt
+      // qu'écartée : elle existe, elle doit rester visible.
+      team.matches.sort(function (a, b) {
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        var dd = a.date.getTime() - b.date.getTime();
+        if (dd !== 0) return dd;
+        return (a.hour || 0) * 60 + a.minute - ((b.hour || 0) * 60 + b.minute);
+      });
+
+      team.jouees = 0; team.gagnees = 0; team.perdues = 0; team.nulles = 0;
+      team.matches.forEach(function (m) {
+        if (m.scoreSoi === null) return;
+        team.jouees += 1;
+        if (m.scoreSoi > m.scoreAdv) team.gagnees += 1;
+        else if (m.scoreSoi < m.scoreAdv) team.perdues += 1;
+        else team.nulles += 1;
+      });
+      team.aVenir = team.matches.length - team.jouees;
+    });
+
+    // Tri demandé : par club, puis par numéro d'équipe. Le numéro est comparé
+    // en nombre, sans quoi l'équipe 10 se glisserait entre la 1 et la 2.
+    teams.sort(function (a, b) {
+      var c = a.clubNom.localeCompare(b.clubNom, "fr");
+      if (c !== 0) return c;
+      var na = parseInt(a.numero, 10), nb = parseInt(b.numero, 10);
+      if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+      return a.numero.localeCompare(b.numero, "fr");
+    });
+
+    return teams;
+  }
+
+  // ---------------------------------------------------------------
+  // Rendu
+  // ---------------------------------------------------------------
+  var DAY_ABBR = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+  var MONTH_ABBR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+
+  function formatShortDate(d) {
+    return DAY_ABBR[d.getDay()] + " " + d.getDate() + " " + MONTH_ABBR[d.getMonth()];
+  }
+
+  function formatHour(hour, minute) {
+    if (hour === null) return "";
+    return minute ? (hour + "h" + String(minute).padStart(2, "0")) : (hour + "h");
+  }
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (k === "class") e.className = attrs[k];
+        else if (k === "text") e.textContent = attrs[k];
+        else e.setAttribute(k, attrs[k]);
+      }
+    }
+    (children || []).forEach(function (c) { e.appendChild(c); });
+    return e;
+  }
+
+  function renderSkeleton(container) {
+    container.innerHTML = "";
+    for (var i = 0; i < 3; i++) {
+      var card = el("div", { class: "skeleton-card" });
+      var header = el("div", { class: "skeleton-card-header" });
+      header.appendChild(el("div", { class: "skeleton-bar", style: "width:55%" }));
+      card.appendChild(header);
+      for (var r = 0; r < 5; r++) {
+        var row = el("div", { class: "skeleton-row" });
+        row.appendChild(el("div", { class: "skeleton-bar", style: "width:" + (40 + (r % 3) * 15) + "%" }));
+        card.appendChild(row);
+      }
+      container.appendChild(card);
+    }
+  }
+
+  function renderBanner(container, kind, title, message) {
+    var b = el("div", { class: "banner " + kind });
+    b.appendChild(el("strong", { text: title }));
+    b.appendChild(document.createTextNode(message));
+    container.appendChild(b);
+  }
+
+  function buildMatchRow(m) {
+    var row = el("div", { class: "match-row" });
+
+    var quand = el("div", { class: "match-when" });
+    if (m.date) {
+      quand.appendChild(el("b", { text: formatShortDate(m.date) }));
+      quand.appendChild(document.createTextNode(formatHour(m.hour, m.minute)));
+    } else {
+      quand.appendChild(el("b", { text: "date à venir" }));
+    }
+    row.appendChild(quand);
+
+    var main = el("div", { class: "match-main" });
+    main.appendChild(el("div", { class: "match-opp", text: (m.chezSoi ? "reçoit " : "se déplace chez ") + m.adversaire }));
+    var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
+    if (meta) main.appendChild(el("div", { class: "match-meta", text: meta }));
+    row.appendChild(main);
+
+    if (m.scoreSoi === null) {
+      row.appendChild(el("div", { class: "match-score todo", text: "à venir" }));
+    } else {
+      var cls = m.scoreSoi > m.scoreAdv ? "win" : (m.scoreSoi < m.scoreAdv ? "loss" : "");
+      row.appendChild(el("div", { class: "match-score " + cls, text: m.scoreSoi + " - " + m.scoreAdv }));
+    }
+
+    return row;
+  }
+
+  function buildTeamBlock(team) {
+    var block = el("div", { class: "team-block" });
+
+    var head = el("div", { class: "team-head" });
+    head.appendChild(el("div", { class: "team-name", text: "Équipe " + (team.numero || "?") }));
+    head.appendChild(el("span", { class: "badge serie-" + team.cat, text: team.serieLabel }));
+    if (team.poule) head.appendChild(el("span", { class: "team-poule", text: team.poule }));
+    block.appendChild(head);
+
+    var bilan = [team.matches.length + " partie" + (team.matches.length > 1 ? "s" : "")];
+    if (team.jouees) {
+      var detail = team.gagnees + " gagnée" + (team.gagnees > 1 ? "s" : "") +
+                   ", " + team.perdues + " perdue" + (team.perdues > 1 ? "s" : "");
+      if (team.nulles) detail += ", " + team.nulles + " nulle" + (team.nulles > 1 ? "s" : "");
+      bilan.push(detail);
+    }
+    if (team.aVenir) bilan.push(team.aVenir + " à venir");
+    var record = el("div", { class: "team-record" });
+    record.appendChild(el("b", { text: bilan[0] }));
+    if (bilan.length > 1) record.appendChild(document.createTextNode(" · " + bilan.slice(1).join(" · ")));
+    block.appendChild(record);
+
+    team.matches.forEach(function (m) { block.appendChild(buildMatchRow(m)); });
+
+    return block;
+  }
+
+  function renderResults(teams) {
+    var results = document.getElementById("results");
+    results.innerHTML = "";
+
+    var visibles = teams.filter(function (t) { return filterState.series[t.cat]; });
+    if (visibles.length === 0) {
+      results.appendChild(el("div", { class: "empty-state", text: "Aucune équipe ne correspond aux filtres." }));
+      return;
+    }
+
+    // Les équipes arrivent déjà triées par club puis par numéro : il suffit de
+    // couper à chaque changement de club.
+    var carte = null, clubCourant = null;
+    visibles.forEach(function (team) {
+      if (team.clubNom !== clubCourant) {
+        clubCourant = team.clubNom;
+        var lesSiennes = visibles.filter(function (t) { return t.clubNom === clubCourant; });
+        carte = el("div", { class: "club-card" });
+        var head = el("div", { class: "club-head" });
+        head.appendChild(document.createTextNode(clubCourant + " "));
+        head.appendChild(el("span", { text: lesSiennes.length + " équipe" + (lesSiennes.length > 1 ? "s" : "") }));
+        carte.appendChild(head);
+        results.appendChild(carte);
+      }
+      carte.appendChild(buildTeamBlock(team));
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Orchestration
+  // ---------------------------------------------------------------
+  function formatTime(ts) {
+    var d = new Date(ts);
+    return d.toLocaleDateString("fr-FR") + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function formatSync(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return formatTime(d.getTime());
+  }
+
+  function run(forceRefresh) {
+    var lastSyncText = document.getElementById("lastSyncText");
+    var bannerSlot = document.getElementById("banner-slot");
+    var results = document.getElementById("results");
+    bannerSlot.innerHTML = "";
+    lastSyncText.textContent = "chargement…";
+
+    function afficher(data) {
+      bannerSlot.innerHTML = "";
+      lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
+      lastTeams = buildTeams(data.rencontres, buildClubMap(data.clubs));
+      renderResults(lastTeams);
+    }
+
+    // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le
+    //    réseau : l'API met environ deux secondes à répondre, et la source ne
+    //    se synchronise qu'une fois par nuit.
+    var holder = {};
+    var rendu = false;
+    var signatureRendue = null;
+
+    fetchLiveData(viaCache(holder)).then(function (data) {
+      afficher(data);
+      rendu = true;
+      signatureRendue = signature(data);
+    }).catch(function () {
+      // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
+    }).then(function () {
+      // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit.
+      if (rendu && !forceRefresh && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
+
+      var skeletonTimer = rendu ? null : setTimeout(function () { renderSkeleton(results); }, 150);
+
+      return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
+        if (skeletonTimer) clearTimeout(skeletonTimer);
+        if (!rendu || signature(data) !== signatureRendue) afficher(data);
+        else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
+      }).catch(function (err) {
+        if (skeletonTimer) clearTimeout(skeletonTimer);
+        var message = err && err.message ? err.message : String(err);
+        if (rendu) {
+          renderBanner(bannerSlot, "warn", "Données non rafraîchies",
+            "Le dernier appel à l'API a échoué (" + message + "). " +
+            "Le récapitulatif affiché date du " + formatTime(holder.fetchedAt) + " et peut être obsolète.");
+        } else {
+          results.innerHTML = "";
+          lastSyncText.textContent = "échec du chargement";
+          renderBanner(bannerSlot, "error", "Impossible d'afficher le récapitulatif",
+            message + " — par sécurité, rien n'est affiché : la liste serait potentiellement incomplète.");
+        }
+      });
+    });
+  }
+
+  function setupFilters() {
+    loadFilterState();
+    document.querySelectorAll("#filterSeries .filter-chip").forEach(function (chip) {
+      var serie = chip.getAttribute("data-serie");
+      chip.classList.toggle("active", !!filterState.series[serie]);
+      chip.addEventListener("click", function () {
+        filterState.series[serie] = !filterState.series[serie];
+        chip.classList.toggle("active", filterState.series[serie]);
+        saveFilterState();
+        if (lastTeams) renderResults(lastTeams);
+      });
+    });
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
+  document.getElementById("backToTopBtn").addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  setupFilters();
+  run(false);
+})();
+</script>
+</body>
+</html>

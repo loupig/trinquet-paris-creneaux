@@ -336,6 +336,7 @@
   }
   .page-nav a {
     flex: 1 1 0;
+    min-width: 0;
     text-align: center;
     font-size: 12px;
     font-weight: 600;
@@ -343,8 +344,9 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 7px 10px;
+    padding: 7px 6px;
     text-decoration: none;
+    white-space: nowrap;
   }
   .page-nav a.active {
     color: var(--accent);
@@ -376,8 +378,9 @@
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
   </div>
   <nav class="page-nav">
-    <a href="index.html">Créneaux libres</a>
+    <a href="index.html">Créneaux</a>
     <a href="programme.html" class="active" aria-current="page">Programme</a>
+    <a href="equipes.html">Équipes</a>
     <a href="compteur.html">Compteur</a>
   </nav>
   <p class="header-sync">Toutes les rencontres, tous lieux confondus, à venir et déjà jouées.</p>
