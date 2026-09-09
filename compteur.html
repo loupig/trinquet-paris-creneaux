@@ -92,10 +92,11 @@
   .card-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
 
   /* --- Réglages d'équipe --- */
-  .team-setup + .team-setup { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .team-setup { display: flex; align-items: center; gap: 10px; }
+  .team-setup + .team-setup { margin-top: 10px; }
   .team-name {
-    display: block;
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     font: inherit;
     font-size: 13px;
     font-weight: 600;
@@ -105,11 +106,10 @@
     padding: 8px 10px;
     background: #fff;
   }
-  .swatches { display: flex; gap: 6px; margin-top: 8px; }
+  .swatches { display: flex; gap: 6px; flex: 0 0 auto; }
   .swatch {
-    flex: 1 1 0;
-    height: 32px;
-    max-width: 64px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
     border: 2px solid transparent;
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
@@ -117,6 +117,15 @@
     cursor: pointer;
   }
   .swatch.on { border-color: var(--text); }
+  /* La pastille mesure 30 px pour tenir à côté du champ, mais sa zone tactile
+     est étendue à 36 x 44 px — le pas entre deux pastilles, et la hauteur
+     minimale confortable au pouce. */
+  .swatch { position: relative; }
+  .swatch::after {
+    content: "";
+    position: absolute;
+    left: -3px; right: -3px; top: -7px; bottom: -7px;
+  }
 
   /* --- Tableau de score --- */
   .scoreboard { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -411,9 +420,14 @@
     state.teams.forEach(function (team, i) {
       var ligne = el("div", { class: "team-setup" });
 
+      // iOS déclenche sa barre AutoFill (adresses, cartes, mots de passe) sur
+      // les champs qu'il croit reconnaître — un libellé contenant "nom" suffit.
+      // D'où l'étiquette neutre et les attributs ci-dessous.
       var champ = el("input", {
-        class: "team-name", type: "text", value: team.name,
-        maxlength: "24", "aria-label": "Nom de l'équipe " + (i + 1)
+        class: "team-name", type: "text", value: team.name, maxlength: "24",
+        autocomplete: "off", autocorrect: "off", autocapitalize: "words",
+        spellcheck: "false", enterkeyhint: "done",
+        "aria-label": "Équipe " + (i + 1)
       });
       champ.addEventListener("input", function () {
         team.name = champ.value;
