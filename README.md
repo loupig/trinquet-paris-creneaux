@@ -54,6 +54,12 @@ principales et met en évidence celle où l'on se trouve :
   leader. Une ligne de résumé donne le plus gros écart, à quel point du match il
   est survenu, et le nombre de changements de leader.
 
+  En mode « Scores », une étoile marque chaque retour à égalité. Sur une partie
+  très disputée elles se suivraient de trop près et redessineraient la
+  diagonale en masquant les courbes : au-delà d'une douzaine, seule une étoile
+  sur N est tracée — chacune reste une vraie égalité — et le résumé donne le
+  compte exact en signalant que toutes ne sont pas marquées.
+
   Chaque point est horodaté, ce qui donne un troisième mode, « Échanges » :
   une barre par point, à la couleur de l'équipe qui l'a emporté, hauteur égale
   à la durée de l'échange. Une partie comporte des pauses entre les jeux, donc
