@@ -50,6 +50,8 @@
     border-bottom: 1px solid var(--border);
     padding: 16px 16px 14px;
   }
+  header h1 a.home-link { color: inherit; text-decoration: none; }
+  header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
     font-size: 15px;
@@ -361,13 +363,13 @@
 <header>
   <div class="header-top">
     <div>
-      <h1>Report d'une partie</h1>
+      <h1><a href="index.html" class="home-link">Report d'une partie</a></h1>
       <h1>Ligue d'Île-de-France</h1>
     </div>
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
   </div>
   <nav class="page-nav">
-    <a href="index.html">Créneaux</a>
+    <a href="creneaux.html">Créneaux</a>
     <a href="programme.html">Programme</a>
     <a href="equipes.html">Équipes</a>
     <a href="compteur.html">Compteur</a>
@@ -382,7 +384,7 @@
   <div class="recap-card">
     <div class="recap-title">Avant d'acter le report</div>
     <p class="recap-empty">Une date repérée ici n'est pas une date actée. Mettez-vous d'accord avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
-    <p class="recap-empty">Seuls les créneaux encore disponibles sont affichés, sur la grille de championnat du Trinquet Paris (vendredi 21h et 22h, dimanche de 14h à 17h et de 20h à 22h). Pour voir qui occupe les autres créneaux, passez par les <a href="index.html">créneaux libres au Trinquet Paris</a>. Un report sur un créneau hors grille se négocie hors de cet outil, avec le trinquet et la ligue.</p>
+    <p class="recap-empty">Seuls les créneaux encore disponibles sont affichés, sur la grille de championnat du Trinquet Paris (vendredi 21h et 22h, dimanche de 14h à 17h et de 20h à 22h). Pour voir qui occupe les autres créneaux, passez par les <a href="creneaux.html">créneaux libres au Trinquet Paris</a>. Un report sur un créneau hors grille se négocie hors de cet outil, avec le trinquet et la ligue.</p>
   </div>
 
   <div class="legend">
@@ -439,7 +441,7 @@
   };
 
   // Grille fixe du trinquet. Clé = Date.getDay() (0=dimanche ... 5=vendredi).
-  // Identique à la constante GRID d'index.html : les deux pages doivent
+  // Identique à la constante GRID de creneaux.html : les deux pages doivent
   // rester cohérentes.
   var GRID = {
     5: [21, 22],                    // Vendredi
@@ -448,7 +450,7 @@
 
   // Règle large de sécurité : capte "trinquet" + "paris" en excluant
   // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
-  // Fronton PB13, Chiquito de Cambo). Copie de la fonction d'index.html.
+  // Fronton PB13, Chiquito de Cambo). Copie de la fonction de creneaux.html.
   function matchesTrinquetParis(lieu) {
     if (!lieu) return false;
     var s = lieu.toUpperCase();
@@ -462,7 +464,7 @@
   }
 
   // ---------------------------------------------------------------
-  // Parsing des dates / heures du format LIDFPB (identique à index.html)
+  // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
   // ---------------------------------------------------------------
   function parseDateRenc(raw) {
     if (!raw) return null;
@@ -531,7 +533,7 @@
   // ---------------------------------------------------------------
   // Le cache est indexé par URL de requête, et donc partagé par les trois
   // pages du site : passer du programme au report ou aux créneaux libres ne
-  // refait pas les appels déjà faits. Les appels filtrés par lieu d'index.html
+  // refait pas les appels déjà faits. Les appels filtrés par lieu de creneaux.html
   // gardent leurs propres entrées, leur URL n'étant pas la même.
   var API_CACHE_PREFIX = "lidfpb_api_v1:";
 
@@ -694,8 +696,8 @@
   // Calcul des créneaux
   // ---------------------------------------------------------------
   // Occupation de la grille du Trinquet Paris. Deux différences avec la
-  // fonction équivalente d'index.html :
-  //  - index.html reçoit des lignes déjà filtrées sur le lieu côté API ; ici
+  // fonction équivalente de creneaux.html :
+  //  - creneaux.html reçoit des lignes déjà filtrées sur le lieu côté API ; ici
   //    on reçoit tous les lieux, le test matchesTrinquetParis est obligatoire ;
   //  - la rencontre qu'on cherche à reporter n'occupe pas son propre créneau,
   //    sinon il s'afficherait "Occupé" au lieu de "Créneau actuel".
@@ -712,7 +714,7 @@
 
       var t = parseHeureRenc(row.heure_renc);
       // Créneau hors grille standard : ne concerne aucune de nos cases,
-      // même convention qu'index.html.
+      // même convention que creneaux.html.
       if (!t || hours.indexOf(t.hour) === -1) return;
 
       // Seule l'occupation compte : la page n'affiche plus les rencontres qui

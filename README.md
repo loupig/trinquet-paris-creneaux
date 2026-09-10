@@ -11,12 +11,21 @@ créneaux libres à la main.
 
 ## Pages
 
-Cinq pages statiques indépendantes, sans build ni dépendance, chacune avec son
+Six pages statiques indépendantes, sans build ni dépendance, chacune avec son
 CSS et son JS inline. Un menu à quatre entrées (« Créneaux » / « Programme » /
 « Équipes » / « Compteur »), en haut de chaque page, signale les destinations
-principales et met en évidence celle où l'on se trouve :
+principales et met en évidence celle où l'on se trouve ; le titre du bandeau
+ramène à l'accueil, ce qui évite une cinquième entrée qui ne tiendrait plus sur
+un écran de 390 px :
 
-- [`index.html`](index.html) — créneaux libres au Trinquet Paris, en tableau
+- [`index.html`](index.html) — l'accueil, un tableau de bord plutôt qu'un
+  sommaire : les prochaines rencontres, le nombre de créneaux encore libres au
+  Trinquet Paris sur quatre semaines avec la date du prochain, et l'avancement
+  de la saison. Chaque bloc est cliquable vers la page complète. Un accueil qui
+  ne serait qu'un menu ajouterait un clic au geste le plus fréquent sans rien
+  apporter que le menu ne fasse déjà.
+
+- [`creneaux.html`](creneaux.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.
 - [`programme.html`](programme.html) — calendrier complet des championnats,
   tous lieux et toutes séries, passées et à venir, avec compositions et
@@ -57,7 +66,7 @@ principales et met en évidence celle où l'on se trouve :
   créneaux encore disponibles** de la grille du Trinquet Paris, en signalant
   les jours où l'une des deux équipes joue déjà, tous lieux confondus. Les
   créneaux pris sont barrés sans être détaillés : pour savoir qui les occupe,
-  c'est `index.html`. Comme le reste du site, la page n'enregistre rien et ne
+  c'est `creneaux.html`. Comme le reste du site, la page n'enregistre rien et ne
   prévient personne.
 - [`compteur.html`](compteur.html) — compteur de points pour marquer une
   partie sur place : deux équipes, un grand bouton par équipe, annulation du
@@ -107,7 +116,7 @@ principales et met en évidence celle où l'on se trouve :
 
 ## Fonctionnement
 
-Tout est dans un seul fichier autonome, [`index.html`](index.html) (HTML +
+Tout est dans un seul fichier autonome, [`creneaux.html`](creneaux.html) (HTML +
 CSS + JS inline, aucune dépendance, aucun build).
 
 Au chargement, la page :
@@ -168,7 +177,7 @@ se bloquer.
 ## Mettre à jour le site
 
 ```
-git add index.html
+git add creneaux.html index.html
 git commit -m "description du changement"
 git push
 ```
@@ -181,7 +190,7 @@ faire automatiquement.
 ## Configuration
 
 Les principaux réglages sont regroupés en haut de la balise `<script>` dans
-`index.html` :
+`creneaux.html` :
 
 | Constante | Rôle |
 |---|---|
@@ -208,7 +217,7 @@ Le navigateur compense avec deux mécanismes :
 - **Un cache indexé par URL de requête**, partagé par les trois pages
   (`lidfpb_api_v1:<url>`). Les tables communes ne sont récupérées qu'une fois :
   passer du programme au report ou aux créneaux libres ne refait pas les appels
-  déjà faits. Les appels d'`index.html` filtrés par libellé de lieu gardent
+  déjà faits. Les appels de `creneaux.html` filtrés par libellé de lieu gardent
   leurs propres entrées, leur URL n'étant pas la même.
 - **L'affichage immédiat de ce que le cache sait déjà**, suivi d'une
   revalidation en arrière-plan si l'entrée a plus de `CACHE_TTL_MS`. La page ne
@@ -271,7 +280,7 @@ voudrait construire autre chose avec les mêmes données.
   comité, ou une équipe qui n'a pas encore déclaré sa composition à la
   ligue, affichera "composition non disponible".
 - **Niveau de la partie** : le champ `Phase` de l'API (1 à 12) est traduit
-  en clair via `PHASE_LABELS` dans `index.html` (Poules, Barrage,
+  en clair via `PHASE_LABELS` dans `creneaux.html` (Poules, Barrage,
   1/32e... jusqu'à Finale), mapping communiqué par la ligue. En phase de
   poules, "Poule N" (champ `Poule`) est affiché plutôt que "Poules".
 - **Report : Trinquet Paris uniquement** : `report.html` ne connaît que la
@@ -284,7 +293,7 @@ voudrait construire autre chose avec les mêmes données.
   Un report sur un créneau hors grille se traite hors de cet outil.
 - **Report : une case barrée ne dit pas pourquoi** : un créneau déjà pris et
   une heure absente de la grille ce jour-là sont rendus à l'identique. La
-  distinction n'aide pas à choisir une date, et `index.html` donne le détail
+  distinction n'aide pas à choisir une date, et `creneaux.html` donne le détail
   de l'occupation pour qui en a besoin.
 - **Report : horizon des phases finales** : l'horizon s'arrête à la dernière
   date programmée de la phase de la partie. Les phases finales tenant sur une

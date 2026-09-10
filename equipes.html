@@ -55,6 +55,8 @@
     border-bottom: 1px solid var(--border);
     padding: 16px 16px 14px;
   }
+  header h1 a.home-link { color: inherit; text-decoration: none; }
+  header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
     font-size: 15px;
@@ -337,7 +339,7 @@
 <header>
   <div class="header-top">
     <div>
-      <h1>Parties par équipe</h1>
+      <h1><a href="index.html" class="home-link">Parties par équipe</a></h1>
       <h1>Ligue d'Île-de-France</h1>
     </div>
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
@@ -345,7 +347,7 @@
   <p class="header-sync">Toutes les rencontres regroupées par club puis par équipe, jouées et à venir.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
   <nav class="page-nav">
-    <a href="index.html">Créneaux</a>
+    <a href="creneaux.html">Créneaux</a>
     <a href="programme.html">Programme</a>
     <a href="equipes.html" class="active" aria-current="page">Équipes</a>
     <a href="compteur.html">Compteur</a>
@@ -424,7 +426,7 @@
   var lastTeams = null;
 
   // ---------------------------------------------------------------
-  // Parsing des dates / heures du format LIDFPB (identique à index.html)
+  // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
   // ---------------------------------------------------------------
   function parseDateRenc(raw) {
     if (!raw) return null;

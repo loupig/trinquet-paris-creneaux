@@ -34,6 +34,8 @@
     border-bottom: 1px solid var(--border);
     padding: 16px 16px 14px;
   }
+  header h1 a.home-link { color: inherit; text-decoration: none; }
+  header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
     font-size: 15px;
@@ -246,11 +248,11 @@
 <body>
 
 <header>
-  <h1>Compteur de points</h1>
+  <h1><a href="index.html" class="home-link">Compteur de points</a></h1>
   <h1>Ligue d'Île-de-France</h1>
   <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, rien n'est partagé avec la ligue.</p>
   <nav class="page-nav">
-    <a href="index.html">Créneaux</a>
+    <a href="creneaux.html">Créneaux</a>
     <a href="programme.html">Programme</a>
     <a href="equipes.html">Équipes</a>
     <a href="compteur.html" class="active" aria-current="page">Compteur</a>

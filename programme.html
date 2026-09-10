@@ -54,6 +54,8 @@
     border-bottom: 1px solid var(--border);
     padding: 16px 16px 14px;
   }
+  header h1 a.home-link { color: inherit; text-decoration: none; }
+  header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
     font-size: 15px;
@@ -372,13 +374,13 @@
 <header>
   <div class="header-top">
     <div>
-      <h1>Programme des championnats</h1>
+      <h1><a href="index.html" class="home-link">Programme des championnats</a></h1>
       <h1>Ligue d'Île-de-France</h1>
     </div>
     <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
   </div>
   <nav class="page-nav">
-    <a href="index.html">Créneaux</a>
+    <a href="creneaux.html">Créneaux</a>
     <a href="programme.html" class="active" aria-current="page">Programme</a>
     <a href="equipes.html">Équipes</a>
     <a href="compteur.html">Compteur</a>
@@ -487,7 +489,7 @@
 
   // Règle large de sécurité : capte "trinquet" + "paris" en excluant
   // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
-  // Fronton PB13, Chiquito de Cambo). Copie de la fonction d'index.html.
+  // Fronton PB13, Chiquito de Cambo). Copie de la fonction de creneaux.html.
   function matchesTrinquetParis(lieu) {
     if (!lieu) return false;
     var s = lieu.toUpperCase();
@@ -501,7 +503,7 @@
   }
 
   // ---------------------------------------------------------------
-  // Parsing des dates / heures du format LIDFPB (identique à index.html)
+  // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
   // ---------------------------------------------------------------
   function parseDateRenc(raw) {
     if (!raw) return null;
@@ -564,7 +566,7 @@
   // ---------------------------------------------------------------
   // Le cache est indexé par URL de requête, et donc partagé par les trois
   // pages du site : passer du programme au report ou aux créneaux libres ne
-  // refait pas les appels déjà faits. Les appels filtrés par lieu d'index.html
+  // refait pas les appels déjà faits. Les appels filtrés par lieu de creneaux.html
   // gardent leurs propres entrées, leur URL n'étant pas la même.
   var API_CACHE_PREFIX = "lidfpb_api_v1:";
 
@@ -628,7 +630,7 @@
 
   function fetchLiveData(source) {
     // Pas de filtre lieu_renc ici : on veut tous les lieux, contrairement à
-    // index.html qui ne s'intéresse qu'au Trinquet Paris.
+    // creneaux.html qui ne s'intéresse qu'au Trinquet Paris.
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
     // Compositions et contacts sont un bonus d'affichage, pas une donnée
