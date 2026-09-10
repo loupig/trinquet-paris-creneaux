@@ -393,6 +393,8 @@
 <main>
   <div class="recap-card">
     <div class="recap-title">Filtres</div>
+    <div class="filter-subtitle">Spécialité</div>
+    <div class="filter-group" id="filterSpecs"></div>
     <div class="filter-subtitle">Série</div>
     <div class="filter-group" id="filterSeries">
       <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
@@ -460,6 +462,7 @@
   };
 
   var filterState = {
+    specs: {},
     series: { "1": true, "2": true },
     lieux: {},
     phases: {},
@@ -472,6 +475,7 @@
       if (!raw) return;
       var saved = JSON.parse(raw);
       if (saved && saved.series) filterState.series = saved.series;
+      if (saved && saved.specs) filterState.specs = saved.specs;
       if (saved && saved.lieux) filterState.lieux = saved.lieux;
       if (saved && saved.phases) filterState.phases = saved.phases;
       if (saved && typeof saved.hidePast === "boolean") filterState.hidePast = saved.hidePast;
@@ -823,6 +827,7 @@
         serie: catRaw,
         serieLabel: SERIE_LABELS[catRaw] || ("Cat. " + (catRaw || "?")),
         competLabel: COMPET_LABELS[competRaw] || "",
+        spec: specRaw,
         specLabel: SPEC_LABELS[specRaw] || "",
         teams: labelRec + " vs " + labelVis,
         labelRec: labelRec,
@@ -1075,6 +1080,13 @@
     });
   }
 
+  function distinctSpecialites(matches) {
+    var seen = {};
+    matches.forEach(function (m) { seen[m.spec] = true; });
+    return Object.keys(seen).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+      .map(function (spec) { return { key: spec, label: SPEC_LABELS[spec] || ("Spécialité " + (spec || "?")) }; });
+  }
+
   function distinctLieux(matches) {
     var seen = {};
     matches.forEach(function (m) { seen[m.lieu] = true; });
@@ -1099,6 +1111,7 @@
     var todayTime = today.getTime();
     var filtered = matches.filter(function (m) {
       return activeSeries.indexOf(m.serie) !== -1 &&
+        filterState.specs[m.spec] !== false &&
         filterState.lieux[m.lieu] !== false &&
         filterState.phases[m.phaseRaw] !== false &&
         (!filterState.hidePast || m.date.getTime() >= todayTime);
@@ -1166,6 +1179,7 @@
       // les chips sont reconstruites à partir de l'ensemble complet des
       // rencontres (non filtré), pour ne jamais perdre une valeur en cours
       // de route ; l'état actif de chaque valeur est conservé via filterState.
+      renderDynamicChipGroup("filterSpecs", distinctSpecialites(matches), filterState.specs);
       renderDynamicChipGroup("filterLieux", distinctLieux(matches), filterState.lieux);
       renderDynamicChipGroup("filterPhases", distinctPhases(matches), filterState.phases);
       saveFilterState();

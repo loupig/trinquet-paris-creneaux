@@ -357,6 +357,8 @@
 <main>
   <div class="recap-card">
     <div class="recap-title">Filtres</div>
+    <div class="filter-subtitle">Spécialité</div>
+    <div class="filter-group" id="filterSpecs"></div>
     <div class="filter-subtitle">Série</div>
     <div class="filter-group" id="filterSeries">
       <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
@@ -395,6 +397,10 @@
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
 
+  // La spécialité est le niveau au-dessus de la catégorie, que la ligue nomme
+  // aussi "série" : Catégorie 1 = Série 1, c'est le même champ.
+  var SPEC_LABELS = { "2": "Trinquet / P.G Pleine Masculin" };
+
   var PHASE_LABELS = {
     "1": "Poules",
     "2": "Barrage",
@@ -410,11 +416,12 @@
     "12": "Finale"
   };
 
-  var filterState = { series: { "1": true, "2": true }, club: "" };   // club vide = tous
+  var filterState = { specs: {}, series: { "1": true, "2": true }, club: "" };   // club vide = tous
 
   function loadFilterState() {
     try {
       var saved = JSON.parse(localStorage.getItem(FILTER_CACHE_KEY));
+      if (saved && saved.specs) filterState.specs = saved.specs;
       if (saved && saved.series) filterState.series = saved.series;
       if (saved && typeof saved.club === "string") filterState.club = saved.club;
     } catch (e) { /* stockage indisponible ou corrompu : valeurs par défaut */ }
@@ -679,22 +686,25 @@
     return /^9{3,}/.test(String(code || "").trim());
   }
 
-  function teamKey(cat, club, equipe) {
-    return [String(cat || "").trim(), String(club || "").trim(), String(equipe || "").trim()].join("|");
+  function teamKey(spec, cat, club, equipe) {
+    return [String(spec || "").trim(), String(cat || "").trim(),
+            String(club || "").trim(), String(equipe || "").trim()].join("|");
   }
 
   function buildTeams(rencontres, clubMap, joinCtx) {
     var index = {};
 
     function ajoute(row, chezSoi) {
+      var spec = String(row["Spécialité"] || "").trim();
       var cat = String(row["Catégorie"] || "").trim();
       var club = chezSoi ? row.club_rec : row.club_vis;
       var equipe = chezSoi ? row.equip_rec : row.equip_vis;
-      var cle = teamKey(cat, club, equipe);
+      var cle = teamKey(spec, cat, club, equipe);
 
       var team = index[cle];
       if (!team) {
         team = index[cle] = {
+          spec: spec,
           cat: cat,
           serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
           clubNom: clubMap[club] || ("Club " + club),
@@ -883,6 +893,33 @@
     return block;
   }
 
+  // Les valeurs possibles dépendent des données reçues : les pastilles sont
+  // reconstruites à partir de l'ensemble complet des équipes, jamais des
+  // équipes déjà filtrées. Une valeur inconnue de l'état démarre active.
+  function renderSpecChips(teams) {
+    var container = document.getElementById("filterSpecs");
+    var vues = {};
+    teams.forEach(function (t) { vues[t.spec] = true; });
+    container.innerHTML = "";
+    Object.keys(vues).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+      .forEach(function (spec) {
+        if (!Object.prototype.hasOwnProperty.call(filterState.specs, spec)) filterState.specs[spec] = true;
+        var chip = el("button", {
+          type: "button",
+          class: "filter-chip" + (filterState.specs[spec] ? " active" : ""),
+          text: SPEC_LABELS[spec] || ("Spécialité " + (spec || "?"))
+        });
+        chip.addEventListener("click", function () {
+          filterState.specs[spec] = !filterState.specs[spec];
+          chip.classList.toggle("active", filterState.specs[spec]);
+          saveFilterState();
+          if (lastTeams) renderResults(lastTeams);
+        });
+        container.appendChild(chip);
+      });
+    saveFilterState();
+  }
+
   function renderClubOptions(teams) {
     var select = document.getElementById("filterClub");
     var clubs = [];
@@ -912,7 +949,9 @@
     results.innerHTML = "";
 
     var visibles = teams.filter(function (t) {
-      return filterState.series[t.cat] && (!filterState.club || t.clubNom === filterState.club);
+      return filterState.specs[t.spec] !== false &&
+        filterState.series[t.cat] &&
+        (!filterState.club || t.clubNom === filterState.club);
     });
     if (visibles.length === 0) {
       results.appendChild(el("div", {
@@ -973,6 +1012,7 @@
         licenceMap: buildLicenceMap(data.licencies),
         engagementsIndex: buildEngagementsIndex(data.engagements)
       });
+      renderSpecChips(lastTeams);
       renderClubOptions(lastTeams);
       renderResults(lastTeams);
     }

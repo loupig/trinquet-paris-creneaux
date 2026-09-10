@@ -32,6 +32,12 @@ le bandeau n'est pas collant et disparaît au défilement :
 
 - [`creneaux.html`](creneaux.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.
+Les deux pages de calendrier, `programme.html` et `equipes.html`, portent un
+filtre par **spécialité** au-dessus du filtre par série, la spécialité étant le
+niveau au-dessus dans la nomenclature de la ligue. Une seule spécialité figure
+au calendrier de la saison en cours, la pastille est donc seule : le filtre
+prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
+
 - [`programme.html`](programme.html) — calendrier complet des championnats,
   tous lieux et toutes séries, passées et à venir, avec compositions et
   contacts des responsables d'équipe.
@@ -40,9 +46,9 @@ le bandeau n'est pas collant et disparaît au défilement :
   l'intérieur une section par équipe classée par numéro. Chaque équipe affiche
   sa série, sa poule, son bilan (jouées, gagnées, perdues, à venir) et la liste
   chronologique de ses parties, avec l'adversaire, le lieu, et le score du point
-  de vue de l'équipe — vert si elle l'emporte, rouge sinon. Deux filtres
-  mémorisés d'une visite à l'autre : la série en pastilles, et le club en liste
-  déroulante (onze clubs aux noms longs rempliraient cinq lignes de pastilles,
+  de vue de l'équipe — vert si elle l'emporte, rouge sinon. Trois filtres
+  mémorisés d'une visite à l'autre : la spécialité et la série en pastilles, et
+  le club en liste déroulante (onze clubs aux noms longs rempliraient cinq lignes de pastilles,
   et un club à la fois est le besoin réel). Les clubs fictifs de la ligue — la
   plage de codes commençant par des 9, dont « Equipe à désigner » qui porte
   l'adversaire encore inconnu d'une qualification — restent listés dans la page
