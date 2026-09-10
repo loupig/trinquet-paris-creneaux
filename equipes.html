@@ -667,6 +667,15 @@
   // Une équipe est identifiée par sa catégorie, son club et son numéro. La
   // catégorie fait partie de la clé par prudence : rien ne garantit qu'un club
   // ne réutilisera pas un numéro d'équipe d'une série à l'autre.
+  // La ligue réserve une plage de codes aux clubs fictifs : "9998" porte
+  // l'adversaire encore inconnu d'une qualification, affiché "Equipe à
+  // désigner". Le site source les regroupe sous "*** 99 999 ***", d'où la
+  // règle sur les 9 de tête. Ces équipes restent listées — l'information est
+  // réelle — mais filtrer dessus n'aurait pas de sens.
+  function clubFictif(code) {
+    return /^9{3,}/.test(String(code || "").trim());
+  }
+
   function teamKey(cat, club, equipe) {
     return [String(cat || "").trim(), String(club || "").trim(), String(equipe || "").trim()].join("|");
   }
@@ -687,6 +696,7 @@
           serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
           clubNom: clubMap[club] || ("Club " + club),
           numero: String(equipe || "").trim(),
+          clubCode: String(club || "").trim(),
           poule: "",
           roster: getRoster(joinCtx, club, cat, equipe),
           matches: []
@@ -873,7 +883,10 @@
   function renderClubOptions(teams) {
     var select = document.getElementById("filterClub");
     var clubs = [];
-    teams.forEach(function (t) { if (clubs.indexOf(t.clubNom) === -1) clubs.push(t.clubNom); });
+    teams.forEach(function (t) {
+      if (clubFictif(t.clubCode)) return;
+      if (clubs.indexOf(t.clubNom) === -1) clubs.push(t.clubNom);
+    });
     clubs.sort(function (a, b) { return a.localeCompare(b, "fr"); });
 
     // Un club mémorisé qui a disparu des données ne doit pas filtrer dans le
@@ -884,7 +897,9 @@
     }
 
     select.innerHTML = "";
-    select.appendChild(el("option", { value: "", text: "Tous les clubs (" + clubs.length + ")" }));
+    // Pas de compteur ici : les clubs fictifs sont absents des choix mais
+    // toujours listés dans la page, le nombre ne collerait pas.
+    select.appendChild(el("option", { value: "", text: "Tous les clubs" }));
     clubs.forEach(function (c) { select.appendChild(el("option", { value: c, text: c })); });
     select.value = filterState.club;
   }

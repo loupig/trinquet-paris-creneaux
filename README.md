@@ -29,7 +29,10 @@ principales et met en évidence celle où l'on se trouve :
   de vue de l'équipe — vert si elle l'emporte, rouge sinon. Deux filtres
   mémorisés d'une visite à l'autre : la série en pastilles, et le club en liste
   déroulante (onze clubs aux noms longs rempliraient cinq lignes de pastilles,
-  et un club à la fois est le besoin réel).
+  et un club à la fois est le besoin réel). Les clubs fictifs de la ligue — la
+  plage de codes commençant par des 9, dont « Equipe à désigner » qui porte
+  l'adversaire encore inconnu d'une qualification — restent listés dans la page
+  mais sont absents des choix du filtre : filtrer dessus n'aurait pas de sens.
 
   Sous chaque équipe, sa composition déclarée à la ligue : noms de joueurs
   seuls, jamais de licence ni de contact. Vingt-six équipes sur vingt-sept en
