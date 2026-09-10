@@ -14,14 +14,19 @@ créneaux libres à la main.
 Six pages statiques indépendantes, sans build ni dépendance, chacune avec son
 CSS et son JS inline. Un menu à quatre entrées (« Créneaux » / « Programme » /
 « Équipes » / « Compteur »), en haut de chaque page, signale les destinations
-principales et met en évidence celle où l'on se trouve ; le titre du bandeau
-ramène à l'accueil, ce qui évite une cinquième entrée qui ne tiendrait plus sur
-un écran de 390 px :
+principales et met en évidence celle où l'on se trouve ; une cinquième entrée
+ne tiendrait plus sur un écran de 390 px, le retour à l'accueil passe donc par
+deux autres chemins : le titre du bandeau, et un bouton maison flottant en bas
+à droite, au-dessus de la flèche « remonter » — y compris sur le compteur, dont
+le bandeau n'est pas collant et disparaît au défilement :
 
 - [`index.html`](index.html) — l'accueil, un tableau de bord plutôt qu'un
   sommaire : les prochaines rencontres, le nombre de créneaux encore libres au
   Trinquet Paris sur quatre semaines avec la date du prochain, et l'avancement
-  de la saison. Chaque bloc est cliquable vers la page complète. Un accueil qui
+  de la saison ventilé sur deux niveaux, la spécialité puis la catégorie (que
+  la ligue nomme aussi « série » — c'est le même champ dans les données, d'où
+  un seul niveau de découpe réel aujourd'hui, la saison en cours ne comptant
+  qu'une spécialité). Chaque bloc est cliquable vers la page complète. Un accueil qui
   ne serait qu'un menu ajouterait un clic au geste le plus fréquent sans rien
   apporter que le menu ne fasse déjà.
 

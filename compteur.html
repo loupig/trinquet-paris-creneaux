@@ -233,6 +233,33 @@
   .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .chart-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
+  .fab-row {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 50;
+  }
+  .fab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  .fab-btn:active { opacity: 0.85; }
+
   footer {
     text-align: center;
     padding: 20px 4px 10px;
@@ -290,9 +317,13 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.09</p>
+    <p>Version 2026.09.10</p>
   </footer>
 </main>
+
+<div class="fab-row">
+  <a class="fab-btn" href="index.html" aria-label="Retour à l'accueil"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 3.2 2.6 11.4a1 1 0 0 0 .66 1.75H5v7.05c0 .55.45 1 1 1h3.5v-5.5h5v5.5H18c.55 0 1-.45 1-1v-7.05h1.74a1 1 0 0 0 .66-1.75L12 3.2z"/></svg></a>
+</div>
 
 <script>
 (function () {

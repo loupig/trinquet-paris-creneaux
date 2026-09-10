@@ -180,6 +180,31 @@
     margin: 9px 0 7px;
   }
   .progress i { display: block; height: 100%; background: var(--accent); }
+  .progress.mini { height: 5px; margin: 5px 0 0 12px; }
+  .progress i.serie-1 { background: var(--serie1-text); }
+  .progress i.serie-2 { background: var(--serie2-text); }
+  .split { margin-top: 12px; }
+  .split-spec {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .progress.mini + .split-spec { margin-top: 14px; }
+  .split-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    padding-left: 10px;
+    border-left: 2px solid var(--border);
+  }
+  .progress.mini + .split-row { margin-top: 11px; }
+  .split-count { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
 
   .skeleton-card {
     background: var(--card-bg);
@@ -280,6 +305,12 @@
   var NB_PROCHAINES = 4;      // rencontres listées dans la tuile "prochaines parties"
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
+
+  // Dans les données de la ligue, "Catégorie" et "Série" sont le même champ :
+  // Catégorie 1 = Série 1. La Spécialité est le niveau au-dessus — une seule
+  // aujourd'hui, mais le calendrier peut en accueillir d'autres, d'où la
+  // ventilation à deux niveaux.
+  var SPEC_LABELS = { "2": "Trinquet / P.G Pleine Masculin" };
 
   var PHASE_LABELS = {
     "1": "Poules", "2": "Barrage", "3": "Barrage 1er tour", "4": "Barrage 2e tour",
@@ -528,6 +559,28 @@
     return libres;
   }
 
+  // Avancement de la saison, ventilé sur deux niveaux : la spécialité, puis
+  // la catégorie (que la ligue nomme aussi "série").
+  function parSpecialite(rencontres) {
+    var specs = {};
+    rencontres.forEach(function (row) {
+      var spec = String(row["Spécialité"] || "").trim();
+      var cat = String(row["Catégorie"] || "").trim();
+      var s = specs[spec] || (specs[spec] = { spec: spec, label: SPEC_LABELS[spec] || ("Spécialité " + (spec || "?")), cats: {} });
+      var c = s.cats[cat] || (s.cats[cat] = { cat: cat, label: SERIE_LABELS[cat] || ("Catégorie " + (cat || "?")), total: 0, jouees: 0 });
+      c.total += 1;
+      if (hasScore(row)) c.jouees += 1;
+    });
+
+    return Object.keys(specs).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+      .map(function (k) {
+        var s = specs[k];
+        s.categories = Object.keys(s.cats).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+          .map(function (c) { return s.cats[c]; });
+        return s;
+      });
+  }
+
   // ---------------------------------------------------------------
   // Rendu
   // ---------------------------------------------------------------
@@ -644,6 +697,25 @@
     var barre = el("div", { class: "progress" });
     barre.appendChild(el("i", { style: "width:" + (total ? Math.round(jouees / total * 100) : 0) + "%" }));
     t3.body.appendChild(barre);
+
+    var split = el("div", { class: "split" });
+    parSpecialite(data.rencontres).forEach(function (spec) {
+      split.appendChild(el("div", { class: "split-spec", text: spec.label }));
+      spec.categories.forEach(function (c) {
+        var ligne = el("div", { class: "split-row" });
+        ligne.appendChild(el("div", { text: c.label }));
+        ligne.appendChild(el("div", { class: "split-count", text: c.jouees + " / " + c.total }));
+        split.appendChild(ligne);
+        var mini = el("div", { class: "progress mini" });
+        mini.appendChild(el("i", {
+          class: "serie-" + c.cat,
+          style: "width:" + (c.total ? Math.round(c.jouees / c.total * 100) : 0) + "%"
+        }));
+        split.appendChild(mini);
+      });
+    });
+    t3.body.appendChild(split);
+
     t3.body.appendChild(el("p", { class: "tile-note", text: "Compositions, bilans et calendrier de chaque équipe, club par club." }));
     box.appendChild(t3);
   }
