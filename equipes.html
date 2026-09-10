@@ -223,6 +223,14 @@
     color: var(--muted);
   }
   .team-record b { color: var(--text); font-weight: 700; }
+  .team-roster {
+    padding: 0 14px 9px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+  .team-roster b { font-weight: 700; color: var(--muted); font-size: 11px; }
+  .team-roster.absente { font-size: 11px; color: var(--muted); font-style: italic; }
 
   /* --- Une partie --- */
   .match-row {
@@ -529,8 +537,13 @@
     // Pas de filtre lieu : cette page couvre toutes les rencontres, tous lieux.
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
+    // Les compositions sont un bonus d'affichage, pas une donnée essentielle
+    // comme le calendrier : si ces appels échouent, on dégrade en silence
+    // plutôt que de bloquer toute la page.
+    var engagementsPromise = source(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
+    var licenciesPromise = source(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all([rencontresPromise, clubsPromise]).then(function (results) {
+    return Promise.all([rencontresPromise, clubsPromise, engagementsPromise, licenciesPromise]).then(function (results) {
       var rencontres = results[0].data.filter(function (row) {
         var cat = String(row["Catégorie"] || "").trim();
         return SERIE_LABELS.hasOwnProperty(cat) && row.oid;
@@ -538,6 +551,8 @@
       return {
         rencontres: rencontres,
         clubs: results[1].data,
+        engagements: results[2].data,
+        licencies: results[3].data,
         fetchedAt: Date.now(),
         lastSync: results[0].lastSync || null
       };
@@ -548,7 +563,8 @@
   // de re-rendre la page si rien n'a changé — la source ne se synchronise
   // qu'une fois par nuit.
   function signature(data) {
-    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
+    return [data.lastSync, data.rencontres.length, data.clubs.length,
+            data.engagements.length, data.licencies.length].join("|");
   }
 
   // ---------------------------------------------------------------
@@ -576,6 +592,69 @@
     return eq ? (name + " (éq. " + eq + ")") : name;
   }
 
+  // rencontres utilise un code concaténé ("3750030" = ligue+comité+club),
+  // tandis qu'engagements/licencies utilisent le format "Numéro club" avec
+  // tirets ("03-750-030"). Cette table fait la conversion.
+  function buildNumeroClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      var numero = String(c["Numéro club"] || "").trim();
+      if (c["comité"] && c["club"] && numero) map[ligue + comite + club] = numero;
+    });
+    return map;
+  }
+
+  // Les numéros de licence ne sont pas formatés pareil selon la table
+  // ("058863" dans licencies, "58863" dans engagements) : on compare toujours
+  // la forme sans zéros de tête.
+  function normalizeLicence(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d+$/.test(s)) return s;
+    return String(Number.parseInt(s, 10));
+  }
+
+  function buildLicenceMap(licenciesData) {
+    var map = {};
+    (licenciesData || []).forEach(function (l) {
+      var licence = normalizeLicence(l["Licence"]);
+      if (!licence) return;
+      map[licence] = ((l["prenom"] || "").trim() + " " + (l["nom"] || "").trim()).trim();
+    });
+    return map;
+  }
+
+  // Les en-têtes exportées par le site source contiennent littéralement
+  // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite via
+  // fromCharCode pour éviter qu'un éditeur ne la décode en espace insécable.
+  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
+  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
+
+  // Clé : "NuméroClub|Catégorie|Equipe" -> licences déclarées à la ligue.
+  // Seules les licences sont retenues : cette page n'affiche aucun contact.
+  function buildEngagementsIndex(engagementsData) {
+    var index = {};
+    (engagementsData || []).forEach(function (e) {
+      var key = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      var licences = LICENCE_COLUMNS
+        .map(function (col) { return normalizeLicence(e[col]); })
+        .filter(function (v) { return v; });
+      if (licences.length) index[key] = licences;
+    });
+    return index;
+  }
+
+  function getRoster(joinCtx, clubCode, categorie, equipe) {
+    var numeroClub = joinCtx.numeroClubMap[clubCode];
+    if (!numeroClub) return null;
+    var licences = joinCtx.engagementsIndex[[numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
+    if (!licences) return null;
+    var noms = licences.map(function (l) { return joinCtx.licenceMap[l]; }).filter(function (n) { return !!n; });
+    return noms.length ? noms : null;
+  }
+
   function hasScore(row) {
     var cr = String(row.score_cr == null ? "" : row.score_cr).trim();
     var cv = String(row.score_cv == null ? "" : row.score_cv).trim();
@@ -592,7 +671,7 @@
     return [String(cat || "").trim(), String(club || "").trim(), String(equipe || "").trim()].join("|");
   }
 
-  function buildTeams(rencontres, clubMap) {
+  function buildTeams(rencontres, clubMap, joinCtx) {
     var index = {};
 
     function ajoute(row, chezSoi) {
@@ -609,6 +688,7 @@
           clubNom: clubMap[club] || ("Club " + club),
           numero: String(equipe || "").trim(),
           poule: "",
+          roster: getRoster(joinCtx, club, cat, equipe),
           matches: []
         };
       }
@@ -779,6 +859,12 @@
     if (bilan.length > 1) record.appendChild(document.createTextNode(" · " + bilan.slice(1).join(" · ")));
     block.appendChild(record);
 
+    // Noms seuls, jamais de licence ni de contact (cf. section RGPD du README).
+    var compo = el("div", { class: "team-roster" + (team.roster ? "" : " absente") });
+    compo.appendChild(el("b", { text: team.roster ? "Joueurs : " : "" }));
+    compo.appendChild(document.createTextNode(team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue"));
+    block.appendChild(compo);
+
     team.matches.forEach(function (m) { block.appendChild(buildMatchRow(m)); });
 
     return block;
@@ -863,7 +949,12 @@
     function afficher(data) {
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
-      lastTeams = buildTeams(data.rencontres, buildClubMap(data.clubs));
+      var clubMap = buildClubMap(data.clubs);
+      lastTeams = buildTeams(data.rencontres, clubMap, {
+        numeroClubMap: buildNumeroClubMap(data.clubs),
+        licenceMap: buildLicenceMap(data.licencies),
+        engagementsIndex: buildEngagementsIndex(data.engagements)
+      });
       renderClubOptions(lastTeams);
       renderResults(lastTeams);
     }

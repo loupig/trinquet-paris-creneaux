@@ -31,6 +31,13 @@ principales et met en évidence celle où l'on se trouve :
   déroulante (onze clubs aux noms longs rempliraient cinq lignes de pastilles,
   et un club à la fois est le besoin réel).
 
+  Sous chaque équipe, sa composition déclarée à la ligue : noms de joueurs
+  seuls, jamais de licence ni de contact. Vingt-six équipes sur vingt-sept en
+  ont une ; celle qui n'en a pas l'indique explicitement plutôt que d'afficher
+  une ligne vide. Les compositions sont un bonus d'affichage : si les appels
+  `engagements` ou `licencies` échouent, la page se rend sans elles au lieu de
+  bloquer le récapitulatif.
+
   Aucune mention de réception ni de déplacement : en Île-de-France tout se joue
   sur les mêmes trinquets, la distinction ne veut rien dire pour les joueurs.
   Elle reste utilisée en interne, uniquement pour orienter le score du bon côté.
@@ -224,6 +231,13 @@ scraper Apps Script (voir plus bas) filtre ça **avant** l'écriture sur
 Drive : seuls `Numéro club`, `Licence`, `nom`, `prenom` sont conservés, et
 uniquement pour les clubs du comité — jamais l'adresse ou la date de
 naissance, à aucun moment exposées par l'API.
+
+Les noms de joueurs apparaissent sur deux pages, `programme.html` (au clic sur
+une rencontre) et `equipes.html` (sous chaque équipe). Dans les deux cas ce
+sont les noms seuls, jointure `rencontres` → `engagements` → `licencies`, sans
+numéro de licence ni coordonnées. Seule `programme.html` va plus loin, avec les
+raccourcis de contact du responsable d'équipe, dont les numéros sont déjà
+publiés en clair sur le site de la ligue.
 
 ## Backend (Apps Script)
 
