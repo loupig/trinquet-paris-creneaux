@@ -1061,6 +1061,18 @@
     return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()];
   }
 
+  // Lien vers cette même page, en absolu : le message part chez un tiers qui
+  // n'a aucun contexte. Construit depuis l'adresse courante plutôt qu'écrit
+  // en dur, pour rester valide quel que soit l'hébergement.
+  function reportUrl(oid) {
+    if (!oid) return null;
+    try {
+      return new URL("report.html?oid=" + encodeURIComponent(oid), window.location.href).href;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Message de proposition prérempli, adressé au responsable de "side".
   // Chaque élément absent des données de la ligue est simplement omis.
   function buildProposalMessage(target, side, libres) {
@@ -1087,9 +1099,13 @@
     var blocs = [
       "Bonjour" + (resp ? " " + resp : "") + ",",
       rencontre.join("\n"),
-      dispos.join("\n"),
-      "Qu'est-ce qui vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue."
+      dispos.join("\n")
     ];
+
+    var lien = reportUrl(target.oid);
+    if (lien) blocs.push("Liste complète et à jour : " + lien);
+
+    blocs.push("Qu'est-ce qui vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue.");
 
     var contexte = [target.serieLabel, target.meta].filter(function (part) { return !!part; }).join(" - ");
     if (contexte) blocs.push("_" + contexte + "_");
