@@ -137,6 +137,28 @@
   .recap-line { font-size: 12px; color: var(--text); line-height: 1.5; }
   .recap-line strong { font-weight: 700; }
 
+  .propose-intro { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0 0 8px; }
+  .propose-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 4px 0;
+  }
+  .propose-team.sans-contact { color: var(--muted); }
+  .wa-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .wa-icon svg { display: block; }
+  .wa-icon.icon-whatsapp { color: #25D366; }
+  .wa-icon.icon-sms { color: var(--accent); }
+  .wa-icon.icon-tel { color: var(--accent); }
+
   .day-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -381,6 +403,8 @@
 <main>
   <div class="recap-card featured" id="targetCard" hidden></div>
 
+  <div class="recap-card" id="proposeCard" hidden></div>
+
   <div class="recap-card">
     <div class="recap-title">Avant d'acter le report</div>
     <p class="recap-empty">Une date repérée ici n'est pas une date actée. Mettez-vous d'accord avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
@@ -400,7 +424,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.10</p>
+    <p>Version 2026.09.11</p>
   </footer>
 </main>
 
@@ -602,10 +626,15 @@
     // se fait au client, uniquement pour l'occupation des créneaux.
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
+    // Les contacts ne servent qu'au message de proposition : si l'appel
+    // échoue, on dégrade en silence (pas de liens) plutôt que de priver la
+    // page de son tableau de créneaux.
+    var engagementsPromise = source(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all([rencontresPromise, clubsPromise]).then(function (results) {
+    return Promise.all([rencontresPromise, clubsPromise, engagementsPromise]).then(function (results) {
       var rencontresJson = results[0];
       var clubsJson = results[1];
+      var engagementsJson = results[2];
 
       var rencontres = rencontresJson.data.filter(function (row) {
         var cat = String(row["Catégorie"] || "").trim();
@@ -615,6 +644,7 @@
       return {
         rencontres: rencontres,
         clubs: clubsJson.data,
+        engagements: engagementsJson.data,
         fetchedAt: Date.now(),
         lastSync: rencontresJson.lastSync || null
       };
@@ -625,7 +655,7 @@
   // de re-rendre la page si rien n'a changé — la source ne se synchronise
   // qu'une fois par nuit.
   function signature(data) {
-    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
+    return [data.lastSync, data.rencontres.length, data.clubs.length, data.engagements.length].join("|");
   }
 
 
@@ -646,6 +676,68 @@
       }
     });
     return map;
+  }
+
+  // rencontres utilise un code concaténé ("3750030" = ligue+comité+club),
+  // tandis qu'engagements utilise le format "Numéro club" du site
+  // ("03-750-030"). Cette table fait la conversion entre les deux.
+  function buildNumeroClubMap(clubsData) {
+    var map = {};
+    (clubsData || []).forEach(function (c) {
+      var comite = String(c["comité"] || "").padStart(3, "0");
+      var club = String(c["club"] || "").padStart(3, "0");
+      var ligue = String(c["Ligue"] || "3");
+      if (c["comité"] && c["club"] && c["Numéro club"]) {
+        map[ligue + comite + club] = c["Numéro club"];
+      }
+    });
+    return map;
+  }
+
+  // Clé : "NuméroClub|Catégorie|Equipe" -> responsable déclaré à la ligue.
+  // Contrairement à programme.html, les compositions ne sont pas chargées :
+  // cette page n'affiche aucun nom de joueur.
+  function buildContactsIndex(engagementsData) {
+    var index = {};
+    (engagementsData || []).forEach(function (e) {
+      var key = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      var responsable = String(e["Responsable"] || "").trim();
+      var tel = String(e["Tél1. Resp."] || "").trim() || String(e["Tél2. Resp."] || "").trim();
+      if (responsable || tel) index[key] = { responsable: responsable, tel: tel };
+    });
+    return index;
+  }
+
+  function getContact(contactsIndex, numeroClubMap, clubCode, categorie, equipe) {
+    var numeroClub = numeroClubMap[clubCode];
+    if (!numeroClub) return null;
+    var entry = contactsIndex[[numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
+    if (!entry || !entry.tel) return null;
+    return { responsable: entry.responsable, tel: entry.tel };
+  }
+
+  // Numéros saisis dans des formats variés ("06 12 34 56 78", parfois avec
+  // indicatif). wa.me exige un format international sans "0" initial ni
+  // séparateurs. Copie de programme.html.
+  function normalizePhoneForWhatsapp(raw) {
+    var digits = String(raw || "").replace(/\D/g, "");
+    if (!digits) return null;
+    if (digits.slice(0, 2) === "33") return digits;
+    if (digits.length === 10 && digits[0] === "0") return "33" + digits.slice(1);
+    if (digits.length === 9) return "33" + digits;
+    return digits.length >= 8 ? digits : null;
+  }
+
+  // "Responsable" est saisi librement par les clubs : on isole le prénom pour
+  // un "Bonjour" moins administratif, en retombant sur la valeur brute dès
+  // qu'elle est ambiguë. Copie de programme.html.
+  function prenomDuResponsable(raw) {
+    var tokens = String(raw || "").trim().split(/\s+/).filter(function (t) { return !!t; });
+    if (!tokens.length) return "";
+    var capitales = tokens.filter(function (t) { return t === t.toUpperCase(); });
+    if (capitales.length === tokens.length) return tokens.join(" ");
+    if (capitales.length === 0) return tokens[0];
+    return tokens.filter(function (t) { return t !== t.toUpperCase(); }).join(" ");
   }
 
   function clubLabel(clubMap, code, equipe) {
@@ -679,6 +771,11 @@
 
     return {
       oid: String(row.oid || ""),
+      cat: cat,
+      clubRec: row.club_rec,
+      equipRec: row.equip_rec,
+      clubVis: row.club_vis,
+      equipVis: row.equip_vis,
       date: effectiveDate(row),
       hour: t ? t.hour : null,
       minute: t ? t.minute : 0,
@@ -937,6 +1034,129 @@
     if (cell) cell.classList.toggle("open", !detail.hidden);
   }
 
+  // Dates proposables dans le message : uniquement les créneaux libres des
+  // jours où aucune des deux équipes ne joue déjà (les cases "warn" du
+  // tableau sont volontairement exclues, on ne propose pas une date qu'il
+  // faudra retirer ensuite). Le créneau actuel n'est pas une proposition.
+  function computeFreeDates(dates, occupied, busyDays, target) {
+    var currentKey = (target.date && target.hour !== null) ? (dateKey(target.date) + "|" + target.hour) : null;
+    var libres = [];
+    dates.forEach(function (d) {
+      if (busyDays[dateKey(d)]) return;
+      var hours = (GRID[d.getDay()] || []).filter(function (h) {
+        var key = dateKey(d) + "|" + h;
+        if (currentKey && key === currentKey) return false;
+        return !occupied[key];
+      });
+      if (hours.length) libres.push({ date: d, hours: hours });
+    });
+    return libres;
+  }
+
+  // Au-delà, le message devient illisible sur un téléphone : les dates
+  // suivantes restent visibles dans le tableau de la page.
+  var MAX_DATES_MESSAGE = 6;
+
+  function formatDateSansAnnee(d) {
+    return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()];
+  }
+
+  // Message de proposition prérempli, adressé au responsable de "side".
+  // Chaque élément absent des données de la ligue est simplement omis.
+  function buildProposalMessage(target, side, libres) {
+    var resp = prenomDuResponsable((side.contact && side.contact.responsable) || "");
+
+    var rencontre = ["Notre partie", target.labelRec + " vs " + target.labelVis];
+    if (target.date && target.hour !== null) {
+      rencontre.push("prévue le *" + formatDate(target.date) + " à " + formatHour(target.hour, target.minute) + "* doit être reportée.");
+    } else {
+      rencontre.push("doit être reportée.");
+    }
+
+    var retenues = libres.slice(0, MAX_DATES_MESSAGE);
+    var lignes = retenues.map(function (item) {
+      var heures = item.hours.map(function (h) { return h + "h"; });
+      var fin = heures.length > 1 ? (heures.slice(0, -1).join(", ") + " ou " + heures[heures.length - 1]) : heures[0];
+      return "- " + formatDateSansAnnee(item.date) + " : " + fin;
+    });
+    var dispos = ["Voici les créneaux encore libres au Trinquet Paris :"].concat(lignes);
+    if (libres.length > retenues.length) {
+      dispos.push("(d'autres dates restent possibles ensuite)");
+    }
+
+    var blocs = [
+      "Bonjour" + (resp ? " " + resp : "") + ",",
+      rencontre.join("\n"),
+      dispos.join("\n"),
+      "Qu'est-ce qui vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue."
+    ];
+
+    var contexte = [target.serieLabel, target.meta].filter(function (part) { return !!part; }).join(" - ");
+    if (contexte) blocs.push("_" + contexte + "_");
+
+    blocs.push("Merci !");
+    return blocs.join("\n\n");
+  }
+
+  // Pictogrammes SVG inline (pas de dépendance externe), identiques à
+  // programme.html pour que les 3 canaux se reconnaissent d'une page à l'autre.
+  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/><path d="M12.05 2C6.53 2 2.05 6.48 2.05 12c0 1.77.46 3.5 1.35 5.02L2 22l5.11-1.34a9.95 9.95 0 0 0 4.94 1.31c5.52 0 10-4.48 10-10S17.57 2 12.05 2zm0 18.16a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.09.81.82-3.01-.19-.3a8.13 8.13 0 0 1-1.25-4.34c0-4.5 3.66-8.16 8.16-8.16 2.18 0 4.23.85 5.77 2.39a8.1 8.1 0 0 1 2.39 5.77c0 4.5-3.66 8.16-8.16 8.16z"/></svg>';
+  var ICON_SVG_SMS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>';
+  var ICON_SVG_TEL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+
+  function buildIconLink(iconClass, svg, href, title, openInNewTab) {
+    var a = el("a", { class: "wa-icon " + iconClass, href: href, title: title, "aria-label": title });
+    if (openInNewTab) { a.target = "_blank"; a.rel = "noopener"; }
+    a.innerHTML = svg;
+    return a;
+  }
+
+  // Un lien par équipe, les deux étant proposées : la page ne sait pas
+  // laquelle est celle du lecteur. Les numéros sont ceux des responsables
+  // déjà publiés en clair sur le site de la ligue.
+  function renderProposeCard(target, libres) {
+    var card = document.getElementById("proposeCard");
+    card.innerHTML = "";
+    card.hidden = true;
+    if (!libres.length) return;
+
+    var sides = [
+      { label: target.labelRec, contact: target.contactRec },
+      { label: target.labelVis, contact: target.contactVis }
+    ];
+
+    card.appendChild(el("div", { class: "recap-title", text: "Proposer ces dates à l'adversaire" }));
+    var nbDates = Math.min(libres.length, MAX_DATES_MESSAGE);
+    card.appendChild(el("p", {
+      class: "propose-intro",
+      text: "Message prérempli avec " + nbDates + " date" + (nbDates > 1 ? "s" : "") +
+            " où le créneau est libre et où aucune des deux équipes ne joue déjà."
+    }));
+
+    var auMoinsUnContact = false;
+    sides.forEach(function (side) {
+      var number = side.contact ? normalizePhoneForWhatsapp(side.contact.tel) : null;
+      var ligne = el("div", { class: "propose-team" + (number ? "" : " sans-contact") });
+      if (number) {
+        auMoinsUnContact = true;
+        var who = side.label + (side.contact.responsable ? " (" + side.contact.responsable + ")" : "");
+        var texte = encodeURIComponent(buildProposalMessage(target, side, libres));
+        ligne.appendChild(buildIconLink("icon-whatsapp", ICON_SVG_WHATSAPP, "https://wa.me/" + number + "?text=" + texte, "WhatsApp " + who, true));
+        ligne.appendChild(buildIconLink("icon-sms", ICON_SVG_SMS, "sms:+" + number + "?&body=" + texte, "SMS " + who, false));
+        ligne.appendChild(buildIconLink("icon-tel", ICON_SVG_TEL, "tel:+" + number, "Appeler " + who, false));
+        ligne.appendChild(document.createTextNode(who));
+      } else {
+        ligne.appendChild(document.createTextNode(side.label + " : aucun responsable joignable déclaré à la ligue"));
+      }
+      card.appendChild(ligne);
+    });
+
+    if (!auMoinsUnContact) {
+      card.appendChild(el("p", { class: "recap-empty", text: "Les dates restent visibles dans le tableau ci-dessous, à transmettre par vos propres moyens." }));
+    }
+    card.hidden = false;
+  }
+
   function renderResults(dates, occupied, busyDays, target) {
     var results = document.getElementById("results");
     results.innerHTML = "";
@@ -1068,9 +1288,11 @@
     var bannerSlot = document.getElementById("banner-slot");
     var results = document.getElementById("results");
     var targetCard = document.getElementById("targetCard");
+    var proposeCard = document.getElementById("proposeCard");
     bannerSlot.innerHTML = "";
     results.innerHTML = "";
     targetCard.hidden = true;
+    proposeCard.hidden = true;
 
     var oid = getOid();
     if (!oid) {
@@ -1088,6 +1310,7 @@
       bannerSlot.innerHTML = "";
       results.innerHTML = "";
       targetCard.hidden = true;
+      proposeCard.hidden = true;
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
 
       var today = startOfDay(new Date());
@@ -1106,6 +1329,10 @@
       }
 
       var target = buildTarget(row, clubMap);
+      var numeroClubMap = buildNumeroClubMap(data.clubs);
+      var contactsIndex = buildContactsIndex(data.engagements);
+      target.contactRec = getContact(contactsIndex, numeroClubMap, target.clubRec, target.cat, target.equipRec);
+      target.contactVis = getContact(contactsIndex, numeroClubMap, target.clubVis, target.cat, target.equipVis);
       renderTargetCard(target);
 
       if (target.score) {
@@ -1131,6 +1358,7 @@
       var busyDays = computeTeamBusyDays(data.rencontres, target.keys, target.oid, clubMap);
 
       renderResults(dates, occupied, busyDays, target);
+      renderProposeCard(target, computeFreeDates(dates, occupied, busyDays, target));
     }
 
     // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le
