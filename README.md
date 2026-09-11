@@ -12,15 +12,22 @@ créneaux libres à la main.
 ## Pages
 
 Six pages statiques indépendantes, sans build ni dépendance, chacune avec son
-CSS et son JS inline. Un menu à trois entrées (« Créneaux » / « Programme » /
-« Équipes »), en haut de chaque page, signale les destinations principales et
-met en évidence celle où l'on se trouve. Le compteur n'y figure pas : ce n'est
-pas une page de consultation du championnat, et une quatrième entrée serrait
-le menu sur un écran de 390 px. Il s'atteint par un bouton calculette en bas à
-gauche, à côté du lien vers le site de la ligue. Le retour à l'accueil passe
-par deux autres chemins : le titre du bandeau, et un bouton maison flottant en
-bas à droite, au-dessus de la flèche « remonter » — y compris sur le compteur,
-dont le bandeau n'est pas collant et disparaît au défilement :
+CSS et son JS inline. La navigation est celle d'une application mobile
+plutôt que celle d'un site : rien n'est dans le flux de la page, tout flotte
+aux deux extrémités de l'écran, là où se posent les pouces.
+
+En bas, une barre d'onglets à quatre entrées (« Accueil » / « Créneaux » /
+« Programme » / « Équipes »), icône et libellé, en verre dépoli
+(`backdrop-filter: blur(20px) saturate(180%)` sur un blanc à 72 %). L'onglet
+courant prend une pastille colorée. Le bouton maison flottant a disparu avec
+elle : l'onglet Accueil fait le même travail.
+
+En haut, deux groupes flottants du même verre : le lien vers le site de la
+ligue à gauche, en pastille rouge, et à droite le rafraîchissement puis le
+compteur. Le compteur n'est pas un onglet : ce n'est pas une page de
+consultation du championnat, et une cinquième entrée serrerait les libellés
+sur un écran de 390 px. Son icône passe en vert plein quand on est dessus.
+Le titre du bandeau reste un second chemin vers l'accueil :
 
 - [`index.html`](index.html) — l'accueil, un tableau de bord plutôt qu'un
   sommaire : les prochaines rencontres, le nombre de créneaux encore libres au

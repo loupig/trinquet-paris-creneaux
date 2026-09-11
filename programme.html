@@ -52,7 +52,8 @@
     z-index: 40;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
-    padding: 16px 16px 14px;
+    /* 58px en haut : la place des boutons flottants. */
+    padding: 58px 16px 14px;
   }
   header h1 a.home-link { color: inherit; text-decoration: none; }
   header h1 a.home-link:active { opacity: 0.6; }
@@ -62,24 +63,6 @@
     font-weight: 700;
     color: var(--text);
   }
-  .header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .header-refresh {
-    flex: 0 0 auto;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 8px;
-    margin-top: 1px;
-  }
-  .header-refresh:active { background: #eef1fb; }
   header .header-sync {
     margin: 4px 0 0;
     font-size: 11px;
@@ -89,10 +72,116 @@
   header .header-sync a { color: var(--accent); }
   header .header-sync strong { color: var(--text); }
 
+  /* --- Boutons flottants du haut : ligue à gauche, outils à droite.
+     Même recette de verre dépoli que la barre d'onglets du bas, pour que
+     les deux extrémités de l'écran se répondent. --- */
+  .header-bar {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    z-index: 70;
+    pointer-events: none;
+  }
+  .header-bar > * { pointer-events: auto; }
+  .ligue-btn {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(206, 17, 38, 0.82);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 9px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.22);
+  }
+  .ligue-btn:active { opacity: 0.85; }
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px 0 11px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pill-btn span { line-height: 1; }
+  .icon-btn, .pill-btn {
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.16);
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .pill-btn:active { opacity: 0.75; }
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    padding: 0;
+  }
+  .icon-btn:active { opacity: 0.75; }
+  .icon-btn.calc { color: #009B48; }
+  .icon-btn.calc.on { background: #009B48; border-color: #009B48; color: #fff; }
+
+  /* --- Barre d'onglets flottante, verre dépoli facon iOS --- */
+  .tab-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 6px 24px rgba(26, 26, 46, 0.16);
+    z-index: 60;
+  }
+  .tab-bar a {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 2px 5px;
+    border-radius: 20px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .tab-bar a span {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+  }
+  .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
+  .tab-bar a:active { opacity: 0.7; }
+
   main {
     max-width: 640px;
     margin: 0 auto;
-    padding: 14px 12px 60px;
+    padding: 14px 12px 92px;
   }
 
   .banner {
@@ -291,7 +380,7 @@
   .fab-row {
     position: fixed;
     right: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -315,70 +404,7 @@
   }
   .fab-btn:active { opacity: 0.85; }
 
-  /* Le compteur n'est pas une page de consultation du championnat : il sort du
-     menu (qui ne tient pas une cinquième entrée sur 390 px) pour rejoindre le
-     lien vers la ligue, en bas à gauche. */
-  .bottom-left {
-    position: fixed;
-    left: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 50;
-  }
-  .calc-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    /* Vert de l'ikurriña, comme le rouge du bouton ligue : les deux boutons
-       du bas reprennent les couleurs du favicon. */
-    background: #009B48;
-    color: #fff;
-    text-decoration: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-  }
-  .calc-btn:active { opacity: 0.85; }
-  .league-link-btn {
-    background: #CE1126;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 12px 16px;
-    border-radius: 24px;
-    text-decoration: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-  }
-  .league-link-btn:active { opacity: 0.85; }
 
-  .page-nav {
-    display: flex;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  .page-nav a {
-    flex: 1 1 0;
-    min-width: 0;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 7px 6px;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .page-nav a.active {
-    color: var(--accent);
-    background: var(--accent-bg);
-    border-color: var(--accent-border);
-  }
-  .page-nav a:active { background: var(--accent-bg); }
 
   footer {
     text-align: center;
@@ -394,19 +420,16 @@
 </head>
 <body>
 
-<header>
-  <div class="header-top">
-    <div>
-      <h1><a href="index.html" class="home-link">Programme des championnats</a></h1>
-      <h1>Ligue d'Île-de-France</h1>
-    </div>
-    <button id="refreshBtn" type="button" class="header-refresh">Rafraîchir</button>
+<div class="header-bar">
+  <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
+  <div class="header-actions">
+    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 12a8.2 8.2 0 1 1-2.4-5.8"/><path d="M20.2 3.6v4.8h-4.8"/></svg><span>Rafraîchir</span></button>
+    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.2h0M12 15.2h0M15.5 15.2h0M8.5 18.4h0M12 18.4h0M15.5 18.4h0"/></svg></a>
   </div>
-  <nav class="page-nav">
-    <a href="creneaux.html">Créneaux</a>
-    <a href="programme.html" class="active" aria-current="page">Programme</a>
-    <a href="equipes.html">Équipes</a>
-  </nav>
+</div>
+<header>
+  <h1><a href="index.html" class="home-link">Programme des championnats</a></h1>
+  <h1>Ligue d'Île-de-France</h1>
   <p class="header-sync">Toutes les rencontres, tous lieux confondus, à venir et déjà jouées.</p>
   <p class="header-sync">Cette page se contente d'afficher le calendrier communiqué par la ligue — elle n'a aucun effet sur le site de la ligue.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
@@ -442,12 +465,15 @@
   </footer>
 </main>
 
-<div class="bottom-left">
-  <a class="league-link-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
-  <a class="calc-btn" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.2h0M12 15.2h0M15.5 15.2h0M8.5 18.4h0M12 18.4h0M15.5 18.4h0"/></svg></a>
-</div>
+<nav class="tab-bar" aria-label="Navigation principale">
+  <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
+  <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
+  <a href="programme.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Programme</span></a>
+  <a href="equipes.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.2" cy="8.6" r="3.1"/><path d="M3.6 19.4c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M16.2 5.9a3 3 0 0 1 0 5.5"/><path d="M17.9 14.5c1.8.8 2.9 2.5 2.9 4.6"/></svg><span>Équipes</span></a>
+</nav>
+
+
 <div class="fab-row">
-  <a class="fab-btn" href="index.html" aria-label="Retour à l'accueil"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 3.2 2.6 11.4a1 1 0 0 0 .66 1.75H5v7.05c0 .55.45 1 1 1h3.5v-5.5h5v5.5H18c.55 0 1-.45 1-1v-7.05h1.74a1 1 0 0 0 .66-1.75L12 3.2z"/></svg></a>
   <button id="backToTopBtn" class="fab-btn" type="button" aria-label="Remonter en haut de la page">↑</button>
 </div>
 
