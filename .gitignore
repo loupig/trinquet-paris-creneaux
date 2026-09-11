@@ -1,2 +1,8 @@
 .gstack/
 apps-script/
+
+# Captures de travail : celle du classement de la ligue porte des noms et
+# des numéros de licence, le dépôt est public.
+image.png
+*.jpg
+*.jpeg

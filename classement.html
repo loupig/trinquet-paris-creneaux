@@ -289,14 +289,23 @@
   }
   .rank-row:first-of-type { border-top: none; }
   .rank-pos {
-    flex: 0 0 20px;
-    font-size: 13px;
+    flex: 0 0 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
     font-weight: 800;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
-    text-align: right;
   }
-  .rank-row.premier .rank-pos { color: var(--accent); }
+  /* Podium : la couleur porte le rang, pas une icône. Les trois teintes sont
+     assombries par rapport à l'or, l'argent et le bronze usuels, qui passent
+     mal en petit sur fond blanc. */
+  .rank-row.or .rank-pos { color: #8a6d0b; background: #fbf0cd; }
+  .rank-row.argent .rank-pos { color: #5f636b; background: #eceef1; }
+  .rank-row.bronze .rank-pos { color: #8a5524; background: #f6e6d8; }
   .rank-main { flex: 1 1 auto; min-width: 0; }
   .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
   .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
@@ -308,7 +317,24 @@
     font-variant-numeric: tabular-nums;
   }
   .rank-score.vide { font-size: 13px; color: var(--muted); }
-  .rank-ga { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
+     pour une séparation de carte. */
+  .cut-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px 5px;
+    border-top: 2px solid var(--accent-border);
+  }
+  .cut-line span {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
 
   .legende {
     font-size: 11px;
@@ -405,7 +431,7 @@
       <button type="button" class="filter-chip" data-mode="poule">Par poule</button>
       <button type="button" class="filter-chip" data-mode="general">Général</button>
     </div>
-    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. En dessous : goal average total, et sa moyenne par partie entre parenthèses, qui départage à égalité.</p>
+    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts.</p>
   </div>
 
   <div id="banner-slot"></div>
@@ -470,6 +496,8 @@
   // la source en contient un.
   var PTS_VICTOIRE = 3, PTS_NUL = 2, PTS_DEFAITE = 1;
   var PHASE_POULES = "1";
+  // Les quatre premiers de chaque poule vont en quarts de finale.
+  var QUALIFIES_PAR_POULE = 4;
 
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
@@ -756,8 +784,10 @@
     return (v > 0 ? "+" : (v < 0 ? "−" : "")) + fmtMoyenne(Math.abs(v));
   }
 
+  var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
+
   function buildRankRow(team, rang) {
-    var row = el("div", { class: "rank-row" + (rang === 1 && team.jouees ? " premier" : "") });
+    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") });
     row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
 
     var main = el("div", { class: "rank-main" });
@@ -767,20 +797,22 @@
       detail = team.jouees + " partie" + (team.jouees > 1 ? "s" : "") +
                " · " + team.gagnees + " G · " + team.perdues + " P" +
                (team.nulles ? " · " + team.nulles + " N" : "") +
-               " · " + team.points + " pts · " + team.marques + "–" + team.encaisses;
+               " · " + team.points + " pts · " + team.marques + "–" + team.encaisses +
+               " · GA " + fmtSigne(team.ga) + " (" + fmtSigneMoyen(team.gaMoyen) + ")";
     } else {
       detail = "aucune partie jouée";
     }
     main.appendChild(el("div", { class: "rank-detail", text: detail }));
     row.appendChild(main);
 
+    // À droite, le seul critère de classement. Le goal average qui départage
+    // est descendu dans le détail : deux nombres empilés à droite laissaient
+    // croire à deux colonnes de tri.
     var vals = el("div", { class: "rank-values" });
-    if (team.jouees) {
-      vals.appendChild(el("div", { class: "rank-score", text: fmtMoyenne(team.moyenne) }));
-      vals.appendChild(el("div", { class: "rank-ga", text: fmtSigne(team.ga) + " (" + fmtSigneMoyen(team.gaMoyen) + ")" }));
-    } else {
-      vals.appendChild(el("div", { class: "rank-score vide", text: "–" }));
-    }
+    vals.appendChild(el("div", {
+      class: "rank-score" + (team.jouees ? "" : " vide"),
+      text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
+    }));
     row.appendChild(vals);
 
     return row;
@@ -797,8 +829,17 @@
     if (groupe.sousTitre) head.appendChild(el("span", { class: "poule-sub", text: groupe.sousTitre }));
     carte.appendChild(head);
 
-    trierClassement(groupe.teams).forEach(function (t, idx) {
+    var classees = trierClassement(groupe.teams);
+    classees.forEach(function (t, idx) {
       carte.appendChild(buildRankRow(t, idx + 1));
+      // Les quarts se qualifient poule par poule : le trait n'a aucun sens
+      // sur une table générale, où les poules sont fusionnées.
+      if (filterState.mode === "poule" && idx + 1 === QUALIFIES_PAR_POULE && classees.length > QUALIFIES_PAR_POULE) {
+        var trait = el("div", { class: "cut-line" });
+        trait.appendChild(el("span", { text: "Qualifiés pour les quarts" }));
+        trait.appendChild(el("i", {}));
+        carte.appendChild(trait);
+      }
     });
 
     return carte;
