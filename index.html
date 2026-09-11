@@ -46,8 +46,8 @@
   header {
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
-    /* 58px en haut : la place des boutons flottants. */
-    padding: 58px 16px 14px;
+    /* 54px en haut : la place des boutons flottants. */
+    padding: 54px 16px 12px;
   }
   header h1 {
     margin: 0;
@@ -174,7 +174,7 @@
   main {
     max-width: 640px;
     margin: 0 auto;
-    padding: 14px 12px 92px;
+    padding: 12px 12px 78px;
   }
 
   .banner {
@@ -195,7 +195,7 @@
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     text-decoration: none;
     color: inherit;
     overflow: hidden;
@@ -206,29 +206,52 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
-    padding: 11px 14px;
+    padding: 9px 14px;
     border-bottom: 1px solid var(--border);
     background: var(--bg);
   }
   .tile-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
   .tile-go { font-size: 11px; font-weight: 600; color: var(--accent); white-space: nowrap; }
-  .tile-body { padding: 12px 14px; }
+  .tile-body { padding: 10px 14px; }
+  .tile-slim {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .tile-sub { font-size: 10px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
   .tile-note { font-size: 11px; color: var(--muted); line-height: 1.45; margin: 0; }
 
   /* --- Chiffre mis en avant --- */
   .headline { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .headline-value { font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .headline-value { font-size: 22px; font-weight: 800; line-height: 1.1; }
   .headline-value.free { color: var(--free-text); }
   .headline-unit { font-size: 12px; font-weight: 600; color: var(--muted); }
 
-  /* --- Prochaines parties --- */
-  .next-row { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; }
+  /* --- Prochaines parties ---
+     Une ligne par partie, tronquée : la tuile entière ouvre le programme, qui
+     donne poule, lieu et noms complets. Sur l'accueil l'utile est "quand, qui,
+     quelle série", pas le détail. */
+  .next-row { display: flex; gap: 8px; align-items: center; padding: 5px 0; }
   .next-row + .next-row { border-top: 1px solid var(--border); }
-  .next-when { flex: 0 0 78px; font-size: 11px; color: var(--muted); line-height: 1.3; }
-  .next-when b { display: block; color: var(--text); font-weight: 700; }
-  .next-main { flex: 1 1 auto; min-width: 0; }
-  .next-teams { font-size: 12px; font-weight: 600; line-height: 1.3; }
-  .next-meta { font-size: 10px; color: var(--muted); margin-top: 1px; line-height: 1.35; }
+  .next-when {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .next-teams {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .badge {
     font-size: 9px;
     font-weight: 700;
@@ -252,7 +275,7 @@
   .progress.mini { height: 5px; margin: 5px 0 0 12px; }
   .progress i.serie-1 { background: var(--serie1-text); }
   .progress i.serie-2 { background: var(--serie2-text); }
-  .split { margin-top: 12px; }
+  .split { margin-top: 10px; }
   .split-spec {
     font-size: 11px;
     font-weight: 700;
@@ -261,7 +284,7 @@
     color: var(--muted);
     margin-bottom: 8px;
   }
-  .progress.mini + .split-spec { margin-top: 14px; }
+  .progress.mini + .split-spec { margin-top: 11px; }
   .split-row {
     display: flex;
     align-items: baseline;
@@ -272,7 +295,7 @@
     padding-left: 10px;
     border-left: 2px solid var(--border);
   }
-  .progress.mini + .split-row { margin-top: 11px; }
+  .progress.mini + .split-row { margin-top: 8px; }
   .split-count { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
 
   .skeleton-card {
@@ -299,8 +322,8 @@
   }
 
 
-  footer { text-align: center; padding: 20px 4px 10px; }
-  footer p { margin: 0 0 6px; font-size: 11px; color: var(--muted); }
+  footer { text-align: center; padding: 12px 4px 6px; }
+  footer p { margin: 0 0 4px; font-size: 11px; color: var(--muted); }
   footer a { color: var(--muted); }
 </style>
 </head>
@@ -316,7 +339,7 @@
 <header>
   <h1>Trinquet Paris &amp; championnats</h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Ce site affiche ce que la ligue publie. Il ne réserve rien, n'inscrit rien, et n'a aucun effet sur le site de la ligue.</p>
+  <p class="header-sync">Ce site affiche ce que la ligue publie, sans aucun effet sur son site.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
@@ -324,20 +347,16 @@
   <div id="banner-slot"></div>
   <div id="tiles"></div>
 
-  <a class="tile" href="compteur.html">
-    <div class="tile-head">
+  <a class="tile tile-slim" href="compteur.html">
+    <div>
       <div class="tile-title">Compteur de points</div>
-      <div class="tile-go">Ouvrir →</div>
+      <div class="tile-sub">Marquer une partie point par point, tout reste dans ce téléphone.</div>
     </div>
-    <div class="tile-body">
-      <p class="tile-note">Marquer une partie point par point, sur place, avec le déroulé du score et la durée des échanges. Rien n'est envoyé, tout reste dans ce téléphone.</p>
-    </div>
+    <div class="tile-go">Ouvrir →</div>
   </a>
 
   <footer>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
-    <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.11</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.09.11</p>
   </footer>
 </main>
 
@@ -715,14 +734,11 @@
     } else {
       aVenir.slice(0, NB_PROCHAINES).forEach(function (m) {
         var row = el("div", { class: "next-row" });
-        var when = el("div", { class: "next-when" });
-        when.appendChild(el("b", { text: formatShortDate(m.date) }));
-        when.appendChild(document.createTextNode(formatHour(m.hour, m.minute)));
-        row.appendChild(when);
-        var main = el("div", { class: "next-main" });
-        main.appendChild(el("div", { class: "next-teams", text: m.teams }));
-        main.appendChild(el("div", { class: "next-meta", text: [m.meta, m.lieu].filter(Boolean).join(" · ") }));
-        row.appendChild(main);
+        row.appendChild(el("div", {
+          class: "next-when",
+          text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
+        }));
+        row.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teams }));
         row.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
         t1.body.appendChild(row);
       });
@@ -772,7 +788,6 @@
     });
     t3.body.appendChild(split);
 
-    t3.body.appendChild(el("p", { class: "tile-note", text: "Compositions, bilans et calendrier de chaque équipe, club par club." }));
     box.appendChild(t3);
   }
 
