@@ -571,6 +571,29 @@
     return eq ? (name + " (éq. " + eq + ")") : name;
   }
 
+  // Abréviations d'usage, telles que les clubs se nomment entre eux. Elles ne
+  // servent qu'à l'accueil, où chaque partie doit tenir sur une ligne ; le
+  // programme et les équipes gardent les noms complets de la ligue. Un club
+  // absent de cette table garde son nom entier : mieux vaut une ligne tronquée
+  // qu'une abréviation inventée. AAESB et PILOTARI sont déjà courts.
+  var CLUBS_ABREGES = {
+    "CHAVILLE PELOTE BASQUE": "Chaville",
+    "CHATILLON PELOTE BASQUE": "Chatillon",
+    "PARIS EUSKAL PILOTA": "PEP",
+    "METRO PELOTE BASQUE ANTONY": "MPBA",
+    "CLUB DE PELOTE BASQUE DE PARIS": "CPBP",
+    "LEVALLOIS SC": "LSC",
+    "PARIS PELOTE BASQUE 13": "PPB13",
+    "PARIS TALDEA": "Taldea"
+  };
+
+  function clubCourt(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var court = CLUBS_ABREGES[name.toUpperCase().trim()] || name;
+    var eq = String(equipe || "").trim();
+    return eq ? (court + " " + eq) : court;
+  }
+
   function hasScore(row) {
     var cr = String(row.score_cr == null ? "" : row.score_cr).trim();
     var cv = String(row.score_cv == null ? "" : row.score_cv).trim();
@@ -592,7 +615,8 @@
       return {
         date: d, hour: t.hour, minute: t.minute, cat: cat,
         serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
-        teams: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
+        teams: clubCourt(clubMap, row.club_rec, row.equip_rec) + " vs " + clubCourt(clubMap, row.club_vis, row.equip_vis),
+        teamsLong: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
         lieu: String(row.lieu_renc || "").trim(),
         meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "")
       };
@@ -738,7 +762,7 @@
           class: "next-when",
           text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
         }));
-        row.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teams }));
+        row.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
         row.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
         t1.body.appendChild(row);
       });
