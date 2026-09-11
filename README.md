@@ -11,13 +11,13 @@ créneaux libres à la main.
 
 ## Pages
 
-Six pages statiques indépendantes, sans build ni dépendance, chacune avec son
+Sept pages statiques indépendantes, sans build ni dépendance, chacune avec son
 CSS et son JS inline. La navigation est celle d'une application mobile
 plutôt que celle d'un site : rien n'est dans le flux de la page, tout flotte
 aux deux extrémités de l'écran, là où se posent les pouces.
 
-En bas, une barre d'onglets à quatre entrées (« Accueil » / « Créneaux » /
-« Programme » / « Équipes »), icône et libellé, en verre dépoli
+En bas, une barre d'onglets à cinq entrées (« Accueil » / « Créneaux » /
+« Programme » / « Équipes » / « Classement »), icône et libellé, en verre dépoli
 (`backdrop-filter: blur(20px) saturate(180%)` sur un blanc à 72 %). L'onglet
 courant prend une pastille colorée. Le bouton maison flottant a disparu avec
 elle : l'onglet Accueil fait le même travail.
@@ -79,6 +79,20 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   L'identité d'une équipe est la clé catégorie + club + numéro ; la catégorie y
   figure par prudence, rien ne garantissant qu'un club ne réutilise pas un
   numéro d'équipe d'une série à l'autre.
+- [`classement.html`](classement.html) — classement des poules. Barème de la
+  ligue : 3 points la victoire, 1 point la défaite. Le classement se fait au
+  total de points divisé par le nombre de parties jouées, puis au goal average
+  moyen. Diviser plutôt que totaliser est indispensable ici : les poules ne
+  jouent pas toutes le même nombre de parties au même moment, un total brut
+  avantagerait mécaniquement l'équipe qui a joué le plus tôt. Seule la phase de
+  poules est classée (`Phase` vaut 1) : les phases finales sont à élimination
+  directe, une moyenne de points par partie n'y voudrait rien dire. Deux
+  découpages en pastilles : par poule, ou général, qui fusionne les poules
+  d'une même catégorie. Une équipe engagée mais qui n'a encore rien joué reste
+  listée, en fin de table et sans rang : la table doit montrer l'effectif
+  complet de la poule dès le début de saison. Un nul vaudrait 2 points, cas
+  qui ne devrait jamais survenir puisqu'une équipe atteint 40.
+
 - [`report.html`](report.html) — aide au choix d'une date de report. S'ouvre
   depuis le bouton « Chercher une date de report » d'une partie non jouée du
   programme (`report.html?oid=<oid de la rencontre>`), rappelle le créneau

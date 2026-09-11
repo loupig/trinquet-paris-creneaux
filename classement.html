@@ -245,34 +245,6 @@
   .filter-chip.serie-1.active { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
   .filter-chip.serie-2.active { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
 
-  /* --- Club --- */
-  .club-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-  .club-head {
-    padding: 11px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-  .club-head span { font-weight: 600; color: var(--muted); font-size: 11px; }
-
-  /* --- Équipe --- */
-  .team-block { border-bottom: 1px solid var(--border); }
-  .team-block:last-child { border-bottom: none; }
-  .team-head {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 10px 14px 8px;
-  }
-  .team-name { font-size: 13px; font-weight: 700; }
   .badge {
     font-size: 10px;
     font-weight: 700;
@@ -282,67 +254,68 @@
   }
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
   .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
-  .team-poule { font-size: 11px; color: var(--muted); }
-  .team-record {
-    padding: 0 14px 8px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .team-record b { color: var(--text); font-weight: 700; }
-  .team-roster {
-    padding: 0 14px 9px;
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--text);
-  }
-  .team-roster b { font-weight: 700; color: var(--muted); font-size: 11px; }
-  .team-roster.absente { font-size: 11px; color: var(--muted); font-style: italic; }
 
-  /* --- Une partie --- */
-  .match-row {
+  /* --- Une poule --- */
+  .poule-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .poule-head {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 11px; }
+
+  /* --- Une ligne de classement ---
+     Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
+     tableau obligerait à défiler horizontalement, ou à des colonnes de 22px
+     illisibles. Le critère de tri est à droite, en gros ; le détail qui le
+     compose est sur la ligne du dessous. */
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 8px 14px;
     border-top: 1px solid var(--border);
   }
-  /* Colonne toujours présente, vide quand la partie n'est pas replanifiable :
-     sans elle le bord gauche de la liste deviendrait irrégulier. */
-  .match-replan { flex: 0 0 18px; }
-  .replan-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    color: var(--accent);
-    background: #fff;
-    border: 1px solid var(--accent-border);
-    border-radius: 5px;
-    text-decoration: none;
-  }
-  .replan-btn svg { display: block; }
-  .replan-btn:active { background: var(--accent-bg); }
-
-  .match-when {
-    flex: 0 0 74px;
-    font-size: 11px;
-    line-height: 1.3;
-    color: var(--muted);
-  }
-  .match-when b { display: block; color: var(--text); font-weight: 700; }
-  .match-main { flex: 1 1 auto; min-width: 0; }
-  .match-opp { font-size: 12px; font-weight: 600; line-height: 1.3; }
-  .match-meta { font-size: 10px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
-  .match-score {
-    flex: 0 0 auto;
+  .rank-row:first-of-type { border-top: none; }
+  .rank-pos {
+    flex: 0 0 20px;
     font-size: 13px;
     font-weight: 800;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .rank-row.premier .rank-pos { color: var(--accent); }
+  .rank-main { flex: 1 1 auto; min-width: 0; }
+  .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
+  .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+  .rank-values { flex: 0 0 auto; text-align: right; }
+  .rank-score {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.1;
     font-variant-numeric: tabular-nums;
   }
-  .match-score.win { color: var(--win-text); }
-  .match-score.loss { color: var(--loss-text); }
-  .match-score.todo { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .rank-score.vide { font-size: 13px; color: var(--muted); }
+  .rank-ga { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .legende {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 10px 0 0;
+  }
 
   .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
 
@@ -411,9 +384,9 @@
   </div>
 </div>
 <header>
-  <h1><a href="index.html" class="home-link">Parties par équipe</a></h1>
+  <h1><a href="index.html" class="home-link">Classement des poules</a></h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Toutes les rencontres regroupées par club puis par équipe, jouées et à venir.</p>
+  <p class="header-sync">Phase de poules uniquement : victoire 3 points, défaite 1 point. Classement au total de points divisé par le nombre de parties jouées, puis au goal average moyen.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
@@ -427,8 +400,12 @@
       <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
       <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
     </div>
-    <div class="filter-subtitle">Club</div>
-    <select class="filter-select" id="filterClub" aria-label="Filtrer par club"></select>
+    <div class="filter-subtitle">Découpage</div>
+    <div class="filter-group" id="filterDecoupage">
+      <button type="button" class="filter-chip" data-mode="poule">Par poule</button>
+      <button type="button" class="filter-chip" data-mode="general">Général</button>
+    </div>
+    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. En dessous : goal average total, et sa moyenne par partie entre parenthèses, qui départage à égalité.</p>
   </div>
 
   <div id="banner-slot"></div>
@@ -445,8 +422,8 @@
   <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
   <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
   <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Programme</span></a>
-  <a href="equipes.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><circle cx="9.2" cy="8.4" r="3.7"/><path d="M9.2 13.6c3.6 0 6.4 2.4 6.4 5.9a1 1 0 0 1-1 1H3.8a1 1 0 0 1-1-1c0-3.5 2.8-5.9 6.4-5.9z"/><circle cx="17.3" cy="8.6" r="2.9"/><path d="M17.3 13.2c2.6 0 4.5 1.8 4.5 4.4a1 1 0 0 1-1 1h-3.4c.1-1.9-.5-3.7-1.7-5.1.5-.2 1.1-.3 1.6-.3z"/></svg><span>Équipes</span></a>
-  <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
+  <a href="equipes.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.2" cy="8.6" r="3.1"/><path d="M3.6 19.4c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M16.2 5.9a3 3 0 0 1 0 5.5"/><path d="M17.9 14.5c1.8.8 2.9 2.5 2.9 4.6"/></svg><span>Équipes</span></a>
+  <a href="classement.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><rect x="3.6" y="19.4" width="16.8" height="2" rx="1"/><rect x="4.3" y="11.8" width="5" height="6.2" rx="1.4"/><rect x="9.5" y="7.2" width="5" height="10.8" rx="1.4"/><rect x="14.7" y="9.8" width="5" height="8.2" rx="1.4"/></svg><span>Classement</span></a>
 </nav>
 
 
@@ -462,7 +439,7 @@
   // Configuration
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
-  var FILTER_CACHE_KEY = "lidfpb_equipes_filters_v1";
+  var FILTER_CACHE_KEY = "lidfpb_classement_filters_v1";
   var CACHE_TTL_MS = 5 * 60 * 1000;
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
@@ -471,22 +448,7 @@
   // aussi "série" : Catégorie 1 = Série 1, c'est le même champ.
   var SPEC_LABELS = { "2": "Trinquet / P.G Pleine Masculin" };
 
-  var PHASE_LABELS = {
-    "1": "Poules",
-    "2": "Barrage",
-    "3": "Barrage 1er tour",
-    "4": "Barrage 2e tour",
-    "5": "Barrage 3e tour",
-    "6": "Barrage maintien",
-    "7": "1/32e de finale",
-    "8": "1/16e de finale",
-    "9": "1/8e de finale",
-    "10": "1/4 de finale",
-    "11": "1/2 finale",
-    "12": "Finale"
-  };
-
-  var filterState = { specs: {}, series: { "1": true, "2": true }, club: "" };   // club vide = tous
+  var filterState = { specs: {}, series: { "1": true, "2": true }, mode: "poule" };
 
   function loadFilterState() {
     try {
@@ -503,50 +465,17 @@
 
   var lastTeams = null;
 
+  // Barème fixé par la ligue. Un nul est impossible en pratique (une équipe
+  // atteint 40), la valeur intermédiaire n'est là que pour ne pas planter si
+  // la source en contient un.
+  var PTS_VICTOIRE = 3, PTS_NUL = 2, PTS_DEFAITE = 1;
+  var PHASE_POULES = "1";
+
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
   // ---------------------------------------------------------------
-  function parseDateRenc(raw) {
-    if (!raw) return null;
-    var s = String(raw).trim();
-    if (!/^\d{7,8}$/.test(s)) return null;
-    if (s.length === 7) s = "0" + s;
-    var day = parseInt(s.slice(0, 2), 10);
-    var month = parseInt(s.slice(2, 4), 10);
-    var year = parseInt(s.slice(4, 8), 10);
-    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-    var nowYear = new Date().getFullYear();
-    if (year < nowYear - 2 || year > nowYear + 4) return null;
-    var d = new Date(year, month - 1, day);
-    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
-    return d;
-  }
-
-  function parseHeureRenc(raw) {
-    var s = String(raw || "").trim();
-    if (!/^\d{1,4}$/.test(s)) return null;
-    s = s.padStart(4, "0");
-    var hour = parseInt(s.slice(0, 2), 10);
-    var minute = parseInt(s.slice(2, 4), 10);
-    if (hour > 23 || minute > 59) return null;
-    return { hour: hour, minute: minute };
-  }
-
-  function startOfDay(d) {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  }
-
   // Date "effective" d'une rencontre : si reportée (date_rep renseignée et
   // différente de date_renc), c'est cette nouvelle date qui compte.
-  function effectiveDate(row) {
-    var original = parseDateRenc(row.date_renc);
-    var reported = parseDateRenc(row.date_rep);
-    if (reported && (!original || reported.getTime() !== original.getTime())) {
-      return reported;
-    }
-    return original;
-  }
-
   // ---------------------------------------------------------------
   // Cache des appels API
   // ---------------------------------------------------------------
@@ -614,27 +543,23 @@
   }
 
   function fetchLiveData(source) {
-    // Pas de filtre lieu : cette page couvre toutes les rencontres, tous lieux.
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
-    // Les compositions sont un bonus d'affichage, pas une donnée essentielle
-    // comme le calendrier : si ces appels échouent, on dégrade en silence
-    // plutôt que de bloquer toute la page.
-    var engagementsPromise = source(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
-    var licenciesPromise = source(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all([rencontresPromise, clubsPromise, engagementsPromise, licenciesPromise]).then(function (results) {
-      var rencontres = results[0].data.filter(function (row) {
+    return Promise.all([rencontresPromise, clubsPromise]).then(function (results) {
+      var rencontresJson = results[0];
+      var clubsJson = results[1];
+
+      var rencontres = rencontresJson.data.filter(function (row) {
         var cat = String(row["Catégorie"] || "").trim();
         return SERIE_LABELS.hasOwnProperty(cat) && row.oid;
       });
+
       return {
         rencontres: rencontres,
-        clubs: results[1].data,
-        engagements: results[2].data,
-        licencies: results[3].data,
+        clubs: clubsJson.data,
         fetchedAt: Date.now(),
-        lastSync: results[0].lastSync || null
+        lastSync: rencontresJson.lastSync || null
       };
     });
   }
@@ -643,8 +568,7 @@
   // de re-rendre la page si rien n'a changé — la source ne se synchronise
   // qu'une fois par nuit.
   function signature(data) {
-    return [data.lastSync, data.rencontres.length, data.clubs.length,
-            data.engagements.length, data.licencies.length].join("|");
+    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
   }
 
   // ---------------------------------------------------------------
@@ -672,69 +596,6 @@
     return eq ? (name + " (éq. " + eq + ")") : name;
   }
 
-  // rencontres utilise un code concaténé ("3750030" = ligue+comité+club),
-  // tandis qu'engagements/licencies utilisent le format "Numéro club" avec
-  // tirets ("03-750-030"). Cette table fait la conversion.
-  function buildNumeroClubMap(clubsData) {
-    var map = {};
-    (clubsData || []).forEach(function (c) {
-      var comite = String(c["comité"] || "").padStart(3, "0");
-      var club = String(c["club"] || "").padStart(3, "0");
-      var ligue = String(c["Ligue"] || "3");
-      var numero = String(c["Numéro club"] || "").trim();
-      if (c["comité"] && c["club"] && numero) map[ligue + comite + club] = numero;
-    });
-    return map;
-  }
-
-  // Les numéros de licence ne sont pas formatés pareil selon la table
-  // ("058863" dans licencies, "58863" dans engagements) : on compare toujours
-  // la forme sans zéros de tête.
-  function normalizeLicence(raw) {
-    var s = String(raw || "").trim();
-    if (!/^\d+$/.test(s)) return s;
-    return String(Number.parseInt(s, 10));
-  }
-
-  function buildLicenceMap(licenciesData) {
-    var map = {};
-    (licenciesData || []).forEach(function (l) {
-      var licence = normalizeLicence(l["Licence"]);
-      if (!licence) return;
-      map[licence] = ((l["prenom"] || "").trim() + " " + (l["nom"] || "").trim()).trim();
-    });
-    return map;
-  }
-
-  // Les en-têtes exportées par le site source contiennent littéralement
-  // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite via
-  // fromCharCode pour éviter qu'un éditeur ne la décode en espace insécable.
-  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
-  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
-
-  // Clé : "NuméroClub|Catégorie|Equipe" -> licences déclarées à la ligue.
-  // Seules les licences sont retenues : cette page n'affiche aucun contact.
-  function buildEngagementsIndex(engagementsData) {
-    var index = {};
-    (engagementsData || []).forEach(function (e) {
-      var key = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
-      var licences = LICENCE_COLUMNS
-        .map(function (col) { return normalizeLicence(e[col]); })
-        .filter(function (v) { return v; });
-      if (licences.length) index[key] = licences;
-    });
-    return index;
-  }
-
-  function getRoster(joinCtx, clubCode, categorie, equipe) {
-    var numeroClub = joinCtx.numeroClubMap[clubCode];
-    if (!numeroClub) return null;
-    var licences = joinCtx.engagementsIndex[[numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
-    if (!licences) return null;
-    var noms = licences.map(function (l) { return joinCtx.licenceMap[l]; }).filter(function (n) { return !!n; });
-    return noms.length ? noms : null;
-  }
-
   function hasScore(row) {
     var cr = String(row.score_cr == null ? "" : row.score_cr).trim();
     var cv = String(row.score_cv == null ? "" : row.score_cv).trim();
@@ -742,143 +603,107 @@
   }
 
   // ---------------------------------------------------------------
-  // Construction du récapitulatif par équipe
+  // Construction du classement
   // ---------------------------------------------------------------
-  // Une équipe est identifiée par sa catégorie, son club et son numéro. La
-  // catégorie fait partie de la clé par prudence : rien ne garantit qu'un club
-  // ne réutilisera pas un numéro d'équipe d'une série à l'autre.
   // La ligue réserve une plage de codes aux clubs fictifs : "9998" porte
-  // l'adversaire encore inconnu d'une qualification, affiché "Equipe à
-  // désigner". Le site source les regroupe sous "*** 99 999 ***", d'où la
-  // règle sur les 9 de tête. Ces équipes restent listées — l'information est
-  // réelle — mais filtrer dessus n'aurait pas de sens.
+  // l'adversaire encore inconnu d'une qualification. Ces équipes n'ont pas
+  // leur place dans un classement de poule.
   function clubFictif(code) {
     return /^9{3,}/.test(String(code || "").trim());
   }
 
-  function teamKey(spec, cat, club, equipe) {
-    return [String(spec || "").trim(), String(cat || "").trim(),
+  function teamKey(spec, cat, poule, club, equipe) {
+    return [String(spec || "").trim(), String(cat || "").trim(), String(poule || "").trim(),
             String(club || "").trim(), String(equipe || "").trim()].join("|");
   }
 
-  function buildTeams(rencontres, clubMap, joinCtx) {
+  // Seule la phase de poules est classée : les phases finales se jouent à
+  // élimination directe, une moyenne de points par partie n'y veut rien dire.
+  function estPhaseDePoules(row) {
+    return String(row.Phase || "").trim() === PHASE_POULES;
+  }
+
+  // Une équipe est comptée dans la poule où elle joue. Toutes les équipes
+  // engagées apparaissent, y compris celles qui n'ont encore rien joué : la
+  // table doit montrer l'effectif complet dès le début de saison.
+  function buildStandings(rencontres, clubMap) {
     var index = {};
 
-    function ajoute(row, chezSoi) {
+    function equipe(row, chezSoi) {
       var spec = String(row["Spécialité"] || "").trim();
       var cat = String(row["Catégorie"] || "").trim();
-      var club = chezSoi ? row.club_rec : row.club_vis;
-      var equipe = chezSoi ? row.equip_rec : row.equip_vis;
-      var cle = teamKey(spec, cat, club, equipe);
+      var poule = String(row.Poule || "").trim();
+      var club = String((chezSoi ? row.club_rec : row.club_vis) || "").trim();
+      var num = String((chezSoi ? row.equip_rec : row.equip_vis) || "").trim();
+      if (clubFictif(club)) return null;
 
-      var team = index[cle];
-      if (!team) {
-        team = index[cle] = {
+      var cle = teamKey(spec, cat, poule, club, num);
+      var t = index[cle];
+      if (!t) {
+        t = index[cle] = {
           spec: spec,
           cat: cat,
           serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
+          poule: poule,
+          clubCode: club,
           clubNom: clubMap[club] || ("Club " + club),
-          numero: String(equipe || "").trim(),
-          clubCode: String(club || "").trim(),
-          poule: "",
-          roster: getRoster(joinCtx, club, cat, equipe),
-          matches: []
+          numero: num,
+          label: clubLabel(clubMap, club, num),
+          jouees: 0, gagnees: 0, perdues: 0, nulles: 0,
+          points: 0, marques: 0, encaisses: 0
         };
       }
-      if (!team.poule && row.Poule) team.poule = "Poule " + row.Poule;
-
-      var scoreSoi = null, scoreAdv = null;
-      if (hasScore(row)) {
-        scoreSoi = parseInt(chezSoi ? row.score_cr : row.score_cv, 10);
-        scoreAdv = parseInt(chezSoi ? row.score_cv : row.score_cr, 10);
-      }
-
-      var phaseRaw = String(row.Phase || "").trim();
-      var t = parseHeureRenc(row.heure_renc);
-      team.matches.push({
-        date: effectiveDate(row),
-        hour: t ? t.hour : null,
-        minute: t ? t.minute : 0,
-        chezSoi: chezSoi,
-        adversaire: clubLabel(clubMap, chezSoi ? row.club_vis : row.club_rec, chezSoi ? row.equip_vis : row.equip_rec),
-        oid: String(row.oid || "").trim(),
-        lieu: String(row.lieu_renc || "").trim(),
-        meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
-        scoreSoi: scoreSoi,
-        scoreAdv: scoreAdv
-      });
+      return t;
     }
 
-    rencontres.forEach(function (row) { ajoute(row, true); ajoute(row, false); });
+    rencontres.forEach(function (row) {
+      if (!estPhaseDePoules(row)) return;
+      var rec = equipe(row, true);
+      var vis = equipe(row, false);
+      if (!rec || !vis || !hasScore(row)) return;
 
-    var teams = Object.keys(index).map(function (k) { return index[k]; });
+      var sr = parseInt(row.score_cr, 10);
+      var sv = parseInt(row.score_cv, 10);
+      if (Number.isNaN(sr) || Number.isNaN(sv)) return;
 
-    teams.forEach(function (team) {
-      // Une rencontre sans date lisible est reléguée en fin de liste plutôt
-      // qu'écartée : elle existe, elle doit rester visible.
-      team.matches.sort(function (a, b) {
-        if (!a.date && !b.date) return 0;
-        if (!a.date) return 1;
-        if (!b.date) return -1;
-        var dd = a.date.getTime() - b.date.getTime();
-        if (dd !== 0) return dd;
-        return (a.hour || 0) * 60 + a.minute - ((b.hour || 0) * 60 + b.minute);
+      [[rec, sr, sv], [vis, sv, sr]].forEach(function (cote) {
+        var t = cote[0], pour = cote[1], contre = cote[2];
+        t.jouees += 1;
+        t.marques += pour;
+        t.encaisses += contre;
+        if (pour > contre) { t.gagnees += 1; t.points += PTS_VICTOIRE; }
+        else if (pour < contre) { t.perdues += 1; t.points += PTS_DEFAITE; }
+        else { t.nulles += 1; t.points += PTS_NUL; }
       });
-
-      team.jouees = 0; team.gagnees = 0; team.perdues = 0; team.nulles = 0;
-      team.matches.forEach(function (m) {
-        if (m.scoreSoi === null) return;
-        team.jouees += 1;
-        if (m.scoreSoi > m.scoreAdv) team.gagnees += 1;
-        else if (m.scoreSoi < m.scoreAdv) team.perdues += 1;
-        else team.nulles += 1;
-      });
-      team.aVenir = team.matches.length - team.jouees;
     });
 
-    // Tri demandé : par club, puis par numéro d'équipe. Le numéro est comparé
-    // en nombre, sans quoi l'équipe 10 se glisserait entre la 1 et la 2.
-    teams.sort(function (a, b) {
-      var c = a.clubNom.localeCompare(b.clubNom, "fr");
-      if (c !== 0) return c;
-      var na = parseInt(a.numero, 10), nb = parseInt(b.numero, 10);
-      if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
-      return a.numero.localeCompare(b.numero, "fr");
+    return Object.keys(index).map(function (k) {
+      var t = index[k];
+      t.ga = t.marques - t.encaisses;
+      // Une équipe sans partie jouée n'a pas de moyenne : null, pas zéro, pour
+      // ne pas la classer devant une équipe qui a perdu.
+      t.moyenne = t.jouees ? (t.points / t.jouees) : null;
+      t.gaMoyen = t.jouees ? (t.ga / t.jouees) : null;
+      return t;
     });
+  }
 
-    return teams;
+  // Tri demandé : moyenne de points, puis goal average moyen. Les équipes sans
+  // partie jouée ferment la marche, dans l'ordre alphabétique.
+  function trierClassement(teams) {
+    return teams.slice().sort(function (a, b) {
+      if (a.jouees === 0 && b.jouees === 0) return a.label.localeCompare(b.label, "fr");
+      if (a.jouees === 0) return 1;
+      if (b.jouees === 0) return -1;
+      if (b.moyenne !== a.moyenne) return b.moyenne - a.moyenne;
+      if (b.gaMoyen !== a.gaMoyen) return b.gaMoyen - a.gaMoyen;
+      return a.label.localeCompare(b.label, "fr");
+    });
   }
 
   // ---------------------------------------------------------------
   // Rendu
   // ---------------------------------------------------------------
-  var DAY_ABBR = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
-  var MONTH_ABBR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-
-  function formatShortDate(d) {
-    return DAY_ABBR[d.getDay()] + " " + d.getDate() + " " + MONTH_ABBR[d.getMonth()];
-  }
-
-  function formatHour(hour, minute) {
-    if (hour === null) return "";
-    return minute ? (hour + "h" + String(minute).padStart(2, "0")) : (hour + "h");
-  }
-
-  // Règle large de sécurité : capte "trinquet" + "paris" en excluant
-  // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
-  // Fronton PB13, Chiquito de Cambo). Copie de la fonction de programme.html.
-  function matchesTrinquetParis(lieu) {
-    if (!lieu) return false;
-    var s = lieu.toUpperCase();
-    if (s.indexOf("TRINQUET") === -1) return false;
-    if (s.indexOf("PARIS") === -1) return false;
-    if (s.indexOf("CAVALERIE") !== -1) return false;
-    if (s.indexOf("75015") !== -1) return false;
-    if (s.indexOf("PB13") !== -1 || s.indexOf("PB 13") !== -1) return false;
-    if (s.indexOf("CHIQUITO") !== -1) return false;
-    return true;
-  }
-
   function el(tag, attrs, children) {
     var e = document.createElement(tag);
     if (attrs) {
@@ -915,90 +740,68 @@
     container.appendChild(b);
   }
 
-  // Le report ne se conçoit que là où une grille de créneaux existe
-  // (Trinquet Paris, cf. report.html). Une partie passée sans score reste
-  // reportable : c'est même le cas le plus urgent à recaser.
-  function canReport(m) {
-    return m.scoreSoi === null && !!m.oid && matchesTrinquetParis(m.lieu);
+  // Une moyenne se lit mieux à deux décimales : 2.50 et 2.33 se départagent à
+  // l'œil, 2.5 et 2.3 laissent croire à un écart plus net qu'il n'est.
+  function fmtMoyenne(v) {
+    return v.toFixed(2).replace(".", ",");
   }
 
-  var ICON_SVG_REPLAN = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-7.5-7.5V16l3 1.8.75-1.23-2.25-1.32V12.5h-1.5z"/></svg>';
+  // Le signe est toujours écrit, y compris le plus : un goal average se lit
+  // comme un écart, pas comme un total.
+  function fmtSigne(v) {
+    return (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v);
+  }
 
-  function buildMatchRow(m) {
-    var row = el("div", { class: "match-row" });
+  function fmtSigneMoyen(v) {
+    return (v > 0 ? "+" : (v < 0 ? "−" : "")) + fmtMoyenne(Math.abs(v));
+  }
 
-    var replan = el("div", { class: "match-replan" });
-    if (canReport(m)) {
-      var btn = el("a", {
-        class: "replan-btn",
-        href: "report.html?oid=" + encodeURIComponent(m.oid),
-        title: "Chercher une date de report",
-        "aria-label": "Chercher une date de report"
-      });
-      btn.innerHTML = ICON_SVG_REPLAN;
-      replan.appendChild(btn);
-    }
-    row.appendChild(replan);
+  function buildRankRow(team, rang) {
+    var row = el("div", { class: "rank-row" + (rang === 1 && team.jouees ? " premier" : "") });
+    row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
 
-    var quand = el("div", { class: "match-when" });
-    if (m.date) {
-      quand.appendChild(el("b", { text: formatShortDate(m.date) }));
-      quand.appendChild(document.createTextNode(formatHour(m.hour, m.minute)));
+    var main = el("div", { class: "rank-main" });
+    main.appendChild(el("div", { class: "rank-team", text: team.label }));
+    var detail;
+    if (team.jouees) {
+      detail = team.jouees + " partie" + (team.jouees > 1 ? "s" : "") +
+               " · " + team.gagnees + " G · " + team.perdues + " P" +
+               (team.nulles ? " · " + team.nulles + " N" : "") +
+               " · " + team.points + " pts · " + team.marques + "–" + team.encaisses;
     } else {
-      quand.appendChild(el("b", { text: "date à venir" }));
+      detail = "aucune partie jouée";
     }
-    row.appendChild(quand);
-
-    var main = el("div", { class: "match-main" });
-    // Pas de "reçoit" / "se déplace" : en Île-de-France tout se joue sur les
-    // mêmes trinquets, la réception ne change rien pour les joueurs. Le champ
-    // chezSoi ne sert plus qu'à orienter le score du bon côté.
-    main.appendChild(el("div", { class: "match-opp", text: "contre " + m.adversaire }));
-    var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
-    if (meta) main.appendChild(el("div", { class: "match-meta", text: meta }));
+    main.appendChild(el("div", { class: "rank-detail", text: detail }));
     row.appendChild(main);
 
-    if (m.scoreSoi === null) {
-      row.appendChild(el("div", { class: "match-score todo", text: "à venir" }));
+    var vals = el("div", { class: "rank-values" });
+    if (team.jouees) {
+      vals.appendChild(el("div", { class: "rank-score", text: fmtMoyenne(team.moyenne) }));
+      vals.appendChild(el("div", { class: "rank-ga", text: fmtSigne(team.ga) + " (" + fmtSigneMoyen(team.gaMoyen) + ")" }));
     } else {
-      var cls = m.scoreSoi > m.scoreAdv ? "win" : (m.scoreSoi < m.scoreAdv ? "loss" : "");
-      row.appendChild(el("div", { class: "match-score " + cls, text: m.scoreSoi + " - " + m.scoreAdv }));
+      vals.appendChild(el("div", { class: "rank-score vide", text: "–" }));
     }
+    row.appendChild(vals);
 
     return row;
   }
 
-  function buildTeamBlock(team) {
-    var block = el("div", { class: "team-block" });
+  // Une carte par groupe classé : une poule, ou une catégorie entière en mode
+  // général. Le titre dit toujours de quoi il s'agit, sans quoi deux tables
+  // côte à côte seraient impossibles à distinguer.
+  function buildPouleCard(groupe) {
+    var carte = el("div", { class: "poule-card" });
+    var head = el("div", { class: "poule-head" });
+    head.appendChild(el("span", { class: "badge serie-" + groupe.cat, text: groupe.serieLabel }));
+    head.appendChild(el("span", { text: groupe.titre }));
+    if (groupe.sousTitre) head.appendChild(el("span", { class: "poule-sub", text: groupe.sousTitre }));
+    carte.appendChild(head);
 
-    var head = el("div", { class: "team-head" });
-    head.appendChild(el("div", { class: "team-name", text: "Équipe " + (team.numero || "?") }));
-    head.appendChild(el("span", { class: "badge serie-" + team.cat, text: team.serieLabel }));
-    if (team.poule) head.appendChild(el("span", { class: "team-poule", text: team.poule }));
-    block.appendChild(head);
+    trierClassement(groupe.teams).forEach(function (t, idx) {
+      carte.appendChild(buildRankRow(t, idx + 1));
+    });
 
-    var bilan = [team.matches.length + " partie" + (team.matches.length > 1 ? "s" : "")];
-    if (team.jouees) {
-      var detail = team.gagnees + " gagnée" + (team.gagnees > 1 ? "s" : "") +
-                   ", " + team.perdues + " perdue" + (team.perdues > 1 ? "s" : "");
-      if (team.nulles) detail += ", " + team.nulles + " nulle" + (team.nulles > 1 ? "s" : "");
-      bilan.push(detail);
-    }
-    if (team.aVenir) bilan.push(team.aVenir + " à venir");
-    var record = el("div", { class: "team-record" });
-    record.appendChild(el("b", { text: bilan[0] }));
-    if (bilan.length > 1) record.appendChild(document.createTextNode(" · " + bilan.slice(1).join(" · ")));
-    block.appendChild(record);
-
-    // Noms seuls, jamais de licence ni de contact (cf. section RGPD du README).
-    var compo = el("div", { class: "team-roster" + (team.roster ? "" : " absente") });
-    compo.appendChild(el("b", { text: team.roster ? "Joueurs : " : "" }));
-    compo.appendChild(document.createTextNode(team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue"));
-    block.appendChild(compo);
-
-    team.matches.forEach(function (m) { block.appendChild(buildMatchRow(m)); });
-
-    return block;
+    return carte;
   }
 
   // Les valeurs possibles dépendent des données reçues : les pastilles sont
@@ -1028,28 +831,47 @@
     saveFilterState();
   }
 
-  function renderClubOptions(teams) {
-    var select = document.getElementById("filterClub");
-    var clubs = [];
+  // En mode "général", les poules d'une même catégorie sont fusionnées : une
+  // équipe n'apparaît qu'une fois, ses compteurs étant déjà ceux de sa poule
+  // unique. En mode "par poule", une carte par poule.
+  function grouper(teams) {
+    var groupes = {};
     teams.forEach(function (t) {
-      if (clubFictif(t.clubCode)) return;
-      if (clubs.indexOf(t.clubNom) === -1) clubs.push(t.clubNom);
+      var cle = filterState.mode === "general"
+        ? (t.spec + "|" + t.cat)
+        : (t.spec + "|" + t.cat + "|" + t.poule);
+      var g = groupes[cle];
+      if (!g) {
+        g = groupes[cle] = {
+          cle: cle, spec: t.spec, cat: t.cat, serieLabel: t.serieLabel,
+          poule: t.poule, teams: []
+        };
+      }
+      g.teams.push(t);
     });
-    clubs.sort(function (a, b) { return a.localeCompare(b, "fr"); });
 
-    // Un club mémorisé qui a disparu des données ne doit pas filtrer dans le
-    // vide : on retombe sur "tous les clubs".
-    if (filterState.club && clubs.indexOf(filterState.club) === -1) {
-      filterState.club = "";
-      saveFilterState();
-    }
-
-    select.innerHTML = "";
-    // Pas de compteur ici : les clubs fictifs sont absents des choix mais
-    // toujours listés dans la page, le nombre ne collerait pas.
-    select.appendChild(el("option", { value: "", text: "Tous les clubs" }));
-    clubs.forEach(function (c) { select.appendChild(el("option", { value: c, text: c })); });
-    select.value = filterState.club;
+    return Object.keys(groupes).map(function (k) { return groupes[k]; })
+      .sort(function (a, b) {
+        var c = a.spec.localeCompare(b.spec, "fr", { numeric: true });
+        if (c !== 0) return c;
+        c = a.cat.localeCompare(b.cat, "fr", { numeric: true });
+        if (c !== 0) return c;
+        return String(a.poule).localeCompare(String(b.poule), "fr", { numeric: true });
+      })
+      .map(function (g) {
+        var nb = g.teams.length + " équipe" + (g.teams.length > 1 ? "s" : "");
+        if (filterState.mode === "general") {
+          var poules = {};
+          g.teams.forEach(function (t) { if (t.poule) poules[t.poule] = true; });
+          var np = Object.keys(poules).length;
+          g.titre = "Classement général";
+          g.sousTitre = nb + (np > 1 ? " · " + np + " poules confondues" : "");
+        } else {
+          g.titre = g.poule ? ("Poule " + g.poule) : "Sans poule";
+          g.sousTitre = nb;
+        }
+        return g;
+      });
   }
 
   function renderResults(teams) {
@@ -1057,36 +879,17 @@
     results.innerHTML = "";
 
     var visibles = teams.filter(function (t) {
-      return filterState.specs[t.spec] !== false &&
-        filterState.series[t.cat] &&
-        (!filterState.club || t.clubNom === filterState.club);
+      return filterState.specs[t.spec] !== false && filterState.series[t.cat];
     });
     if (visibles.length === 0) {
       results.appendChild(el("div", {
         class: "empty-state",
-        text: filterState.club
-          ? (filterState.club + " n'a aucune équipe dans les séries sélectionnées.")
-          : "Aucune équipe ne correspond aux filtres."
+        text: "Aucune équipe ne correspond aux filtres."
       }));
       return;
     }
 
-    // Les équipes arrivent déjà triées par club puis par numéro : il suffit de
-    // couper à chaque changement de club.
-    var carte = null, clubCourant = null;
-    visibles.forEach(function (team) {
-      if (team.clubNom !== clubCourant) {
-        clubCourant = team.clubNom;
-        var lesSiennes = visibles.filter(function (t) { return t.clubNom === clubCourant; });
-        carte = el("div", { class: "club-card" });
-        var head = el("div", { class: "club-head" });
-        head.appendChild(document.createTextNode(clubCourant + " "));
-        head.appendChild(el("span", { text: lesSiennes.length + " équipe" + (lesSiennes.length > 1 ? "s" : "") }));
-        carte.appendChild(head);
-        results.appendChild(carte);
-      }
-      carte.appendChild(buildTeamBlock(team));
-    });
+    grouper(visibles).forEach(function (g) { results.appendChild(buildPouleCard(g)); });
   }
 
   // ---------------------------------------------------------------
@@ -1115,13 +918,8 @@
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       var clubMap = buildClubMap(data.clubs);
-      lastTeams = buildTeams(data.rencontres, clubMap, {
-        numeroClubMap: buildNumeroClubMap(data.clubs),
-        licenceMap: buildLicenceMap(data.licencies),
-        engagementsIndex: buildEngagementsIndex(data.engagements)
-      });
+      lastTeams = buildStandings(data.rencontres, clubMap);
       renderSpecChips(lastTeams);
-      renderClubOptions(lastTeams);
       renderResults(lastTeams);
     }
 
@@ -1154,12 +952,12 @@
         if (rendu) {
           renderBanner(bannerSlot, "warn", "Données non rafraîchies",
             "Le dernier appel à l'API a échoué (" + message + "). " +
-            "Le récapitulatif affiché date du " + formatTime(holder.fetchedAt) + " et peut être obsolète.");
+            "Le classement affiché date du " + formatTime(holder.fetchedAt) + " et peut être obsolète.");
         } else {
           results.innerHTML = "";
           lastSyncText.textContent = "échec du chargement";
-          renderBanner(bannerSlot, "error", "Impossible d'afficher le récapitulatif",
-            message + " — par sécurité, rien n'est affiché : la liste serait potentiellement incomplète.");
+          renderBanner(bannerSlot, "error", "Impossible d'afficher le classement",
+            message + " — par sécurité, rien n'est affiché : un classement incomplet induirait en erreur.");
         }
       });
     });
@@ -1178,11 +976,18 @@
       });
     });
 
-    var select = document.getElementById("filterClub");
-    select.addEventListener("change", function () {
-      filterState.club = select.value;
-      saveFilterState();
-      if (lastTeams) renderResults(lastTeams);
+    document.querySelectorAll("#filterDecoupage .filter-chip").forEach(function (chip) {
+      var mode = chip.getAttribute("data-mode");
+      chip.classList.toggle("active", filterState.mode === mode);
+      chip.addEventListener("click", function () {
+        if (filterState.mode === mode) return;
+        filterState.mode = mode;
+        document.querySelectorAll("#filterDecoupage .filter-chip").forEach(function (c) {
+          c.classList.toggle("active", c.getAttribute("data-mode") === mode);
+        });
+        saveFilterState();
+        if (lastTeams) renderResults(lastTeams);
+      });
     });
   }
 
