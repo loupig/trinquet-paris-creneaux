@@ -242,6 +242,24 @@
     padding: 8px 14px;
     border-top: 1px solid var(--border);
   }
+  /* Colonne toujours présente, vide quand la partie n'est pas replanifiable :
+     sans elle le bord gauche de la liste deviendrait irrégulier. */
+  .match-replan { flex: 0 0 18px; }
+  .replan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: var(--accent);
+    background: #fff;
+    border: 1px solid var(--accent-border);
+    border-radius: 5px;
+    text-decoration: none;
+  }
+  .replan-btn svg { display: block; }
+  .replan-btn:active { background: var(--accent-bg); }
+
   .match-when {
     flex: 0 0 74px;
     font-size: 11px;
@@ -374,7 +392,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.10</p>
+    <p>Version 2026.09.11</p>
   </footer>
 </main>
 
@@ -731,6 +749,7 @@
         minute: t ? t.minute : 0,
         chezSoi: chezSoi,
         adversaire: clubLabel(clubMap, chezSoi ? row.club_vis : row.club_rec, chezSoi ? row.equip_vis : row.equip_rec),
+        oid: String(row.oid || "").trim(),
         lieu: String(row.lieu_renc || "").trim(),
         meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
         scoreSoi: scoreSoi,
@@ -793,6 +812,21 @@
     return minute ? (hour + "h" + String(minute).padStart(2, "0")) : (hour + "h");
   }
 
+  // Règle large de sécurité : capte "trinquet" + "paris" en excluant
+  // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
+  // Fronton PB13, Chiquito de Cambo). Copie de la fonction de programme.html.
+  function matchesTrinquetParis(lieu) {
+    if (!lieu) return false;
+    var s = lieu.toUpperCase();
+    if (s.indexOf("TRINQUET") === -1) return false;
+    if (s.indexOf("PARIS") === -1) return false;
+    if (s.indexOf("CAVALERIE") !== -1) return false;
+    if (s.indexOf("75015") !== -1) return false;
+    if (s.indexOf("PB13") !== -1 || s.indexOf("PB 13") !== -1) return false;
+    if (s.indexOf("CHIQUITO") !== -1) return false;
+    return true;
+  }
+
   function el(tag, attrs, children) {
     var e = document.createElement(tag);
     if (attrs) {
@@ -829,8 +863,30 @@
     container.appendChild(b);
   }
 
+  // Le report ne se conçoit que là où une grille de créneaux existe
+  // (Trinquet Paris, cf. report.html). Une partie passée sans score reste
+  // reportable : c'est même le cas le plus urgent à recaser.
+  function canReport(m) {
+    return m.scoreSoi === null && !!m.oid && matchesTrinquetParis(m.lieu);
+  }
+
+  var ICON_SVG_REPLAN = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-7.5-7.5V16l3 1.8.75-1.23-2.25-1.32V12.5h-1.5z"/></svg>';
+
   function buildMatchRow(m) {
     var row = el("div", { class: "match-row" });
+
+    var replan = el("div", { class: "match-replan" });
+    if (canReport(m)) {
+      var btn = el("a", {
+        class: "replan-btn",
+        href: "report.html?oid=" + encodeURIComponent(m.oid),
+        title: "Chercher une date de report",
+        "aria-label": "Chercher une date de report"
+      });
+      btn.innerHTML = ICON_SVG_REPLAN;
+      replan.appendChild(btn);
+    }
+    row.appendChild(replan);
 
     var quand = el("div", { class: "match-when" });
     if (m.date) {
