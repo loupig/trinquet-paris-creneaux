@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Programme des championnats — LIDFPB</title>
+<title>Parties par date — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <style>
   :root {
@@ -203,6 +203,35 @@
     border-color: var(--warn-border);
   }
   .banner strong { display: block; margin-bottom: 4px; }
+
+  /* Bascule entre les deux vues d'une même donnée : programme.html affiche
+     les parties par date, equipes.html les regroupe par club puis par équipe.
+     Elle vit dans le header, donc elle hérite de son position:sticky et reste
+     accessible pendant tout le défilement de la liste. */
+  header .view-switch {
+    display: flex;
+    gap: 3px;
+    margin: 10px 0 0;
+    background: var(--bg);
+    border-radius: 11px;
+    padding: 3px;
+  }
+  header .view-switch a,
+  header .view-switch span {
+    flex: 1 1 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 7px 6px;
+    border-radius: 9px;
+  }
+  header .view-switch .current {
+    color: var(--accent);
+    background: var(--card-bg);
+    box-shadow: 0 1px 2px rgba(26, 26, 46, 0.08);
+  }
 
   .recap-card {
     background: var(--card-bg);
@@ -428,11 +457,13 @@
   </div>
 </div>
 <header>
-  <h1><a href="index.html" class="home-link">Programme des championnats</a></h1>
+  <h1><a href="index.html" class="home-link">Parties des championnats</a></h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Toutes les rencontres, tous lieux confondus, à venir et déjà jouées.</p>
-  <p class="header-sync">Cette page se contente d'afficher le calendrier communiqué par la ligue — elle n'a aucun effet sur le site de la ligue.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
+  <div class="view-switch" aria-label="Vue">
+    <span class="current" aria-current="page">Par date</span>
+    <a href="equipes.html">Par équipe</a>
+  </div>
 </header>
 
 <main>
@@ -459,17 +490,17 @@
   <div id="results"></div>
 
   <footer>
+    <p>Cette page se contente d'afficher le calendrier communiqué par la ligue, elle n'a aucun effet sur le site de la ligue.</p>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.09.11</p>
+    <p>Version 2026.09.16</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
   <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
   <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
-  <a href="programme.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d="M8.6 5.6h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8zm0 5h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8zm0 5h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8z"/><circle cx="4.4" cy="7" r="1.7"/><circle cx="4.4" cy="12" r="1.7"/><circle cx="4.4" cy="17" r="1.7"/></svg><span>Programme</span></a>
-  <a href="equipes.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.2" cy="8.6" r="3.1"/><path d="M3.6 19.4c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M16.2 5.9a3 3 0 0 1 0 5.5"/><path d="M17.9 14.5c1.8.8 2.9 2.5 2.9 4.6"/></svg><span>Équipes</span></a>
+  <a href="programme.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d="M8.6 5.6h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8zm0 5h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8zm0 5h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8z"/><circle cx="4.4" cy="7" r="1.7"/><circle cx="4.4" cy="12" r="1.7"/><circle cx="4.4" cy="17" r="1.7"/></svg><span>Parties</span></a>
   <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
 </nav>
 
@@ -487,6 +518,11 @@
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
   var FILTER_CACHE_KEY = "lidfpb_programme_filters_v1";
+  // Spécialité et Série sont les deux filtres communs aux vues « par date » et
+  // « par équipe » : ils transitent par une clé partagée pour que la bascule de
+  // vue conserve le contexte de filtrage. Les filtres propres à une vue (lieu,
+  // phase, parties passées, club) restent dans la clé de la page.
+  var SHARED_FILTER_KEY = "lidfpb_parties_filters_v1";
   var CACHE_TTL_MS = 5 * 60 * 1000;
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
@@ -524,18 +560,27 @@
   function loadFilterState() {
     try {
       var raw = localStorage.getItem(FILTER_CACHE_KEY);
-      if (!raw) return;
-      var saved = JSON.parse(raw);
-      if (saved && saved.series) filterState.series = saved.series;
-      if (saved && saved.specs) filterState.specs = saved.specs;
-      if (saved && saved.lieux) filterState.lieux = saved.lieux;
-      if (saved && saved.phases) filterState.phases = saved.phases;
-      if (saved && typeof saved.hidePast === "boolean") filterState.hidePast = saved.hidePast;
+      if (raw) {
+        var saved = JSON.parse(raw);
+        if (saved && saved.series) filterState.series = saved.series;
+        if (saved && saved.specs) filterState.specs = saved.specs;
+        if (saved && saved.lieux) filterState.lieux = saved.lieux;
+        if (saved && saved.phases) filterState.phases = saved.phases;
+        if (saved && typeof saved.hidePast === "boolean") filterState.hidePast = saved.hidePast;
+      }
     } catch (e) { /* stockage indisponible ou corrompu : on garde les valeurs par défaut */ }
+    try {
+      var partage = JSON.parse(localStorage.getItem(SHARED_FILTER_KEY));
+      if (partage && partage.specs) filterState.specs = partage.specs;
+      if (partage && partage.series) filterState.series = partage.series;
+    } catch (e) { /* stockage indisponible ou corrompu : on garde les valeurs déjà chargées */ }
   }
 
   function saveFilterState() {
     try { localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(filterState)); } catch (e) { /* quota dépassé ou stockage désactivé : tant pis, pas bloquant */ }
+    try {
+      localStorage.setItem(SHARED_FILTER_KEY, JSON.stringify({ specs: filterState.specs, series: filterState.series }));
+    } catch (e) { /* pas bloquant */ }
   }
 
   var lastMatches = null;
