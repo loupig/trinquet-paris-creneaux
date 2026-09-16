@@ -247,6 +247,35 @@
     margin-bottom: 8px;
   }
 
+  /* Le bloc Filtres se replie : on ne le règle qu'une fois, alors qu'il pousse
+     la liste hors de l'écran à chaque chargement. Ouvert par défaut, l'état
+     est retenu et commun à toutes les pages. */
+  .filters-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .filters-toggle svg {
+    flex: none;
+    color: var(--muted);
+    transition: transform 0.18s ease;
+  }
+  .filters-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  .filters-body { margin-top: 8px; }
+  .filters-body[hidden] { display: none; }
+
+
   .filter-group {
     display: flex;
     flex-wrap: wrap;
@@ -468,7 +497,8 @@
 
 <main>
   <div class="recap-card">
-    <div class="recap-title">Filtres</div>
+    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="filters-body" id="filtersBody">
     <div class="filter-subtitle">Spécialité</div>
     <div class="filter-group" id="filterSpecs"></div>
     <div class="filter-subtitle">Série</div>
@@ -483,6 +513,7 @@
     <div class="filter-subtitle">Affichage</div>
     <div class="filter-group" id="filterPeriode">
       <button type="button" class="filter-chip" id="chipHidePast">Masquer les parties passées</button>
+    </div>
     </div>
   </div>
 
@@ -1365,5 +1396,33 @@
   run(false);
 })();
 </script>
+<script>
+(function () {
+  "use strict";
+
+  // Le pli du bloc Filtres est commun à toutes les pages : replié dans la vue
+  // « par date », il le reste après la bascule vers « par équipe ».
+  var CLE_PLI = "lidfpb_filters_open_v1";
+  var bouton = document.getElementById("filtersToggle");
+  var corps = document.getElementById("filtersBody");
+  if (!bouton || !corps) return;
+
+  function appliquer(ouvert) {
+    bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
+    corps.hidden = !ouvert;
+  }
+
+  var ouvert = true;   // ouvert par défaut : seul un pli explicite le referme
+  try { if (localStorage.getItem(CLE_PLI) === "0") ouvert = false; } catch (e) { /* stockage indisponible : on reste ouvert */ }
+  appliquer(ouvert);
+
+  bouton.addEventListener("click", function () {
+    ouvert = !ouvert;
+    appliquer(ouvert);
+    try { localStorage.setItem(CLE_PLI, ouvert ? "1" : "0"); } catch (e) { /* pas bloquant */ }
+  });
+})();
+</script>
+
 </body>
 </html>
