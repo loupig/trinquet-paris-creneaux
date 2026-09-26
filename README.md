@@ -30,29 +30,34 @@ sur un écran de 390 px. Son icône passe en vert plein quand on est dessus.
 Le titre du bandeau reste un second chemin vers l'accueil :
 
 - [`index.html`](index.html) — l'accueil, un tableau de bord plutôt qu'un
-  sommaire : les prochaines rencontres, le nombre de créneaux encore libres au
-  Trinquet Paris sur quatre semaines avec la date du prochain, et l'avancement
-  de la saison ventilé sur deux niveaux, la spécialité puis la catégorie (que
-  la ligue nomme aussi « série » — c'est le même champ dans les données, d'où
-  un seul niveau de découpe réel aujourd'hui, la saison en cours ne comptant
-  qu'une spécialité). Chaque bloc est cliquable vers la page complète. Un accueil qui
-  ne serait qu'un menu ajouterait un clic au geste le plus fréquent sans rien
-  apporter que le menu ne fasse déjà.
+  sommaire, réduit à deux blocs. Chaque bloc est cliquable vers la page
+  complète. Un accueil qui ne serait qu'un menu ajouterait un clic au geste le
+  plus fréquent sans rien apporter que le menu ne fasse déjà.
 
-  Sous les prochaines rencontres, la tuile « À voir ce week-end » répond à la
-  question du spectateur : laquelle vaut le déplacement ? Elle retient, sur le
-  premier week-end (vendredi à dimanche) qui compte une partie à venir, celles
-  qui remplissent l'un de ces critères, du plus fort au plus faible : **phase
+  Le premier, « D'ici dimanche 4 oct. », répond à la fois au joueur (quand je
+  joue) et au spectateur (quoi aller voir). Il liste toutes les parties à venir
+  jusqu'au dimanche du premier week-end qui en compte, parties de semaine
+  comprises : un joueur du mardi doit voir sa partie. Le titre porte la date de
+  ce dimanche, pour rester juste pendant une trêve. Une partie ordinaire tient
+  sur une ligne ; une partie **à voir** en prend une seconde, avec son lieu et
+  l'étiquette de son critère le plus fort, du plus fort au plus faible : **phase
   finale** (1/32e à finale, pas les barrages), **choc de tête** (1er contre 2e
   de la poule), **qualification** (deux équipes classées du 3e au 6e, de part
   et d'autre du trait des quatre qualifiés), **derby** (Paris Euskal Pilota
   contre Pilotari, Pilotari contre Chatillon, table `DERBYS`) et **même club**.
-  Chaque partie ne porte que l'étiquette de son critère le plus fort, trois au
-  plus sont affichées, et la tuile disparaît quand rien n'est à signaler. Les
-  critères de classement attendent que les deux équipes aient joué au moins une
-  partie. Le classement utilisé est une copie de celui de `classement.html` :
+  Les critères de classement attendent que les deux équipes aient joué au moins
+  une partie. Le classement utilisé est une copie de celui de `classement.html` :
   les deux doivent rester identiques. Aucun appel API de plus, tout vient des
   données déjà chargées par l'accueil.
+
+  Le second donne l'avancement de la saison, ventilé sur deux niveaux, la
+  spécialité puis la catégorie (que la ligue nomme aussi « série », c'est le
+  même champ dans les données, d'où un seul niveau de découpe réel aujourd'hui,
+  la saison en cours ne comptant qu'une spécialité).
+
+  Les créneaux libres et le compteur n'ont plus de tuile sur l'accueil : ils
+  doublaient l'onglet Créneaux et le bouton calculette de l'en-tête, qui
+  restent les chemins pour y aller.
 
 - [`creneaux.html`](creneaux.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.

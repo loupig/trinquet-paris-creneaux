@@ -13,9 +13,6 @@
     --text: #1a1a2e;
     --muted: #767986;
     --border: #e6e7eb;
-    --free-bg: #e8f7ee;
-    --free-text: #1e7a43;
-    --free-border: #b9e6cc;
     --serie1-bg: #e3f6f4;
     --serie1-text: #0f766e;
     --serie1-border: #b7e6e0;
@@ -213,28 +210,16 @@
   .tile-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
   .tile-go { font-size: 11px; font-weight: 600; color: var(--accent); white-space: nowrap; }
   .tile-body { padding: 10px 14px; }
-  .tile-slim {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 14px;
-  }
-  .tile-sub { font-size: 10px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
   .tile-note { font-size: 11px; color: var(--muted); line-height: 1.45; margin: 0; }
 
   /* --- Chiffre mis en avant --- */
   .headline { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .headline-value { font-size: 22px; font-weight: 800; line-height: 1.1; }
-  .headline-value.free { color: var(--free-text); }
   .headline-unit { font-size: 12px; font-weight: 600; color: var(--muted); }
 
-  /* --- Prochaines parties ---
-     Une ligne par partie, tronquée : la tuile entière ouvre le programme, qui
-     donne poule, lieu et noms complets. Sur l'accueil l'utile est "quand, qui,
-     quelle série", pas le détail. */
-  .next-row { display: flex; gap: 8px; align-items: center; padding: 5px 0; }
-  .next-row + .next-row { border-top: 1px solid var(--border); }
+  /* --- Ligne d'une partie ---
+     Tronquée : la tuile entière ouvre le programme, qui donne poule, lieu et
+     noms complets. Sur l'accueil l'utile est "quand, qui, quelle série". */
   .next-when {
     flex: 0 0 auto;
     font-size: 10px;
@@ -263,10 +248,10 @@
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
   .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
 
-  /* --- À voir ce week-end ---
-     Deux lignes par partie : la première comme "Prochaines parties", la
-     seconde dit pourquoi elle est à voir, et où. Le lieu n'y tiendrait pas sur
-     une seule ligne à 390 px. */
+  /* --- D'ici dimanche ---
+     Une ligne par partie. Une partie à voir en prend une seconde, qui dit
+     pourquoi et où : c'est cette ligne qui porte l'accent. Le lieu n'y tiendrait
+     pas sur la première ligne à 390 px. */
   .affiche { padding: 5px 0; }
   .affiche + .affiche { border-top: 1px solid var(--border); }
   .affiche-line { display: flex; gap: 8px; align-items: center; }
@@ -374,14 +359,6 @@
   <div id="banner-slot"></div>
   <div id="tiles"></div>
 
-  <a class="tile tile-slim" href="compteur.html">
-    <div>
-      <div class="tile-title">Compteur de points</div>
-      <div class="tile-sub">Marquer une partie point par point, tout reste dans ce téléphone.</div>
-    </div>
-    <div class="tile-go">Ouvrir →</div>
-  </a>
-
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.09.26</p>
   </footer>
@@ -404,7 +381,6 @@
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
   var CACHE_TTL_MS = 5 * 60 * 1000;
-  var NB_PROCHAINES = 4;      // rencontres listées dans la tuile "prochaines parties"
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
 
@@ -420,28 +396,6 @@
     "8": "1/16e de finale", "9": "1/8e de finale", "10": "1/4 de finale",
     "11": "1/2 finale", "12": "Finale"
   };
-
-  // Grille fixe du trinquet. Clé = Date.getDay() (0=dimanche ... 5=vendredi).
-  // Doit rester cohérente avec la constante GRID de creneaux.html.
-  var GRID = {
-    5: [21, 22],                    // Vendredi
-    0: [14, 15, 16, 17, 20, 21, 22] // Dimanche
-  };
-
-  // Règle large de sécurité : capte "trinquet" + "paris" en excluant
-  // explicitement les autres lieux parisiens homonymes (Cavalerie 75015,
-  // Fronton PB13, Chiquito de Cambo). Copie de la fonction de creneaux.html.
-  function matchesTrinquetParis(lieu) {
-    if (!lieu) return false;
-    var s = lieu.toUpperCase();
-    if (s.indexOf("TRINQUET") === -1) return false;
-    if (s.indexOf("PARIS") === -1) return false;
-    if (s.indexOf("CAVALERIE") !== -1) return false;
-    if (s.indexOf("75015") !== -1) return false;
-    if (s.indexOf("PB13") !== -1 || s.indexOf("PB 13") !== -1) return false;
-    if (s.indexOf("CHIQUITO") !== -1) return false;
-    return true;
-  }
 
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
@@ -470,10 +424,6 @@
     var minute = parseInt(s.slice(2, 4), 10);
     if (hour > 23 || minute > 59) return null;
     return { hour: hour, minute: minute };
-  }
-
-  function dateKey(d) {
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
   function startOfDay(d) {
@@ -769,11 +719,9 @@
   // ---------------------------------------------------------------
   // Affiche du week-end
   // ---------------------------------------------------------------
-  // Les parties à enjeu du prochain week-end, chacune avec la raison de sa
+  // Les parties d'ici dimanche, celles à enjeu portant la raison de leur
   // sélection. Les critères sont rangés du plus fort au plus faible : une
-  // partie ne prend que l'étiquette du premier qu'elle remplit, et c'est aussi
-  // cet ordre qui départage quand il faut n'en garder que NB_AFFICHES.
-  var NB_AFFICHES = 3;
+  // partie ne prend que l'étiquette du premier qu'elle remplit.
   // 1/32e de finale à finale. Les barrages (phases 2 à 6) n'en sont pas.
   var PHASES_FINALES = ["7", "8", "9", "10", "11", "12"];
   // Zone disputée autour du trait de qualification.
@@ -787,22 +735,26 @@
     ["PILOTARI", "CHATILLON PELOTE BASQUE"]
   ];
 
-  // Clé du vendredi d'un week-end (vendredi, samedi ou dimanche), null en semaine.
-  function vendrediDu(d) {
+  // Dimanche du week-end d'une date (vendredi, samedi ou dimanche), null en semaine.
+  function dimancheDu(d) {
     var jour = d.getDay();
     if (jour !== 5 && jour !== 6 && jour !== 0) return null;
-    var v = new Date(d);
-    v.setDate(v.getDate() - (jour + 2) % 7);
-    return dateKey(v);
+    var dim = new Date(d);
+    dim.setDate(dim.getDate() + (7 - jour) % 7);
+    return dim;
   }
 
-  // Les parties à venir du premier week-end qui en compte. aVenir est déjà
-  // trié par date, reports compris, et privé des parties jouées.
-  function partiesDuWeekEnd(aVenir) {
-    var cible = null;
-    for (var i = 0; i < aVenir.length && !cible; i++) cible = vendrediDu(aVenir[i].date);
-    if (!cible) return [];
-    return aVenir.filter(function (m) { return vendrediDu(m.date) === cible; });
+  // Les parties à venir jusqu'au dimanche du premier week-end qui en compte,
+  // parties de semaine comprises : un joueur du mardi doit voir sa partie.
+  // Sans plus aucun week-end joué, toutes les parties restantes. aVenir est
+  // déjà trié par date, reports compris, et privé des parties jouées.
+  function partiesDIciDimanche(aVenir) {
+    var dimanche = null;
+    for (var i = 0; i < aVenir.length && !dimanche; i++) dimanche = dimancheDu(aVenir[i].date);
+    return {
+      dimanche: dimanche,
+      parties: dimanche ? aVenir.filter(function (m) { return m.date <= dimanche; }) : aVenir
+    };
   }
 
   // Rang de chaque équipe dans sa poule. Une équipe qui n'a rien joué n'a pas
@@ -873,54 +825,19 @@
     }
   ];
 
+  // Toutes les parties d'ici dimanche, dans l'ordre chronologique, chacune
+  // avec l'étiquette de son critère le plus fort, ou null si elle n'est pas à voir.
   function affiches(aVenir, standings, clubMap) {
     var ctx = { rangs: rangsParPoule(standings), clubMap: clubMap };
-    var retenues = [];
-    partiesDuWeekEnd(aVenir).forEach(function (m, ordre) {
-      for (var i = 0; i < CRITERES.length; i++) {
-        var etiquette = CRITERES[i](m, ctx);
-        if (etiquette) {
-          retenues.push({ partie: m, etiquette: etiquette, force: i, ordre: ordre });
-          return;
-        }
-      }
-    });
-    return retenues
-      .sort(function (a, b) { return (a.force - b.force) || (a.ordre - b.ordre); })
-      .slice(0, NB_AFFICHES)
-      .sort(function (a, b) { return a.ordre - b.ordre; });
-  }
-
-  // Occupation de la grille du Trinquet Paris, puis premier créneau libre.
-  // Mêmes conventions que creneaux.html : une rencontre à une heure hors
-  // grille n'occupe aucun de nos créneaux.
-  function creneauxLibres(rencontres, today, semaines) {
-    var occupe = {};
-    rencontres.forEach(function (row) {
-      if (!matchesTrinquetParis(row.lieu_renc)) return;
-      var d = effectiveDate(row);
-      if (!d || d < today) return;
-      var heures = GRID[d.getDay()];
-      if (!heures) return;
-      var t = parseHeureRenc(row.heure_renc);
-      if (!t || heures.indexOf(t.hour) === -1) return;
-      occupe[dateKey(d) + "|" + t.hour] = true;
-    });
-
-    var libres = [];
-    var d = new Date(today);
-    var limite = new Date(today);
-    limite.setDate(limite.getDate() + semaines * 7);
-    while (d <= limite) {
-      var heures = GRID[d.getDay()];
-      if (heures) {
-        for (var i = 0; i < heures.length; i++) {
-          if (!occupe[dateKey(d) + "|" + heures[i]]) libres.push({ date: new Date(d), hour: heures[i] });
-        }
-      }
-      d.setDate(d.getDate() + 1);
-    }
-    return libres;
+    var fenetre = partiesDIciDimanche(aVenir);
+    return {
+      dimanche: fenetre.dimanche,
+      parties: fenetre.parties.map(function (m) {
+        var etiquette = null;
+        for (var i = 0; i < CRITERES.length && !etiquette; i++) etiquette = CRITERES[i](m, ctx);
+        return { partie: m, etiquette: etiquette };
+      })
+    };
   }
 
   // Avancement de la saison, ventilé sur deux niveaux : la spécialité, puis
@@ -1013,66 +930,40 @@
 
     var clubMap = buildClubMap(data.clubs);
     var aVenir = prochaines(data.rencontres, clubMap, today);
-    var libres = creneauxLibres(data.rencontres, today, 4);
     var jouees = data.rencontres.filter(hasScore).length;
 
-    // --- Prochaines parties ---
-    var t1 = buildTile("programme.html", "Prochaines parties", "Tout le programme →");
-    if (aVenir.length === 0) {
+    // --- D'ici dimanche ---
+    // Toutes les parties jusqu'au prochain dimanche joué. Une partie à voir
+    // prend une seconde ligne, étiquette et lieu : c'est ce qui la fait
+    // ressortir, sans la sortir de l'ordre chronologique.
+    var ici = affiches(aVenir, buildStandings(data.rencontres, clubMap), clubMap);
+    var titre = ici.dimanche
+      ? "D'ici dimanche " + ici.dimanche.getDate() + " " + MONTH_ABBR[ici.dimanche.getMonth()]
+      : "Prochaines parties";
+    var t1 = buildTile("programme.html", titre, "Tout le programme →");
+    if (ici.parties.length === 0) {
       t1.body.appendChild(el("p", { class: "tile-note", text: "Plus aucune rencontre à venir dans le calendrier publié par la ligue." }));
-    } else {
-      aVenir.slice(0, NB_PROCHAINES).forEach(function (m) {
-        var row = el("div", { class: "next-row" });
-        row.appendChild(el("div", {
-          class: "next-when",
-          text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
-        }));
-        row.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
-        row.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
-        t1.body.appendChild(row);
-      });
     }
-    box.appendChild(t1);
-
-    // --- À voir ce week-end ---
-    // Absente s'il n'y a rien à signaler : une tuile vide allongerait l'accueil
-    // sans rien dire.
-    var aVoir = affiches(aVenir, buildStandings(data.rencontres, clubMap), clubMap);
-    if (aVoir.length) {
-      var tA = buildTile("programme.html", "À voir ce week-end", "Tout le programme →");
-      aVoir.forEach(function (a) {
-        var m = a.partie;
-        var item = el("div", { class: "affiche" });
-        var ligne1 = el("div", { class: "affiche-line" });
-        ligne1.appendChild(el("div", {
-          class: "next-when",
-          text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
-        }));
-        ligne1.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
-        ligne1.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
-        item.appendChild(ligne1);
+    ici.parties.forEach(function (a) {
+      var m = a.partie;
+      var item = el("div", { class: "affiche" });
+      var ligne1 = el("div", { class: "affiche-line" });
+      ligne1.appendChild(el("div", {
+        class: "next-when",
+        text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
+      }));
+      ligne1.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
+      ligne1.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
+      item.appendChild(ligne1);
+      if (a.etiquette) {
         var ligne2 = el("div", { class: "affiche-why" });
         ligne2.appendChild(el("span", { class: "affiche-tag", text: a.etiquette }));
         ligne2.appendChild(el("span", { class: "affiche-lieu", text: lieuCourt(m.lieu), title: m.lieu }));
         item.appendChild(ligne2);
-        tA.body.appendChild(item);
-      });
-      box.appendChild(tA);
-    }
-
-    // --- Créneaux libres au Trinquet Paris ---
-    var t2 = buildTile("creneaux.html", "Trinquet Paris", "Tous les créneaux →");
-    var ligne = el("div", { class: "headline" });
-    ligne.appendChild(el("div", { class: "headline-value free", text: String(libres.length) }));
-    ligne.appendChild(el("div", { class: "headline-unit", text: "créneau" + (libres.length > 1 ? "x" : "") + " libre" + (libres.length > 1 ? "s" : "") + " dans les 4 prochaines semaines" }));
-    t2.body.appendChild(ligne);
-    t2.body.appendChild(el("p", {
-      class: "tile-note",
-      text: libres.length
-        ? ("Le prochain : " + formatShortDate(libres[0].date) + " à " + libres[0].hour + "h.")
-        : "Aucun créneau de la grille n'est libre sur cette période."
-    }));
-    box.appendChild(t2);
+      }
+      t1.body.appendChild(item);
+    });
+    box.appendChild(t1);
 
     // --- Avancement de la saison ---
     var total = data.rencontres.length;
