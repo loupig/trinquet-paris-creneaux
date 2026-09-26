@@ -39,6 +39,21 @@ Le titre du bandeau reste un second chemin vers l'accueil :
   ne serait qu'un menu ajouterait un clic au geste le plus fréquent sans rien
   apporter que le menu ne fasse déjà.
 
+  Sous les prochaines rencontres, la tuile « À voir ce week-end » répond à la
+  question du spectateur : laquelle vaut le déplacement ? Elle retient, sur le
+  premier week-end (vendredi à dimanche) qui compte une partie à venir, celles
+  qui remplissent l'un de ces critères, du plus fort au plus faible : **phase
+  finale** (1/32e à finale, pas les barrages), **choc de tête** (1er contre 2e
+  de la poule), **qualification** (deux équipes classées du 3e au 6e, de part
+  et d'autre du trait des quatre qualifiés), **derby** (Paris Euskal Pilota
+  contre Pilotari, Pilotari contre Chatillon, table `DERBYS`) et **même club**.
+  Chaque partie ne porte que l'étiquette de son critère le plus fort, trois au
+  plus sont affichées, et la tuile disparaît quand rien n'est à signaler. Les
+  critères de classement attendent que les deux équipes aient joué au moins une
+  partie. Le classement utilisé est une copie de celui de `classement.html` :
+  les deux doivent rester identiques. Aucun appel API de plus, tout vient des
+  données déjà chargées par l'accueil.
+
 - [`creneaux.html`](creneaux.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.
 Les deux pages de calendrier, `programme.html` et `equipes.html`, portent un

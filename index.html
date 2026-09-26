@@ -263,6 +263,33 @@
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
   .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
 
+  /* --- À voir ce week-end ---
+     Deux lignes par partie : la première comme "Prochaines parties", la
+     seconde dit pourquoi elle est à voir, et où. Le lieu n'y tiendrait pas sur
+     une seule ligne à 390 px. */
+  .affiche { padding: 5px 0; }
+  .affiche + .affiche { border-top: 1px solid var(--border); }
+  .affiche-line { display: flex; gap: 8px; align-items: center; }
+  .affiche-why { display: flex; gap: 8px; align-items: center; margin-top: 3px; min-width: 0; }
+  .affiche-tag {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 1px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .affiche-lieu {
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* --- Barre de progression de la saison --- */
   .progress {
     height: 7px;
@@ -356,7 +383,7 @@
   </a>
 
   <footer>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.09.16</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.09.26</p>
   </footer>
 </main>
 
@@ -601,6 +628,113 @@
   }
 
   // ---------------------------------------------------------------
+  // Classement des poules, pour l'affiche du week-end
+  // ---------------------------------------------------------------
+  // Copie du calcul de classement.html (constantes, clubFictif, teamKey,
+  // estPhaseDePoules, buildStandings, trierClassement) : les deux copies
+  // doivent rester identiques, sans quoi un "1er contre 2e" annoncé ici ne
+  // serait plus vrai sur la page Classement.
+  var PTS_VICTOIRE = 3, PTS_NUL = 2, PTS_DEFAITE = 1;
+  var PHASE_POULES = "1";
+  var QUALIFIES_PAR_POULE = 4;
+
+  // La ligue réserve une plage de codes aux clubs fictifs : "9998" porte
+  // l'adversaire encore inconnu d'une qualification. Ces équipes n'ont pas
+  // leur place dans un classement de poule.
+  function clubFictif(code) {
+    return /^9{3,}/.test(String(code || "").trim());
+  }
+
+  function teamKey(spec, cat, poule, club, equipe) {
+    return [String(spec || "").trim(), String(cat || "").trim(), String(poule || "").trim(),
+            String(club || "").trim(), String(equipe || "").trim()].join("|");
+  }
+
+  // Seule la phase de poules est classée : les phases finales se jouent à
+  // élimination directe, une moyenne de points par partie n'y veut rien dire.
+  function estPhaseDePoules(row) {
+    return String(row.Phase || "").trim() === PHASE_POULES;
+  }
+
+  // Une équipe est comptée dans la poule où elle joue. Toutes les équipes
+  // engagées apparaissent, y compris celles qui n'ont encore rien joué : la
+  // table doit montrer l'effectif complet dès le début de saison.
+  function buildStandings(rencontres, clubMap) {
+    var index = {};
+
+    function equipe(row, chezSoi) {
+      var spec = String(row["Spécialité"] || "").trim();
+      var cat = String(row["Catégorie"] || "").trim();
+      var poule = String(row.Poule || "").trim();
+      var club = String((chezSoi ? row.club_rec : row.club_vis) || "").trim();
+      var num = String((chezSoi ? row.equip_rec : row.equip_vis) || "").trim();
+      if (clubFictif(club)) return null;
+
+      var cle = teamKey(spec, cat, poule, club, num);
+      var t = index[cle];
+      if (!t) {
+        t = index[cle] = {
+          spec: spec,
+          cat: cat,
+          serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
+          poule: poule,
+          clubCode: club,
+          clubNom: clubMap[club] || ("Club " + club),
+          numero: num,
+          label: clubLabel(clubMap, club, num),
+          jouees: 0, gagnees: 0, perdues: 0, nulles: 0,
+          points: 0, marques: 0, encaisses: 0
+        };
+      }
+      return t;
+    }
+
+    rencontres.forEach(function (row) {
+      if (!estPhaseDePoules(row)) return;
+      var rec = equipe(row, true);
+      var vis = equipe(row, false);
+      if (!rec || !vis || !hasScore(row)) return;
+
+      var sr = parseInt(row.score_cr, 10);
+      var sv = parseInt(row.score_cv, 10);
+      if (Number.isNaN(sr) || Number.isNaN(sv)) return;
+
+      [[rec, sr, sv], [vis, sv, sr]].forEach(function (cote) {
+        var t = cote[0], pour = cote[1], contre = cote[2];
+        t.jouees += 1;
+        t.marques += pour;
+        t.encaisses += contre;
+        if (pour > contre) { t.gagnees += 1; t.points += PTS_VICTOIRE; }
+        else if (pour < contre) { t.perdues += 1; t.points += PTS_DEFAITE; }
+        else { t.nulles += 1; t.points += PTS_NUL; }
+      });
+    });
+
+    return Object.keys(index).map(function (k) {
+      var t = index[k];
+      t.ga = t.marques - t.encaisses;
+      // Une équipe sans partie jouée n'a pas de moyenne : null, pas zéro, pour
+      // ne pas la classer devant une équipe qui a perdu.
+      t.moyenne = t.jouees ? (t.points / t.jouees) : null;
+      t.gaMoyen = t.jouees ? (t.ga / t.jouees) : null;
+      return t;
+    });
+  }
+
+  // Tri demandé : moyenne de points, puis goal average moyen. Les équipes sans
+  // partie jouée ferment la marche, dans l'ordre alphabétique.
+  function trierClassement(teams) {
+    return teams.slice().sort(function (a, b) {
+      if (a.jouees === 0 && b.jouees === 0) return a.label.localeCompare(b.label, "fr");
+      if (a.jouees === 0) return 1;
+      if (b.jouees === 0) return -1;
+      if (b.moyenne !== a.moyenne) return b.moyenne - a.moyenne;
+      if (b.gaMoyen !== a.gaMoyen) return b.gaMoyen - a.gaMoyen;
+      return a.label.localeCompare(b.label, "fr");
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Calculs du tableau de bord
   // ---------------------------------------------------------------
   // Les prochaines rencontres, tous lieux confondus. Une partie du jour reste
@@ -618,12 +752,143 @@
         teams: clubCourt(clubMap, row.club_rec, row.equip_rec) + " vs " + clubCourt(clubMap, row.club_vis, row.equip_vis),
         teamsLong: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
         lieu: String(row.lieu_renc || "").trim(),
-        meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "")
+        meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
+        // Champs bruts, pour les critères de l'affiche du week-end.
+        spec: String(row["Spécialité"] || "").trim(),
+        phase: phaseRaw,
+        poule: String(row.Poule || "").trim(),
+        clubRec: String(row.club_rec || "").trim(), equipRec: String(row.equip_rec || "").trim(),
+        clubVis: String(row.club_vis || "").trim(), equipVis: String(row.equip_vis || "").trim()
       };
     }).filter(Boolean).sort(function (a, b) {
       var dd = a.date.getTime() - b.date.getTime();
       return dd !== 0 ? dd : (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute);
     });
+  }
+
+  // ---------------------------------------------------------------
+  // Affiche du week-end
+  // ---------------------------------------------------------------
+  // Les parties à enjeu du prochain week-end, chacune avec la raison de sa
+  // sélection. Les critères sont rangés du plus fort au plus faible : une
+  // partie ne prend que l'étiquette du premier qu'elle remplit, et c'est aussi
+  // cet ordre qui départage quand il faut n'en garder que NB_AFFICHES.
+  var NB_AFFICHES = 3;
+  // 1/32e de finale à finale. Les barrages (phases 2 à 6) n'en sont pas.
+  var PHASES_FINALES = ["7", "8", "9", "10", "11", "12"];
+  // Zone disputée autour du trait de qualification.
+  var RANG_QUALIF_MIN = 3, RANG_QUALIF_MAX = 6;
+  // En deçà, le classement n'a pas encore de sens.
+  var PARTIES_MIN_CLASSEMENT = 1;
+  // Rivalités reconnues, par nom de club tel que la ligue l'écrit, comme dans
+  // CLUBS_ABREGES. Un club renommé à la source cesse d'être reconnu.
+  var DERBYS = [
+    ["PARIS EUSKAL PILOTA", "PILOTARI"],
+    ["PILOTARI", "CHATILLON PELOTE BASQUE"]
+  ];
+
+  // Clé du vendredi d'un week-end (vendredi, samedi ou dimanche), null en semaine.
+  function vendrediDu(d) {
+    var jour = d.getDay();
+    if (jour !== 5 && jour !== 6 && jour !== 0) return null;
+    var v = new Date(d);
+    v.setDate(v.getDate() - (jour + 2) % 7);
+    return dateKey(v);
+  }
+
+  // Les parties à venir du premier week-end qui en compte. aVenir est déjà
+  // trié par date, reports compris, et privé des parties jouées.
+  function partiesDuWeekEnd(aVenir) {
+    var cible = null;
+    for (var i = 0; i < aVenir.length && !cible; i++) cible = vendrediDu(aVenir[i].date);
+    if (!cible) return [];
+    return aVenir.filter(function (m) { return vendrediDu(m.date) === cible; });
+  }
+
+  // Rang de chaque équipe dans sa poule. Une équipe qui n'a rien joué n'a pas
+  // de rang, comme sur la page Classement.
+  function rangsParPoule(standings) {
+    var poules = {};
+    standings.forEach(function (t) {
+      var k = [t.spec, t.cat, t.poule].join("|");
+      if (!poules[k]) poules[k] = [];
+      poules[k].push(t);
+    });
+    var rangs = {};
+    Object.keys(poules).forEach(function (k) {
+      var equipes = poules[k];
+      trierClassement(equipes).forEach(function (t, i) {
+        rangs[teamKey(t.spec, t.cat, t.poule, t.clubCode, t.numero)] = {
+          rang: t.jouees ? i + 1 : null, jouees: t.jouees, taille: equipes.length
+        };
+      });
+    });
+    return rangs;
+  }
+
+  // Rangs des deux équipes d'une partie de poule, ou null si le classement ne
+  // permet pas encore d'en juger.
+  function rangsDeLaPartie(m, ctx) {
+    if (m.phase !== PHASE_POULES) return null;
+    var a = ctx.rangs[teamKey(m.spec, m.cat, m.poule, m.clubRec, m.equipRec)];
+    var b = ctx.rangs[teamKey(m.spec, m.cat, m.poule, m.clubVis, m.equipVis)];
+    if (!a || !b || !a.rang || !b.rang) return null;
+    if (a.jouees < PARTIES_MIN_CLASSEMENT || b.jouees < PARTIES_MIN_CLASSEMENT) return null;
+    return { haut: Math.min(a.rang, b.rang), bas: Math.max(a.rang, b.rang), taille: a.taille };
+  }
+
+  // "PARIS (Trinquet Paris - 75016)" devient "Trinquet Paris" : c'est le nom
+  // de la salle qui parle aux joueurs, pas la ville ni le code postal.
+  function lieuCourt(lieu) {
+    var m = /\(([^)]+)\)/.exec(lieu || "");
+    return m ? m[1].split(" - ")[0].trim() : (lieu || "");
+  }
+
+  function nomClub(clubMap, code) {
+    return String(clubMap[code] || "").toUpperCase().trim();
+  }
+
+  var CRITERES = [
+    function phaseFinale(m) {
+      return PHASES_FINALES.indexOf(m.phase) !== -1 ? PHASE_LABELS[m.phase] : null;
+    },
+    function chocDeTete(m, ctx) {
+      var r = rangsDeLaPartie(m, ctx);
+      return r && r.haut === 1 && r.bas === 2 ? "Choc pour la 1re place" : null;
+    },
+    function qualification(m, ctx) {
+      var r = rangsDeLaPartie(m, ctx);
+      if (!r || r.taille <= QUALIFIES_PAR_POULE) return null;
+      if (r.haut < RANG_QUALIF_MIN || r.bas > RANG_QUALIF_MAX) return null;
+      return r.haut <= QUALIFIES_PAR_POULE && r.bas > QUALIFIES_PAR_POULE ? "Place en quart en jeu" : null;
+    },
+    function derby(m, ctx) {
+      var a = nomClub(ctx.clubMap, m.clubRec), b = nomClub(ctx.clubMap, m.clubVis);
+      return DERBYS.some(function (p) {
+        return (p[0] === a && p[1] === b) || (p[0] === b && p[1] === a);
+      }) ? "Derby" : null;
+    },
+    function memeClub(m) {
+      return m.clubRec && m.clubRec === m.clubVis && !clubFictif(m.clubRec) ? "Duel interne" : null;
+    }
+  ];
+
+  function affiches(aVenir, standings, clubMap) {
+    var ctx = { rangs: rangsParPoule(standings), clubMap: clubMap };
+    var retenues = [];
+    partiesDuWeekEnd(aVenir).forEach(function (m, ordre) {
+      for (var i = 0; i < CRITERES.length; i++) {
+        var etiquette = CRITERES[i](m, ctx);
+        if (etiquette) {
+          retenues.push({ partie: m, etiquette: etiquette, force: i, ordre: ordre });
+          return;
+        }
+      }
+    });
+    return retenues
+      .sort(function (a, b) { return (a.force - b.force) || (a.ordre - b.ordre); })
+      .slice(0, NB_AFFICHES)
+      .sort(function (a, b) { return a.ordre - b.ordre; });
   }
 
   // Occupation de la grille du Trinquet Paris, puis premier créneau libre.
@@ -768,6 +1033,32 @@
       });
     }
     box.appendChild(t1);
+
+    // --- À voir ce week-end ---
+    // Absente s'il n'y a rien à signaler : une tuile vide allongerait l'accueil
+    // sans rien dire.
+    var aVoir = affiches(aVenir, buildStandings(data.rencontres, clubMap), clubMap);
+    if (aVoir.length) {
+      var tA = buildTile("programme.html", "À voir ce week-end", "Tout le programme →");
+      aVoir.forEach(function (a) {
+        var m = a.partie;
+        var item = el("div", { class: "affiche" });
+        var ligne1 = el("div", { class: "affiche-line" });
+        ligne1.appendChild(el("div", {
+          class: "next-when",
+          text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
+        }));
+        ligne1.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
+        ligne1.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
+        item.appendChild(ligne1);
+        var ligne2 = el("div", { class: "affiche-why" });
+        ligne2.appendChild(el("span", { class: "affiche-tag", text: a.etiquette }));
+        ligne2.appendChild(el("span", { class: "affiche-lieu", text: lieuCourt(m.lieu), title: m.lieu }));
+        item.appendChild(ligne2);
+        tA.body.appendChild(item);
+      });
+      box.appendChild(tA);
+    }
 
     // --- Créneaux libres au Trinquet Paris ---
     var t2 = buildTile("creneaux.html", "Trinquet Paris", "Tous les créneaux →");
