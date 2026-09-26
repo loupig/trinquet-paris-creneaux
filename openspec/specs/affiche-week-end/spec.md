@@ -7,19 +7,27 @@ Signaler au visiteur de l'accueil les parties du prochain week-end qui valent le
 ## Requirements
 
 ### Requirement: Fenêtre du week-end
-L'affiche SHALL porter sur un seul week-end, du vendredi au dimanche inclus : le premier, à partir d'aujourd'hui, qui compte au moins une partie à venir, tous lieux confondus. Une partie à venir est une partie sans score dont la date effective (la date de report si elle existe, sinon la date d'origine) est aujourd'hui ou plus tard. Une partie du jour reste à venir toute la journée.
+Le bloc SHALL couvrir toutes les parties à venir d'aujourd'hui jusqu'au dimanche inclus du premier week-end (vendredi à dimanche) qui compte au moins une partie à venir, tous lieux confondus. Les parties de semaine qui précèdent ce week-end en font partie. Quand plus aucun week-end ne compte de partie mais qu'il reste des parties en semaine, la fenêtre couvre toutes les parties à venir. Une partie à venir est une partie sans score dont la date effective (la date de report si elle existe, sinon la date d'origine) est aujourd'hui ou plus tard. Une partie du jour reste à venir toute la journée.
 
 #### Scenario: Week-end en cours
 - **WHEN** on est un samedi et qu'une partie sans score est programmée le dimanche
-- **THEN** l'affiche porte sur ce week-end-là, du vendredi précédent au dimanche
+- **THEN** la fenêtre va d'aujourd'hui à ce dimanche
+
+#### Scenario: Partie en semaine avant le week-end
+- **WHEN** on est lundi, qu'une partie est programmée mardi et d'autres le week-end suivant
+- **THEN** la partie du mardi figure dans le bloc, avant celles du week-end
 
 #### Scenario: Week-end vide
 - **WHEN** aucune partie n'est programmée le week-end qui vient, mais que le suivant en compte
-- **THEN** l'affiche porte sur le week-end suivant
+- **THEN** la fenêtre s'étend jusqu'au dimanche du week-end suivant, parties de semaine intermédiaires comprises
+
+#### Scenario: Plus de week-end joué
+- **WHEN** il ne reste que des parties en semaine dans le calendrier
+- **THEN** la fenêtre couvre toutes ces parties
 
 #### Scenario: Partie déjà jouée
-- **WHEN** une partie du week-end a déjà un score
-- **THEN** elle ne figure pas dans l'affiche
+- **WHEN** une partie de la fenêtre a déjà un score
+- **THEN** elle ne figure pas dans le bloc
 
 #### Scenario: Partie reportée
 - **WHEN** une partie prévue ce week-end a été reportée à une date ultérieure
@@ -102,30 +110,16 @@ Chaque partie retenue SHALL porter une seule étiquette, celle du critère le pl
 - **WHEN** une 1/2 finale oppose Paris Euskal Pilota et Pilotari
 - **THEN** la partie apparaît une seule fois, avec l'étiquette « 1/2 finale »
 
-### Requirement: Trois affiches au maximum
-L'affiche SHALL présenter au plus 3 parties. Quand plus de 3 parties sont retenues, les 3 plus fortes sont gardées, selon l'ordre des critères puis l'ordre chronologique. Les parties gardées sont présentées dans l'ordre chronologique.
-
-#### Scenario: Cinq parties retenues
-- **WHEN** une finale, un choc de tête et trois duels internes sont retenus pour le même week-end
-- **THEN** l'affiche présente la finale, le choc de tête et le premier duel interne dans le temps, triés par date et heure
-
 ### Requirement: Contenu d'une affiche
-Chaque partie présentée SHALL indiquer le jour et l'heure, les deux équipes sous leur nom court, la série, le lieu et l'étiquette qui explique sa sélection.
+Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série. Une partie à voir SHALL avoir en plus une seconde ligne avec l'étiquette qui explique sa sélection et le lieu. Une partie ordinaire n'a pas de seconde ligne.
 
 #### Scenario: Lecture d'une affiche
-- **WHEN** un visiteur ouvre l'accueil et qu'une partie est retenue
+- **WHEN** un visiteur ouvre l'accueil et qu'une partie de la fenêtre répond à un critère
 - **THEN** il voit dans la même entrée quand, qui, où, et pourquoi elle est à voir, sans défilement horizontal sur un écran de 390 px
 
-### Requirement: Tuile absente sans affiche
-La tuile SHALL ne pas apparaître quand aucune partie du week-end ne répond à un critère. Elle ne remplace jamais une autre tuile de l'accueil.
-
-#### Scenario: Week-end sans enjeu
-- **WHEN** les parties du week-end ne répondent à aucun critère
-- **THEN** l'accueil s'affiche sans la tuile, exactement comme aujourd'hui
-
-#### Scenario: Fin de saison
-- **WHEN** plus aucune partie n'est à venir dans le calendrier
-- **THEN** la tuile n'apparaît pas
+#### Scenario: Lecture d'une partie ordinaire
+- **WHEN** une partie de la fenêtre ne répond à aucun critère
+- **THEN** elle tient sur une seule ligne, sans étiquette ni lieu
 
 ### Requirement: Accès au programme
 La tuile SHALL mener au programme complet, comme les autres tuiles de l'accueil mènent à leur page.
@@ -133,3 +127,25 @@ La tuile SHALL mener au programme complet, comme les autres tuiles de l'accueil 
 #### Scenario: Clic sur la tuile
 - **WHEN** le visiteur touche la tuile
 - **THEN** la page Programme s'ouvre
+
+### Requirement: Toutes les parties de la fenêtre
+Le bloc SHALL lister toutes les parties à venir de la fenêtre, qu'elles soient à voir ou non, dans l'ordre chronologique. Les parties à voir restent à leur place chronologique et se distinguent par leur présentation, sans être regroupées ni remontées en tête.
+
+#### Scenario: Week-end mêlant parties ordinaires et parties à voir
+- **WHEN** la fenêtre compte 6 parties dont 2 répondent à un critère
+- **THEN** le bloc liste les 6 parties par date et heure, et seules les 2 parties à voir portent une étiquette
+
+#### Scenario: Aucune partie à voir
+- **WHEN** aucune partie de la fenêtre ne répond à un critère
+- **THEN** le bloc liste toutes les parties de la fenêtre, sans aucune étiquette
+
+### Requirement: Bloc toujours présent
+Le bloc « D'ici dimanche » SHALL toujours figurer sur l'accueil. Son titre SHALL porter la date du dimanche qui clôt la fenêtre, par exemple « D'ici dimanche 4 oct. ». Quand plus aucune partie n'est à venir, il affiche le message « Plus aucune rencontre à venir dans le calendrier publié par la ligue. ».
+
+#### Scenario: Titre daté
+- **WHEN** on est lundi 28 septembre et que le premier week-end joué se termine le dimanche 4 octobre
+- **THEN** le titre du bloc est « D'ici dimanche 4 oct. »
+
+#### Scenario: Fin de saison
+- **WHEN** plus aucune partie n'est à venir dans le calendrier
+- **THEN** le bloc reste affiché, avec le message de fin de calendrier à la place des parties
