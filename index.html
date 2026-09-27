@@ -248,6 +248,43 @@
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
   .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
 
+  /* --- Mes équipes ---
+     Un bloc, pas un lien : il porte les cases du choix. Le choix se déplie
+     dans la page (<details>), jamais en popup. Sans équipe suivie, il ne reste
+     que la ligne d'invitation. */
+  .mes-row { padding: 5px 0; }
+  .mes-row + .mes-row { border-top: 1px solid var(--border); }
+  .mes-line { display: flex; gap: 8px; align-items: center; }
+  .mes-nom { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 700; }
+  .mes-info { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .mes-info strong { color: var(--text); font-weight: 700; }
+  .choix > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 9px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .choix > summary::-webkit-details-marker { display: none; }
+  .tile-body + .choix > summary { border-top: 1px solid var(--border); }
+  .choix-liste { padding: 0 14px 10px; }
+  .choix-serie {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    margin: 8px 0 4px;
+  }
+  .choix-club { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 3px 0; font-size: 12px; }
+  .choix-club-nom { flex: 0 0 72px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .choix-club label { display: inline-flex; align-items: center; gap: 4px; }
+
+  /* Repère des parties de mes équipes dans "D'ici dimanche" : un trait en
+     marge, sans étiquette, pour ne pas concurrencer l'accent des parties à voir. */
+  .affiche.mine { box-shadow: inset 3px 0 0 var(--accent); padding-left: 8px; margin-left: -8px; }
+
   /* --- D'ici dimanche ---
      Une ligne par partie. Une partie à voir en prend une seconde, qui dit
      pourquoi et où : c'est cette ligne qui porte l'accent. Le lieu n'y tiendrait
@@ -360,7 +397,7 @@
   <div id="tiles"></div>
 
   <footer>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.09.26</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.09.27</p>
   </footer>
 </main>
 
@@ -840,6 +877,86 @@
     };
   }
 
+  // ---------------------------------------------------------------
+  // Mes équipes
+  // ---------------------------------------------------------------
+  // Les équipes que le visiteur suit, mémorisées dans son navigateur et nulle
+  // part ailleurs : pas de compte, rien n'est envoyé. Une équipe se reconnaît
+  // à spécialité + catégorie + club + numéro, sans la poule, qui n'est
+  // renseignée qu'en phase de poules.
+  var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
+
+  function cleEquipe(spec, cat, club, numero) {
+    return [String(spec || "").trim(), String(cat || "").trim(),
+            String(club || "").trim(), String(numero || "").trim()].join("|");
+  }
+
+  function lireMesEquipes() {
+    try {
+      var liste = JSON.parse(localStorage.getItem(MES_EQUIPES_KEY));
+      return Array.isArray(liste) ? liste.filter(function (k) { return typeof k === "string"; }) : [];
+    } catch (e) { return []; /* stockage indisponible ou corrompu : aucune équipe suivie */ }
+  }
+
+  function ecrireMesEquipes(liste) {
+    try { localStorage.setItem(MES_EQUIPES_KEY, JSON.stringify(liste)); } catch (e) { /* pas bloquant */ }
+  }
+
+  function joueDans(m, cle) {
+    return cleEquipe(m.spec, m.cat, m.clubRec, m.equipRec) === cle ||
+           cleEquipe(m.spec, m.cat, m.clubVis, m.equipVis) === cle;
+  }
+
+  // Équipes proposées au choix : toutes les équipes engagées en poule, clubs
+  // fictifs exclus (buildStandings les écarte déjà), par série puis club puis numéro.
+  function equipesProposees(standings, clubMap) {
+    var vues = {};
+    return standings.map(function (t) {
+      return {
+        cle: cleEquipe(t.spec, t.cat, t.clubCode, t.numero),
+        cat: t.cat, serieLabel: t.serieLabel, numero: t.numero,
+        club: clubCourt(clubMap, t.clubCode, ""), court: clubCourt(clubMap, t.clubCode, t.numero)
+      };
+    }).filter(function (e) {
+      if (vues[e.cle]) return false;
+      vues[e.cle] = true;
+      return true;
+    }).sort(function (a, b) {
+      return a.cat.localeCompare(b.cat, "fr", { numeric: true }) ||
+             a.club.localeCompare(b.club, "fr") ||
+             a.numero.localeCompare(b.numero, "fr", { numeric: true });
+    });
+  }
+
+  function rangEnClair(r) {
+    return (r === 1 ? "1er" : r + "e");
+  }
+
+  // Pour chaque équipe suivie encore présente dans les données : sa prochaine
+  // partie (même au-delà de dimanche) et son rang de poule, comme sur la page
+  // Classement. Une équipe disparue des données est ignorée sans bruit.
+  function suiviMesEquipes(cles, aVenir, standings, clubMap) {
+    var rangs = rangsParPoule(standings);
+    return cles.map(function (cle) {
+      var t = standings.filter(function (s) { return cleEquipe(s.spec, s.cat, s.clubCode, s.numero) === cle; })[0];
+      if (!t) return null;
+      var r = rangs[teamKey(t.spec, t.cat, t.poule, t.clubCode, t.numero)];
+      var prochaine = aVenir.filter(function (m) { return joueDans(m, cle); })[0] || null;
+      var adversaire = null;
+      if (prochaine) {
+        var chezSoi = cleEquipe(prochaine.spec, prochaine.cat, prochaine.clubRec, prochaine.equipRec) === cle;
+        adversaire = chezSoi ? clubCourt(clubMap, prochaine.clubVis, prochaine.equipVis)
+                             : clubCourt(clubMap, prochaine.clubRec, prochaine.equipRec);
+      }
+      return {
+        cle: cle, cat: t.cat, serieLabel: t.serieLabel,
+        court: clubCourt(clubMap, t.clubCode, t.numero),
+        rang: r && r.rang ? (rangEnClair(r.rang) + " sur " + r.taille + ", poule " + t.poule) : null,
+        prochaine: prochaine, adversaire: adversaire
+      };
+    }).filter(Boolean);
+  }
+
   // Avancement de la saison, ventilé sur deux niveaux : la spécialité, puis
   // la catégorie (que la ligue nomme aussi "série").
   function parSpecialite(rencontres) {
@@ -924,6 +1041,73 @@
     return tile;
   }
 
+  // Le panneau de choix reste ouvert d'un rendu à l'autre tant qu'on coche :
+  // chaque case redessine l'accueil, qui le refermerait sinon.
+  var choixOuvert = false;
+
+  function buildMesEquipes(data, today, mes, aVenir, standings, clubMap) {
+    var bloc = el("div", { class: "tile mes-equipes" });
+    var suivis = suiviMesEquipes(mes, aVenir, standings, clubMap);
+
+    if (suivis.length) {
+      var head = el("div", { class: "tile-head" });
+      head.appendChild(el("div", { class: "tile-title", text: "Mes équipes" }));
+      bloc.appendChild(head);
+      var body = el("div", { class: "tile-body" });
+      suivis.forEach(function (s) {
+        var row = el("div", { class: "mes-row" });
+        var ligne = el("div", { class: "mes-line" });
+        ligne.appendChild(el("div", { class: "mes-nom", text: s.court }));
+        ligne.appendChild(el("span", { class: "badge serie-" + s.cat, text: s.serieLabel }));
+        row.appendChild(ligne);
+        var info = el("div", { class: "mes-info" });
+        info.appendChild(el("strong", { text: s.rang || "pas encore classée" }));
+        info.appendChild(document.createTextNode(" · " + (s.prochaine
+          ? formatShortDate(s.prochaine.date) + " " + formatHour(s.prochaine.hour, s.prochaine.minute) + " contre " + s.adversaire
+          : "plus de partie programmée")));
+        row.appendChild(info);
+        body.appendChild(row);
+      });
+      bloc.appendChild(body);
+    }
+
+    var choix = el("details", { class: "choix" });
+    choix.appendChild(el("summary", { text: suivis.length ? "Modifier mes équipes" : "Choisir mes équipes →" }));
+    var liste = el("div", { class: "choix-liste" });
+    var serie = null, club = null, ligneClub = null;
+    equipesProposees(standings, clubMap).forEach(function (e) {
+      if (e.serieLabel !== serie) {
+        serie = e.serieLabel; club = null;
+        liste.appendChild(el("div", { class: "choix-serie", text: serie }));
+      }
+      if (e.club !== club) {
+        club = e.club;
+        ligneClub = el("div", { class: "choix-club" });
+        ligneClub.appendChild(el("span", { class: "choix-club-nom", text: club, title: club }));
+        liste.appendChild(ligneClub);
+      }
+      var label = el("label");
+      var caseEq = el("input", { type: "checkbox", value: e.cle });
+      caseEq.checked = mes.indexOf(e.cle) !== -1;
+      caseEq.addEventListener("change", function () {
+        // Seules les cases cochées sont gardées : une équipe disparue des
+        // données sort du choix à cette occasion.
+        var coches = [].slice.call(liste.querySelectorAll("input:checked")).map(function (c) { return c.value; });
+        ecrireMesEquipes(coches);
+        choixOuvert = true;
+        renderTiles(data, today);
+      });
+      label.appendChild(caseEq);
+      label.appendChild(document.createTextNode("éq. " + e.numero));
+      ligneClub.appendChild(label);
+    });
+    choix.appendChild(liste);
+    if (choixOuvert) choix.open = true;
+    choix.addEventListener("toggle", function () { choixOuvert = choix.open; });
+    bloc.appendChild(choix);
+    return bloc;
+  }
+
   function renderTiles(data, today) {
     var box = document.getElementById("tiles");
     box.innerHTML = "";
@@ -931,12 +1115,17 @@
     var clubMap = buildClubMap(data.clubs);
     var aVenir = prochaines(data.rencontres, clubMap, today);
     var jouees = data.rencontres.filter(hasScore).length;
+    var standings = buildStandings(data.rencontres, clubMap);
+    var mes = lireMesEquipes();
+
+    // --- Mes équipes ---
+    box.appendChild(buildMesEquipes(data, today, mes, aVenir, standings, clubMap));
 
     // --- D'ici dimanche ---
     // Toutes les parties jusqu'au prochain dimanche joué. Une partie à voir
     // prend une seconde ligne, étiquette et lieu : c'est ce qui la fait
     // ressortir, sans la sortir de l'ordre chronologique.
-    var ici = affiches(aVenir, buildStandings(data.rencontres, clubMap), clubMap);
+    var ici = affiches(aVenir, standings, clubMap);
     var titre = ici.dimanche
       ? "D'ici dimanche " + ici.dimanche.getDate() + " " + MONTH_ABBR[ici.dimanche.getMonth()]
       : "Prochaines parties";
@@ -946,7 +1135,8 @@
     }
     ici.parties.forEach(function (a) {
       var m = a.partie;
-      var item = el("div", { class: "affiche" });
+      var mienne = mes.some(function (cle) { return joueDans(m, cle); });
+      var item = el("div", { class: "affiche" + (mienne ? " mine" : "") });
       var ligne1 = el("div", { class: "affiche-line" });
       ligne1.appendChild(el("div", {
         class: "next-when",

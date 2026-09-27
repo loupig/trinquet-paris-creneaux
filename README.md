@@ -30,11 +30,21 @@ sur un écran de 390 px. Son icône passe en vert plein quand on est dessus.
 Le titre du bandeau reste un second chemin vers l'accueil :
 
 - [`index.html`](index.html) — l'accueil, un tableau de bord plutôt qu'un
-  sommaire, réduit à deux blocs. Chaque bloc est cliquable vers la page
-  complète. Un accueil qui ne serait qu'un menu ajouterait un clic au geste le
-  plus fréquent sans rien apporter que le menu ne fasse déjà.
+  sommaire, en trois blocs. Un accueil qui ne serait qu'un menu ajouterait un
+  clic au geste le plus fréquent sans rien apporter que le menu ne fasse déjà.
 
-  Le premier, « D'ici dimanche 4 oct. », répond à la fois au joueur (quand je
+  En tête, « Mes équipes » : le visiteur coche une ou plusieurs équipes qu'il
+  suit, dans un panneau qui se déplie dans la page (pas de popup, voir plus
+  bas). Pour chacune, le bloc donne son rang de poule, calculé comme sur la page
+  Classement, et sa prochaine partie, même au-delà de dimanche. Ses parties
+  portent aussi un trait en marge dans le bloc suivant. Le choix est mémorisé
+  **dans le navigateur uniquement** (`localStorage`, clé
+  `lidfpb_mes_equipes_v1`) : pas de compte, rien n'est envoyé nulle part, et le
+  choix ne suit pas le visiteur d'un appareil à l'autre. Tant qu'aucune équipe
+  n'est choisie, le bloc se réduit à l'invitation « Choisir mes équipes ». C'est
+  le seul bloc qui n'est pas un lien, puisqu'il porte des cases à cocher.
+
+  Ensuite, « D'ici dimanche 4 oct. », cliquable vers le Programme, répond à la fois au joueur (quand je
   joue) et au spectateur (quoi aller voir). Il liste toutes les parties à venir
   jusqu'au dimanche du premier week-end qui en compte, parties de semaine
   comprises : un joueur du mardi doit voir sa partie. Le titre porte la date de
@@ -50,7 +60,7 @@ Le titre du bandeau reste un second chemin vers l'accueil :
   les deux doivent rester identiques. Aucun appel API de plus, tout vient des
   données déjà chargées par l'accueil.
 
-  Le second donne l'avancement de la saison, ventilé sur deux niveaux, la
+  Enfin, « Championnats », cliquable vers les Équipes, donne l'avancement de la saison, ventilé sur deux niveaux, la
   spécialité puis la catégorie (que la ligue nomme aussi « série », c'est le
   même champ dans les données, d'où un seul niveau de découpe réel aujourd'hui,
   la saison en cours ne comptant qu'une spécialité).
