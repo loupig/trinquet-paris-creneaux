@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Signaler au visiteur de l'accueil les parties du prochain week-end qui valent le déplacement, et lui dire en quelques mots pourquoi chacune a été retenue.
+Montrer sur l'accueil toutes les parties d'ici le dimanche du prochain week-end joué, et faire ressortir celles qui valent le déplacement en disant en quelques mots pourquoi chacune a été retenue.
 
 ## Requirements
 
