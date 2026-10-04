@@ -6,17 +6,6 @@ Donner à chaque équipe engagée une page qui réunit tout ce qui la concerne :
 
 ## Requirements
 
-### Requirement: Onglet Mon équipe
-La barre d'onglets SHALL compter cinq entrées sur toutes les pages du site, dans cet ordre : Accueil, Mon équipe, Parties, Classement, Créneaux. L'onglet « Mon équipe » ouvre la page de l'équipe et y apparaît comme onglet courant. Sur un écran de 390 px de large, les cinq libellés MUST tenir sans être coupés et sans défilement horizontal.
-
-#### Scenario: Aller sur la page depuis une autre page
-- **WHEN** un visiteur sur la page Classement touche l'onglet « Mon équipe »
-- **THEN** la page de l'équipe s'ouvre et l'onglet « Mon équipe » est marqué comme courant
-
-#### Scenario: Écran étroit
-- **WHEN** une page du site est affichée sur un écran de 390 px de large
-- **THEN** les cinq onglets sont visibles, libellés entiers, sans défilement horizontal
-
 ### Requirement: Équipe affichée
 La page SHALL porter sur une seule équipe, choisie dans cet ordre : l'équipe désignée dans l'adresse de la page, sinon la dernière équipe consultée sur cet appareil, sinon la première équipe suivie depuis l'accueil. Sans aucune des trois, la page MUST se limiter à la liste de choix et à une invitation à choisir une équipe. Une équipe désignée qui n'existe pas dans les rencontres publiées est traitée comme absente, sans message d'erreur.
 
