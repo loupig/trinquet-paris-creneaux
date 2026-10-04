@@ -397,7 +397,6 @@
   .section-head span { font-weight: 600; color: var(--muted); font-size: 11px; }
   .section-note { padding: 10px 14px; font-size: 12px; color: var(--muted); }
   .section-head + .match-row { border-top: none; }
-  .section-card .team-roster { padding-top: 10px; }
 
   .team-rang { padding: 0 14px 10px; font-size: 12px; color: var(--muted); }
   .team-rang b { color: var(--text); font-weight: 700; }
@@ -1366,6 +1365,15 @@
       rang.appendChild(el("b", { text: rangEnClair(p) }));
       carte.appendChild(rang);
     }
+    // Compositions non chargées : rien plutôt que d'annoncer à tort une
+    // composition non déclarée. Noms seuls, jamais de licence ni de contact
+    // (cf. section RGPD du README).
+    if (!etat.data.compositionsIndisponibles) {
+      var compo = el("div", { class: "team-roster" + (team.roster ? "" : " absente") });
+      compo.appendChild(el("b", { text: team.roster ? "Joueurs : " : "" }));
+      compo.appendChild(document.createTextNode(team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue"));
+      carte.appendChild(compo);
+    }
     return carte;
   }
 
@@ -1472,16 +1480,6 @@
     return carte;
   }
 
-  // Noms seuls, jamais de licence ni de contact (cf. section RGPD du README).
-  function buildComposition(team) {
-    var carte = section("Composition");
-    var compo = el("div", { class: "team-roster" + (team.roster ? "" : " absente") });
-    compo.appendChild(el("b", { text: team.roster ? "Joueurs : " : "" }));
-    compo.appendChild(document.createTextNode(team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue"));
-    carte.appendChild(compo);
-    return carte;
-  }
-
   function renderEquipe(cle) {
     var results = document.getElementById("results");
     results.innerHTML = "";
@@ -1504,9 +1502,6 @@
       var reste = resteAJouer(etat.data.rencontres, etat.clubMap, p, cle);
       if (reste.length) results.appendChild(buildReste(reste));
     }
-    // Compositions non chargées : la section disparaît plutôt que d'annoncer
-    // à tort une composition non déclarée.
-    if (!etat.data.compositionsIndisponibles) results.appendChild(buildComposition(team));
   }
 
   // Les équipes suivies d'abord, puis toutes les équipes par série, triées par

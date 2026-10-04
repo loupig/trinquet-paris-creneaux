@@ -120,15 +120,15 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   d'une saison passée par exemple, est ignorée sans message.
 
   Dans l'ordre : l'en-tête de l'équipe avec son rang en clair (« 3e sur 6,
-  poule 1 »), sa prochaine partie mise en avant, avec le bouton « Chercher une
-  date de report » quand elle se joue au Trinquet Paris (même définition que
-  sur l'accueil : sans score, à partir d'aujourd'hui), son bilan et sa forme
-  (les cinq dernières parties jouées, de la plus ancienne à la plus récente,
-  toutes phases confondues), la table de sa poule avec sa ligne mise en
-  évidence, toutes ses parties, celles qui restent à jouer dans sa poule entre
-  les autres équipes, et enfin sa composition, noms seuls. Si les compositions
-  ne se chargent pas, la section disparaît plutôt que d'annoncer à tort une
-  composition non déclarée.
+  poule 1 ») et sa composition, noms seuls, puis sa prochaine partie mise en
+  avant, avec le bouton « Chercher une date de report » quand elle se joue au
+  Trinquet Paris (même définition que sur l'accueil : sans score, à partir
+  d'aujourd'hui), son bilan et sa forme (les cinq dernières parties jouées, de
+  la plus ancienne à la plus récente, toutes phases confondues), la table de sa
+  poule avec sa ligne mise en évidence, toutes ses parties, et celles qui
+  restent à jouer dans sa poule entre les autres équipes. Si les compositions
+  ne se chargent pas, la ligne disparaît de l'en-tête plutôt que d'annoncer à
+  tort une composition non déclarée.
 
   Le classement est une troisième copie du calcul de `classement.html`, après
   celle de l'accueil : les trois doivent rester identiques. Elle appelle
@@ -321,7 +321,7 @@ uniquement pour les clubs du comité — jamais l'adresse ou la date de
 naissance, à aucun moment exposées par l'API.
 
 Les noms de joueurs apparaissent sur deux pages, `programme.html` (au clic
-sur une rencontre) et `equipe.html` (section Composition). Dans les deux cas
+sur une rencontre) et `equipe.html` (en tête de page). Dans les deux cas
 ce sont les noms seuls, jointure
 `rencontres` → `engagements` → `licencies`, sans
 numéro de licence ni coordonnées. Seule `programme.html` va plus loin, avec les
