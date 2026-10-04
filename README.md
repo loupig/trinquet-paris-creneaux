@@ -120,12 +120,12 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   d'une saison passée par exemple, est ignorée sans message.
 
   Dans l'ordre : l'en-tête de l'équipe avec son rang en clair (« 3e sur 6,
-  poule 1 ») et sa composition, noms seuls, puis sa prochaine partie mise en
-  avant, avec le bouton « Chercher une date de report » quand elle se joue au
-  Trinquet Paris (même définition que sur l'accueil : sans score, à partir
-  d'aujourd'hui), son bilan et sa forme (les cinq dernières parties jouées, de
-  la plus ancienne à la plus récente, toutes phases confondues), toutes ses
-  parties, et celles qui restent à jouer dans sa poule entre les autres
+  poule 1 ») et sa composition, noms seuls, puis son bilan et sa forme (les
+  cinq dernières parties jouées, de la plus ancienne à la plus récente, toutes
+  phases confondues), sa prochaine partie mise en avant, avec le bouton
+  « Chercher une date de report » quand elle se joue au Trinquet Paris (même
+  définition que sur l'accueil : sans score, à partir d'aujourd'hui), toutes
+  ses parties, et celles qui restent à jouer dans sa poule entre les autres
   équipes. Si les compositions ne se chargent pas, la ligne disparaît de
   l'en-tête plutôt que d'annoncer à tort une composition non déclarée. La
   table complète de la poule n'y figure pas : elle est sur la page Classement.

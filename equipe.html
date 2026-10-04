@@ -1573,8 +1573,8 @@
 
     var p = pouleDe(etat.standings, team);
     results.appendChild(buildEnTete(team, p));
-    results.appendChild(buildProchaine(team));
     results.appendChild(buildBilan(team, p));
+    results.appendChild(buildProchaine(team));
     results.appendChild(buildParties(team));
     if (p) {
       var reste = resteAJouer(etat.data.rencontres, etat.clubMap, p, cle);
