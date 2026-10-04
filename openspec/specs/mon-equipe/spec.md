@@ -78,11 +78,11 @@ La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, 
 - **THEN** elle figure en fin de liste, avec « date à venir »
 
 ### Requirement: Bilan et forme
-La page SHALL donner le bilan de l'équipe sur toutes ses parties jouées, toutes phases confondues : nombre de parties jouées, gagnées, perdues, à venir, et points marqués et encaissés. Elle SHALL aussi montrer sa forme : le résultat (G ou P) de ses cinq dernières parties jouées, de la plus ancienne à la plus récente. Une équipe qui n'a encore rien joué est indiquée « aucune partie jouée », sans forme.
+La page SHALL donner le bilan de l'équipe sur toutes ses parties jouées, toutes phases confondues : nombre de parties jouées, gagnées, perdues, à venir, et points marqués et encaissés. Elle SHALL aussi montrer sa forme : le résultat (V pour victoire, D pour défaite) de ses cinq dernières parties jouées, de la plus ancienne à la plus récente. Une équipe qui n'a encore rien joué est indiquée « aucune partie jouée », sans forme.
 
 #### Scenario: Équipe en cours de saison
 - **WHEN** l'équipe a joué sept parties, gagné les deux dernières et perdu les trois précédentes
-- **THEN** la forme affiche P, P, P, G, G
+- **THEN** la forme affiche D, D, D, V, V
 
 #### Scenario: Moins de cinq parties jouées
 - **WHEN** l'équipe a joué deux parties

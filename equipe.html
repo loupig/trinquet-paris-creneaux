@@ -363,8 +363,8 @@
     font-weight: 800;
     color: #fff;
   }
-  .forme-res.g { background: var(--win-text); }
-  .forme-res.p { background: var(--loss-text); }
+  .forme-res.v { background: var(--win-text); }
+  .forme-res.d { background: var(--loss-text); }
   .forme-res.n { background: var(--muted); }
   .objectif { padding: 0 14px 12px; font-size: 12px; line-height: 1.45; }
   /* --- Fiche de l'adversaire : à qui on va se frotter --- */
@@ -1217,7 +1217,7 @@
       marques: marques,
       encaisses: encaisses,
       forme: jouees.slice(-FORME_NB).map(function (m) {
-        return m.scoreSoi > m.scoreAdv ? "G" : (m.scoreSoi < m.scoreAdv ? "P" : "N");
+        return m.scoreSoi > m.scoreAdv ? "V" : (m.scoreSoi < m.scoreAdv ? "D" : "N");
       })
     };
   }
@@ -1419,7 +1419,7 @@
     return carte;
   }
 
-  var SENS_RESULTAT = { G: "gagnée", P: "perdue", N: "nulle" };
+  var SENS_RESULTAT = { V: "gagnée", D: "perdue", N: "nulle" };
 
   function ajouterPastilles(conteneur, forme) {
     forme.forEach(function (r) {
@@ -1460,7 +1460,7 @@
     var ligne = el("div", { class: "fiche-ligne" });
     if (p) ligne.appendChild(el("b", { text: rangEnClair(p) }));
     if (b.forme.length) {
-      ligne.appendChild(el("span", { text: (p ? "· " : "") + "Forme" }));
+      ligne.appendChild(el("span", { text: (p ? "· " : "") + "Série en cours" }));
       ajouterPastilles(ligne, b.forme);
     }
     if (!p && !b.forme.length) ligne.appendChild(el("span", { text: "aucune partie jouée" }));
@@ -1521,7 +1521,7 @@
 
     if (b.forme.length) {
       var forme = el("div", { class: "forme" });
-      forme.appendChild(el("span", { class: "forme-label", text: "Forme" }));
+      forme.appendChild(el("span", { class: "forme-label", text: "Série en cours" }));
       ajouterPastilles(forme, b.forme);
       carte.appendChild(forme);
     }
