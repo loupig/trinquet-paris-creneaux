@@ -11,7 +11,8 @@ créneaux libres à la main.
 
 ## Pages
 
-Huit pages statiques indépendantes, sans build ni dépendance, chacune avec son
+Sept pages statiques indépendantes, plus une redirection, sans build ni
+dépendance, chacune avec son
 CSS et son JS inline. La navigation est celle d'une application mobile
 plutôt que celle d'un site : rien n'est dans le flux de la page, tout flotte
 aux deux extrémités de l'écran, là où se posent les pouces.
@@ -61,7 +62,7 @@ Le titre du bandeau reste un second chemin vers l'accueil :
   les deux doivent rester identiques. Aucun appel API de plus, tout vient des
   données déjà chargées par l'accueil.
 
-  Enfin, « Championnats », cliquable vers les Équipes, donne l'avancement de la saison, ventilé sur deux niveaux, la
+  Enfin, « Championnats », cliquable vers le Classement, donne l'avancement de la saison, ventilé sur deux niveaux, la
   spécialité puis la catégorie (que la ligue nomme aussi « série », c'est le
   même champ dans les données, d'où un seul niveau de découpe réel aujourd'hui,
   la saison en cours ne comptant qu'une spécialité).
@@ -72,7 +73,7 @@ Le titre du bandeau reste un second chemin vers l'accueil :
 
 - [`creneaux.html`](creneaux.html) — créneaux libres au Trinquet Paris, en tableau
   par week-end. C'est la page décrite en détail ci-dessous.
-Les deux pages de calendrier, `programme.html` et `equipes.html`, portent un
+La page de calendrier, `programme.html`, porte un
 filtre par **spécialité** au-dessus du filtre par série, la spécialité étant le
 niveau au-dessus dans la nomenclature de la ligue. Une seule spécialité figure
 au calendrier de la saison en cours, la pastille est donc seule : le filtre
@@ -81,35 +82,11 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
 - [`programme.html`](programme.html) — calendrier complet des championnats,
   tous lieux et toutes séries, passées et à venir, avec compositions et
   contacts des responsables d'équipe.
-- [`equipes.html`](equipes.html) — les mêmes rencontres, mais vues par équipe
-  plutôt que par date : une carte par club, dans l'ordre alphabétique, et à
-  l'intérieur une section par équipe classée par numéro. Chaque équipe affiche
-  sa série, sa poule, son bilan (jouées, gagnées, perdues, à venir) et la liste
-  chronologique de ses parties, avec l'adversaire, le lieu, et le score du point
-  de vue de l'équipe — vert si elle l'emporte, rouge sinon. Trois filtres
-  mémorisés d'une visite à l'autre : la spécialité et la série en pastilles, et
-  le club en liste déroulante (onze clubs aux noms longs rempliraient cinq lignes de pastilles,
-  et un club à la fois est le besoin réel). Les clubs fictifs de la ligue — la
-  plage de codes commençant par des 9, dont « Equipe à désigner » qui porte
-  l'adversaire encore inconnu d'une qualification — restent listés dans la page
-  mais sont absents des choix du filtre : filtrer dessus n'aurait pas de sens.
-
-  Sous chaque équipe, sa composition déclarée à la ligue : noms de joueurs
-  seuls, jamais de licence ni de contact. Vingt-six équipes sur vingt-sept en
-  ont une ; celle qui n'en a pas l'indique explicitement plutôt que d'afficher
-  une ligne vide. Les compositions sont un bonus d'affichage : si les appels
-  `engagements` ou `licencies` échouent, la page se rend sans elles au lieu de
-  bloquer le récapitulatif.
-
-  Aucune mention de réception ni de déplacement : en Île-de-France tout se joue
-  sur les mêmes trinquets, la distinction ne veut rien dire pour les joueurs.
-  Elle reste utilisée en interne, uniquement pour orienter le score du bon côté.
-
-  Chaque rencontre apparaît deux fois, une fois pour chaque équipe : c'est
-  l'intérêt de la vue, et cela porte la page à 158 lignes pour 79 rencontres.
-  L'identité d'une équipe est la clé catégorie + club + numéro ; la catégorie y
-  figure par prudence, rien ne garantissant qu'un club ne réutilise pas un
-  numéro d'équipe d'une série à l'autre.
+- [`equipes.html`](equipes.html) — simple redirection vers `equipe.html`.
+  L'ancienne vue « Parties par équipe », qui listait toutes les équipes club
+  par club, a été retirée une fois la page Mon équipe en place : elle faisait
+  doublon. Le fichier reste pour ne pas casser les favoris et les liens déjà
+  partagés, et renvoie vers Mon équipe sans s'inscrire dans l'historique.
 - [`classement.html`](classement.html) — classement des poules. Barème de la
   ligue : 3 points la victoire, 1 point la défaite. Le classement se fait au
   total de points divisé par le nombre de parties jouées, puis au goal average
@@ -127,7 +104,7 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
 - [`equipe.html`](equipe.html) — « Mon équipe », tout ce qui concerne une
   seule équipe, sur une page. L'équipe est désignée dans l'adresse
   (`equipe.html?equipe=<spécialité|catégorie|club|numéro>`, la clé déjà
-  utilisée par la vue Par équipe et par « Mes équipes ») : le lien se partage
+  utilisée par « Mes équipes ») : le lien se partage
   tel quel. N'importe quelle équipe engagée se consulte, suivie ou non. Une
   liste déroulante dans l'en-tête permet d'en changer sans recharger les
   données ; elle propose d'abord les équipes suivies depuis l'accueil, dans un
@@ -154,9 +131,9 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   composition non déclarée.
 
   Le classement est une troisième copie du calcul de `classement.html`, après
-  celle de l'accueil : les trois doivent rester identiques. Mêmes appels API
-  et même cache que la vue Par équipe, d'où un affichage immédiat en venant
-  de celle-ci.
+  celle de l'accueil : les trois doivent rester identiques. Elle appelle
+  `rencontres`, `clubs`, `engagements` et `licencies`, avec le cache partagé
+  par toutes les pages.
 
 - [`report.html`](report.html) — aide au choix d'une date de report. S'ouvre
   depuis le bouton « Chercher une date de report » d'une partie non jouée du
@@ -343,9 +320,9 @@ Drive : seuls `Numéro club`, `Licence`, `nom`, `prenom` sont conservés, et
 uniquement pour les clubs du comité — jamais l'adresse ou la date de
 naissance, à aucun moment exposées par l'API.
 
-Les noms de joueurs apparaissent sur trois pages, `programme.html` (au clic
-sur une rencontre), `equipes.html` (sous chaque équipe) et `equipe.html`
-(section Composition). Dans les trois cas ce sont les noms seuls, jointure
+Les noms de joueurs apparaissent sur deux pages, `programme.html` (au clic
+sur une rencontre) et `equipe.html` (section Composition). Dans les deux cas
+ce sont les noms seuls, jointure
 `rencontres` → `engagements` → `licencies`, sans
 numéro de licence ni coordonnées. Seule `programme.html` va plus loin, avec les
 raccourcis de contact du responsable d'équipe, dont les numéros sont déjà

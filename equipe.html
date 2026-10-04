@@ -1266,8 +1266,8 @@
     })[0] || null;
   }
 
-  // Bilan sur toutes les parties jouées, toutes phases confondues, comme sur la
-  // vue Par équipe. La forme suit l'ordre chronologique, la plus récente à droite.
+  // Bilan sur toutes les parties jouées, toutes phases confondues. La forme suit
+  // l'ordre chronologique, la plus récente à droite.
   function bilanDe(team) {
     var jouees = team.matches.filter(function (m) { return m.scoreSoi !== null; });
     var marques = 0, encaisses = 0;
