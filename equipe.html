@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parties par équipe — LIDFPB</title>
+<title>Mon équipe — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <style>
   :root {
@@ -198,128 +198,6 @@
   .banner.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
   .banner strong { display: block; margin-bottom: 4px; }
 
-  /* Bascule entre les deux vues d'une même donnée : programme.html affiche
-     les parties par date, equipes.html les regroupe par club puis par équipe.
-     Elle vit dans le header, donc elle hérite de son position:sticky et reste
-     accessible pendant tout le défilement de la liste. */
-  header .view-switch {
-    display: flex;
-    gap: 3px;
-    margin: 10px 0 0;
-    background: var(--bg);
-    border-radius: 11px;
-    padding: 3px;
-  }
-  header .view-switch a,
-  header .view-switch span {
-    flex: 1 1 0;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
-    text-decoration: none;
-    padding: 7px 6px;
-    border-radius: 9px;
-  }
-  header .view-switch .current {
-    color: var(--accent);
-    background: var(--card-bg);
-    box-shadow: 0 1px 2px rgba(26, 26, 46, 0.08);
-  }
-
-  .recap-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-  }
-  .recap-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
-
-  /* Le bloc Filtres se replie : on ne le règle qu'une fois, alors qu'il pousse
-     la liste hors de l'écran à chaque chargement. Ouvert par défaut, l'état
-     est retenu et commun à toutes les pages. */
-  .filters-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    width: 100%;
-    padding: 0;
-    border: 0;
-    background: none;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    text-align: left;
-    cursor: pointer;
-  }
-  .filters-toggle svg {
-    flex: none;
-    color: var(--muted);
-    transition: transform 0.18s ease;
-  }
-  .filters-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
-  .filters-body { margin-top: 8px; }
-  .filters-body[hidden] { display: none; }
-
-  .filter-subtitle {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--muted);
-    margin: 12px 0 6px;
-  }
-  .filter-subtitle:first-of-type { margin-top: 0; }
-  .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
-  /* Onze clubs aux noms longs : en pastilles ils rempliraient cinq lignes.
-     Une liste déroulante native tient sur une ligne et se manipule mieux au
-     pouce, et un club à la fois est le besoin réel. */
-  .filter-select {
-    font: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    width: 100%;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 10px;
-  }
-  .filter-chip {
-    font: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .filter-chip.active { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
-  .filter-chip.serie-1.active { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
-  .filter-chip.serie-2.active { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
-
-  /* --- Club --- */
-  .club-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-  .club-head {
-    padding: 11px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-  .club-head span { font-weight: 600; color: var(--muted); font-size: 11px; }
-
   /* --- Équipe --- */
   .team-block { border-bottom: 1px solid var(--border); }
   .team-block:last-child { border-bottom: none; }
@@ -402,6 +280,174 @@
   .match-score.loss { color: var(--loss-text); }
   .match-score.todo { font-size: 10px; font-weight: 600; color: var(--muted); }
 
+  /* --- Une poule --- */
+  .poule-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .poule-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 11px; }
+
+  /* --- Une ligne de classement ---
+     Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
+     tableau obligerait à défiler horizontalement, ou à des colonnes de 22px
+     illisibles. Le critère de tri est à droite, en gros ; le détail qui le
+     compose est sur la ligne du dessous. */
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .rank-row:first-of-type { border-top: none; }
+  .rank-pos {
+    flex: 0 0 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Podium : la couleur porte le rang, pas une icône. Les trois teintes sont
+     assombries par rapport à l'or, l'argent et le bronze usuels, qui passent
+     mal en petit sur fond blanc. */
+  .rank-row.or .rank-pos { color: #8a6d0b; background: #fbf0cd; }
+  .rank-row.argent .rank-pos { color: #5f636b; background: #eceef1; }
+  .rank-row.bronze .rank-pos { color: #8a5524; background: #f6e6d8; }
+  .rank-main { flex: 1 1 auto; min-width: 0; }
+  .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
+  .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+  .rank-values { flex: 0 0 auto; text-align: right; }
+  .rank-score {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .rank-score.vide { font-size: 13px; color: var(--muted); }
+
+  /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
+     pour une séparation de carte. */
+  .cut-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px 5px;
+    border-top: 2px solid var(--accent-border);
+  }
+  .cut-line span {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
+
+  /* Le choix de l'équipe vit dans le header : il hérite de son position:sticky
+     et reste accessible pendant tout le défilement, comme la bascule de vue de
+     la page Parties. Une liste déroulante native plutôt que des pastilles : une
+     trentaine d'équipes aux noms longs rempliraient l'écran. */
+  header .choix-equipe {
+    display: block;
+    width: 100%;
+    margin: 10px 0 0;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
+
+  /* --- Une section de la page --- */
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .section-head {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .section-head span { font-weight: 600; color: var(--muted); font-size: 11px; }
+  .section-note { padding: 10px 14px; font-size: 12px; color: var(--muted); }
+  .section-head + .match-row { border-top: none; }
+  .section-card .team-roster { padding-top: 10px; }
+
+  .team-rang { padding: 0 14px 10px; font-size: 12px; color: var(--muted); }
+  .team-rang b { color: var(--text); font-weight: 700; }
+
+  /* --- Prochaine partie : la seule mise en avant de la page --- */
+  .prochaine { padding: 10px 14px 12px; }
+  .prochaine-quand { font-size: 15px; font-weight: 800; }
+  .prochaine-adv { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    text-decoration: none;
+  }
+  .report-btn svg { display: block; }
+  .report-btn:active { opacity: 0.75; }
+
+  /* --- Bilan et forme --- */
+  .bilan { padding: 10px 14px 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .bilan b { color: var(--text); font-weight: 700; }
+  .forme { display: flex; align-items: center; gap: 4px; padding: 0 14px 12px; font-size: 11px; color: var(--muted); }
+  .forme-label { font-weight: 700; margin-right: 4px; }
+  .forme-res {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .forme-res.g { background: var(--win-text); }
+  .forme-res.p { background: var(--loss-text); }
+  .forme-res.n { background: var(--muted); }
+
+  /* La ligne de l'équipe dans sa poule : un fond, pas une bordure, pour ne pas
+     changer la hauteur de ligne ni concurrencer le trait des qualifiés. */
+  .rank-row.moi { background: var(--accent-bg); }
+  .rank-row.moi .rank-team { color: var(--accent); }
+
   .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
 
   .skeleton-card {
@@ -469,31 +515,13 @@
   </div>
 </div>
 <header>
-  <h1><a href="index.html" class="home-link">Parties des championnats</a></h1>
+  <h1><a href="index.html" class="home-link">Mon équipe</a></h1>
   <h1>Ligue d'Île-de-France</h1>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
-  <div class="view-switch" aria-label="Vue">
-    <a href="programme.html">Par date</a>
-    <span class="current" aria-current="page">Par équipe</span>
-  </div>
+  <select class="choix-equipe" id="choixEquipe" aria-label="Choisir une équipe"></select>
 </header>
 
 <main>
-  <div class="recap-card">
-    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-    <div class="filters-body" id="filtersBody">
-    <div class="filter-subtitle">Spécialité</div>
-    <div class="filter-group" id="filterSpecs"></div>
-    <div class="filter-subtitle">Série</div>
-    <div class="filter-group" id="filterSeries">
-      <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
-      <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
-    </div>
-    <div class="filter-subtitle">Club</div>
-    <select class="filter-select" id="filterClub" aria-label="Filtrer par club"></select>
-    </div>
-  </div>
-
   <div id="banner-slot"></div>
   <div id="results"></div>
 
@@ -506,8 +534,8 @@
 
 <nav class="tab-bar" aria-label="Navigation principale">
   <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
-  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mon équipe</span></a>
-  <a href="equipes.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d="M8.6 5.6h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8zm0 5h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8zm0 5h11.2a1.4 1.4 0 0 1 0 2.8H8.6a1.4 1.4 0 0 1 0-2.8z"/><circle cx="4.4" cy="7" r="1.7"/><circle cx="4.4" cy="12" r="1.7"/><circle cx="4.4" cy="17" r="1.7"/></svg><span>Parties</span></a>
+  <a href="equipe.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><circle cx="9" cy="7.8" r="3.5"/><path d="M2.6 19.4c0-3.6 2.9-6.3 6.4-6.3s6.4 2.7 6.4 6.3a1.1 1.1 0 0 1-1.1 1.1H3.7a1.1 1.1 0 0 1-1.1-1.1z"/><circle cx="16.8" cy="8.4" r="2.9"/><path d="M16.9 13.5c2.8.3 4.7 2.6 4.7 5.9a1.1 1.1 0 0 1-1.1 1.1h-3.4c.2-.3.3-.7.3-1.1 0-2.4-.9-4.5-2.4-5.8.6-.1 1.2-.1 1.9-.1z"/></svg><span>Mon équipe</span></a>
+  <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
   <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
   <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
 </nav>
@@ -525,19 +553,17 @@
   // Configuration
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
-  var FILTER_CACHE_KEY = "lidfpb_equipes_filters_v1";
-  // Spécialité et Série sont les deux filtres communs aux vues « par date » et
-  // « par équipe » : ils transitent par une clé partagée pour que la bascule de
-  // vue conserve le contexte de filtrage. Les filtres propres à une vue (lieu,
-  // phase, parties passées, club) restent dans la clé de la page.
-  var SHARED_FILTER_KEY = "lidfpb_parties_filters_v1";
   var CACHE_TTL_MS = 5 * 60 * 1000;
+  // Les équipes suivies depuis l'accueil, sous la même clé qu'index.html. Cette
+  // page les lit pour les proposer en tête de liste, sans jamais les modifier.
+  var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
+  // La dernière équipe consultée, pour la retrouver en revenant par l'onglet.
+  // Elle reste dans le navigateur : rien n'est envoyé nulle part.
+  var EQUIPE_VUE_KEY = "lidfpb_equipe_vue_v1";
+  // Nombre de dernières parties jouées montrées dans la forme.
+  var FORME_NB = 5;
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
-
-  // La spécialité est le niveau au-dessus de la catégorie, que la ligue nomme
-  // aussi "série" : Catégorie 1 = Série 1, c'est le même champ.
-  var SPEC_LABELS = { "2": "Trinquet / P.G Pleine Masculin" };
 
   var PHASE_LABELS = {
     "1": "Poules",
@@ -554,31 +580,11 @@
     "12": "Finale"
   };
 
-  var filterState = { specs: {}, series: { "1": true, "2": true }, club: "" };   // club vide = tous
-
-  function loadFilterState() {
-    try {
-      var saved = JSON.parse(localStorage.getItem(FILTER_CACHE_KEY));
-      if (saved && saved.specs) filterState.specs = saved.specs;
-      if (saved && saved.series) filterState.series = saved.series;
-      if (saved && typeof saved.club === "string") filterState.club = saved.club;
-    } catch (e) { /* stockage indisponible ou corrompu : valeurs par défaut */ }
-    try {
-      var partage = JSON.parse(localStorage.getItem(SHARED_FILTER_KEY));
-      if (partage && partage.specs) filterState.specs = partage.specs;
-      if (partage && partage.series) filterState.series = partage.series;
-    } catch (e) { /* stockage indisponible ou corrompu : on garde les valeurs déjà chargées */ }
-  }
-
-  function saveFilterState() {
-    try { localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(filterState)); } catch (e) { /* pas bloquant */ }
-    try {
-      localStorage.setItem(SHARED_FILTER_KEY, JSON.stringify({ specs: filterState.specs, series: filterState.series }));
-    } catch (e) { /* pas bloquant */ }
-  }
-
-  var lastTeams = null;
-
+  // Barème et qualification, copiés de classement.html avec le calcul du
+  // classement (voir plus bas).
+  var PTS_VICTOIRE = 3, PTS_NUL = 2, PTS_DEFAITE = 1;
+  var PHASE_POULES = "1";
+  var QUALIFIES_PAR_POULE = 4;
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
   // ---------------------------------------------------------------
@@ -695,9 +701,11 @@
     var clubsPromise = source(buildUrl("clubs", {}));
     // Les compositions sont un bonus d'affichage, pas une donnée essentielle
     // comme le calendrier : si ces appels échouent, on dégrade en silence
-    // plutôt que de bloquer toute la page.
-    var engagementsPromise = source(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
-    var licenciesPromise = source(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
+    // plutôt que de bloquer toute la page. L'échec est noté : sans lui, une
+    // composition non chargée passerait pour une composition non déclarée.
+    var echec = function () { return { data: [], indisponible: true }; };
+    var engagementsPromise = source(buildUrl("engagements", {})).catch(echec);
+    var licenciesPromise = source(buildUrl("licencies", {})).catch(echec);
 
     return Promise.all([rencontresPromise, clubsPromise, engagementsPromise, licenciesPromise]).then(function (results) {
       var rencontres = results[0].data.filter(function (row) {
@@ -709,6 +717,7 @@
         clubs: results[1].data,
         engagements: results[2].data,
         licencies: results[3].data,
+        compositionsIndisponibles: !!(results[2].indisponible || results[3].indisponible),
         fetchedAt: Date.now(),
         lastSync: results[0].lastSync || null
       };
@@ -926,6 +935,104 @@
   }
 
   // ---------------------------------------------------------------
+  // Construction du classement
+  // ---------------------------------------------------------------
+  // Copie du calcul de classement.html (constantes, teamKey, estPhaseDePoules,
+  // buildStandings, trierClassement), déjà recopié dans index.html : les trois
+  // copies doivent rester identiques, sans quoi le rang affiché ici ne serait
+  // plus celui de la page Classement. Deux écarts de nom seulement : teamKey
+  // devient cleClassement, le nom étant pris plus haut par la clé d'équipe sans
+  // poule, et clubFictif n'est pas redéclarée, c'est la même fonction.
+  function cleClassement(spec, cat, poule, club, equipe) {
+    return [String(spec || "").trim(), String(cat || "").trim(), String(poule || "").trim(),
+            String(club || "").trim(), String(equipe || "").trim()].join("|");
+  }
+
+  // Seule la phase de poules est classée : les phases finales se jouent à
+  // élimination directe, une moyenne de points par partie n'y veut rien dire.
+  function estPhaseDePoules(row) {
+    return String(row.Phase || "").trim() === PHASE_POULES;
+  }
+
+  // Une équipe est comptée dans la poule où elle joue. Toutes les équipes
+  // engagées apparaissent, y compris celles qui n'ont encore rien joué : la
+  // table doit montrer l'effectif complet dès le début de saison.
+  function buildStandings(rencontres, clubMap) {
+    var index = {};
+
+    function equipe(row, chezSoi) {
+      var spec = String(row["Spécialité"] || "").trim();
+      var cat = String(row["Catégorie"] || "").trim();
+      var poule = String(row.Poule || "").trim();
+      var club = String((chezSoi ? row.club_rec : row.club_vis) || "").trim();
+      var num = String((chezSoi ? row.equip_rec : row.equip_vis) || "").trim();
+      if (clubFictif(club)) return null;
+
+      var cle = cleClassement(spec, cat, poule, club, num);
+      var t = index[cle];
+      if (!t) {
+        t = index[cle] = {
+          spec: spec,
+          cat: cat,
+          serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
+          poule: poule,
+          clubCode: club,
+          clubNom: clubMap[club] || ("Club " + club),
+          numero: num,
+          label: clubLabel(clubMap, club, num),
+          jouees: 0, gagnees: 0, perdues: 0, nulles: 0,
+          points: 0, marques: 0, encaisses: 0
+        };
+      }
+      return t;
+    }
+
+    rencontres.forEach(function (row) {
+      if (!estPhaseDePoules(row)) return;
+      var rec = equipe(row, true);
+      var vis = equipe(row, false);
+      if (!rec || !vis || !hasScore(row)) return;
+
+      var sr = parseInt(row.score_cr, 10);
+      var sv = parseInt(row.score_cv, 10);
+      if (Number.isNaN(sr) || Number.isNaN(sv)) return;
+
+      [[rec, sr, sv], [vis, sv, sr]].forEach(function (cote) {
+        var t = cote[0], pour = cote[1], contre = cote[2];
+        t.jouees += 1;
+        t.marques += pour;
+        t.encaisses += contre;
+        if (pour > contre) { t.gagnees += 1; t.points += PTS_VICTOIRE; }
+        else if (pour < contre) { t.perdues += 1; t.points += PTS_DEFAITE; }
+        else { t.nulles += 1; t.points += PTS_NUL; }
+      });
+    });
+
+    return Object.keys(index).map(function (k) {
+      var t = index[k];
+      t.ga = t.marques - t.encaisses;
+      // Une équipe sans partie jouée n'a pas de moyenne : null, pas zéro, pour
+      // ne pas la classer devant une équipe qui a perdu.
+      t.moyenne = t.jouees ? (t.points / t.jouees) : null;
+      t.gaMoyen = t.jouees ? (t.ga / t.jouees) : null;
+      return t;
+    });
+  }
+
+  // Tri demandé : moyenne de points, puis goal average moyen. Les équipes sans
+  // partie jouée ferment la marche, dans l'ordre alphabétique.
+  function trierClassement(teams) {
+    return teams.slice().sort(function (a, b) {
+      if (a.jouees === 0 && b.jouees === 0) return a.label.localeCompare(b.label, "fr");
+      if (a.jouees === 0) return 1;
+      if (b.jouees === 0) return -1;
+      if (b.moyenne !== a.moyenne) return b.moyenne - a.moyenne;
+      if (b.gaMoyen !== a.gaMoyen) return b.gaMoyen - a.gaMoyen;
+      return a.label.localeCompare(b.label, "fr");
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Rendu
   // ---------------------------------------------------------------
   var DAY_ABBR = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
@@ -1044,126 +1151,412 @@
     return row;
   }
 
-  function buildTeamBlock(team) {
-    var block = el("div", { class: "team-block" });
+  // Une moyenne se lit mieux à deux décimales : 2.50 et 2.33 se départagent à
+  // l'œil, 2.5 et 2.3 laissent croire à un écart plus net qu'il n'est.
+  function fmtMoyenne(v) {
+    return v.toFixed(2).replace(".", ",");
+  }
 
-    var head = el("div", { class: "team-head" });
-    head.appendChild(el("div", { class: "team-name", text: "Équipe " + (team.numero || "?") }));
-    head.appendChild(el("span", { class: "badge serie-" + team.cat, text: team.serieLabel }));
-    if (team.poule) head.appendChild(el("span", { class: "team-poule", text: team.poule }));
-    block.appendChild(head);
+  // Le signe est toujours écrit, y compris le plus : un goal average se lit
+  // comme un écart, pas comme un total.
+  function fmtSigne(v) {
+    return (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v);
+  }
 
-    var bilan = [team.matches.length + " partie" + (team.matches.length > 1 ? "s" : "")];
+  function fmtSigneMoyen(v) {
+    return (v > 0 ? "+" : (v < 0 ? "−" : "")) + fmtMoyenne(Math.abs(v));
+  }
+
+  var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
+
+  function buildRankRow(team, rang) {
+    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") });
+    row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
+
+    var main = el("div", { class: "rank-main" });
+    main.appendChild(el("div", { class: "rank-team", text: team.label }));
+    var detail;
     if (team.jouees) {
-      var detail = team.gagnees + " gagnée" + (team.gagnees > 1 ? "s" : "") +
-                   ", " + team.perdues + " perdue" + (team.perdues > 1 ? "s" : "");
-      if (team.nulles) detail += ", " + team.nulles + " nulle" + (team.nulles > 1 ? "s" : "");
-      bilan.push(detail);
+      detail = team.jouees + " partie" + (team.jouees > 1 ? "s" : "") +
+               " · " + team.gagnees + " G · " + team.perdues + " P" +
+               (team.nulles ? " · " + team.nulles + " N" : "") +
+               " · " + team.points + " pts · " + team.marques + "–" + team.encaisses +
+               " · GA " + fmtSigne(team.ga) + " (" + fmtSigneMoyen(team.gaMoyen) + ")";
+    } else {
+      detail = "aucune partie jouée";
     }
-    if (team.aVenir) bilan.push(team.aVenir + " à venir");
-    var record = el("div", { class: "team-record" });
-    record.appendChild(el("b", { text: bilan[0] }));
-    if (bilan.length > 1) record.appendChild(document.createTextNode(" · " + bilan.slice(1).join(" · ")));
-    block.appendChild(record);
+    main.appendChild(el("div", { class: "rank-detail", text: detail }));
+    row.appendChild(main);
 
-    // Noms seuls, jamais de licence ni de contact (cf. section RGPD du README).
+    // À droite, le seul critère de classement. Le goal average qui départage
+    // est descendu dans le détail : deux nombres empilés à droite laissaient
+    // croire à deux colonnes de tri.
+    var vals = el("div", { class: "rank-values" });
+    vals.appendChild(el("div", {
+      class: "rank-score" + (team.jouees ? "" : " vide"),
+      text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
+    }));
+    row.appendChild(vals);
+
+    return row;
+  }
+
+  // ---------------------------------------------------------------
+  // Équipe affichée
+  // ---------------------------------------------------------------
+  function lireMesEquipes() {
+    try {
+      var liste = JSON.parse(localStorage.getItem(MES_EQUIPES_KEY));
+      return Array.isArray(liste) ? liste.filter(function (k) { return typeof k === "string"; }) : [];
+    } catch (e) { return []; /* stockage indisponible ou corrompu : aucune équipe suivie */ }
+  }
+
+  function lireEquipeVue() {
+    try { return localStorage.getItem(EQUIPE_VUE_KEY) || ""; } catch (e) { return ""; /* stockage indisponible */ }
+  }
+
+  function ecrireEquipeVue(cle) {
+    try { localStorage.setItem(EQUIPE_VUE_KEY, cle); } catch (e) { /* pas bloquant */ }
+  }
+
+  function equipeDansLAdresse() {
+    try { return new URLSearchParams(window.location.search).get("equipe") || ""; } catch (e) { return ""; }
+  }
+
+  // L'adresse désigne toujours l'équipe affichée : elle se partage telle quelle.
+  // replaceState plutôt que pushState : Retour ramène à la page d'où l'on vient,
+  // pas à l'équipe consultée juste avant.
+  function mettreAJourAdresse(cle) {
+    var voulue = window.location.pathname + (cle ? "?equipe=" + encodeURIComponent(cle) : "");
+    if (voulue === window.location.pathname + window.location.search) return;
+    try { history.replaceState(null, "", voulue); } catch (e) { /* adresse inchangée : pas bloquant */ }
+  }
+
+  // Les équipes que l'on peut afficher, par clé : toutes, sauf celles des clubs
+  // fictifs (« Equipe à désigner »), qui ne sont pas de vraies équipes.
+  function equipesChoisissables(teams) {
+    var index = {};
+    teams.forEach(function (t) {
+      if (!clubFictif(t.clubCode)) index[teamKey(t.spec, t.cat, t.clubCode, t.numero)] = t;
+    });
+    return index;
+  }
+
+  // Dans l'ordre : l'équipe demandée, la dernière consultée, puis la première
+  // équipe suivie encore présente. Une clé inconnue (lien d'une autre saison,
+  // équipe disparue) est ignorée sans message.
+  function choisirEquipe(index, demandee, vue, suivies) {
+    var candidates = [demandee, vue].concat(suivies);
+    for (var i = 0; i < candidates.length; i++) {
+      if (candidates[i] && index[candidates[i]]) return candidates[i];
+    }
+    return "";
+  }
+
+  // ---------------------------------------------------------------
+  // Calculs propres à la page
+  // ---------------------------------------------------------------
+  // Même définition que le bloc « Mes équipes » de l'accueil : sans score,
+  // datée d'aujourd'hui ou plus tard, avec une heure lisible. Une partie passée
+  // restée sans score n'est pas « prochaine » ; elle reste dans la liste des
+  // parties, avec son bouton de report.
+  function prochainePartie(team, today) {
+    return team.matches.filter(function (m) {
+      return m.scoreSoi === null && m.date && m.hour !== null && m.date >= today;
+    })[0] || null;
+  }
+
+  // Bilan sur toutes les parties jouées, toutes phases confondues, comme sur la
+  // vue Par équipe. La forme suit l'ordre chronologique, la plus récente à droite.
+  function bilanDe(team) {
+    var jouees = team.matches.filter(function (m) { return m.scoreSoi !== null; });
+    var marques = 0, encaisses = 0;
+    jouees.forEach(function (m) {
+      if (Number.isFinite(m.scoreSoi)) marques += m.scoreSoi;
+      if (Number.isFinite(m.scoreAdv)) encaisses += m.scoreAdv;
+    });
+    return {
+      marques: marques,
+      encaisses: encaisses,
+      forme: jouees.slice(-FORME_NB).map(function (m) {
+        return m.scoreSoi > m.scoreAdv ? "G" : (m.scoreSoi < m.scoreAdv ? "P" : "N");
+      })
+    };
+  }
+
+  // La poule de l'équipe se lit dans le classement, où on la retrouve par
+  // spécialité, catégorie, club et numéro. Une équipe sans partie de poule n'y
+  // figure pas : null, et la page n'a pas de section classement.
+  function pouleDe(standings, team) {
+    var moi = standings.filter(function (s) {
+      return s.spec === team.spec && s.cat === team.cat &&
+             s.clubCode === team.clubCode && s.numero === team.numero;
+    })[0];
+    if (!moi) return null;
+    var classees = trierClassement(standings.filter(function (s) {
+      return s.spec === moi.spec && s.cat === moi.cat && s.poule === moi.poule;
+    }));
+    return {
+      moi: moi,
+      classees: classees,
+      rang: moi.jouees ? classees.indexOf(moi) + 1 : null
+    };
+  }
+
+  function rangEnClair(p) {
+    if (!p.rang) return "pas encore classée";
+    return (p.rang === 1 ? "1er" : p.rang + "e") + " sur " + p.classees.length + ", poule " + p.moi.poule;
+  }
+
+  // Ordre chronologique ; une partie sans date lisible va en fin de liste.
+  function parDate(a, b) {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    var dd = a.date.getTime() - b.date.getTime();
+    if (dd !== 0) return dd;
+    return (a.hour || 0) * 60 + a.minute - ((b.hour || 0) * 60 + b.minute);
+  }
+
+  // Les parties de la poule qui restent à jouer entre les autres équipes : les
+  // siennes sont déjà dans la liste de ses parties.
+  function resteAJouer(rencontres, clubMap, p, cle) {
+    return rencontres.filter(function (row) {
+      if (!estPhaseDePoules(row) || hasScore(row)) return false;
+      var spec = String(row["Spécialité"] || "").trim();
+      var cat = String(row["Catégorie"] || "").trim();
+      if (spec !== p.moi.spec || cat !== p.moi.cat || String(row.Poule || "").trim() !== p.moi.poule) return false;
+      return teamKey(spec, cat, row.club_rec, row.equip_rec) !== cle &&
+             teamKey(spec, cat, row.club_vis, row.equip_vis) !== cle;
+    }).map(function (row) {
+      var t = parseHeureRenc(row.heure_renc);
+      return {
+        date: effectiveDate(row),
+        hour: t ? t.hour : null,
+        minute: t ? t.minute : 0,
+        equipes: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis)
+      };
+    }).sort(parDate);
+  }
+
+  // ---------------------------------------------------------------
+  // Rendu de l'équipe
+  // ---------------------------------------------------------------
+  function section(titre, sousTitre) {
+    var carte = el("div", { class: "section-card" });
+    var head = el("div", { class: "section-head" });
+    head.appendChild(document.createTextNode(titre + (sousTitre ? " " : "")));
+    if (sousTitre) head.appendChild(el("span", { text: sousTitre }));
+    carte.appendChild(head);
+    return carte;
+  }
+
+  function pluriel(n, mot) {
+    return n + " " + mot + (n > 1 ? "s" : "");
+  }
+
+  function buildEnTete(team, p) {
+    var carte = el("div", { class: "section-card" });
+    var head = el("div", { class: "team-head" });
+    head.appendChild(el("div", { class: "team-name", text: clubLabel(etat.clubMap, team.clubCode, team.numero) }));
+    head.appendChild(el("span", { class: "badge serie-" + team.cat, text: team.serieLabel }));
+    carte.appendChild(head);
+    if (p) {
+      var rang = el("div", { class: "team-rang" });
+      rang.appendChild(el("b", { text: rangEnClair(p) }));
+      carte.appendChild(rang);
+    }
+    return carte;
+  }
+
+  function buildProchaine(team) {
+    var carte = section("Prochaine partie");
+    var m = prochainePartie(team, startOfDay(new Date()));
+    if (!m) {
+      carte.appendChild(el("div", { class: "section-note", text: "plus de partie programmée" }));
+      return carte;
+    }
+    var corps = el("div", { class: "prochaine" });
+    corps.appendChild(el("div", { class: "prochaine-quand", text: formatShortDate(m.date) + " · " + formatHour(m.hour, m.minute) }));
+    corps.appendChild(el("div", { class: "prochaine-adv", text: "contre " + m.adversaire }));
+    var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
+    if (meta) corps.appendChild(el("div", { class: "match-meta", text: meta }));
+    if (canReport(m)) {
+      var btn = el("a", { class: "report-btn", href: "report.html?oid=" + encodeURIComponent(m.oid) });
+      btn.innerHTML = ICON_SVG_REPLAN;
+      btn.appendChild(el("span", { text: "Chercher une date de report" }));
+      corps.appendChild(btn);
+    }
+    carte.appendChild(corps);
+    return carte;
+  }
+
+  function buildBilan(team) {
+    var carte = section("Bilan");
+    var b = bilanDe(team);
+    var ligne = el("div", { class: "bilan" });
+    if (team.jouees) {
+      ligne.appendChild(el("b", { text: pluriel(team.jouees, "partie") + " jouée" + (team.jouees > 1 ? "s" : "") }));
+      var detail = " · " + pluriel(team.gagnees, "gagnée") + ", " + pluriel(team.perdues, "perdue");
+      if (team.nulles) detail += ", " + pluriel(team.nulles, "nulle");
+      if (team.aVenir) detail += " · " + team.aVenir + " à venir";
+      ligne.appendChild(document.createTextNode(detail));
+      ligne.appendChild(el("br"));
+      ligne.appendChild(document.createTextNode("Points marqués " + b.marques + " · encaissés " + b.encaisses));
+    } else {
+      ligne.appendChild(el("b", { text: "aucune partie jouée" }));
+      if (team.aVenir) ligne.appendChild(document.createTextNode(" · " + team.aVenir + " à venir"));
+    }
+    carte.appendChild(ligne);
+
+    if (b.forme.length) {
+      var forme = el("div", { class: "forme" });
+      forme.appendChild(el("span", { class: "forme-label", text: "Forme" }));
+      var SENS = { G: "gagnée", P: "perdue", N: "nulle" };
+      b.forme.forEach(function (r) {
+        forme.appendChild(el("span", { class: "forme-res " + r.toLowerCase(), title: "Partie " + SENS[r], text: r }));
+      });
+      carte.appendChild(forme);
+    }
+    return carte;
+  }
+
+  // Présentée comme une carte de poule de la page Classement, la ligne de
+  // l'équipe en plus. Le trait des qualifiés est toujours tracé : c'est
+  // toujours une table de poule.
+  function buildClassement(p) {
+    var carte = el("div", { class: "poule-card" });
+    var head = el("div", { class: "poule-head" });
+    head.appendChild(el("span", { class: "badge serie-" + p.moi.cat, text: p.moi.serieLabel }));
+    head.appendChild(el("span", { text: p.moi.poule ? ("Poule " + p.moi.poule) : "Sans poule" }));
+    head.appendChild(el("span", { class: "poule-sub", text: pluriel(p.classees.length, "équipe") }));
+    carte.appendChild(head);
+
+    p.classees.forEach(function (t, idx) {
+      var row = buildRankRow(t, idx + 1);
+      if (t === p.moi) row.classList.add("moi");
+      carte.appendChild(row);
+      if (idx + 1 === QUALIFIES_PAR_POULE && p.classees.length > QUALIFIES_PAR_POULE) {
+        var trait = el("div", { class: "cut-line" });
+        trait.appendChild(el("span", { text: "Qualifiés pour les quarts" }));
+        trait.appendChild(el("i", {}));
+        carte.appendChild(trait);
+      }
+    });
+    return carte;
+  }
+
+  function buildParties(team) {
+    var carte = section("Ses parties", pluriel(team.matches.length, "partie"));
+    team.matches.forEach(function (m) { carte.appendChild(buildMatchRow(m)); });
+    return carte;
+  }
+
+  function buildReste(reste) {
+    var carte = section("Reste à jouer dans la poule", pluriel(reste.length, "partie"));
+    reste.forEach(function (r) {
+      var row = el("div", { class: "match-row" });
+      var quand = el("div", { class: "match-when" });
+      if (r.date) {
+        quand.appendChild(el("b", { text: formatShortDate(r.date) }));
+        quand.appendChild(document.createTextNode(formatHour(r.hour, r.minute)));
+      } else {
+        quand.appendChild(el("b", { text: "date à venir" }));
+      }
+      row.appendChild(quand);
+      var main = el("div", { class: "match-main" });
+      main.appendChild(el("div", { class: "match-opp", text: r.equipes }));
+      row.appendChild(main);
+      carte.appendChild(row);
+    });
+    return carte;
+  }
+
+  // Noms seuls, jamais de licence ni de contact (cf. section RGPD du README).
+  function buildComposition(team) {
+    var carte = section("Composition");
     var compo = el("div", { class: "team-roster" + (team.roster ? "" : " absente") });
     compo.appendChild(el("b", { text: team.roster ? "Joueurs : " : "" }));
     compo.appendChild(document.createTextNode(team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue"));
-    block.appendChild(compo);
-
-    team.matches.forEach(function (m) { block.appendChild(buildMatchRow(m)); });
-
-    return block;
+    carte.appendChild(compo);
+    return carte;
   }
 
-  // Les valeurs possibles dépendent des données reçues : les pastilles sont
-  // reconstruites à partir de l'ensemble complet des équipes, jamais des
-  // équipes déjà filtrées. Une valeur inconnue de l'état démarre active.
-  function renderSpecChips(teams) {
-    var container = document.getElementById("filterSpecs");
-    var vues = {};
-    teams.forEach(function (t) { vues[t.spec] = true; });
-    container.innerHTML = "";
-    Object.keys(vues).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
-      .forEach(function (spec) {
-        if (!Object.prototype.hasOwnProperty.call(filterState.specs, spec)) filterState.specs[spec] = true;
-        var chip = el("button", {
-          type: "button",
-          class: "filter-chip" + (filterState.specs[spec] ? " active" : ""),
-          text: SPEC_LABELS[spec] || ("Spécialité " + (spec || "?"))
-        });
-        chip.addEventListener("click", function () {
-          filterState.specs[spec] = !filterState.specs[spec];
-          chip.classList.toggle("active", filterState.specs[spec]);
-          saveFilterState();
-          if (lastTeams) renderResults(lastTeams);
-        });
-        container.appendChild(chip);
-      });
-    saveFilterState();
-  }
-
-  function renderClubOptions(teams) {
-    var select = document.getElementById("filterClub");
-    var clubs = [];
-    teams.forEach(function (t) {
-      if (clubFictif(t.clubCode)) return;
-      if (clubs.indexOf(t.clubNom) === -1) clubs.push(t.clubNom);
-    });
-    clubs.sort(function (a, b) { return a.localeCompare(b, "fr"); });
-
-    // Un club mémorisé qui a disparu des données ne doit pas filtrer dans le
-    // vide : on retombe sur "tous les clubs".
-    if (filterState.club && clubs.indexOf(filterState.club) === -1) {
-      filterState.club = "";
-      saveFilterState();
-    }
-
-    select.innerHTML = "";
-    // Pas de compteur ici : les clubs fictifs sont absents des choix mais
-    // toujours listés dans la page, le nombre ne collerait pas.
-    select.appendChild(el("option", { value: "", text: "Tous les clubs" }));
-    clubs.forEach(function (c) { select.appendChild(el("option", { value: c, text: c })); });
-    select.value = filterState.club;
-  }
-
-  function renderResults(teams) {
+  function renderEquipe(cle) {
     var results = document.getElementById("results");
     results.innerHTML = "";
-
-    var visibles = teams.filter(function (t) {
-      return filterState.specs[t.spec] !== false &&
-        filterState.series[t.cat] &&
-        (!filterState.club || t.clubNom === filterState.club);
-    });
-    if (visibles.length === 0) {
+    var team = cle ? etat.index[cle] : null;
+    if (!team) {
       results.appendChild(el("div", {
         class: "empty-state",
-        text: filterState.club
-          ? (filterState.club + " n'a aucune équipe dans les séries sélectionnées.")
-          : "Aucune équipe ne correspond aux filtres."
+        text: "Choisissez une équipe dans la liste ci-dessus : ses parties, son classement de poule et sa composition s'afficheront ici."
       }));
       return;
     }
 
-    // Les équipes arrivent déjà triées par club puis par numéro : il suffit de
-    // couper à chaque changement de club.
-    var carte = null, clubCourant = null;
-    visibles.forEach(function (team) {
-      if (team.clubNom !== clubCourant) {
-        clubCourant = team.clubNom;
-        var lesSiennes = visibles.filter(function (t) { return t.clubNom === clubCourant; });
-        carte = el("div", { class: "club-card" });
-        var head = el("div", { class: "club-head" });
-        head.appendChild(document.createTextNode(clubCourant + " "));
-        head.appendChild(el("span", { text: lesSiennes.length + " équipe" + (lesSiennes.length > 1 ? "s" : "") }));
-        carte.appendChild(head);
-        results.appendChild(carte);
-      }
-      carte.appendChild(buildTeamBlock(team));
-    });
+    var p = pouleDe(etat.standings, team);
+    results.appendChild(buildEnTete(team, p));
+    results.appendChild(buildProchaine(team));
+    results.appendChild(buildBilan(team));
+    if (p) results.appendChild(buildClassement(p));
+    results.appendChild(buildParties(team));
+    if (p) {
+      var reste = resteAJouer(etat.data.rencontres, etat.clubMap, p, cle);
+      if (reste.length) results.appendChild(buildReste(reste));
+    }
+    // Compositions non chargées : la section disparaît plutôt que d'annoncer
+    // à tort une composition non déclarée.
+    if (!etat.data.compositionsIndisponibles) results.appendChild(buildComposition(team));
   }
+
+  // Les équipes suivies d'abord, puis toutes les équipes par série, triées par
+  // club puis par numéro. Une équipe suivie figure donc deux fois.
+  function renderChoix(cle) {
+    var select = document.getElementById("choixEquipe");
+    select.innerHTML = "";
+    select.appendChild(el("option", { value: "", text: "Choisir une équipe…", disabled: "" }));
+
+    var toutes = Object.keys(etat.index).map(function (k) { return { cle: k, t: etat.index[k] }; })
+      .sort(function (a, b) {
+        return a.t.spec.localeCompare(b.t.spec, "fr", { numeric: true }) ||
+               a.t.cat.localeCompare(b.t.cat, "fr", { numeric: true }) ||
+               a.t.clubNom.localeCompare(b.t.clubNom, "fr") ||
+               a.t.numero.localeCompare(b.t.numero, "fr", { numeric: true });
+      });
+    function nom(e) { return clubLabel(etat.clubMap, e.t.clubCode, e.t.numero); }
+
+    var mes = toutes.filter(function (e) { return etat.suivies.indexOf(e.cle) !== -1; });
+    if (mes.length) {
+      var groupeMes = el("optgroup", { label: "Mes équipes" });
+      mes.forEach(function (e) {
+        groupeMes.appendChild(el("option", { value: e.cle, text: nom(e) + " · " + e.t.serieLabel }));
+      });
+      select.appendChild(groupeMes);
+    }
+
+    var groupe = null, groupeCle = null;
+    toutes.forEach(function (e) {
+      var k = e.t.spec + "|" + e.t.cat;
+      if (k !== groupeCle) {
+        groupeCle = k;
+        groupe = el("optgroup", { label: e.t.serieLabel });
+        select.appendChild(groupe);
+      }
+      groupe.appendChild(el("option", { value: e.cle, text: nom(e) }));
+    });
+    select.value = cle;
+  }
+
+  // Affiche une équipe à partir des données en mémoire : aucun appel réseau.
+  function montrer(cle) {
+    etat.cle = cle;
+    if (cle) ecrireEquipeVue(cle);
+    mettreAJourAdresse(cle);
+    document.getElementById("choixEquipe").value = cle;
+    renderEquipe(cle);
+  }
+
+  var etat = { data: null, clubMap: null, index: null, standings: null, suivies: [], cle: "" };
 
   // ---------------------------------------------------------------
   // Orchestration
@@ -1190,15 +1583,19 @@
     function afficher(data) {
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
-      var clubMap = buildClubMap(data.clubs);
-      lastTeams = buildTeams(data.rencontres, clubMap, {
+      etat.data = data;
+      etat.clubMap = buildClubMap(data.clubs);
+      etat.index = equipesChoisissables(buildTeams(data.rencontres, etat.clubMap, {
         numeroClubMap: buildNumeroClubMap(data.clubs),
         licenceMap: buildLicenceMap(data.licencies),
         engagementsIndex: buildEngagementsIndex(data.engagements)
-      });
-      renderSpecChips(lastTeams);
-      renderClubOptions(lastTeams);
-      renderResults(lastTeams);
+      }));
+      etat.standings = buildStandings(data.rencontres, etat.clubMap);
+      etat.suivies = lireMesEquipes();
+      // Après un rafraîchissement, l'équipe déjà affichée reste à l'écran.
+      var cle = choisirEquipe(etat.index, etat.cle || equipeDansLAdresse(), lireEquipeVue(), etat.suivies);
+      renderChoix(cle);
+      montrer(cle);
     }
 
     // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le
@@ -1230,71 +1627,30 @@
         if (rendu) {
           renderBanner(bannerSlot, "warn", "Données non rafraîchies",
             "Le dernier appel à l'API a échoué (" + message + "). " +
-            "Le récapitulatif affiché date du " + formatTime(holder.fetchedAt) + " et peut être obsolète.");
+            "Les données affichées datent du " + formatTime(holder.fetchedAt) + " et peuvent être obsolètes.");
         } else {
           results.innerHTML = "";
           lastSyncText.textContent = "échec du chargement";
-          renderBanner(bannerSlot, "error", "Impossible d'afficher le récapitulatif",
-            message + " — par sécurité, rien n'est affiché : la liste serait potentiellement incomplète.");
+          renderBanner(bannerSlot, "error", "Impossible d'afficher l'équipe",
+            message + " — par sécurité, rien n'est affiché : les données seraient potentiellement incomplètes.");
         }
       });
     });
   }
 
-  function setupFilters() {
-    loadFilterState();
-    document.querySelectorAll("#filterSeries .filter-chip").forEach(function (chip) {
-      var serie = chip.getAttribute("data-serie");
-      chip.classList.toggle("active", !!filterState.series[serie]);
-      chip.addEventListener("click", function () {
-        filterState.series[serie] = !filterState.series[serie];
-        chip.classList.toggle("active", filterState.series[serie]);
-        saveFilterState();
-        if (lastTeams) renderResults(lastTeams);
-      });
-    });
-
-    var select = document.getElementById("filterClub");
-    select.addEventListener("change", function () {
-      filterState.club = select.value;
-      saveFilterState();
-      if (lastTeams) renderResults(lastTeams);
-    });
-  }
-
+  // ---------------------------------------------------------------
+  // Démarrage
+  // ---------------------------------------------------------------
+  document.getElementById("choixEquipe").addEventListener("change", function (ev) {
+    if (!etat.index) return;
+    montrer(ev.target.value);
+    window.scrollTo({ top: 0 });
+  });
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
   document.getElementById("backToTopBtn").addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
-  setupFilters();
   run(false);
-})();
-</script>
-<script>
-(function () {
-  "use strict";
-
-  // Le pli du bloc Filtres est commun à toutes les pages : replié dans la vue
-  // « par date », il le reste après la bascule vers « par équipe ».
-  var CLE_PLI = "lidfpb_filters_open_v1";
-  var bouton = document.getElementById("filtersToggle");
-  var corps = document.getElementById("filtersBody");
-  if (!bouton || !corps) return;
-
-  function appliquer(ouvert) {
-    bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
-    corps.hidden = !ouvert;
-  }
-
-  var ouvert = true;   // ouvert par défaut : seul un pli explicite le referme
-  try { if (localStorage.getItem(CLE_PLI) === "0") ouvert = false; } catch (e) { /* stockage indisponible : on reste ouvert */ }
-  appliquer(ouvert);
-
-  bouton.addEventListener("click", function () {
-    ouvert = !ouvert;
-    appliquer(ouvert);
-    try { localStorage.setItem(CLE_PLI, ouvert ? "1" : "0"); } catch (e) { /* pas bloquant */ }
-  });
 })();
 </script>
 

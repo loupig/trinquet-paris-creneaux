@@ -11,13 +11,13 @@ créneaux libres à la main.
 
 ## Pages
 
-Sept pages statiques indépendantes, sans build ni dépendance, chacune avec son
+Huit pages statiques indépendantes, sans build ni dépendance, chacune avec son
 CSS et son JS inline. La navigation est celle d'une application mobile
 plutôt que celle d'un site : rien n'est dans le flux de la page, tout flotte
 aux deux extrémités de l'écran, là où se posent les pouces.
 
-En bas, une barre d'onglets à cinq entrées (« Accueil » / « Créneaux » /
-« Programme » / « Équipes » / « Classement »), icône et libellé, en verre dépoli
+En bas, une barre d'onglets à cinq entrées (« Accueil » / « Mon équipe » /
+« Parties » / « Classement » / « Créneaux »), icône et libellé, en verre dépoli
 (`backdrop-filter: blur(20px) saturate(180%)` sur un blanc à 72 %). L'onglet
 courant prend une pastille colorée. Le bouton maison flottant a disparu avec
 elle : l'onglet Accueil fait le même travail.
@@ -25,8 +25,9 @@ elle : l'onglet Accueil fait le même travail.
 En haut, deux groupes flottants du même verre : le lien vers le site de la
 ligue à gauche, en pastille rouge, et à droite le rafraîchissement puis le
 compteur. Le compteur n'est pas un onglet : ce n'est pas une page de
-consultation du championnat, et une cinquième entrée serrerait les libellés
-sur un écran de 390 px. Son icône passe en vert plein quand on est dessus.
+consultation du championnat, et une sixième entrée couperait les libellés
+sur un écran de 390 px, où « Classement » occupe déjà presque toute la largeur
+de son onglet. Son icône passe en vert plein quand on est dessus.
 Le titre du bandeau reste un second chemin vers l'accueil :
 
 - [`index.html`](index.html) — l'accueil, un tableau de bord plutôt qu'un
@@ -122,6 +123,40 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   listée, en fin de table et sans rang : la table doit montrer l'effectif
   complet de la poule dès le début de saison. Un nul vaudrait 2 points, cas
   qui ne devrait jamais survenir puisqu'une équipe atteint 40.
+
+- [`equipe.html`](equipe.html) — « Mon équipe », tout ce qui concerne une
+  seule équipe, sur une page. L'équipe est désignée dans l'adresse
+  (`equipe.html?equipe=<spécialité|catégorie|club|numéro>`, la clé déjà
+  utilisée par la vue Par équipe et par « Mes équipes ») : le lien se partage
+  tel quel. N'importe quelle équipe engagée se consulte, suivie ou non. Une
+  liste déroulante dans l'en-tête permet d'en changer sans recharger les
+  données ; elle propose d'abord les équipes suivies depuis l'accueil, dans un
+  groupe « Mes équipes », puis toutes les équipes par série, triées par club
+  puis par numéro, sans les clubs fictifs. Changer d'équipe remplace l'adresse
+  (`history.replaceState`) sans l'empiler : le bouton Retour ramène à la page
+  d'où l'on vient, pas à l'équipe précédente.
+
+  Ouverte sans équipe dans l'adresse, la page reprend la dernière équipe
+  consultée, mémorisée **dans le navigateur uniquement** (`localStorage`, clé
+  `lidfpb_equipe_vue_v1`), sinon la première équipe suivie, sinon elle se
+  réduit à la liste et à une invitation à choisir. Une clé inconnue, lien
+  d'une saison passée par exemple, est ignorée sans message.
+
+  Dans l'ordre : l'en-tête de l'équipe avec son rang en clair (« 3e sur 6,
+  poule 1 »), sa prochaine partie mise en avant, avec le bouton « Chercher une
+  date de report » quand elle se joue au Trinquet Paris (même définition que
+  sur l'accueil : sans score, à partir d'aujourd'hui), son bilan et sa forme
+  (les cinq dernières parties jouées, de la plus ancienne à la plus récente,
+  toutes phases confondues), la table de sa poule avec sa ligne mise en
+  évidence, toutes ses parties, celles qui restent à jouer dans sa poule entre
+  les autres équipes, et enfin sa composition, noms seuls. Si les compositions
+  ne se chargent pas, la section disparaît plutôt que d'annoncer à tort une
+  composition non déclarée.
+
+  Le classement est une troisième copie du calcul de `classement.html`, après
+  celle de l'accueil : les trois doivent rester identiques. Mêmes appels API
+  et même cache que la vue Par équipe, d'où un affichage immédiat en venant
+  de celle-ci.
 
 - [`report.html`](report.html) — aide au choix d'une date de report. S'ouvre
   depuis le bouton « Chercher une date de report » d'une partie non jouée du
@@ -308,9 +343,10 @@ Drive : seuls `Numéro club`, `Licence`, `nom`, `prenom` sont conservés, et
 uniquement pour les clubs du comité — jamais l'adresse ou la date de
 naissance, à aucun moment exposées par l'API.
 
-Les noms de joueurs apparaissent sur deux pages, `programme.html` (au clic sur
-une rencontre) et `equipes.html` (sous chaque équipe). Dans les deux cas ce
-sont les noms seuls, jointure `rencontres` → `engagements` → `licencies`, sans
+Les noms de joueurs apparaissent sur trois pages, `programme.html` (au clic
+sur une rencontre), `equipes.html` (sous chaque équipe) et `equipe.html`
+(section Composition). Dans les trois cas ce sont les noms seuls, jointure
+`rencontres` → `engagements` → `licencies`, sans
 numéro de licence ni coordonnées. Seule `programme.html` va plus loin, avec les
 raccourcis de contact du responsable d'équipe, dont les numéros sont déjà
 publiés en clair sur le site de la ligue.
