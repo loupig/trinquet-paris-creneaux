@@ -280,90 +280,8 @@
   .match-score.loss { color: var(--loss-text); }
   .match-score.todo { font-size: 10px; font-weight: 600; color: var(--muted); }
 
-  /* --- Une poule --- */
-  .poule-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-  .poule-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    font-weight: 700;
-  }
-  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 11px; }
-
-  /* --- Une ligne de classement ---
-     Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
-     tableau obligerait à défiler horizontalement, ou à des colonnes de 22px
-     illisibles. Le critère de tri est à droite, en gros ; le détail qui le
-     compose est sur la ligne du dessous. */
-  .rank-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    border-top: 1px solid var(--border);
-  }
-  .rank-row:first-of-type { border-top: none; }
-  .rank-pos {
-    flex: 0 0 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-  /* Podium : la couleur porte le rang, pas une icône. Les trois teintes sont
-     assombries par rapport à l'or, l'argent et le bronze usuels, qui passent
-     mal en petit sur fond blanc. */
-  .rank-row.or .rank-pos { color: #8a6d0b; background: #fbf0cd; }
-  .rank-row.argent .rank-pos { color: #5f636b; background: #eceef1; }
-  .rank-row.bronze .rank-pos { color: #8a5524; background: #f6e6d8; }
-  .rank-main { flex: 1 1 auto; min-width: 0; }
-  .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
-  .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
-  .rank-values { flex: 0 0 auto; text-align: right; }
-  .rank-score {
-    font-size: 15px;
-    font-weight: 800;
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
-  }
-  .rank-score.vide { font-size: 13px; color: var(--muted); }
-
-  /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
-     pour une séparation de carte. */
-  .cut-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 14px 5px;
-    border-top: 2px solid var(--accent-border);
-  }
-  .cut-line span {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
-
   /* Le choix de l'équipe vit dans le header : il hérite de son position:sticky
-     et reste accessible pendant tout le défilement, comme la bascule de vue de
-     la page Parties. Une liste déroulante native plutôt que des pastilles : une
+     et reste accessible pendant tout le défilement. Une liste déroulante native plutôt que des pastilles : une
      trentaine d'équipes aux noms longs rempliraient l'écran. */
   header .choix-equipe {
     display: block;
@@ -441,11 +359,39 @@
   .forme-res.g { background: var(--win-text); }
   .forme-res.p { background: var(--loss-text); }
   .forme-res.n { background: var(--muted); }
-
-  /* La ligne de l'équipe dans sa poule : un fond, pas une bordure, pour ne pas
-     changer la hauteur de ligne ni concurrencer le trait des qualifiés. */
-  .rank-row.moi { background: var(--accent-bg); }
-  .rank-row.moi .rank-team { color: var(--accent); }
+  .objectif { padding: 0 14px 12px; font-size: 12px; line-height: 1.45; }
+  /* --- Fiche de l'adversaire : à qui on va se frotter --- */
+  .fiche-adv {
+    margin: 0 14px 10px;
+    padding: 7px 10px;
+    background: var(--bg);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .prochaine .fiche-adv { margin: 10px 0 0; }
+  .fiche-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .fiche-ligne + .fiche-ligne { margin-top: 4px; }
+  .fiche-adv b { color: var(--text); font-weight: 700; margin-right: 2px; }
+  .fiche-adv .forme-res { width: 16px; height: 16px; font-size: 9px; }
+  .contact-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: 2px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    text-decoration: none;
+  }
+  .contact-btn svg { display: block; }
+  .contact-btn.wa { color: #25D366; }
+  .contact-btn.sms, .contact-btn.tel { color: var(--accent); }
+  .contact-btn:active { opacity: 0.7; }
+  .objectif .forme-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
 
   .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
 
@@ -796,8 +742,10 @@
   var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
   var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
 
-  // Clé : "NuméroClub|Catégorie|Equipe" -> licences déclarées à la ligue.
-  // Seules les licences sont retenues : cette page n'affiche aucun contact.
+  // Clé : "NuméroClub|Catégorie|Equipe" -> composition (licences) et contact
+  // du responsable déclarés à la ligue, comme dans programme.html. Le contact
+  // ne sert qu'aux boutons Appeler / SMS / WhatsApp : ni le nom ni le numéro
+  // du responsable ne sont affichés.
   function buildEngagementsIndex(engagementsData) {
     var index = {};
     (engagementsData || []).forEach(function (e) {
@@ -805,18 +753,44 @@
       var licences = LICENCE_COLUMNS
         .map(function (col) { return normalizeLicence(e[col]); })
         .filter(function (v) { return v; });
-      if (licences.length) index[key] = licences;
+      var responsable = String(e["Responsable"] || "").trim();
+      var tel = String(e["Tél1. Resp."] || "").trim() || String(e["Tél2. Resp."] || "").trim();
+      if (licences.length || responsable || tel) {
+        index[key] = { licences: licences, responsable: responsable, tel: tel };
+      }
     });
     return index;
   }
 
-  function getRoster(joinCtx, clubCode, categorie, equipe) {
-    var numeroClub = joinCtx.numeroClubMap[clubCode];
+  function engagementDe(joinCtx, clubCode, categorie, equipe) {
+    var numeroClub = joinCtx.numeroClubMap[String(clubCode || "").trim()];
     if (!numeroClub) return null;
-    var licences = joinCtx.engagementsIndex[[numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
-    if (!licences) return null;
-    var noms = licences.map(function (l) { return joinCtx.licenceMap[l]; }).filter(function (n) { return !!n; });
+    return joinCtx.engagementsIndex[[numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|")] || null;
+  }
+
+  function getRoster(joinCtx, clubCode, categorie, equipe) {
+    var entry = engagementDe(joinCtx, clubCode, categorie, equipe);
+    if (!entry || !entry.licences.length) return null;
+    var noms = entry.licences.map(function (l) { return joinCtx.licenceMap[l]; }).filter(function (n) { return !!n; });
     return noms.length ? noms : null;
+  }
+
+  function getContact(joinCtx, clubCode, categorie, equipe) {
+    var entry = engagementDe(joinCtx, clubCode, categorie, equipe);
+    if (!entry || !entry.tel) return null;
+    return { responsable: entry.responsable, tel: entry.tel };
+  }
+
+  // Numéros saisis dans des formats variés ("06 12 34 56 78", "06.12.34.56.78",
+  // parfois avec indicatif). wa.me exige un format international sans "0"
+  // initial ni séparateurs. Copie de programme.html.
+  function normalizePhoneForWhatsapp(raw) {
+    var digits = String(raw || "").replace(/\D/g, "");
+    if (!digits) return null;
+    if (digits.slice(0, 2) === "33") return digits;
+    if (digits.length === 10 && digits[0] === "0") return "33" + digits.slice(1);
+    if (digits.length === 9) return "33" + digits;
+    return digits.length >= 8 ? digits : null;
   }
 
   function hasScore(row) {
@@ -866,6 +840,7 @@
           clubCode: String(club || "").trim(),
           poule: "",
           roster: getRoster(joinCtx, club, cat, equipe),
+          contact: getContact(joinCtx, club, cat, equipe),
           matches: []
         };
       }
@@ -885,6 +860,9 @@
         minute: t ? t.minute : 0,
         chezSoi: chezSoi,
         adversaire: clubLabel(clubMap, chezSoi ? row.club_vis : row.club_rec, chezSoi ? row.equip_vis : row.equip_rec),
+        // Pour retrouver l'équipe adverse et en faire la fiche.
+        clubAdv: String((chezSoi ? row.club_vis : row.club_rec) || "").trim(),
+        numAdv: String((chezSoi ? row.equip_vis : row.equip_rec) || "").trim(),
         oid: String(row.oid || "").trim(),
         lieu: String(row.lieu_renc || "").trim(),
         meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
@@ -1105,6 +1083,10 @@
   }
 
   var ICON_SVG_REPLAN = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-7.5-7.5V16l3 1.8.75-1.23-2.25-1.32V12.5h-1.5z"/></svg>';
+  // Icônes de contact, copiées de programme.html.
+  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/><path d="M12.05 2C6.53 2 2.05 6.48 2.05 12c0 1.77.46 3.5 1.35 5.02L2 22l5.11-1.34a9.95 9.95 0 0 0 4.94 1.31c5.52 0 10-4.48 10-10S17.57 2 12.05 2zm0 18.16a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.09.81.82-3.01-.19-.3a8.13 8.13 0 0 1-1.25-4.34c0-4.5 3.66-8.16 8.16-8.16 2.18 0 4.23.85 5.77 2.39a8.1 8.1 0 0 1 2.39 5.77c0 4.5-3.66 8.16-8.16 8.16z"/></svg>';
+  var ICON_SVG_SMS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>';
+  var ICON_SVG_TEL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
 
   function buildMatchRow(m) {
     var row = el("div", { class: "match-row" });
@@ -1146,56 +1128,6 @@
       var cls = m.scoreSoi > m.scoreAdv ? "win" : (m.scoreSoi < m.scoreAdv ? "loss" : "");
       row.appendChild(el("div", { class: "match-score " + cls, text: m.scoreSoi + " - " + m.scoreAdv }));
     }
-
-    return row;
-  }
-
-  // Une moyenne se lit mieux à deux décimales : 2.50 et 2.33 se départagent à
-  // l'œil, 2.5 et 2.3 laissent croire à un écart plus net qu'il n'est.
-  function fmtMoyenne(v) {
-    return v.toFixed(2).replace(".", ",");
-  }
-
-  // Le signe est toujours écrit, y compris le plus : un goal average se lit
-  // comme un écart, pas comme un total.
-  function fmtSigne(v) {
-    return (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v);
-  }
-
-  function fmtSigneMoyen(v) {
-    return (v > 0 ? "+" : (v < 0 ? "−" : "")) + fmtMoyenne(Math.abs(v));
-  }
-
-  var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
-
-  function buildRankRow(team, rang) {
-    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") });
-    row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
-
-    var main = el("div", { class: "rank-main" });
-    main.appendChild(el("div", { class: "rank-team", text: team.label }));
-    var detail;
-    if (team.jouees) {
-      detail = team.jouees + " partie" + (team.jouees > 1 ? "s" : "") +
-               " · " + team.gagnees + " G · " + team.perdues + " P" +
-               (team.nulles ? " · " + team.nulles + " N" : "") +
-               " · " + team.points + " pts · " + team.marques + "–" + team.encaisses +
-               " · GA " + fmtSigne(team.ga) + " (" + fmtSigneMoyen(team.gaMoyen) + ")";
-    } else {
-      detail = "aucune partie jouée";
-    }
-    main.appendChild(el("div", { class: "rank-detail", text: detail }));
-    row.appendChild(main);
-
-    // À droite, le seul critère de classement. Le goal average qui départage
-    // est descendu dans le détail : deux nombres empilés à droite laissaient
-    // croire à deux colonnes de tri.
-    var vals = el("div", { class: "rank-values" });
-    vals.appendChild(el("div", {
-      class: "rank-score" + (team.jouees ? "" : " vide"),
-      text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
-    }));
-    row.appendChild(vals);
 
     return row;
   }
@@ -1285,7 +1217,7 @@
 
   // La poule de l'équipe se lit dans le classement, où on la retrouve par
   // spécialité, catégorie, club et numéro. Une équipe sans partie de poule n'y
-  // figure pas : null, et la page n'a pas de section classement.
+  // figure pas : null, et la page ne lui donne ni rang ni objectif.
   function pouleDe(standings, team) {
     var moi = standings.filter(function (s) {
       return s.spec === team.spec && s.cat === team.cat &&
@@ -1305,6 +1237,109 @@
   function rangEnClair(p) {
     if (!p.rang) return "pas encore classée";
     return (p.rang === 1 ? "1er" : p.rang + "e") + " sur " + p.classees.length + ", poule " + p.moi.poule;
+  }
+
+  // ---------------------------------------------------------------
+  // Objectif de qualification
+  // ---------------------------------------------------------------
+  // Au-delà, les 2^N issues prendraient trop de temps sur un téléphone. Une
+  // poule de 7 équipes compte 21 parties : seul le tout début de saison est
+  // concerné.
+  var MAX_PARTIES_ENUMEREES = 20;
+
+  // Toutes les issues (victoire ou défaite) des parties de poule restantes sont
+  // passées en revue, avec le critère de la page Classement : points par partie
+  // jouée. Le goal average ne se prévoit pas : une égalité de moyenne compte
+  // contre l'équipe pour dire « assurée », pour elle pour dire « possible ».
+  // Pour chaque nombre k de victoires de l'équipe : sure[k] si toutes les issues
+  // la qualifient, possible[k] si au moins une le fait, nette[k] si au moins
+  // une le fait sans dépendre d'une égalité.
+  function objectifQualification(rencontres, p) {
+    var equipes = p.classees;
+    var moi = equipes.indexOf(p.moi);
+    var indexDe = {};
+    equipes.forEach(function (t, i) { indexDe[t.clubCode + "|" + t.numero] = i; });
+
+    var restantes = [];
+    rencontres.forEach(function (row) {
+      if (!estPhaseDePoules(row) || hasScore(row)) return;
+      if (String(row["Spécialité"] || "").trim() !== p.moi.spec ||
+          String(row["Catégorie"] || "").trim() !== p.moi.cat ||
+          String(row.Poule || "").trim() !== p.moi.poule) return;
+      var rec = indexDe[String(row.club_rec || "").trim() + "|" + String(row.equip_rec || "").trim()];
+      var vis = indexDe[String(row.club_vis || "").trim() + "|" + String(row.equip_vis || "").trim()];
+      if (rec === undefined || vis === undefined) return;   // club fictif : pas une équipe de la poule
+      restantes.push({ rec: rec, vis: vis });
+    });
+
+    if (!restantes.length) return { statut: "finie", qualifiee: !!p.rang && p.rang <= QUALIFIES_PAR_POULE };
+    if (equipes.length <= QUALIFIES_PAR_POULE) return { statut: "assuree" };
+    if (restantes.length > MAX_PARTIES_ENUMEREES) return { statut: "trop", restantes: restantes.length };
+
+    var n = restantes.filter(function (m) { return m.rec === moi || m.vis === moi; }).length;
+    var sure = [], possible = [], nette = [];
+    for (var k = 0; k <= n; k++) { sure.push(true); possible.push(false); nette.push(false); }
+
+    var pts = new Array(equipes.length), jouees = new Array(equipes.length);
+    var nbIssues = 1 << restantes.length;   // 20 bits au plus : pas de débordement
+    for (var issue = 0; issue < nbIssues; issue++) {
+      for (var e = 0; e < equipes.length; e++) { pts[e] = equipes[e].points; jouees[e] = equipes[e].jouees; }
+      var victoires = 0;
+      for (var i = 0; i < restantes.length; i++) {
+        var m = restantes[i];
+        var recGagne = ((issue >> i) & 1) === 1;
+        pts[m.rec] += recGagne ? PTS_VICTOIRE : PTS_DEFAITE;
+        pts[m.vis] += recGagne ? PTS_DEFAITE : PTS_VICTOIRE;
+        jouees[m.rec] += 1;
+        jouees[m.vis] += 1;
+        if ((m.rec === moi && recGagne) || (m.vis === moi && !recGagne)) victoires += 1;
+      }
+      // Moyennes comparées en produits croisés, en entiers : pas d'arrondi.
+      // Une équipe qui n'a rien joué n'a pas de moyenne et ferme la marche.
+      var devant = 0, egales = 0;
+      for (var u = 0; u < equipes.length; u++) {
+        if (u === moi || !jouees[u]) continue;
+        var ecart = pts[u] * jouees[moi] - pts[moi] * jouees[u];
+        if (ecart > 0) devant += 1;
+        else if (ecart === 0) egales += 1;
+      }
+      if (devant + egales >= QUALIFIES_PAR_POULE) sure[victoires] = false;
+      else nette[victoires] = true;
+      if (devant < QUALIFIES_PAR_POULE) possible[victoires] = true;
+    }
+    return { statut: "calcul", n: n, sure: sure, possible: possible, nette: nette };
+  }
+
+  function messageQualification(o) {
+    if (o.statut === "finie") return o.qualifiee ? "Qualifiée pour les quarts." : "Éliminée.";
+    if (o.statut === "assuree") return "Qualifiée quoi qu'il arrive.";
+    if (o.statut === "trop") {
+      return "Encore " + o.restantes + " parties de poule à jouer : le calcul arrivera après les premières rencontres.";
+    }
+    if (o.sure[0]) return "Qualifiée quoi qu'il arrive.";
+    if (!o.possible[o.n]) {
+      return o.n
+        ? "Éliminée : même en gagnant " + (o.n > 1 ? "ses " + o.n + " parties restantes" : "sa dernière partie") + ", la 4e place est hors d'atteinte."
+        : "Éliminée.";
+    }
+    var x = o.sure.indexOf(true), z = o.possible.indexOf(true);
+    var ga = o.nette[z] ? "" : ", au goal average";
+    // Tout gagner sans garantie : une seule phrase plutôt que deux redites.
+    if (x < 0 && z === o.n && o.n) {
+      return "Il lui faut gagner " + (o.n > 1 ? "ses " + o.n + " parties" : "sa dernière partie") +
+             ", et la qualification dépendra encore des autres résultats" + ga + ".";
+    }
+    var phrases = [];
+    if (x >= 0) {
+      phrases.push(pluriel(x, "victoire") + " sur " + o.n + (x > 1 ? " assurent" : " assure") + " la qualification.");
+    } else if (o.n) {
+      phrases.push("Même en gagnant " + (o.n > 1 ? "ses " + o.n + " parties" : "sa dernière partie") + ", la qualification dépendra des autres résultats.");
+    }
+    if (x < 0 || z < x) {
+      var debut = z === 0 ? (o.n ? "Sans victoire" : "Sans plus jouer") : "Dès " + pluriel(z, "victoire");
+      phrases.push(debut + ", elle reste possible selon les autres résultats" + ga + ".");
+    }
+    return phrases.join(" ");
   }
 
   // Ordre chronologique ; une partie sans date lisible va en fin de liste.
@@ -1377,6 +1412,64 @@
     return carte;
   }
 
+  var SENS_RESULTAT = { G: "gagnée", P: "perdue", N: "nulle" };
+
+  function ajouterPastilles(conteneur, forme) {
+    forme.forEach(function (r) {
+      conteneur.appendChild(el("span", { class: "forme-res " + r.toLowerCase(), title: "Partie " + SENS_RESULTAT[r], text: r }));
+    });
+  }
+
+  // Ni le nom ni le numéro du responsable ne sont affichés : seulement les
+  // boutons, et WhatsApp s'ouvre sur une conversation vide. Sans numéro
+  // exploitable, pas de boutons.
+  function buildContacts(adv) {
+    var numero = adv.contact ? normalizePhoneForWhatsapp(adv.contact.tel) : null;
+    if (!numero) return null;
+    var qui = "le responsable de " + clubLabel(etat.clubMap, adv.clubCode, adv.numero);
+    var ligne = el("div", { class: "fiche-ligne" });
+    ligne.appendChild(el("span", { text: "Responsable" }));
+    [["tel", ICON_SVG_TEL, "tel:+" + numero, "Appeler " + qui],
+     ["sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS à " + qui],
+     ["wa", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp à " + qui]].forEach(function (c) {
+      var a = el("a", { class: "contact-btn " + c[0], href: c[2], title: c[3], "aria-label": c[3] });
+      if (c[0] === "wa") { a.target = "_blank"; a.rel = "noopener"; }
+      a.innerHTML = c[1];
+      ligne.appendChild(a);
+    });
+    return ligne;
+  }
+
+  // Fiche de l'adversaire d'une partie à venir : son rang, sa forme, ses
+  // joueurs et de quoi joindre son responsable. Un adversaire pas encore
+  // désigné (club fictif) n'est pas parmi les équipes choisissables : pas de
+  // fiche.
+  function buildFicheAdversaire(team, m) {
+    var adv = etat.index[teamKey(team.spec, team.cat, m.clubAdv, m.numAdv)];
+    if (!adv) return null;
+    var fiche = el("div", { class: "fiche-adv" });
+    var p = pouleDe(etat.standings, adv), b = bilanDe(adv);
+
+    var ligne = el("div", { class: "fiche-ligne" });
+    if (p) ligne.appendChild(el("b", { text: rangEnClair(p) }));
+    if (b.forme.length) {
+      ligne.appendChild(el("span", { text: (p ? "· " : "") + "Forme" }));
+      ajouterPastilles(ligne, b.forme);
+    }
+    if (!p && !b.forme.length) ligne.appendChild(el("span", { text: "aucune partie jouée" }));
+    fiche.appendChild(ligne);
+
+    if (!etat.data.compositionsIndisponibles) {
+      fiche.appendChild(el("div", {
+        class: "fiche-ligne",
+        text: adv.roster ? "Joueurs : " + adv.roster.join(", ") : "Composition non déclarée à la ligue"
+      }));
+    }
+    var contacts = buildContacts(adv);
+    if (contacts) fiche.appendChild(contacts);
+    return fiche;
+  }
+
   function buildProchaine(team) {
     var carte = section("Prochaine partie");
     var m = prochainePartie(team, startOfDay(new Date()));
@@ -1395,11 +1488,13 @@
       btn.appendChild(el("span", { text: "Chercher une date de report" }));
       corps.appendChild(btn);
     }
+    var fiche = buildFicheAdversaire(team, m);
+    if (fiche) corps.appendChild(fiche);
     carte.appendChild(corps);
     return carte;
   }
 
-  function buildBilan(team) {
+  function buildBilan(team, p) {
     var carte = section("Bilan");
     var b = bilanDe(team);
     var ligne = el("div", { class: "bilan" });
@@ -1420,43 +1515,27 @@
     if (b.forme.length) {
       var forme = el("div", { class: "forme" });
       forme.appendChild(el("span", { class: "forme-label", text: "Forme" }));
-      var SENS = { G: "gagnée", P: "perdue", N: "nulle" };
-      b.forme.forEach(function (r) {
-        forme.appendChild(el("span", { class: "forme-res " + r.toLowerCase(), title: "Partie " + SENS[r], text: r }));
-      });
+      ajouterPastilles(forme, b.forme);
       carte.appendChild(forme);
     }
-    return carte;
-  }
 
-  // Présentée comme une carte de poule de la page Classement, la ligne de
-  // l'équipe en plus. Le trait des qualifiés est toujours tracé : c'est
-  // toujours une table de poule.
-  function buildClassement(p) {
-    var carte = el("div", { class: "poule-card" });
-    var head = el("div", { class: "poule-head" });
-    head.appendChild(el("span", { class: "badge serie-" + p.moi.cat, text: p.moi.serieLabel }));
-    head.appendChild(el("span", { text: p.moi.poule ? ("Poule " + p.moi.poule) : "Sans poule" }));
-    head.appendChild(el("span", { class: "poule-sub", text: pluriel(p.classees.length, "équipe") }));
-    carte.appendChild(head);
-
-    p.classees.forEach(function (t, idx) {
-      var row = buildRankRow(t, idx + 1);
-      if (t === p.moi) row.classList.add("moi");
-      carte.appendChild(row);
-      if (idx + 1 === QUALIFIES_PAR_POULE && p.classees.length > QUALIFIES_PAR_POULE) {
-        var trait = el("div", { class: "cut-line" });
-        trait.appendChild(el("span", { text: "Qualifiés pour les quarts" }));
-        trait.appendChild(el("i", {}));
-        carte.appendChild(trait);
-      }
-    });
+    if (p) {
+      var objectif = el("div", { class: "objectif" });
+      objectif.appendChild(el("span", { class: "forme-label", text: "Pour sortir des poules" }));
+      objectif.appendChild(el("div", { text: messageQualification(objectifQualification(etat.data.rencontres, p)) }));
+      carte.appendChild(objectif);
+    }
     return carte;
   }
 
   function buildParties(team) {
     var carte = section("Ses parties", pluriel(team.matches.length, "partie"));
-    team.matches.forEach(function (m) { carte.appendChild(buildMatchRow(m)); });
+    team.matches.forEach(function (m) {
+      carte.appendChild(buildMatchRow(m));
+      if (m.scoreSoi !== null) return;
+      var fiche = buildFicheAdversaire(team, m);
+      if (fiche) carte.appendChild(fiche);
+    });
     return carte;
   }
 
@@ -1495,8 +1574,7 @@
     var p = pouleDe(etat.standings, team);
     results.appendChild(buildEnTete(team, p));
     results.appendChild(buildProchaine(team));
-    results.appendChild(buildBilan(team));
-    if (p) results.appendChild(buildClassement(p));
+    results.appendChild(buildBilan(team, p));
     results.appendChild(buildParties(team));
     if (p) {
       var reste = resteAJouer(etat.data.rencontres, etat.clubMap, p, cle);

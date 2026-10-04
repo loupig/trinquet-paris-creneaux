@@ -124,14 +124,38 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   avant, avec le bouton « Chercher une date de report » quand elle se joue au
   Trinquet Paris (même définition que sur l'accueil : sans score, à partir
   d'aujourd'hui), son bilan et sa forme (les cinq dernières parties jouées, de
-  la plus ancienne à la plus récente, toutes phases confondues), la table de sa
-  poule avec sa ligne mise en évidence, toutes ses parties, et celles qui
-  restent à jouer dans sa poule entre les autres équipes. Si les compositions
-  ne se chargent pas, la ligne disparaît de l'en-tête plutôt que d'annoncer à
-  tort une composition non déclarée.
+  la plus ancienne à la plus récente, toutes phases confondues), toutes ses
+  parties, et celles qui restent à jouer dans sa poule entre les autres
+  équipes. Si les compositions ne se chargent pas, la ligne disparaît de
+  l'en-tête plutôt que d'annoncer à tort une composition non déclarée. La
+  table complète de la poule n'y figure pas : elle est sur la page Classement.
+
+  Sous le bilan, « Pour sortir des poules » dit ce qu'il faut à l'équipe pour
+  finir parmi les quatre premiers : « qualifiée quoi qu'il arrive »,
+  « éliminée », ou le nombre de victoires qui assure la qualification et celui
+  qui la laisse possible. Le calcul passe en revue toutes les issues (victoire
+  ou défaite) des parties de poule restantes, celles de l'équipe comme celles
+  des autres, au critère de la page Classement : points par partie jouée. Le
+  goal average ne se prévoit pas, donc une égalité de moyenne compte contre
+  l'équipe pour dire « assurée », pour elle pour dire « possible », avec la
+  mention « au goal average ». Un nombre de victoires ne dit pas lesquelles :
+  battre un concurrent direct compte plus, mais un seuil « assure » vaut pour
+  n'importe quelles victoires. Au-delà de 20 parties restantes (2^20 issues),
+  le calcul serait trop long sur un téléphone : la ligne donne seulement le
+  nombre de parties à jouer. Une poule en compte 21 au plus, seul le tout début
+  de saison est concerné. Poule terminée : « qualifiée » ou « éliminée »,
+  d'après le classement final.
+
+  Sous chaque partie à venir, et dans la carte « Prochaine partie », une fiche
+  de l'adversaire : son rang dans sa poule, sa forme et ses joueurs, puis trois
+  boutons pour joindre son responsable (Appeler, SMS, WhatsApp, ce dernier sur
+  une conversation vide). Ni le nom ni le numéro du responsable ne sont
+  affichés, seulement les boutons ; sans numéro exploitable, pas de boutons.
+  Un adversaire encore « à désigner » n'a pas de fiche.
 
   Le classement est une troisième copie du calcul de `classement.html`, après
-  celle de l'accueil : les trois doivent rester identiques. Elle appelle
+  celle de l'accueil : les trois doivent rester identiques. Il sert au rang, à
+  l'objectif de qualification et aux fiches des adversaires. La page appelle
   `rencontres`, `clubs`, `engagements` et `licencies`, avec le cache partagé
   par toutes les pages.
 
@@ -324,9 +348,11 @@ Les noms de joueurs apparaissent sur deux pages, `programme.html` (au clic
 sur une rencontre) et `equipe.html` (en tête de page). Dans les deux cas
 ce sont les noms seuls, jointure
 `rencontres` → `engagements` → `licencies`, sans
-numéro de licence ni coordonnées. Seule `programme.html` va plus loin, avec les
-raccourcis de contact du responsable d'équipe, dont les numéros sont déjà
-publiés en clair sur le site de la ligue.
+numéro de licence ni coordonnées. Les deux pages ont aussi des raccourcis
+de contact du responsable d'équipe (Appeler, SMS, WhatsApp), dont les numéros
+sont déjà publiés en clair sur le site de la ligue : `programme.html` pour les
+deux équipes d'une rencontre, `equipe.html` pour les adversaires à venir, sans
+afficher ni le nom ni le numéro du responsable.
 
 ## Backend (Apps Script)
 
