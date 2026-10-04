@@ -82,11 +82,15 @@ En mode « Échanges », le graphe SHALL tracer une barre par point, à partir d
 - **THEN** sa barre touche le haut du graphe, les autres restent lisibles, et le résumé compte une barre au-dessus de l'échelle
 
 ### Requirement: Résumé du déroulé
-Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros écart de la partie, l'équipe qui en a bénéficié et le point où il est atteint pour la première fois, ainsi que le nombre de retours à égalité s'il y en a.
+Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros écart de la partie, l'équipe qui en a bénéficié et le point où il est atteint pour la première fois, ainsi que le nombre de retours à égalité s'il y en a. Quand l'écart n'a jamais dépassé un point, le résumé indique « Jamais plus d'un point d'écart. ».
 
 #### Scenario: Plus gros écart
 - **WHEN** le plus gros écart de la partie, six points en faveur de l'équipe 1, est atteint pour la première fois au 18e point joué
 - **THEN** le résumé indique un plus gros écart de 6 points pour l'équipe 1, au 18e point joué
+
+#### Scenario: Partie serrée de bout en bout
+- **WHEN** à 2-1, l'écart n'a jamais dépassé un point
+- **THEN** le résumé indique « Jamais plus d'un point d'écart. »
 
 ### Requirement: Partie conservée sur l'appareil
 La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, points avec leur horodatage, et mode du graphe. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.

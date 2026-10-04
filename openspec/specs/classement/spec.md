@@ -43,7 +43,7 @@ En découpage par poule, une carte de plus de quatre équipes SHALL porter, sous
 - **THEN** aucun trait n'apparaît
 
 ### Requirement: Filtres du classement
-La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un filtre par série (Série 1, Série 2), tous actifs par défaut. Ces filtres masquent des cartes entières et ne changent jamais le rang d'une équipe. Le choix de spécialité et de série MUST être retrouvé d'une visite à l'autre sur le même navigateur, sans être envoyé nulle part. Quand aucune carte ne reste, la page affiche « Aucune équipe ne correspond aux filtres. ».
+La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un filtre par série (Série 1, Série 2), tous actifs par défaut. Ces filtres masquent des cartes entières et ne changent jamais le rang d'une équipe. Le choix de spécialité, de série et de découpage MUST être retrouvé d'une visite à l'autre sur le même navigateur, sans être envoyé nulle part. Quand aucune carte ne reste, la page affiche « Aucune équipe ne correspond aux filtres. ».
 
 #### Scenario: Une seule série
 - **WHEN** le visiteur désactive « Série 1 »
@@ -52,3 +52,7 @@ La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un
 #### Scenario: Retour sur la page
 - **WHEN** le visiteur a désactivé « Série 1 » puis revient le lendemain
 - **THEN** la série 1 est toujours masquée
+
+#### Scenario: Découpage retrouvé
+- **WHEN** le visiteur a choisi « Général » puis recharge la page
+- **THEN** la page s'affiche en classement général

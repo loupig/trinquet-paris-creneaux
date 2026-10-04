@@ -867,7 +867,7 @@
     for (var k = 1; k < ecart.length; k++) {
       if (ecart[k] !== 0 && ecart[k - 1] !== 0 && (ecart[k] > 0) !== (ecart[k - 1] > 0)) changements += 1;
     }
-    var resume = maxEcart === 0
+    var resume = Math.abs(maxEcart) <= 1
       ? "Jamais plus d'un point d'écart."
       : "Plus gros écart : " + Math.abs(maxEcart) + " point" + (Math.abs(maxEcart) > 1 ? "s" : "") +
         " pour " + (state.teams[maxEcart > 0 ? 0 : 1].name || "l'équipe " + (maxEcart > 0 ? 1 : 2)) +
