@@ -214,6 +214,31 @@ prend son sens le jour où un autre championnat y entre, ce que rien n'empêche.
   resynchroniser. Les parties enregistrées avant l'horodatage se relisent sans
   durées plutôt que d'être perdues.
 
+## Installation sur l'écran d'accueil
+
+Le site s'installe comme une application (PWA) : une icône sur l'écran
+d'accueil, et une ouverture en plein écran, sans barre de navigateur. Sur
+Android, Chrome propose « Installer l'application » ; sur iPhone, il n'y a
+pas de bouton, il faut passer par Partager → Sur l'écran d'accueil.
+
+- [`manifest.webmanifest`](manifest.webmanifest) donne le nom (« LIDFPB »
+  sous l'icône), la page de départ (`./index.html`) et la portée (`./`) en
+  chemins relatifs, le site étant servi sous `/trinquet-paris-creneaux/`.
+- [`icons/`](icons/) : une ikurriña carrée, déclinée du favicon, en 192 et
+  512 px (la 512 sert aussi de version « maskable », le motif supportant
+  d'être recadré en rond par Android) et en 180 px pour l'iPhone
+  (`apple-touch-icon`), qui ignore les icônes du manifeste.
+- Chaque page porte le lien vers le manifeste, la couleur de thème, l'icône
+  iPhone et `viewport-fit=cover` : sans ce dernier, `env(safe-area-inset-*)`
+  vaut 0 et la barre d'onglets passerait sous la barre de geste de l'iPhone
+  en mode installé. `equipes.html`, simple redirection, n'en a pas besoin.
+
+Pas de service worker, donc pas de fonctionnement hors connexion : l'appli
+installée a besoin du réseau comme le site. C'est un choix, pour ne jamais
+laisser un joueur bloqué sur une ancienne version mise en cache. En mode
+installé, il n'y a plus de bouton Retour du navigateur : la barre d'onglets
+en tient lieu.
+
 ## Fonctionnement
 
 Tout est dans un seul fichier autonome, [`creneaux.html`](creneaux.html) (HTML +
