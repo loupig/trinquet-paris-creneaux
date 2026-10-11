@@ -276,6 +276,7 @@
   .match-when b { display: block; color: var(--text); font-weight: 700; }
   .match-main { flex: 1 1 auto; min-width: 0; }
   .match-opp { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .lien-equipe { color: var(--accent); text-decoration: none; }
   .match-meta { font-size: 10px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
   .match-score {
     flex: 0 0 auto;
@@ -1095,7 +1096,21 @@
   var ICON_SVG_SMS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>';
   var ICON_SVG_TEL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
 
-  function buildMatchRow(m) {
+  // « contre » suivi du nom de l'adversaire, en lien vers sa propre page quand
+  // c'est une équipe choisissable. Un vrai lien plutôt qu'un changement sur
+  // place : Retour ramène à l'équipe d'où l'on vient.
+  function contreAdversaire(classe, team, m) {
+    var ligne = el("div", { class: classe, text: "contre " });
+    var cle = teamKey(team.spec, team.cat, m.clubAdv, m.numAdv);
+    if (etat.index[cle]) {
+      ligne.appendChild(el("a", { class: "lien-equipe", href: "equipe.html?equipe=" + encodeURIComponent(cle), text: m.adversaire }));
+    } else {
+      ligne.appendChild(document.createTextNode(m.adversaire));
+    }
+    return ligne;
+  }
+
+  function buildMatchRow(team, m) {
     var row = el("div", { class: "match-row" });
 
     var replan = el("div", { class: "match-replan" });
@@ -1124,7 +1139,7 @@
     // Pas de "reçoit" / "se déplace" : en Île-de-France tout se joue sur les
     // mêmes trinquets, la réception ne change rien pour les joueurs. Le champ
     // chezSoi ne sert plus qu'à orienter le score du bon côté.
-    main.appendChild(el("div", { class: "match-opp", text: "contre " + m.adversaire }));
+    main.appendChild(contreAdversaire("match-opp", team, m));
     var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
     if (meta) main.appendChild(el("div", { class: "match-meta", text: meta }));
     row.appendChild(main);
@@ -1486,7 +1501,7 @@
     }
     var corps = el("div", { class: "prochaine" });
     corps.appendChild(el("div", { class: "prochaine-quand", text: formatShortDate(m.date) + " · " + formatHour(m.hour, m.minute) }));
-    corps.appendChild(el("div", { class: "prochaine-adv", text: "contre " + m.adversaire }));
+    corps.appendChild(contreAdversaire("prochaine-adv", team, m));
     var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
     if (meta) corps.appendChild(el("div", { class: "match-meta", text: meta }));
     if (canReport(m)) {
@@ -1538,7 +1553,7 @@
   function buildParties(team) {
     var carte = section("Ses parties", pluriel(team.matches.length, "partie"));
     team.matches.forEach(function (m) {
-      carte.appendChild(buildMatchRow(m));
+      carte.appendChild(buildMatchRow(team, m));
       if (m.scoreSoi !== null) return;
       var fiche = buildFicheAdversaire(team, m);
       if (fiche) carte.appendChild(fiche);

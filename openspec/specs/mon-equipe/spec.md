@@ -77,6 +77,17 @@ La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, 
 - **WHEN** une partie de l'équipe n'a pas de date lisible
 - **THEN** elle figure en fin de liste, avec « date à venir »
 
+### Requirement: Aller à l'équipe adverse
+Dans la carte « Prochaine partie » et dans la liste des parties, le nom de l'adversaire SHALL être un lien vers la page Mon équipe de cet adversaire. Le lien ouvre une nouvelle page, pour que le bouton Retour ramène à l'équipe d'où l'on vient. Un adversaire pas encore désigné (club fictif de la ligue, « Equipe à désigner ») n'a pas de lien.
+
+#### Scenario: Consulter un adversaire
+- **WHEN** le visiteur, sur la page de son équipe, touche le nom d'un adversaire dans la liste des parties
+- **THEN** la page Mon équipe s'affiche pour cet adversaire, et Retour ramène à son équipe
+
+#### Scenario: Adversaire à désigner
+- **WHEN** une partie de phase finale oppose l'équipe à « Equipe à désigner »
+- **THEN** ce nom n'est pas un lien
+
 ### Requirement: Bilan et forme
 La page SHALL donner le bilan de l'équipe sur toutes ses parties jouées, toutes phases confondues : nombre de parties jouées, gagnées, perdues, à venir, et points marqués et encaissés. Elle SHALL aussi montrer sa forme : le résultat (V pour victoire, D pour défaite) de ses cinq dernières parties jouées, de la plus ancienne à la plus récente. Une équipe qui n'a encore rien joué est indiquée « aucune partie jouée », sans forme.
 
