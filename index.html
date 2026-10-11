@@ -353,6 +353,26 @@
   }
   .progress.mini + .split-row { margin-top: 8px; }
   .split-count { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+  /* Sous une série : une ligne pour les poules, une pour les phases finales. */
+  .split-row + .split-row { margin-top: 6px; }
+  .split-row.phase { font-weight: 500; color: var(--muted); padding-left: 22px; }
+  .progress.mini.phase { margin-left: 24px; }
+  .finales-info {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 8px 0 0 12px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+  }
+  .finales-info svg { flex: 0 0 auto; }
+  .finales-info + .split-row { margin-top: 11px; }
+  .finales-info + .split-spec { margin-top: 13px; }
 
   .skeleton-card {
     background: var(--card-bg);
@@ -404,7 +424,7 @@
   <div id="tiles"></div>
 
   <footer>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.04</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.11</p>
   </footer>
 </main>
 
@@ -966,16 +986,35 @@
   }
 
   // Avancement de la saison, ventilé sur deux niveaux : la spécialité, puis
-  // la catégorie (que la ligue nomme aussi "série").
+  // la catégorie (que la ligue nomme aussi "série"). Chaque série sépare la
+  // phase de poules des phases finales, et garde les jours de ses 1/4, 1/2
+  // et finale pour l'encart de rappel. Les barrages (phases 2 à 6) n'entrent
+  // que dans le total de la série.
+  var DATES_FINALES = [["10", "1/4"], ["11", "1/2"], ["12", "finale"]];
+
   function parSpecialite(rencontres) {
     var specs = {};
     rencontres.forEach(function (row) {
       var spec = String(row["Spécialité"] || "").trim();
       var cat = String(row["Catégorie"] || "").trim();
       var s = specs[spec] || (specs[spec] = { spec: spec, label: SPEC_LABELS[spec] || ("Spécialité " + (spec || "?")), cats: {} });
-      var c = s.cats[cat] || (s.cats[cat] = { cat: cat, label: SERIE_LABELS[cat] || ("Catégorie " + (cat || "?")), total: 0, jouees: 0 });
+      var c = s.cats[cat] || (s.cats[cat] = {
+        cat: cat, label: SERIE_LABELS[cat] || ("Catégorie " + (cat || "?")), total: 0, jouees: 0,
+        poules: { total: 0, jouees: 0 }, finales: { total: 0, jouees: 0 }, jours: {}
+      });
+      var phase = String(row.Phase || "").trim();
+      var groupe = phase === "1" ? c.poules : (PHASES_FINALES.indexOf(phase) !== -1 ? c.finales : null);
       c.total += 1;
-      if (hasScore(row)) c.jouees += 1;
+      if (groupe) groupe.total += 1;
+      if (hasScore(row)) {
+        c.jouees += 1;
+        if (groupe) groupe.jouees += 1;
+      }
+      var d = effectiveDate(row);
+      if (d) {
+        var jours = c.jours[phase] || (c.jours[phase] = []);
+        if (!jours.some(function (j) { return j.getTime() === d.getTime(); })) jours.push(d);
+      }
     });
 
     return Object.keys(specs).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
@@ -995,6 +1034,27 @@
 
   function formatShortDate(d) {
     return DAY_ABBR[d.getDay()] + " " + d.getDate() + " " + MONTH_ABBR[d.getMonth()];
+  }
+
+  function formatJourCourt(d) {
+    return DAY_ABBR[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth() + 1);
+  }
+
+  // Encart des dates de 1/4, 1/2 et finale d'une série, sans les créneaux.
+  // Il reste affiché jusqu'au jour de la dernière de ces dates inclus.
+  function buildFinalesInfo(c, today) {
+    var derniere = null;
+    var parties = DATES_FINALES.map(function (phase) {
+      var jours = (c.jours[phase[0]] || []).slice().sort(function (a, b) { return a - b; });
+      if (!jours.length) return null;
+      if (!derniere || jours[jours.length - 1] > derniere) derniere = jours[jours.length - 1];
+      return phase[1] + " " + jours.map(formatJourCourt).join(" et ");
+    }).filter(function (partie) { return !!partie; });
+    if (!parties.length || derniere < today) return null;
+    var info = el("div", { class: "finales-info" });
+    info.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.01"/></svg>';
+    info.appendChild(el("span", { text: "Phases finales : " + parties.join(" · ") }));
+    return info;
   }
 
   function formatHour(hour, minute) {
@@ -1180,14 +1240,23 @@
       spec.categories.forEach(function (c) {
         var ligne = el("div", { class: "split-row" });
         ligne.appendChild(el("div", { text: c.label }));
-        ligne.appendChild(el("div", { class: "split-count", text: c.jouees + " / " + c.total }));
         split.appendChild(ligne);
-        var mini = el("div", { class: "progress mini" });
-        mini.appendChild(el("i", {
-          class: "serie-" + c.cat,
-          style: "width:" + (c.total ? Math.round(c.jouees / c.total * 100) : 0) + "%"
-        }));
-        split.appendChild(mini);
+        [["Poules", c.poules], ["Phases finales", c.finales]].forEach(function (g) {
+          var compte = g[1];
+          if (!compte.total) return;
+          var sous = el("div", { class: "split-row phase" });
+          sous.appendChild(el("div", { text: g[0] }));
+          sous.appendChild(el("div", { class: "split-count", text: compte.jouees + " / " + compte.total }));
+          split.appendChild(sous);
+          var mini = el("div", { class: "progress mini phase" });
+          mini.appendChild(el("i", {
+            class: "serie-" + c.cat,
+            style: "width:" + Math.round(compte.jouees / compte.total * 100) + "%"
+          }));
+          split.appendChild(mini);
+        });
+        var info = buildFinalesInfo(c, today);
+        if (info) split.appendChild(info);
       });
     });
     t3.body.appendChild(split);
