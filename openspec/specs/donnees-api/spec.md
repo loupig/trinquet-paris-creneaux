@@ -70,6 +70,17 @@ Les pages qui permettent de joindre le responsable d'une équipe SHALL le faire 
 - **WHEN** un visiteur consulte une page qui propose de joindre un responsable
 - **THEN** aucun numéro de téléphone n'est lisible dans la page
 
+### Requirement: Phases finales à désigner tant que les poules ne sont pas finies
+Tant qu'une série a encore au moins une partie de poule sans score, le site SHALL traiter les équipes de ses phases finales (1/32e à finale) comme « Equipe à désigner », même si la ligue les a déjà renseignées : sur toutes les pages, ces parties MUST NOT afficher de nom d'équipe, de joueurs, de contact ni de lien, et elles MUST NOT figurer parmi les parties des équipes renseignées. Les dates, heures et lieux restent affichés.
+
+#### Scenario: Quart renseigné avant la fin des poules
+- **WHEN** la ligue a inscrit deux équipes sur un 1/4 de la série 1 et qu'une partie de poule de la série 1 n'a pas encore de score
+- **THEN** ce 1/4 s'affiche entre « Equipe à désigner » et « Equipe à désigner », sans joueurs, et n'apparaît pas dans la page Mon équipe de ces deux équipes
+
+#### Scenario: Poules terminées
+- **WHEN** toutes les parties de poule de la série ont un score
+- **THEN** les équipes renseignées sur ses phases finales s'affichent normalement
+
 ### Requirement: Préférences gardées sur l'appareil
 Ce que le site retient d'une visite à l'autre (équipes suivies, dernière équipe consultée, filtres, état des blocs repliables, partie du compteur, données de la ligue) SHALL rester dans le navigateur du visiteur. Il n'y a pas de compte, rien de tout cela n'est envoyé, et ces préférences ne suivent pas le visiteur d'un appareil à l'autre.
 

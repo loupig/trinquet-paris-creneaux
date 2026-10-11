@@ -566,6 +566,33 @@
     });
   }
 
+  // Tant qu'une série a encore une partie de poule sans score, les équipes de
+  // ses phases finales ne sont pas connues : celles que la ligue y inscrit
+  // d'avance sont remplacées par son club fictif « Equipe à désigner », comme
+  // une phase pas encore tirée. Plus de nom, de joueurs ni de contact, et la
+  // partie sort du programme des équipes inscrites à tort. "toutes" sert à
+  // savoir où en sont les poules quand "rencontres" est déjà filtré par lieu.
+  var PHASES_A_DESIGNER = ["7", "8", "9", "10", "11", "12"];
+  var CLUB_A_DESIGNER = "9998";
+
+  function masquerFinalesPrematurees(rencontres, toutes) {
+    function serie(row) {
+      return [row["Compétition"], row["Spécialité"], row["Catégorie"]]
+        .map(function (v) { return String(v || "").trim(); }).join("|");
+    }
+    function phase(row) { return String(row.Phase || "").trim(); }
+    var enPoules = {};
+    (toutes || rencontres).forEach(function (row) {
+      var joue = String(row.score_cr == null ? "" : row.score_cr).trim() !== "" &&
+                 String(row.score_cv == null ? "" : row.score_cv).trim() !== "";
+      if (phase(row) === "1" && !joue) enPoules[serie(row)] = true;
+    });
+    return rencontres.map(function (row) {
+      if (!enPoules[serie(row)] || PHASES_A_DESIGNER.indexOf(phase(row)) === -1) return row;
+      return Object.assign({}, row, { club_rec: CLUB_A_DESIGNER, equip_rec: "1", club_vis: CLUB_A_DESIGNER, equip_vis: "1" });
+    });
+  }
+
   function fetchLiveData(source) {
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
@@ -576,7 +603,7 @@
         return SERIE_LABELS.hasOwnProperty(cat) && row.oid;
       });
       return {
-        rencontres: rencontres,
+        rencontres: masquerFinalesPrematurees(rencontres),
         clubs: results[1].data,
         fetchedAt: Date.now(),
         lastSync: results[0].lastSync || null

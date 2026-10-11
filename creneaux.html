@@ -849,10 +849,40 @@
     });
   }
 
+  // Tant qu'une série a encore une partie de poule sans score, les équipes de
+  // ses phases finales ne sont pas connues : celles que la ligue y inscrit
+  // d'avance sont remplacées par son club fictif « Equipe à désigner », comme
+  // une phase pas encore tirée. Plus de nom, de joueurs ni de contact, et la
+  // partie sort du programme des équipes inscrites à tort. "toutes" sert à
+  // savoir où en sont les poules quand "rencontres" est déjà filtré par lieu.
+  var PHASES_A_DESIGNER = ["7", "8", "9", "10", "11", "12"];
+  var CLUB_A_DESIGNER = "9998";
+
+  function masquerFinalesPrematurees(rencontres, toutes) {
+    function serie(row) {
+      return [row["Compétition"], row["Spécialité"], row["Catégorie"]]
+        .map(function (v) { return String(v || "").trim(); }).join("|");
+    }
+    function phase(row) { return String(row.Phase || "").trim(); }
+    var enPoules = {};
+    (toutes || rencontres).forEach(function (row) {
+      var joue = String(row.score_cr == null ? "" : row.score_cr).trim() !== "" &&
+                 String(row.score_cv == null ? "" : row.score_cv).trim() !== "";
+      if (phase(row) === "1" && !joue) enPoules[serie(row)] = true;
+    });
+    return rencontres.map(function (row) {
+      if (!enPoules[serie(row)] || PHASES_A_DESIGNER.indexOf(phase(row)) === -1) return row;
+      return Object.assign({}, row, { club_rec: CLUB_A_DESIGNER, equip_rec: "1", club_vis: CLUB_A_DESIGNER, equip_vis: "1" });
+    });
+  }
+
   function fetchLiveData(source) {
     var rencontresPromises = LIEU_VARIANTS.map(function (lieu) {
       return source(buildUrl("rencontres", { lieu_renc: lieu }));
     });
+    // Toutes les parties, tous lieux : seulement pour savoir si les poules
+    // d'une série sont terminées (cf. masquerFinalesPrematurees).
+    var toutesPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
     // Les compositions d'équipe sont un bonus d'affichage, pas une donnée de
     // sécurité comme les créneaux : si cet appel échoue, on dégrade en
@@ -860,10 +890,11 @@
     var engagementsPromise = source(buildUrl("engagements", {})).catch(function () { return { data: [] }; });
     var licenciesPromise = source(buildUrl("licencies", {})).catch(function () { return { data: [] }; });
 
-    return Promise.all(rencontresPromises.concat([clubsPromise, engagementsPromise, licenciesPromise])).then(function (results) {
+    return Promise.all(rencontresPromises.concat([toutesPromise, clubsPromise, engagementsPromise, licenciesPromise])).then(function (results) {
       var licenciesJson = results.pop();
       var engagementsJson = results.pop();
       var clubsJson = results.pop();
+      var toutesJson = results.pop();
       var merged = {};
       var lastSync = null;
       results.forEach(function (json) {
@@ -887,7 +918,7 @@
       }
 
       return {
-        rencontres: rencontres,
+        rencontres: masquerFinalesPrematurees(rencontres, toutesJson.data),
         clubs: clubsJson.data,
         engagements: engagementsJson.data,
         licencies: licenciesJson.data,
