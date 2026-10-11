@@ -1080,6 +1080,9 @@
       blocs.push("Responsable adverse : " + (autreResp && autreTel ? autreResp + " (" + autreTel + ")" : (autreResp || autreTel)) + ".");
     }
 
+    var finales = rappelPhasesFinales(match);
+    if (finales) blocs.push(finales);
+
     // Rappel de contexte en italique WhatsApp (_.._), en fin de message :
     // utile pour lever une ambiguïté, mais secondaire par rapport à la
     // question posée.
@@ -1092,6 +1095,29 @@
 
     blocs.push("Merci !");
     return blocs.join("\n\n");
+  }
+
+  // Pendant la phase de poules, on prévient que les phases finales ne se
+  // reportent pas, avec leurs dates (sans les créneaux). Les dates diffèrent
+  // d'une série à l'autre : elles sont lues dans les parties de 1/4, 1/2 et
+  // finale de la même compétition, spécialité et série. Une phase sans
+  // partie connue est omise ; sans aucune, pas de rappel.
+  var RAPPEL_FINALES = [["10", "1/4"], ["11", "1/2"], ["12", "finales"]];
+
+  function rappelPhasesFinales(match) {
+    if (match.phaseRaw !== "1" || !lastMatches) return null;
+    var parties = RAPPEL_FINALES.map(function (phase) {
+      var jours = [];
+      lastMatches.forEach(function (m) {
+        if (m.phaseRaw !== phase[0] || m.serie !== match.serie || m.spec !== match.spec || m.competLabel !== match.competLabel) return;
+        var jour = DAY_NAMES[m.date.getDay()].slice(0, 3) + ". " + m.date.getDate() + "/" + (m.date.getMonth() + 1);
+        if (jours.indexOf(jour) === -1) jours.push(jour);
+      });
+      return jours.length ? phase[1] + " : " + jours.join(" et ") : null;
+    }).filter(function (partie) { return !!partie; });
+    if (!parties.length) return null;
+    var liste = parties.length > 1 ? parties.slice(0, -1).join(", ") + " et " + parties[parties.length - 1] : parties[0];
+    return "Noter qu'il n'est pas possible de reporter les phases finales.\n" + liste + ".";
   }
 
   // Le report ne se conçoit que là où une grille de créneaux existe
