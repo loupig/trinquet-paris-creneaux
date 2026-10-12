@@ -128,8 +128,9 @@ La table `licencies` de l'API contient, à la source, des données sensibles
 (date de naissance, adresse postale, y compris pour des mineurs). Le
 scraper Apps Script (voir plus bas) filtre ça **avant** l'écriture sur
 Drive : seuls `Numéro club`, `Licence`, `nom`, `prenom` sont conservés, et
-uniquement pour les clubs du comité — jamais l'adresse ou la date de
-naissance, à aucun moment exposées par l'API.
+uniquement pour les clubs du comité et pour les joueurs d'autres clubs
+déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
+la date de naissance, à aucun moment exposées par l'API.
 
 - **Noms de joueurs** : sur Parties et Créneaux (au détail d'une partie) et
   sur Mon équipe. Noms seuls, sans numéro de licence ni coordonnées.
