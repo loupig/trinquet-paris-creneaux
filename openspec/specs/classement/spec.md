@@ -65,7 +65,7 @@ En tête de chaque série, avant ses cartes de classement, la page SHALL affiche
 - **THEN** sa carte des quarts, marquée « Prévision », oppose le 1er de la poule 1 au 4e de la poule 2 selon le classement actuel, et dit combien de parties restent
 
 ### Requirement: Simulation des parties restantes
-Sous la prévision des quarts, la page SHALL proposer, replié par défaut, la liste des parties de poule de la série encore sans score. Pour chacune, le visiteur peut toucher le vainqueur, ce qui simule 40–30, ou saisir les deux scores. Toucher à nouveau le vainqueur choisi annule la simulation de la partie. Chaque résultat simulé complet MUST être pris en compte aussitôt dans le classement des poules et dans les quarts, sans faire perdre le champ en cours de saisie. Un bandeau signale qu'une simulation est en cours et propose « Voir les quarts » et « Effacer la simulation ». Pendant une simulation, un bouton flottant « Voir les quarts » apparaît tant que la carte des quarts de la série simulée n'est pas à l'écran, et y ramène. La simulation MUST NOT remplacer un score réel, et elle n'est ni enregistrée ni envoyée : elle disparaît au rechargement de la page.
+En bas de chaque série, la page SHALL proposer un simulateur, encadré en pointillés pour le distinguer des résultats réels, qui indique le nombre de parties simulées sur le nombre de parties restantes. Toujours visible, même replié, il donne pour chaque équipe suivie de la série son rang de poule et, si elle est qualifiée, son quart et son adversaire, recalculés à chaque résultat simulé ; sans équipe suivie, il invite à en suivre une depuis l'accueil. Replié par défaut, il liste les parties de poule de la série encore sans score, celles des équipes suivies en premier. Pour chacune, le visiteur peut toucher le vainqueur, ce qui simule 40–30, ou saisir les deux scores. Le vainqueur simulé est marqué, le perdant grisé. Toucher à nouveau le vainqueur choisi, ou « Annuler » sur la partie, annule sa simulation. Chaque résultat simulé complet MUST être pris en compte aussitôt dans le classement des poules et dans les quarts, sans faire perdre le champ en cours de saisie. Un bandeau signale qu'une simulation est en cours et propose « Voir les quarts » et « Effacer la simulation ». Pendant une simulation, un bouton flottant « Voir les quarts » apparaît tant que la carte des quarts de la série simulée n'est pas à l'écran, et y ramène. La simulation MUST NOT remplacer un score réel, et elle n'est ni enregistrée ni envoyée : elle disparaît au rechargement de la page.
 
 #### Scenario: Simuler une victoire
 - **WHEN** le visiteur touche une équipe dans une partie restante
@@ -78,3 +78,7 @@ Sous la prévision des quarts, la page SHALL proposer, replié par défaut, la l
 #### Scenario: Revenir aux quarts après une simulation
 - **WHEN** le visiteur vient de simuler une partie en bas de la série, les quarts hors de l'écran
 - **THEN** un bouton flottant « Voir les quarts » est affiché, et le toucher fait remonter jusqu'à la carte des quarts de cette série
+
+#### Scenario: Mon équipe dans le simulateur
+- **WHEN** le visiteur suit une équipe de la série et simule une partie qui la fait passer de la 3e à la 5e place
+- **THEN** le haut du simulateur passe de « 3e poule 1 · qualifiée · Q3 contre … » à « 5e poule 1 · pas qualifiée », sans qu'il ait à remonter aux quarts
