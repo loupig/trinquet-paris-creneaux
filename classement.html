@@ -663,7 +663,7 @@
       <button type="button" class="filter-chip" data-mode="poule">Par poule</button>
       <button type="button" class="filter-chip" data-mode="general">Général</button>
     </div>
-    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts, croisés avec l'autre poule : le 1er contre le 4e, le 2e contre le 3e. En tête de chaque série, la prévision des quarts ; en bas, de quoi simuler les parties restantes.</p>
+    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts, croisés avec l'autre poule : le 1er contre le 4e, le 2e contre le 3e. Sous le classement de chaque série, la prévision des quarts, puis de quoi simuler les parties restantes.</p>
     </div>
   </div>
 
@@ -1557,8 +1557,8 @@
     slot.appendChild(b);
   }
 
-  // Les quarts sont en tête de série, le simulateur en bas : après une
-  // simulation, on y remonte d'un geste. Vise la série de la dernière partie
+  // Le simulateur, sous les quarts, peut être long : après une simulation,
+  // on remonte aux quarts d'un geste. Vise la série de la dernière partie
   // simulée, sous l'en-tête collant qui masquerait le haut de la carte.
   var derniereSerieSimulee = null;
 
@@ -1602,10 +1602,10 @@
   function remplirZone(zone) {
     zone.el.innerHTML = "";
     var teams = lastTeams.filter(memeSerie(zone.spec, zone.cat));
-    // Les quarts d'abord : c'est ce qu'on vient chercher. Le classement qui
-    // les explique suit, et le simulateur ferme la série.
-    zone.el.appendChild(buildFinalesCard(zone.spec, zone.cat, teams));
+    // Dans l'ordre de la saison : le classement des poules, les quarts qui en
+    // découlent, puis le simulateur, qui ferme la série.
     grouper(teams).forEach(function (g) { zone.el.appendChild(buildPouleCard(g)); });
+    zone.el.appendChild(buildFinalesCard(zone.spec, zone.cat, teams));
   }
 
   function recalculer() {
