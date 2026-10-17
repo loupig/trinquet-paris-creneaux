@@ -164,3 +164,19 @@ Dans le bloc « D'ici dimanche », une partie jouée par l'une des équipes suiv
 #### Scenario: Sans équipe suivie
 - **WHEN** le visiteur ne suit aucune équipe
 - **THEN** aucune ligne ne porte de repère, et le bloc est identique à aujourd'hui
+
+### Requirement: Partage des parties
+Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager ces parties ». Le bouton produit un texte prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes, l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet. Sur un appareil qui a une feuille de partage (téléphone), le texte lui est confié ; sinon il est copié dans le presse-papiers et le bloc l'indique. Rien n'est envoyé par le site lui-même.
+
+#### Scenario: Partage depuis un téléphone
+- **WHEN** le visiteur touche « Partager ces parties » sur son téléphone
+- **THEN** la feuille de partage du téléphone s'ouvre avec le texte des parties, qu'il peut envoyer dans un groupe WhatsApp
+
+#### Scenario: Partage depuis un ordinateur
+- **WHEN** le navigateur n'a pas de feuille de partage
+- **THEN** le texte est copié et le bloc affiche « Texte copié, à coller »
+
+#### Scenario: Aucune partie
+- **WHEN** le bloc n'a aucune partie à venir
+- **THEN** aucun bouton de partage n'apparaît
+
