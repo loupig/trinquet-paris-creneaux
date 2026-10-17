@@ -1,0 +1,36 @@
+# Contrôles lancés sur chaque PR et à chaque push sur main : le site part en
+# production dès la fusion, sans build qui attraperait une erreur avant.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Syntaxe JavaScript des pages
+        run: npm run test:syntaxe
+      - name: Navigateur Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Pages sur données fictives
+        run: npm run test:pages
+      - name: Rapport en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 7
