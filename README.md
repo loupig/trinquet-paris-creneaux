@@ -93,6 +93,7 @@ principaux :
 | `SERIE_LABELS` | toutes sauf le compteur | Correspondance Catégorie → Série affichée |
 | `PHASE_LABELS` | accueil, Mon équipe, Parties, Créneaux, Report | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mon équipe, Classement | Barème, phase classée et nombre de qualifiés : à garder identiques dans les trois pages |
+| `QUARTS` | Classement | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
 | `LIEU_VARIANTS` | Créneaux | Libellés `lieu_renc` interrogés côté API pour ce trinquet. L'API ne filtre que par égalité exacte : un nouveau libellé est à ajouter ici |
@@ -105,7 +106,7 @@ Clés `localStorage` :
 | Clé | Page | Contenu |
 |---|---|---|
 | `lidfpb_api_v1:<url>` | toutes sauf le compteur | Cache d'appels API |
-| `lidfpb_mes_equipes_v1` | accueil (lue aussi par Mon équipe) | Équipes suivies |
+| `lidfpb_mes_equipes_v1` | accueil (lue aussi par Mon équipe et Classement) | Équipes suivies |
 | `lidfpb_equipe_vue_v1` | Mon équipe | Dernière équipe consultée |
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |

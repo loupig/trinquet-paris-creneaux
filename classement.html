@@ -372,6 +372,105 @@
   }
   .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
 
+  /* --- Phases finales : prévision des quarts et simulation --- */
+  .poule-head .statut {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    color: var(--warn-text);
+    background: var(--warn-bg);
+  }
+  .poule-head .statut.final { color: var(--win-text); background: #e3f4ea; }
+  .quart-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .quart-row:first-of-type { border-top: none; }
+  .quart-num {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .quart-main { flex: 1 1 auto; min-width: 0; }
+  .quart-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
+  .quart-team .seed { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .quart-team.suivie { color: var(--accent); }
+  .quart-team.vide { color: var(--muted); font-weight: 600; }
+  .quart-vs { font-size: 10px; color: var(--muted); margin: 1px 0; }
+  .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 8px 14px 10px; border-top: 1px solid var(--border); margin: 0; }
+
+  .sim-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    border: 0;
+    border-top: 1px solid var(--border);
+    background: var(--accent-bg);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: left;
+    cursor: pointer;
+  }
+  .sim-toggle svg { flex: none; transition: transform 0.18s ease; }
+  .sim-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  .sim-match { padding: 8px 14px; border-top: 1px solid var(--border); }
+  .sim-poule { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .sim-side { display: flex; align-items: center; gap: 8px; }
+  .sim-side + .sim-side { margin-top: 4px; }
+  .sim-pick {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .sim-pick.gagne { color: var(--win-text); border-color: #b9e2c8; background: #e3f4ea; font-weight: 700; }
+  .sim-pick.suivie { box-shadow: inset 3px 0 0 var(--accent); }
+  .sim-score {
+    flex: 0 0 52px;
+    width: 52px;
+    padding: 6px 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-actions { padding: 8px 14px 12px; border-top: 1px solid var(--border); }
+  .sim-reset {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--loss-text);
+    background: #fff;
+    border: 1px solid var(--error-border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .banner.sim { background: var(--accent-bg); color: var(--text); border-color: var(--accent-border); }
+  .banner.sim .sim-reset { margin-top: 8px; }
+
   .legende {
     font-size: 11px;
     color: var(--muted);
@@ -448,7 +547,7 @@
 <header>
   <h1><a href="index.html" class="home-link">Classement des poules</a></h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Phase de poules uniquement : victoire 3 points, défaite 1 point. Classement au total de points divisé par le nombre de parties jouées, puis au goal average moyen.</p>
+  <p class="header-sync">Classement de la phase de poules : victoire 3 points, défaite 1 point. Classement au total de points divisé par le nombre de parties jouées, puis au goal average moyen.</p>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
@@ -468,17 +567,18 @@
       <button type="button" class="filter-chip" data-mode="poule">Par poule</button>
       <button type="button" class="filter-chip" data-mode="general">Général</button>
     </div>
-    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts.</p>
+    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts, croisés avec l'autre poule : le 1er contre le 4e, le 2e contre le 3e. Sous chaque série, la prévision des quarts, et de quoi simuler les parties restantes.</p>
     </div>
   </div>
 
   <div id="banner-slot"></div>
+  <div id="sim-slot"></div>
   <div id="results"></div>
 
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.04</p>
+    <p>Version 2026.10.17</p>
   </footer>
 </main>
 
@@ -529,6 +629,17 @@
   }
 
   var lastTeams = null;
+  // Dernières données reçues, pour recalculer le classement à chaque résultat
+  // simulé sans repasser par l'API.
+  var lastData = null;
+
+  // Résultats simulés, par oid de rencontre : { cr: "40", cv: "30" }, saisies
+  // brutes. Gardés en mémoire seulement : une simulation est un essai, elle
+  // ne doit pas survivre à un rechargement et passer pour un vrai score.
+  var simulation = {};
+  // Bloc de simulation déplié, par série : il survit aux re-rendus.
+  var simOuvert = {};
+  var SIM_SCORE_GAGNANT = 40, SIM_SCORE_PERDANT = 30;
 
   // Barème fixé par la ligue. Un nul est impossible en pratique (une équipe
   // atteint 40), la valeur intermédiaire n'est là que pour ne pas planter si
@@ -537,6 +648,10 @@
   var PHASE_POULES = "1";
   // Les quatre premiers de chaque poule vont en quarts de finale.
   var QUALIFIES_PAR_POULE = 4;
+  // Quarts croisés entre les deux poules d'une série : le 1er d'une poule
+  // reçoit le 4e de l'autre, le 2e le 3e. Rangs [poule 1, poule 2].
+  var QUARTS = [[1, 4], [2, 3], [3, 2], [4, 1]];
+  var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
 
   // ---------------------------------------------------------------
   // Parsing des dates / heures du format LIDFPB (identique à creneaux.html)
@@ -957,9 +1072,304 @@
       });
   }
 
+  // ---------------------------------------------------------------
+  // Phases finales : prévision des quarts et simulation
+  // ---------------------------------------------------------------
+  function memeSerie(spec, cat) {
+    return function (x) { return x.spec === spec && x.cat === cat; };
+  }
+
+  // Parties de poule d'une série encore sans score réel : celles qu'on peut
+  // simuler. Toujours lues sur les données reçues, jamais sur les simulées.
+  function partiesRestantes(spec, cat) {
+    return lastData.rencontres.filter(function (row) {
+      return estPhaseDePoules(row) &&
+             String(row["Spécialité"] || "").trim() === spec &&
+             String(row["Catégorie"] || "").trim() === cat &&
+             !clubFictif(row.club_rec) && !clubFictif(row.club_vis) &&
+             !hasScore(row);
+    });
+  }
+
+  function simValide(s) {
+    return !!s && /^\d+$/.test(s.cr) && /^\d+$/.test(s.cv);
+  }
+
+  // Une simulation ne remplace jamais un vrai score : si la ligue publie le
+  // résultat entre-temps, c'est lui qui compte.
+  function avecSimulation(rencontres) {
+    return rencontres.map(function (row) {
+      var s = simulation[row.oid];
+      if (!simValide(s) || hasScore(row)) return row;
+      return Object.assign({}, row, { score_cr: s.cr, score_cv: s.cv });
+    });
+  }
+
+  function nbSimulees() {
+    return lastData.rencontres.filter(function (row) {
+      return simValide(simulation[row.oid]) && !hasScore(row);
+    }).length;
+  }
+
+  function mesEquipes() {
+    var suivies = {};
+    try {
+      var liste = JSON.parse(localStorage.getItem(MES_EQUIPES_KEY));
+      if (Array.isArray(liste)) liste.forEach(function (k) { if (typeof k === "string") suivies[k] = true; });
+    } catch (e) { /* stockage indisponible ou corrompu : aucune équipe suivie */ }
+    return suivies;
+  }
+
+  function estSuivie(suivies, spec, cat, club, numero) {
+    return !!suivies[[spec, cat, String(club || "").trim(), String(numero || "").trim()].join("|")];
+  }
+
+  function ordinal(rang) { return rang === 1 ? "1er" : rang + "e"; }
+
+  // Une équipe qui n'a pas joué n'a pas de rang : elle ne prend pas une place
+  // de qualifiée au seul ordre alphabétique.
+  function buildSlot(classees, rang, pouleId, suivies) {
+    var t = classees[rang - 1];
+    var seed = " · " + ordinal(rang) + " poule " + pouleId;
+    if (!t || !t.jouees) {
+      var vide = el("div", { class: "quart-team vide", text: "À déterminer" });
+      vide.appendChild(el("span", { class: "seed", text: seed }));
+      return vide;
+    }
+    var div = el("div", {
+      class: "quart-team" + (estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero) ? " suivie" : ""),
+      text: t.label
+    });
+    div.appendChild(el("span", { class: "seed", text: seed }));
+    return div;
+  }
+
+  // Les quarts découlent du classement des poules, réel ou simulé : la carte
+  // est une prévision tant qu'une partie de poule reste sans score.
+  function buildFinalesCard(spec, cat, teams) {
+    var restantes = partiesRestantes(spec, cat);
+    var simulees = restantes.filter(function (r) { return simValide(simulation[r.oid]); }).length;
+    var suivies = mesEquipes();
+
+    var carte = el("div", { class: "poule-card" });
+    var head = el("div", { class: "poule-head" });
+    head.appendChild(el("span", { class: "badge serie-" + cat, text: SERIE_LABELS[cat] || ("Cat. " + cat) }));
+    head.appendChild(el("span", { text: "Phases finales" }));
+    head.appendChild(el("span", { class: "poule-sub", text: "1/4 de finale" }));
+    var statut = restantes.length === 0 ? "Poules terminées"
+      : (simulees === restantes.length ? "Simulation" : "Prévision");
+    head.appendChild(el("span", { class: "statut" + (restantes.length === 0 ? " final" : ""), text: statut }));
+    carte.appendChild(head);
+
+    var parPoule = {};
+    teams.forEach(function (t) { (parPoule[t.poule] = parPoule[t.poule] || []).push(t); });
+    var poules = Object.keys(parPoule).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); });
+
+    var note;
+    if (poules.length !== 2) {
+      note = "Les quarts croisent les deux poules d'une série ; celle-ci en compte " + poules.length +
+             ", le tableau n'est pas prévu.";
+    } else {
+      var classees = poules.map(function (p) { return trierClassement(parPoule[p]); });
+      QUARTS.forEach(function (q, i) {
+        // Le mieux classé des deux est écrit en premier.
+        var cotes = [[0, q[0]], [1, q[1]]].sort(function (a, b) { return a[1] - b[1]; });
+        var row = el("div", { class: "quart-row" });
+        row.appendChild(el("div", { class: "quart-num", text: "Q" + (i + 1) }));
+        var main = el("div", { class: "quart-main" });
+        main.appendChild(buildSlot(classees[cotes[0][0]], cotes[0][1], poules[cotes[0][0]], suivies));
+        main.appendChild(el("div", { class: "quart-vs", text: "contre" }));
+        main.appendChild(buildSlot(classees[cotes[1][0]], cotes[1][1], poules[cotes[1][0]], suivies));
+        row.appendChild(main);
+        carte.appendChild(row);
+      });
+      if (restantes.length === 0) {
+        note = "D'après le classement final des poules. Le tableau officiel reste celui de la ligue.";
+      } else {
+        var n = restantes.length;
+        note = "D'après le classement " + (simulees ? "simulé" : "actuel") + " : " + n + " partie" + (n > 1 ? "s" : "") +
+               " de poule " + (n > 1 ? "restent" : "reste") + " sans score, le tableau peut encore changer.";
+      }
+    }
+    carte.appendChild(el("p", { class: "finales-note", text: note }));
+    return carte;
+  }
+
+  // Le simulateur est construit une fois par rendu complet, puis laissé en
+  // place : recalculer le classement ne le reconstruit pas, sans quoi chaque
+  // chiffre tapé ferait perdre le champ en cours de saisie.
+  function buildSimulateur(spec, cat) {
+    var restantes = partiesRestantes(spec, cat);
+    if (restantes.length === 0) return null;
+    var cle = spec + "|" + cat;
+    var suivies = mesEquipes();
+    var clubMap = lastData.clubMap;
+
+    var carte = el("div", { class: "poule-card" });
+    var n = restantes.length;
+    var toggle = el("button", {
+      type: "button",
+      class: "sim-toggle",
+      "aria-expanded": simOuvert[cle] ? "true" : "false"
+    });
+    toggle.appendChild(el("span", { text: "Simuler " + (n > 1 ? "les " + n + " parties restantes" : "la partie restante") }));
+    toggle.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
+    carte.appendChild(toggle);
+
+    var corps = el("div", {});
+    corps.hidden = !simOuvert[cle];
+    toggle.addEventListener("click", function () {
+      simOuvert[cle] = !simOuvert[cle];
+      toggle.setAttribute("aria-expanded", simOuvert[cle] ? "true" : "false");
+      corps.hidden = !simOuvert[cle];
+    });
+
+    corps.appendChild(el("p", {
+      class: "finales-note",
+      text: "Touchez le vainqueur (" + SIM_SCORE_GAGNANT + "–" + SIM_SCORE_PERDANT + " par défaut) ou saisissez le score : " +
+            "le goal average départage les égalités. Rien n'est enregistré ni envoyé."
+    }));
+
+    restantes.slice().sort(function (a, b) {
+      return String(a.Poule || "").localeCompare(String(b.Poule || ""), "fr", { numeric: true });
+    }).forEach(function (row) {
+      corps.appendChild(buildSimMatch(row, spec, cat, clubMap, suivies));
+    });
+
+    var actions = el("div", { class: "sim-actions" });
+    var reset = el("button", { type: "button", class: "sim-reset", text: "Effacer la simulation" });
+    reset.addEventListener("click", effacerSimulation);
+    actions.appendChild(reset);
+    corps.appendChild(actions);
+
+    carte.appendChild(corps);
+    return carte;
+  }
+
+  function buildSimMatch(row, spec, cat, clubMap, suivies) {
+    var oid = row.oid;
+    var bloc = el("div", { class: "sim-match" });
+    bloc.appendChild(el("div", { class: "sim-poule", text: row.Poule ? ("Poule " + String(row.Poule).trim()) : "Poule" }));
+
+    var cotes = [
+      { champ: "cr", autre: "cv", club: row.club_rec, num: row.equip_rec },
+      { champ: "cv", autre: "cr", club: row.club_vis, num: row.equip_vis }
+    ];
+
+    function valeurs() { return simulation[oid] || { cr: "", cv: "" }; }
+
+    function majBoutons() {
+      var s = valeurs();
+      cotes.forEach(function (c) {
+        var gagne = simValide(s) && parseInt(s[c.champ], 10) > parseInt(s[c.autre], 10);
+        c.bouton.classList.toggle("gagne", gagne);
+        c.bouton.setAttribute("aria-pressed", gagne ? "true" : "false");
+      });
+    }
+
+    function rafraichirCotes() {
+      var s = valeurs();
+      cotes.forEach(function (c) { c.input.value = s[c.champ]; });
+      majBoutons();
+    }
+
+    cotes.forEach(function (c) {
+      var ligne = el("div", { class: "sim-side" });
+      c.bouton = el("button", {
+        type: "button",
+        class: "sim-pick" + (estSuivie(suivies, spec, cat, c.club, c.num) ? " suivie" : ""),
+        text: clubLabel(clubMap, String(c.club || "").trim(), c.num)
+      });
+      c.input = el("input", {
+        class: "sim-score",
+        type: "text",
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+        maxlength: "2",
+        "aria-label": "Score simulé"
+      });
+
+      // Toucher le vainqueur déjà choisi annule la simulation de la partie.
+      c.bouton.addEventListener("click", function () {
+        var s = valeurs();
+        if (simValide(s) && parseInt(s[c.champ], 10) > parseInt(s[c.autre], 10)) {
+          delete simulation[oid];
+        } else {
+          var perdant = parseInt(s[c.autre], 10);
+          var nouveau = {};
+          nouveau[c.champ] = String(SIM_SCORE_GAGNANT);
+          nouveau[c.autre] = (!Number.isNaN(perdant) && perdant < SIM_SCORE_GAGNANT) ? String(perdant) : String(SIM_SCORE_PERDANT);
+          simulation[oid] = nouveau;
+        }
+        rafraichirCotes();
+        recalculer();
+      });
+
+      c.input.addEventListener("input", function () {
+        var s = valeurs();
+        var copie = { cr: s.cr, cv: s.cv };
+        copie[c.champ] = c.input.value.replace(/\D/g, "");
+        if (copie.cr === "" && copie.cv === "") delete simulation[oid];
+        else simulation[oid] = copie;
+        // Le champ en cours de saisie n'est pas réécrit : seuls les boutons
+        // suivent, et le classement au-dessus.
+        majBoutons();
+        recalculer();
+      });
+
+      ligne.appendChild(c.bouton);
+      ligne.appendChild(c.input);
+      bloc.appendChild(ligne);
+    });
+
+    rafraichirCotes();
+    return bloc;
+  }
+
+  function effacerSimulation() {
+    simulation = {};
+    lastTeams = buildStandings(lastData.rencontres, lastData.clubMap);
+    renderResults(lastTeams);
+  }
+
+  function renderSimBanner() {
+    var slot = document.getElementById("sim-slot");
+    slot.innerHTML = "";
+    var n = lastData ? nbSimulees() : 0;
+    if (!n) return;
+    var b = el("div", { class: "banner sim" });
+    b.appendChild(el("strong", { text: "Simulation en cours" }));
+    b.appendChild(document.createTextNode(
+      n + " résultat" + (n > 1 ? "s simulés sont inclus" : " simulé est inclus") +
+      " dans le classement et les quarts ci-dessous. Ils disparaissent au rechargement."));
+    var reset = el("button", { type: "button", class: "sim-reset", text: "Effacer la simulation" });
+    reset.addEventListener("click", effacerSimulation);
+    b.appendChild(el("div", {}, [reset]));
+    slot.appendChild(b);
+  }
+
+  // Zones de classement de chaque série affichée, recalculées en place à
+  // chaque résultat simulé.
+  var zonesClassement = [];
+
+  function remplirZone(zone) {
+    zone.el.innerHTML = "";
+    var teams = lastTeams.filter(memeSerie(zone.spec, zone.cat));
+    grouper(teams).forEach(function (g) { zone.el.appendChild(buildPouleCard(g)); });
+    zone.el.appendChild(buildFinalesCard(zone.spec, zone.cat, teams));
+  }
+
+  function recalculer() {
+    lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
+    zonesClassement.forEach(remplirZone);
+    renderSimBanner();
+  }
+
   function renderResults(teams) {
     var results = document.getElementById("results");
     results.innerHTML = "";
+    zonesClassement = [];
+    renderSimBanner();
 
     var visibles = teams.filter(function (t) {
       return filterState.specs[t.spec] !== false && filterState.series[t.cat];
@@ -972,7 +1382,23 @@
       return;
     }
 
-    grouper(visibles).forEach(function (g) { results.appendChild(buildPouleCard(g)); });
+    // Une zone par série : ses cartes de classement, sa prévision des quarts,
+    // puis son simulateur, qui reste en place quand la zone est recalculée.
+    var series = {};
+    visibles.forEach(function (t) { series[t.spec + "|" + t.cat] = { spec: t.spec, cat: t.cat }; });
+    Object.keys(series).map(function (k) { return series[k]; })
+      .sort(function (a, b) {
+        var c = a.spec.localeCompare(b.spec, "fr", { numeric: true });
+        return c !== 0 ? c : a.cat.localeCompare(b.cat, "fr", { numeric: true });
+      })
+      .forEach(function (s) {
+        var zone = { spec: s.spec, cat: s.cat, el: el("div", {}) };
+        zonesClassement.push(zone);
+        remplirZone(zone);
+        results.appendChild(zone.el);
+        var sim = buildSimulateur(s.spec, s.cat);
+        if (sim) results.appendChild(sim);
+      });
   }
 
   // ---------------------------------------------------------------
@@ -1001,7 +1427,8 @@
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       var clubMap = buildClubMap(data.clubs);
-      lastTeams = buildStandings(data.rencontres, clubMap);
+      lastData = { rencontres: data.rencontres, clubMap: clubMap };
+      lastTeams = buildStandings(avecSimulation(data.rencontres), clubMap);
       renderSpecChips(lastTeams);
       renderResults(lastTeams);
     }
