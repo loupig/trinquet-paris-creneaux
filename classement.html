@@ -388,40 +388,47 @@
   .finales-card { border: 2px solid var(--text); }
   .finales-card .poule-head { background: var(--text); color: #fff; border-bottom: none; }
   .finales-card .poule-head .poule-sub { color: rgba(255, 255, 255, 0.7); }
+  /* Un quart tient sur une ligne : le rang de poule en étiquette sur le
+     bord extérieur, accolé au nom plutôt qu'en dessous. */
   .quart-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1fr);
     align-items: center;
-    gap: 6px;
-    padding: 10px 12px;
+    gap: 4px;
+    padding: 4px 8px;
     border-top: 1px solid var(--border);
   }
   .quart-row:first-of-type { border-top: none; }
   .quart-side {
     min-width: 0;
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 4px 6px;
+    border-radius: 7px;
     border: 1px solid transparent;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
   .quart-side.droite { text-align: right; }
-  .quart-side.suivie { background: var(--accent-bg); border-color: var(--accent-border); }
-  .quart-team { font-size: 13px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
-  .quart-side.suivie .quart-team { color: var(--accent); }
-  .quart-side.vide .quart-team { color: var(--muted); font-weight: 600; }
+  .quart-side.suivie { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  .quart-side.vide { color: var(--muted); font-weight: 600; }
   .quart-seed {
     display: inline-block;
-    margin-top: 3px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     color: var(--muted);
     background: var(--bg);
     border-radius: 20px;
-    padding: 1px 6px;
+    padding: 0 5px;
+    vertical-align: 1px;
+    white-space: nowrap;
   }
-  .quart-mid { text-align: center; line-height: 1.1; }
-  .quart-num { display: block; font-size: 10px; font-weight: 800; color: var(--accent); }
-  .quart-vs { display: block; font-size: 13px; font-weight: 900; color: var(--text); }
-  .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 8px 14px 10px; border-top: 1px solid var(--border); margin: 0; }
+  .quart-side:not(.droite) .quart-seed { margin-right: 4px; }
+  .quart-side.droite .quart-seed { margin-left: 4px; }
+  .quart-mid { text-align: center; line-height: 1; }
+  .quart-num { display: block; font-size: 9px; font-weight: 800; color: var(--accent); }
+  .quart-vs { display: block; font-size: 11px; font-weight: 900; color: var(--text); }
+  .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
 
   /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
      résultat. En tête, ce que la simulation change pour mes équipes. */
@@ -1248,8 +1255,10 @@
     var t = cote.team;
     var suivie = t && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
     var side = el("div", { class: "quart-side" + (droite ? " droite" : "") + (t ? "" : " vide") + (suivie ? " suivie" : "") });
-    side.appendChild(el("div", { class: "quart-team", text: t ? t.label : "À déterminer" }));
-    side.appendChild(el("span", { class: "quart-seed", text: ordinal(cote.rang) + " poule " + cote.poule }));
+    var seed = el("span", { class: "quart-seed", text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule });
+    var nom = document.createTextNode(t ? t.label : "À déterminer");
+    if (droite) { side.appendChild(nom); side.appendChild(seed); }
+    else { side.appendChild(seed); side.appendChild(nom); }
     return side;
   }
 
@@ -1290,8 +1299,8 @@
         note = "D'après le classement final des poules. Le tableau officiel reste celui de la ligue.";
       } else {
         var n = restantes.length;
-        note = "D'après le classement " + (simulees ? "simulé" : "actuel") + " : " + n + " partie" + (n > 1 ? "s" : "") +
-               " de poule " + (n > 1 ? "restent" : "reste") + " sans score, le tableau peut encore changer.";
+        note = "Selon le classement " + (simulees ? "simulé" : "actuel") + ", " + n + " partie" + (n > 1 ? "s" : "") +
+               " de poule à jouer : le tableau peut encore changer.";
       }
     }
     carte.appendChild(el("p", { class: "finales-note", text: note }));
