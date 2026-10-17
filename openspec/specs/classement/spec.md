@@ -58,14 +58,14 @@ La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un
 - **THEN** la page s'affiche en classement général
 
 ### Requirement: Prévision des quarts de finale
-Sous les cartes de chaque série, la page SHALL afficher une carte « Phases finales · 1/4 de finale » qui déduit les quarts du classement des poules, réel ou simulé : le 1er de la poule 1 contre le 4e de la poule 2, le 2e de la poule 1 contre le 3e de la poule 2, le 3e de la poule 1 contre le 2e de la poule 2, le 4e de la poule 1 contre le 1er de la poule 2. Chaque place donne l'équipe et son rang de poule, ou « À déterminer » quand ce rang n'est occupé par aucune équipe ayant joué. La carte porte « Prévision » tant qu'une partie de poule de la série reste sans score, « Simulation » quand toutes les parties restantes sont simulées, et « Poules terminées » sinon, en rappelant que le tableau officiel reste celui de la ligue. Une équipe suivie depuis l'accueil y est mise en évidence. Une série qui n'a pas exactement deux poules n'a pas de tableau, seulement une note qui le dit.
+En tête de chaque série, avant ses cartes de classement, la page SHALL afficher une carte « Phases finales · 1/4 de finale », habillée autrement que les classements (cadre et en-tête pleins, foncés), qui déduit les quarts du classement des poules, réel ou simulé : le 1er de la poule 1 contre le 4e de la poule 2, le 2e de la poule 1 contre le 3e de la poule 2, le 3e de la poule 1 contre le 2e de la poule 2, le 4e de la poule 1 contre le 1er de la poule 2. Chaque quart se lit face à face : une équipe à gauche, « VS » et le numéro du quart au centre, l'autre à droite, chacune avec son rang de poule en étiquette, ou « À déterminer » quand ce rang n'est occupé par aucune équipe ayant joué. La carte porte « Prévision » tant qu'une partie de poule de la série reste sans score, « Simulation » quand toutes les parties restantes sont simulées, et « Poules terminées » sinon, en rappelant que le tableau officiel reste celui de la ligue. Une équipe suivie depuis l'accueil y est mise en évidence sur fond coloré. Une série qui n'a pas exactement deux poules n'a pas de tableau, seulement une note qui le dit.
 
 #### Scenario: Poules en cours
 - **WHEN** la série 1 a deux poules et des parties de poule sans score
 - **THEN** sa carte des quarts, marquée « Prévision », oppose le 1er de la poule 1 au 4e de la poule 2 selon le classement actuel, et dit combien de parties restent
 
 ### Requirement: Simulation des parties restantes
-Sous la prévision des quarts, la page SHALL proposer, replié par défaut, la liste des parties de poule de la série encore sans score. Pour chacune, le visiteur peut toucher le vainqueur, ce qui simule 40–30, ou saisir les deux scores. Toucher à nouveau le vainqueur choisi annule la simulation de la partie. Chaque résultat simulé complet MUST être pris en compte aussitôt dans le classement des poules et dans les quarts, sans faire perdre le champ en cours de saisie. Un bandeau signale qu'une simulation est en cours et permet de l'effacer. La simulation MUST NOT remplacer un score réel, et elle n'est ni enregistrée ni envoyée : elle disparaît au rechargement de la page.
+Sous la prévision des quarts, la page SHALL proposer, replié par défaut, la liste des parties de poule de la série encore sans score. Pour chacune, le visiteur peut toucher le vainqueur, ce qui simule 40–30, ou saisir les deux scores. Toucher à nouveau le vainqueur choisi annule la simulation de la partie. Chaque résultat simulé complet MUST être pris en compte aussitôt dans le classement des poules et dans les quarts, sans faire perdre le champ en cours de saisie. Un bandeau signale qu'une simulation est en cours et propose « Voir les quarts » et « Effacer la simulation ». Pendant une simulation, un bouton flottant « Voir les quarts » apparaît tant que la carte des quarts de la série simulée n'est pas à l'écran, et y ramène. La simulation MUST NOT remplacer un score réel, et elle n'est ni enregistrée ni envoyée : elle disparaît au rechargement de la page.
 
 #### Scenario: Simuler une victoire
 - **WHEN** le visiteur touche une équipe dans une partie restante
@@ -74,3 +74,7 @@ Sous la prévision des quarts, la page SHALL proposer, replié par défaut, la l
 #### Scenario: Rechargement
 - **WHEN** le visiteur a simulé des résultats puis recharge la page
 - **THEN** le classement et les quarts ne reposent plus que sur les scores réels
+
+#### Scenario: Revenir aux quarts après une simulation
+- **WHEN** le visiteur vient de simuler une partie en bas de la série, les quarts hors de l'écran
+- **THEN** un bouton flottant « Voir les quarts » est affiché, et le toucher fait remonter jusqu'à la carte des quarts de cette série
