@@ -7,7 +7,7 @@ Afficher le classement de chaque poule des championnats, ou un classement géné
 ## Requirements
 
 ### Requirement: Règle rappelée en tête
-La page SHALL rappeler en tête qu'elle ne classe que la phase de poules, avec le barème (victoire 3 points, défaite 1 point) et le critère (total de points divisé par le nombre de parties jouées, puis goal average moyen). Le classement suit la spec `calcul-classement`. Les phases finales n'apparaissent pas sur la page.
+La page SHALL rappeler en tête qu'elle classe la phase de poules, avec le barème (victoire 3 points, défaite 1 point) et le critère (total de points divisé par le nombre de parties jouées, puis goal average moyen). Le classement suit la spec `calcul-classement`. Les résultats des phases finales n'apparaissent pas sur la page : seule la prévision des quarts, déduite du classement des poules, y figure.
 
 #### Scenario: Ouverture de la page
 - **WHEN** un visiteur ouvre la page Classement
@@ -56,3 +56,21 @@ La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un
 #### Scenario: Découpage retrouvé
 - **WHEN** le visiteur a choisi « Général » puis recharge la page
 - **THEN** la page s'affiche en classement général
+
+### Requirement: Prévision des quarts de finale
+Sous les cartes de chaque série, la page SHALL afficher une carte « Phases finales · 1/4 de finale » qui déduit les quarts du classement des poules, réel ou simulé : le 1er de la poule 1 contre le 4e de la poule 2, le 2e de la poule 1 contre le 3e de la poule 2, le 3e de la poule 1 contre le 2e de la poule 2, le 4e de la poule 1 contre le 1er de la poule 2. Chaque place donne l'équipe et son rang de poule, ou « À déterminer » quand ce rang n'est occupé par aucune équipe ayant joué. La carte porte « Prévision » tant qu'une partie de poule de la série reste sans score, « Simulation » quand toutes les parties restantes sont simulées, et « Poules terminées » sinon, en rappelant que le tableau officiel reste celui de la ligue. Une équipe suivie depuis l'accueil y est mise en évidence. Une série qui n'a pas exactement deux poules n'a pas de tableau, seulement une note qui le dit.
+
+#### Scenario: Poules en cours
+- **WHEN** la série 1 a deux poules et des parties de poule sans score
+- **THEN** sa carte des quarts, marquée « Prévision », oppose le 1er de la poule 1 au 4e de la poule 2 selon le classement actuel, et dit combien de parties restent
+
+### Requirement: Simulation des parties restantes
+Sous la prévision des quarts, la page SHALL proposer, replié par défaut, la liste des parties de poule de la série encore sans score. Pour chacune, le visiteur peut toucher le vainqueur, ce qui simule 40–30, ou saisir les deux scores. Toucher à nouveau le vainqueur choisi annule la simulation de la partie. Chaque résultat simulé complet MUST être pris en compte aussitôt dans le classement des poules et dans les quarts, sans faire perdre le champ en cours de saisie. Un bandeau signale qu'une simulation est en cours et permet de l'effacer. La simulation MUST NOT remplacer un score réel, et elle n'est ni enregistrée ni envoyée : elle disparaît au rechargement de la page.
+
+#### Scenario: Simuler une victoire
+- **WHEN** le visiteur touche une équipe dans une partie restante
+- **THEN** la partie compte comme gagnée 40–30 par cette équipe, le classement de sa poule et les quarts sont recalculés, et le bandeau « Simulation en cours » apparaît
+
+#### Scenario: Rechargement
+- **WHEN** le visiteur a simulé des résultats puis recharge la page
+- **THEN** le classement et les quarts ne reposent plus que sur les scores réels
