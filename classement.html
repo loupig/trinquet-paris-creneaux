@@ -383,27 +383,44 @@
     background: var(--warn-bg);
   }
   .poule-head .statut.final { color: var(--win-text); background: #e3f4ea; }
+  /* Les quarts ne sont pas un classement de plus : en-tête plein et affiche
+     face à face, pour qu'on les trouve sans lire les poules. */
+  .finales-card { border: 2px solid var(--text); }
+  .finales-card .poule-head { background: var(--text); color: #fff; border-bottom: none; }
+  .finales-card .poule-head .poule-sub { color: rgba(255, 255, 255, 0.7); }
   .quart-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
     align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
+    gap: 6px;
+    padding: 10px 12px;
     border-top: 1px solid var(--border);
   }
   .quart-row:first-of-type { border-top: none; }
-  .quart-num {
-    flex: 0 0 auto;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
+  .quart-side {
+    min-width: 0;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid transparent;
   }
-  .quart-main { flex: 1 1 auto; min-width: 0; }
-  .quart-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
-  .quart-team .seed { font-size: 10px; font-weight: 600; color: var(--muted); }
-  .quart-team.suivie { color: var(--accent); }
-  .quart-team.vide { color: var(--muted); font-weight: 600; }
-  .quart-vs { font-size: 10px; color: var(--muted); margin: 1px 0; }
+  .quart-side.droite { text-align: right; }
+  .quart-side.suivie { background: var(--accent-bg); border-color: var(--accent-border); }
+  .quart-team { font-size: 13px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+  .quart-side.suivie .quart-team { color: var(--accent); }
+  .quart-side.vide .quart-team { color: var(--muted); font-weight: 600; }
+  .quart-seed {
+    display: inline-block;
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 1px 6px;
+  }
+  .quart-mid { text-align: center; line-height: 1.1; }
+  .quart-num { display: block; font-size: 10px; font-weight: 800; color: var(--accent); }
+  .quart-vs { display: block; font-size: 13px; font-weight: 900; color: var(--text); }
   .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 8px 14px 10px; border-top: 1px solid var(--border); margin: 0; }
 
   .sim-toggle {
@@ -469,7 +486,18 @@
     cursor: pointer;
   }
   .banner.sim { background: var(--accent-bg); color: var(--text); border-color: var(--accent-border); }
-  .banner.sim .sim-reset { margin-top: 8px; }
+  .banner.sim .sim-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .voir-quarts {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--text);
+    border: 1px solid var(--text);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
 
   .legende {
     font-size: 11px;
@@ -528,6 +556,8 @@
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
+  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 13px; font-weight: 700; background: var(--text); }
+  .fab-btn[hidden] { display: none; }
 
 
   footer { text-align: center; padding: 20px 4px 10px; }
@@ -567,7 +597,7 @@
       <button type="button" class="filter-chip" data-mode="poule">Par poule</button>
       <button type="button" class="filter-chip" data-mode="general">Général</button>
     </div>
-    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts, croisés avec l'autre poule : le 1er contre le 4e, le 2e contre le 3e. Sous chaque série, la prévision des quarts, et de quoi simuler les parties restantes.</p>
+    <p class="legende">Chiffre de droite : points par partie jouée, le critère de classement. Le goal average moyen, entre parenthèses dans le détail, départage à égalité. Les quatre premiers de chaque poule sont qualifiés pour les quarts, croisés avec l'autre poule : le 1er contre le 4e, le 2e contre le 3e. En tête de chaque série, la prévision des quarts ; en bas, de quoi simuler les parties restantes.</p>
     </div>
   </div>
 
@@ -592,6 +622,7 @@
 
 
 <div class="fab-row">
+  <button id="voirQuartsFab" class="fab-btn pill" type="button" hidden>Voir les quarts</button>
   <button id="backToTopBtn" class="fab-btn" type="button" aria-label="Remonter en haut de la page">↑</button>
 </div>
 
@@ -1128,20 +1159,14 @@
 
   // Une équipe qui n'a pas joué n'a pas de rang : elle ne prend pas une place
   // de qualifiée au seul ordre alphabétique.
-  function buildSlot(classees, rang, pouleId, suivies) {
+  function buildSlot(classees, rang, pouleId, suivies, droite) {
     var t = classees[rang - 1];
-    var seed = " · " + ordinal(rang) + " poule " + pouleId;
-    if (!t || !t.jouees) {
-      var vide = el("div", { class: "quart-team vide", text: "À déterminer" });
-      vide.appendChild(el("span", { class: "seed", text: seed }));
-      return vide;
-    }
-    var div = el("div", {
-      class: "quart-team" + (estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero) ? " suivie" : ""),
-      text: t.label
-    });
-    div.appendChild(el("span", { class: "seed", text: seed }));
-    return div;
+    var joue = t && t.jouees;
+    var suivie = joue && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
+    var side = el("div", { class: "quart-side" + (droite ? " droite" : "") + (joue ? "" : " vide") + (suivie ? " suivie" : "") });
+    side.appendChild(el("div", { class: "quart-team", text: joue ? t.label : "À déterminer" }));
+    side.appendChild(el("span", { class: "quart-seed", text: ordinal(rang) + " poule " + pouleId }));
+    return side;
   }
 
   // Les quarts découlent du classement des poules, réel ou simulé : la carte
@@ -1151,7 +1176,7 @@
     var simulees = restantes.filter(function (r) { return simValide(simulation[r.oid]); }).length;
     var suivies = mesEquipes();
 
-    var carte = el("div", { class: "poule-card" });
+    var carte = el("div", { class: "poule-card finales-card" });
     var head = el("div", { class: "poule-head" });
     head.appendChild(el("span", { class: "badge serie-" + cat, text: SERIE_LABELS[cat] || ("Cat. " + cat) }));
     head.appendChild(el("span", { text: "Phases finales" }));
@@ -1175,12 +1200,12 @@
         // Le mieux classé des deux est écrit en premier.
         var cotes = [[0, q[0]], [1, q[1]]].sort(function (a, b) { return a[1] - b[1]; });
         var row = el("div", { class: "quart-row" });
-        row.appendChild(el("div", { class: "quart-num", text: "Q" + (i + 1) }));
-        var main = el("div", { class: "quart-main" });
-        main.appendChild(buildSlot(classees[cotes[0][0]], cotes[0][1], poules[cotes[0][0]], suivies));
-        main.appendChild(el("div", { class: "quart-vs", text: "contre" }));
-        main.appendChild(buildSlot(classees[cotes[1][0]], cotes[1][1], poules[cotes[1][0]], suivies));
-        row.appendChild(main);
+        row.appendChild(buildSlot(classees[cotes[0][0]], cotes[0][1], poules[cotes[0][0]], suivies, false));
+        var mid = el("div", { class: "quart-mid" });
+        mid.appendChild(el("span", { class: "quart-num", text: "Q" + (i + 1) }));
+        mid.appendChild(el("span", { class: "quart-vs", text: "VS" }));
+        row.appendChild(mid);
+        row.appendChild(buildSlot(classees[cotes[1][0]], cotes[1][1], poules[cotes[1][0]], suivies, true));
         carte.appendChild(row);
       });
       if (restantes.length === 0) {
@@ -1302,6 +1327,7 @@
           simulation[oid] = nouveau;
         }
         rafraichirCotes();
+        derniereSerieSimulee = spec + "|" + cat;
         recalculer();
       });
 
@@ -1314,6 +1340,7 @@
         // Le champ en cours de saisie n'est pas réécrit : seuls les boutons
         // suivent, et le classement au-dessus.
         majBoutons();
+        derniereSerieSimulee = spec + "|" + cat;
         recalculer();
       });
 
@@ -1342,10 +1369,50 @@
     b.appendChild(document.createTextNode(
       n + " résultat" + (n > 1 ? "s simulés sont inclus" : " simulé est inclus") +
       " dans le classement et les quarts ci-dessous. Ils disparaissent au rechargement."));
+    var voir = el("button", { type: "button", class: "voir-quarts", text: "Voir les quarts" });
+    voir.addEventListener("click", voirQuarts);
     var reset = el("button", { type: "button", class: "sim-reset", text: "Effacer la simulation" });
     reset.addEventListener("click", effacerSimulation);
-    b.appendChild(el("div", {}, [reset]));
+    b.appendChild(el("div", { class: "sim-btns" }, [voir, reset]));
     slot.appendChild(b);
+  }
+
+  // Les quarts sont en tête de série, le simulateur en bas : après une
+  // simulation, on y remonte d'un geste. Vise la série de la dernière partie
+  // simulée, sous l'en-tête collant qui masquerait le haut de la carte.
+  var derniereSerieSimulee = null;
+
+  function voirQuarts() {
+    var zone = null;
+    zonesClassement.forEach(function (z) {
+      if (!zone || (z.spec + "|" + z.cat) === derniereSerieSimulee) zone = z;
+    });
+    var carte = zone && zone.el.querySelector(".finales-card");
+    if (!carte) return;
+    var header = document.querySelector("header");
+    var top = carte.getBoundingClientRect().top + window.pageYOffset - (header ? header.offsetHeight : 0) - 8;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }
+
+  // Le bouton flottant ne sert que pendant une simulation, et seulement quand
+  // les quarts de la série simulée ne sont pas déjà à l'écran.
+  function majFabQuarts() {
+    var fab = document.getElementById("voirQuartsFab");
+    var visible = false;
+    if (lastData && nbSimulees()) {
+      visible = true;
+      zonesClassement.forEach(function (z) {
+        if ((z.spec + "|" + z.cat) !== derniereSerieSimulee) return;
+        var carte = z.el.querySelector(".finales-card");
+        if (!carte) return;
+        // « À l'écran » : au moins la moitié de la carte, un bout de note en
+        // haut de l'écran ne compte pas.
+        var r = carte.getBoundingClientRect();
+        var vu = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+        if (vu > Math.min(r.height, window.innerHeight) / 2) visible = false;
+      });
+    }
+    fab.hidden = !visible;
   }
 
   // Zones de classement de chaque série affichée, recalculées en place à
@@ -1355,14 +1422,17 @@
   function remplirZone(zone) {
     zone.el.innerHTML = "";
     var teams = lastTeams.filter(memeSerie(zone.spec, zone.cat));
-    grouper(teams).forEach(function (g) { zone.el.appendChild(buildPouleCard(g)); });
+    // Les quarts d'abord : c'est ce qu'on vient chercher. Le classement qui
+    // les explique suit, et le simulateur ferme la série.
     zone.el.appendChild(buildFinalesCard(zone.spec, zone.cat, teams));
+    grouper(teams).forEach(function (g) { zone.el.appendChild(buildPouleCard(g)); });
   }
 
   function recalculer() {
     lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
     zonesClassement.forEach(remplirZone);
     renderSimBanner();
+    majFabQuarts();
   }
 
   function renderResults(teams) {
@@ -1370,6 +1440,7 @@
     results.innerHTML = "";
     zonesClassement = [];
     renderSimBanner();
+    majFabQuarts();
 
     var visibles = teams.filter(function (t) {
       return filterState.specs[t.spec] !== false && filterState.series[t.cat];
@@ -1502,6 +1573,8 @@
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
+  document.getElementById("voirQuartsFab").addEventListener("click", voirQuarts);
+  window.addEventListener("scroll", majFabQuarts, { passive: true });
   document.getElementById("backToTopBtn").addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
