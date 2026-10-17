@@ -115,3 +115,32 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".sim-card").first().locator(".sim-compteur")).toHaveText(/^0\//);
   });
 });
+
+test.describe("Accueil : partage des parties d'ici dimanche", () => {
+  test("la feuille de partage reçoit le texte des parties", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
+    });
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    await page.getByRole("button", { name: "Partager ces parties" }).click();
+    const texte = await page.evaluate(() => window.__partage && window.__partage.text);
+    expect(texte).toMatch(/^\*Pala gomme pleine · (D'ici dimanche|Prochaines parties)/);
+    expect(texte).toContain(" vs ");
+    expect(texte).toContain("Trinquet Paris");
+    expect(texte).toMatch(/Programme complet : http.*\/programme\.html$/);
+  });
+
+  test("sans feuille de partage, le texte est copié", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    await page.getByRole("button", { name: "Partager ces parties" }).click();
+    await expect(page.locator(".partage-ok")).toHaveText("Texte copié, à coller");
+    const copie = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copie).toContain("Programme complet");
+  });
+});
