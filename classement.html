@@ -423,57 +423,116 @@
   .quart-vs { display: block; font-size: 13px; font-weight: 900; color: var(--text); }
   .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 8px 14px 10px; border-top: 1px solid var(--border); margin: 0; }
 
+  /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
+     résultat. En tête, ce que la simulation change pour mes équipes. */
+  .sim-card { border: 1.5px dashed var(--accent-border); background: #fbfcff; }
   .sim-toggle {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
     width: 100%;
-    padding: 10px 14px;
+    padding: 12px 14px;
     border: 0;
-    border-top: 1px solid var(--border);
     background: var(--accent-bg);
     font: inherit;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 800;
     color: var(--accent);
     text-align: left;
     cursor: pointer;
   }
+  .sim-toggle .sim-titre { flex: 1 1 auto; min-width: 0; }
+  .sim-toggle .sim-titre small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+  .sim-compteur {
+    flex: none;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-compteur.zero { color: var(--accent); background: #fff; border: 1px solid var(--accent-border); }
   .sim-toggle svg { flex: none; transition: transform 0.18s ease; }
   .sim-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
-  .sim-match { padding: 8px 14px; border-top: 1px solid var(--border); }
-  .sim-poule { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+
+  .sim-impact { padding: 10px 14px; border-top: 1px solid var(--accent-border); background: #fff; }
+  .sim-impact-ligne { font-size: 12px; line-height: 1.4; }
+  .sim-impact-ligne + .sim-impact-ligne { margin-top: 6px; }
+  .sim-impact-ligne b { font-weight: 800; }
+  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
+  .sim-impact-ligne .verdict.ok { color: var(--win-text); background: #e3f4ea; }
+  .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
+  .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
+  .sim-impact.astuce { font-size: 11px; color: var(--muted); line-height: 1.45; }
+
+  .sim-liste { padding: 4px 10px 2px; }
+  .sim-match {
+    margin: 8px 0;
+    padding: 8px 10px 10px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .sim-match.simulee { border-color: var(--accent-border); box-shadow: inset 3px 0 0 var(--accent); }
+  .sim-match-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-height: 20px; }
+  .sim-poule { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .sim-mienne { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-annuler {
+    margin-left: auto;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    padding: 2px 0 2px 8px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .sim-annuler[hidden] { display: none; }
   .sim-side { display: flex; align-items: center; gap: 8px; }
-  .sim-side + .sim-side { margin-top: 4px; }
+  .sim-side + .sim-side { margin-top: 6px; }
   .sim-pick {
     flex: 1 1 auto;
     min-width: 0;
-    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 6px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: #fff;
     font: inherit;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text);
     text-align: left;
     cursor: pointer;
   }
-  .sim-pick.gagne { color: var(--win-text); border-color: #b9e2c8; background: #e3f4ea; font-weight: 700; }
-  .sim-pick.suivie { box-shadow: inset 3px 0 0 var(--accent); }
+  .sim-pick .nom { flex: 1 1 auto; min-width: 0; }
+  .sim-pick .marque { flex: none; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; }
+  .sim-pick.gagne { color: var(--win-text); border-color: #b9e2c8; background: #e3f4ea; font-weight: 800; }
+  .sim-pick.perd { color: var(--muted); background: var(--bg); }
+  .sim-pick.suivie .nom { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
   .sim-score {
     flex: 0 0 52px;
     width: 52px;
+    min-height: 40px;
     padding: 6px 4px;
     border: 1px solid var(--border);
     border-radius: 8px;
+    background: #fff;
     font: inherit;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 800;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
-  .sim-actions { padding: 8px 14px 12px; border-top: 1px solid var(--border); }
+  .sim-score:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  .sim-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 14px 12px; }
   .sim-reset {
     font: inherit;
     font-size: 12px;
@@ -1159,13 +1218,38 @@
 
   // Une équipe qui n'a pas joué n'a pas de rang : elle ne prend pas une place
   // de qualifiée au seul ordre alphabétique.
-  function buildSlot(classees, rang, pouleId, suivies, droite) {
-    var t = classees[rang - 1];
-    var joue = t && t.jouees;
-    var suivie = joue && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
-    var side = el("div", { class: "quart-side" + (droite ? " droite" : "") + (joue ? "" : " vide") + (suivie ? " suivie" : "") });
-    side.appendChild(el("div", { class: "quart-team", text: joue ? t.label : "À déterminer" }));
-    side.appendChild(el("span", { class: "quart-seed", text: ordinal(rang) + " poule " + pouleId }));
+  // Tableau des quarts d'une série, à partir du classement de ses deux
+  // poules. null quand la série n'a pas exactement deux poules. Une place
+  // n'est occupée que par une équipe qui a joué : pas de qualifiée au seul
+  // ordre alphabétique.
+  function tableauQuarts(teams) {
+    var parPoule = {};
+    teams.forEach(function (t) { (parPoule[t.poule] = parPoule[t.poule] || []).push(t); });
+    var poules = Object.keys(parPoule).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); });
+    if (poules.length !== 2) return { nbPoules: poules.length, quarts: null };
+    var classees = poules.map(function (p) { return trierClassement(parPoule[p]); });
+    return {
+      nbPoules: 2,
+      quarts: QUARTS.map(function (q, i) {
+        // Le mieux classé des deux est écrit en premier.
+        var cotes = [[0, q[0]], [1, q[1]]].sort(function (a, b) { return a[1] - b[1]; });
+        return {
+          num: i + 1,
+          cotes: cotes.map(function (c) {
+            var t = classees[c[0]][c[1] - 1];
+            return { poule: poules[c[0]], rang: c[1], team: (t && t.jouees) ? t : null };
+          })
+        };
+      })
+    };
+  }
+
+  function buildSlot(cote, suivies, droite) {
+    var t = cote.team;
+    var suivie = t && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
+    var side = el("div", { class: "quart-side" + (droite ? " droite" : "") + (t ? "" : " vide") + (suivie ? " suivie" : "") });
+    side.appendChild(el("div", { class: "quart-team", text: t ? t.label : "À déterminer" }));
+    side.appendChild(el("span", { class: "quart-seed", text: ordinal(cote.rang) + " poule " + cote.poule }));
     return side;
   }
 
@@ -1186,26 +1270,20 @@
     head.appendChild(el("span", { class: "statut" + (restantes.length === 0 ? " final" : ""), text: statut }));
     carte.appendChild(head);
 
-    var parPoule = {};
-    teams.forEach(function (t) { (parPoule[t.poule] = parPoule[t.poule] || []).push(t); });
-    var poules = Object.keys(parPoule).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); });
-
+    var tableau = tableauQuarts(teams);
     var note;
-    if (poules.length !== 2) {
-      note = "Les quarts croisent les deux poules d'une série ; celle-ci en compte " + poules.length +
+    if (!tableau.quarts) {
+      note = "Les quarts croisent les deux poules d'une série ; celle-ci en compte " + tableau.nbPoules +
              ", le tableau n'est pas prévu.";
     } else {
-      var classees = poules.map(function (p) { return trierClassement(parPoule[p]); });
-      QUARTS.forEach(function (q, i) {
-        // Le mieux classé des deux est écrit en premier.
-        var cotes = [[0, q[0]], [1, q[1]]].sort(function (a, b) { return a[1] - b[1]; });
+      tableau.quarts.forEach(function (q) {
         var row = el("div", { class: "quart-row" });
-        row.appendChild(buildSlot(classees[cotes[0][0]], cotes[0][1], poules[cotes[0][0]], suivies, false));
+        row.appendChild(buildSlot(q.cotes[0], suivies, false));
         var mid = el("div", { class: "quart-mid" });
-        mid.appendChild(el("span", { class: "quart-num", text: "Q" + (i + 1) }));
+        mid.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
         mid.appendChild(el("span", { class: "quart-vs", text: "VS" }));
         row.appendChild(mid);
-        row.appendChild(buildSlot(classees[cotes[1][0]], cotes[1][1], poules[cotes[1][0]], suivies, true));
+        row.appendChild(buildSlot(q.cotes[1], suivies, true));
         carte.appendChild(row);
       });
       if (restantes.length === 0) {
@@ -1220,26 +1298,84 @@
     return carte;
   }
 
+  // Ce que le classement, réel ou simulé, donne pour chaque équipe suivie de
+  // la série : son rang et son quart. C'est la question qu'on se pose en
+  // simulant, la réponse est donc sous les yeux, au-dessus des parties.
+  function majImpact(zone) {
+    var bloc = zone.impact;
+    if (!bloc) return;
+    bloc.innerHTML = "";
+    var suivies = mesEquipes();
+    var teams = lastTeams.filter(memeSerie(zone.spec, zone.cat));
+    var miennes = teams.filter(function (t) { return estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero); });
+    bloc.classList.toggle("astuce", miennes.length === 0);
+    if (miennes.length === 0) {
+      bloc.textContent = "Suivez votre équipe depuis l'accueil : son quart s'affichera ici, recalculé à chaque résultat simulé.";
+      return;
+    }
+    var tableau = tableauQuarts(teams);
+    miennes.forEach(function (t) {
+      var ligne = el("div", { class: "sim-impact-ligne" });
+      ligne.appendChild(el("b", { text: t.label }));
+      var classees = trierClassement(teams.filter(function (x) { return x.poule === t.poule; }));
+      var rang = classees.indexOf(t) + 1;
+      var verdict, genre;
+      if (!t.jouees) {
+        verdict = "pas encore classée"; genre = "attente";
+      } else if (rang > QUALIFIES_PAR_POULE) {
+        verdict = ordinal(rang) + " poule " + t.poule + " · pas qualifiée"; genre = "ko";
+      } else {
+        verdict = ordinal(rang) + " poule " + t.poule + " · qualifiée"; genre = "ok";
+        (tableau.quarts || []).forEach(function (q) {
+          var i = q.cotes[0].team === t ? 0 : (q.cotes[1].team === t ? 1 : -1);
+          if (i === -1) return;
+          var adv = q.cotes[1 - i];
+          verdict += " · Q" + q.num + " contre " + (adv.team ? adv.team.label : "à déterminer (" + ordinal(adv.rang) + " poule " + adv.poule + ")");
+        });
+      }
+      ligne.appendChild(document.createElement("br"));
+      ligne.appendChild(el("span", { class: "verdict " + genre, text: verdict }));
+      bloc.appendChild(ligne);
+    });
+  }
+
+  function majCompteur(zone) {
+    if (!zone.compteur) return;
+    var restantes = partiesRestantes(zone.spec, zone.cat);
+    var n = restantes.filter(function (r) { return simValide(simulation[r.oid]); }).length;
+    zone.compteur.textContent = n + "/" + restantes.length;
+    zone.compteur.classList.toggle("zero", n === 0);
+  }
+
   // Le simulateur est construit une fois par rendu complet, puis laissé en
   // place : recalculer le classement ne le reconstruit pas, sans quoi chaque
   // chiffre tapé ferait perdre le champ en cours de saisie.
-  function buildSimulateur(spec, cat) {
+  function buildSimulateur(zone) {
+    var spec = zone.spec, cat = zone.cat;
     var restantes = partiesRestantes(spec, cat);
     if (restantes.length === 0) return null;
     var cle = spec + "|" + cat;
     var suivies = mesEquipes();
     var clubMap = lastData.clubMap;
 
-    var carte = el("div", { class: "poule-card" });
+    var carte = el("div", { class: "poule-card sim-card" });
     var n = restantes.length;
     var toggle = el("button", {
       type: "button",
       class: "sim-toggle",
       "aria-expanded": simOuvert[cle] ? "true" : "false"
     });
-    toggle.appendChild(el("span", { text: "Simuler " + (n > 1 ? "les " + n + " parties restantes" : "la partie restante") }));
+    var titre = el("span", { class: "sim-titre", text: "Et si… ? Simuler " + (n > 1 ? "les " + n + " parties restantes" : "la partie restante") });
+    titre.appendChild(el("small", { text: (SERIE_LABELS[cat] || ("Cat. " + cat)) + " · touchez le vainqueur ou saisissez le score" }));
+    toggle.appendChild(titre);
+    zone.compteur = el("span", { class: "sim-compteur", title: "Parties simulées" });
+    toggle.appendChild(zone.compteur);
     toggle.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
     carte.appendChild(toggle);
+
+    // Visible même replié : on voit d'emblée où en est son équipe.
+    zone.impact = el("div", { class: "sim-impact" });
+    carte.appendChild(zone.impact);
 
     var corps = el("div", {});
     corps.hidden = !simOuvert[cle];
@@ -1249,32 +1385,50 @@
       corps.hidden = !simOuvert[cle];
     });
 
-    corps.appendChild(el("p", {
-      class: "finales-note",
-      text: "Touchez le vainqueur (" + SIM_SCORE_GAGNANT + "–" + SIM_SCORE_PERDANT + " par défaut) ou saisissez le score : " +
-            "le goal average départage les égalités. Rien n'est enregistré ni envoyé."
-    }));
+    function mienne(row) {
+      return estSuivie(suivies, spec, cat, row.club_rec, row.equip_rec) || estSuivie(suivies, spec, cat, row.club_vis, row.equip_vis);
+    }
 
+    // Les parties de mes équipes d'abord, puis par poule.
+    var liste = el("div", { class: "sim-liste" });
     restantes.slice().sort(function (a, b) {
+      var m = (mienne(b) ? 1 : 0) - (mienne(a) ? 1 : 0);
+      if (m !== 0) return m;
       return String(a.Poule || "").localeCompare(String(b.Poule || ""), "fr", { numeric: true });
     }).forEach(function (row) {
-      corps.appendChild(buildSimMatch(row, spec, cat, clubMap, suivies));
+      liste.appendChild(buildSimMatch(row, spec, cat, clubMap, suivies, mienne(row)));
     });
+    corps.appendChild(liste);
 
     var actions = el("div", { class: "sim-actions" });
-    var reset = el("button", { type: "button", class: "sim-reset", text: "Effacer la simulation" });
+    var voir = el("button", { type: "button", class: "voir-quarts", text: "Voir les quarts" });
+    voir.addEventListener("click", function () { derniereSerieSimulee = cle; voirQuarts(); });
+    var reset = el("button", { type: "button", class: "sim-reset", text: "Tout effacer" });
     reset.addEventListener("click", effacerSimulation);
+    actions.appendChild(voir);
     actions.appendChild(reset);
     corps.appendChild(actions);
+    corps.appendChild(el("p", {
+      class: "finales-note",
+      text: "Vainqueur touché : " + SIM_SCORE_GAGNANT + "–" + SIM_SCORE_PERDANT + ", à corriger au besoin, le goal average départageant les égalités. " +
+            "Rien n'est enregistré ni envoyé."
+    }));
 
     carte.appendChild(corps);
+    majImpact(zone);
+    majCompteur(zone);
     return carte;
   }
 
-  function buildSimMatch(row, spec, cat, clubMap, suivies) {
+  function buildSimMatch(row, spec, cat, clubMap, suivies, mienne) {
     var oid = row.oid;
     var bloc = el("div", { class: "sim-match" });
-    bloc.appendChild(el("div", { class: "sim-poule", text: row.Poule ? ("Poule " + String(row.Poule).trim()) : "Poule" }));
+    var tete = el("div", { class: "sim-match-head" });
+    tete.appendChild(el("span", { class: "sim-poule", text: row.Poule ? ("Poule " + String(row.Poule).trim()) : "Poule" }));
+    if (mienne) tete.appendChild(el("span", { class: "sim-mienne", text: "Mon équipe" }));
+    var annuler = el("button", { type: "button", class: "sim-annuler", text: "Annuler" });
+    tete.appendChild(annuler);
+    bloc.appendChild(tete);
 
     var cotes = [
       { champ: "cr", autre: "cv", club: row.club_rec, num: row.equip_rec },
@@ -1285,12 +1439,29 @@
 
     function majBoutons() {
       var s = valeurs();
+      var complet = simValide(s);
       cotes.forEach(function (c) {
-        var gagne = simValide(s) && parseInt(s[c.champ], 10) > parseInt(s[c.autre], 10);
+        var gagne = complet && parseInt(s[c.champ], 10) > parseInt(s[c.autre], 10);
+        var perd = complet && parseInt(s[c.champ], 10) < parseInt(s[c.autre], 10);
         c.bouton.classList.toggle("gagne", gagne);
+        c.bouton.classList.toggle("perd", perd);
         c.bouton.setAttribute("aria-pressed", gagne ? "true" : "false");
+        c.marque.textContent = gagne ? "✓ GAGNE" : "";
       });
+      bloc.classList.toggle("simulee", complet);
+      annuler.hidden = !simulation[oid];
     }
+
+    function changer() {
+      derniereSerieSimulee = spec + "|" + cat;
+      recalculer();
+    }
+
+    annuler.addEventListener("click", function () {
+      delete simulation[oid];
+      rafraichirCotes();
+      changer();
+    });
 
     function rafraichirCotes() {
       var s = valeurs();
@@ -1302,9 +1473,11 @@
       var ligne = el("div", { class: "sim-side" });
       c.bouton = el("button", {
         type: "button",
-        class: "sim-pick" + (estSuivie(suivies, spec, cat, c.club, c.num) ? " suivie" : ""),
-        text: clubLabel(clubMap, String(c.club || "").trim(), c.num)
+        class: "sim-pick" + (estSuivie(suivies, spec, cat, c.club, c.num) ? " suivie" : "")
       });
+      c.bouton.appendChild(el("span", { class: "nom", text: clubLabel(clubMap, String(c.club || "").trim(), c.num) }));
+      c.marque = el("span", { class: "marque" });
+      c.bouton.appendChild(c.marque);
       c.input = el("input", {
         class: "sim-score",
         type: "text",
@@ -1327,8 +1500,7 @@
           simulation[oid] = nouveau;
         }
         rafraichirCotes();
-        derniereSerieSimulee = spec + "|" + cat;
-        recalculer();
+        changer();
       });
 
       c.input.addEventListener("input", function () {
@@ -1340,8 +1512,7 @@
         // Le champ en cours de saisie n'est pas réécrit : seuls les boutons
         // suivent, et le classement au-dessus.
         majBoutons();
-        derniereSerieSimulee = spec + "|" + cat;
-        recalculer();
+        changer();
       });
 
       ligne.appendChild(c.bouton);
@@ -1430,7 +1601,7 @@
 
   function recalculer() {
     lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
-    zonesClassement.forEach(remplirZone);
+    zonesClassement.forEach(function (z) { remplirZone(z); majImpact(z); majCompteur(z); });
     renderSimBanner();
     majFabQuarts();
   }
@@ -1467,7 +1638,7 @@
         zonesClassement.push(zone);
         remplirZone(zone);
         results.appendChild(zone.el);
-        var sim = buildSimulateur(s.spec, s.cat);
+        var sim = buildSimulateur(zone);
         if (sim) results.appendChild(sim);
       });
   }
