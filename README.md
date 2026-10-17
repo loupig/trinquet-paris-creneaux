@@ -80,6 +80,33 @@ GitHub Pages redéploie automatiquement (~30s à 2min) à chaque push sur
 (`Version AAAA.MM.JJ`) de chaque page modifiée : pas de build ici pour le
 faire automatiquement.
 
+## Tests
+
+Pas de build ici : sans contrôle, une erreur dans une page partirait en
+production dès la fusion. Une GitHub Action ([`tests.yml`](.github/workflows/tests.yml))
+lance donc sur chaque PR, et à chaque push sur `main` :
+
+- **la syntaxe** du JavaScript de chaque page, compilé sans être exécuté
+  ([`tests/syntaxe.mjs`](tests/syntaxe.mjs)) ;
+- **les pages** dans Chromium, sur un écran de téléphone, avec des données
+  fictives servies à la place de l'API ([`tests/donnees.mjs`](tests/donnees.mjs),
+  clubs et joueurs inventés) : chaque page s'ouvre sans erreur JavaScript ni
+  bandeau d'échec et affiche son contenu, et le Classement est testé de bout
+  en bout (ordre des cartes, quarts croisés, simulation)
+  ([`tests/pages.spec.mjs`](tests/pages.spec.mjs)).
+
+En local (Node 20 et Python 3) :
+
+```
+npm install
+npx playwright install chromium
+npm test
+```
+
+Les tests ne joignent jamais la vraie API. Ils ne couvrent ni l'exactitude
+des données de la ligue ni le rendu fin de chaque page : une nouvelle
+fonctionnalité ajoute son scénario dans `tests/pages.spec.mjs`.
+
 ## Configuration
 
 Chaque page porte ses propres réglages en tête de son `<script>`. Les

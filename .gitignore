@@ -6,3 +6,8 @@ apps-script/
 image.png
 *.jpg
 *.jpeg
+
+# Tests
+node_modules/
+test-results/
+playwright-report/

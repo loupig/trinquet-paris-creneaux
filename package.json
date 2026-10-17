@@ -1,0 +1,13 @@
+{
+  "name": "trinquet-paris-creneaux",
+  "private": true,
+  "description": "Tests du site statique LIDFPB : rien à construire, les pages sont servies telles quelles.",
+  "scripts": {
+    "test": "node tests/syntaxe.mjs && playwright test",
+    "test:syntaxe": "node tests/syntaxe.mjs",
+    "test:pages": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
