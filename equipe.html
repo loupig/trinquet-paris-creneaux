@@ -287,6 +287,7 @@
   .match-score.win { color: var(--win-text); }
   .match-score.loss { color: var(--loss-text); }
   .match-score.todo { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .match-score.retard { font-size: 10px; font-weight: 700; color: var(--loss-text); text-align: right; line-height: 1.2; }
 
   /* Le choix de l'équipe vit dans le header : il hérite de son position:sticky
      et reste accessible pendant tout le défilement. Une liste déroulante native plutôt que des pastilles : une
@@ -1197,7 +1198,12 @@
     row.appendChild(main);
 
     if (m.scoreSoi === null) {
-      row.appendChild(el("div", { class: "match-score todo", text: "à venir" }));
+      // Date passée sans résultat publié : la partie n'est plus « à venir »,
+      // elle est à reprogrammer, comme le dit le message « Prévenir l'équipe ».
+      var enRetard = m.date && m.date < startOfDay(new Date());
+      row.appendChild(enRetard
+        ? el("div", { class: "match-score retard", text: "à reprogrammer", title: "Date passée sans résultat publié" })
+        : el("div", { class: "match-score todo", text: "à venir" }));
     } else {
       var cls = m.scoreSoi > m.scoreAdv ? "win" : (m.scoreSoi < m.scoreAdv ? "loss" : "");
       row.appendChild(el("div", { class: "match-score " + cls, text: m.scoreSoi + " - " + m.scoreAdv }));

@@ -153,6 +153,9 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
     await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
     await attendreChargement(page);
 
+    // La partie à la date passée n'est plus « à venir » dans la liste.
+    await expect(page.locator(".match-score.retard")).toHaveText(["à reprogrammer"]);
+
     const bloc = page.locator(".prevenir");
     await expect(bloc).toContainText("à reprogrammer au plus vite");
 
