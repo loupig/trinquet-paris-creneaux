@@ -79,8 +79,13 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(quarts).toHaveCount(4);
     await expect(quarts.nth(0)).toContainText("1er P1");
     await expect(quarts.nth(0)).toContainText("4e P2");
-    await expect(quarts.nth(1)).toContainText("2e P1");
-    await expect(quarts.nth(1)).toContainText("3e P2");
+    await expect(quarts.nth(1)).toContainText("3e P1");
+    await expect(quarts.nth(1)).toContainText("2e P2");
+    await expect(quarts.nth(2)).toContainText("2e P1");
+    await expect(quarts.nth(2)).toContainText("3e P2");
+    await expect(quarts.nth(3)).toContainText("4e P1");
+    await expect(quarts.nth(3)).toContainText("1er P2");
+    await expect(page.locator(".finales-card .demies").first()).toHaveText(/D1 : V\.Q1 – V\.Q2.*D2 : V\.Q3 – V\.Q4/);
     await expect(page.locator(".finales-card .statut").first()).toHaveText("Prévision");
   });
 
@@ -90,6 +95,7 @@ test.describe("Classement : quarts et simulation", () => {
 
     const sim = page.locator(".sim-card").first();
     await expect(sim.locator(".sim-impact")).toContainText("Charlie");
+    await expect(sim.locator(".sim-impact")).toContainText(/puis D\d contre V\.Q\d/);
     await expect(sim.locator(".sim-compteur")).toHaveText(/^0\//);
 
     await sim.locator(".sim-toggle").click();

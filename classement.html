@@ -428,6 +428,20 @@
   .quart-mid { text-align: center; line-height: 1; }
   .quart-num { display: block; font-size: 9px; font-weight: 800; color: var(--accent); }
   .quart-vs { display: block; font-size: 11px; font-weight: 900; color: var(--text); }
+  .quart-row.moitie { border-top: 2px solid var(--text); }
+  .demies {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 6px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .demies-titre { font-weight: 900; color: var(--accent); }
+  .demie { color: var(--text); white-space: nowrap; }
   .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
 
   /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
@@ -744,9 +758,12 @@
   var PHASE_POULES = "1";
   // Les quatre premiers de chaque poule vont en quarts de finale.
   var QUALIFIES_PAR_POULE = 4;
-  // Quarts croisés entre les deux poules d'une série : le 1er d'une poule
-  // reçoit le 4e de l'autre, le 2e le 3e. Rangs [poule 1, poule 2].
-  var QUARTS = [[1, 4], [2, 3], [3, 2], [4, 1]];
+  // Quarts croisés entre les deux poules d'une série, dans l'ordre Q1 à Q4
+  // fixé par la ligue : cet ordre décide des demies. Rangs [poule 1, poule 2].
+  var QUARTS = [[1, 4], [3, 2], [2, 3], [4, 1]];
+  // Demi-finales : vainqueurs de Q1 et Q2, puis de Q3 et Q4. Les deux 1ers de
+  // poule ne peuvent donc se retrouver qu'en finale.
+  var DEMIES = [[1, 2], [3, 4]];
   var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
 
   // ---------------------------------------------------------------
@@ -1237,8 +1254,8 @@
     return {
       nbPoules: 2,
       quarts: QUARTS.map(function (q, i) {
-        // Le mieux classé des deux est écrit en premier.
-        var cotes = [[0, q[0]], [1, q[1]]].sort(function (a, b) { return a[1] - b[1]; });
+        // Poule 1 à gauche, poule 2 à droite, comme le tableau de la ligue.
+        var cotes = [[0, q[0]], [1, q[1]]];
         return {
           num: i + 1,
           cotes: cotes.map(function (c) {
@@ -1285,7 +1302,9 @@
              ", le tableau n'est pas prévu.";
     } else {
       tableau.quarts.forEach(function (q) {
-        var row = el("div", { class: "quart-row" });
+        // Un trait plus marqué sépare les deux moitiés du tableau, Q1-Q2 et
+        // Q3-Q4, qui donnent chacune une demie.
+        var row = el("div", { class: "quart-row" + (q.num === DEMIES[1][0] ? " moitie" : "") });
         row.appendChild(buildSlot(q.cotes[0], suivies, false));
         var mid = el("div", { class: "quart-mid" });
         mid.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
@@ -1294,6 +1313,12 @@
         row.appendChild(buildSlot(q.cotes[1], suivies, true));
         carte.appendChild(row);
       });
+      var demies = el("div", { class: "demies" });
+      demies.appendChild(el("span", { class: "demies-titre", text: "1/2" }));
+      DEMIES.forEach(function (d, i) {
+        demies.appendChild(el("span", { class: "demie", text: "D" + (i + 1) + " : V.Q" + d[0] + " – V.Q" + d[1] }));
+      });
+      carte.appendChild(demies);
       if (restantes.length === 0) {
         note = "D'après le classement final des poules. Le tableau officiel reste celui de la ligue.";
       } else {
@@ -1339,6 +1364,10 @@
           if (i === -1) return;
           var adv = q.cotes[1 - i];
           verdict += " · Q" + q.num + " contre " + (adv.team ? adv.team.label : "à déterminer (" + ordinal(adv.rang) + " poule " + adv.poule + ")");
+          DEMIES.forEach(function (d, j) {
+            var k = d.indexOf(q.num);
+            if (k !== -1) verdict += ", puis D" + (j + 1) + " contre V.Q" + d[1 - k];
+          });
         });
       }
       ligne.appendChild(document.createElement("br"));
