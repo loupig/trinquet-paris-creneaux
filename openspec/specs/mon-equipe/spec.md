@@ -209,3 +209,19 @@ Sur la fiche de l'adversaire, la page SHALL proposer trois boutons pour joindre 
 #### Scenario: Numéro non affiché
 - **WHEN** le visiteur lit la fiche d'un adversaire joignable
 - **THEN** ni le numéro ni le nom du responsable n'apparaissent en clair dans la page
+
+### Requirement: Prévenir l'équipe de ses parties à jouer
+Sous la liste de ses parties, la page SHALL proposer un bloc « Prévenir l'équipe » quand l'équipe affichée a au moins une partie sans score contre un adversaire connu. Le bloc annonce le nombre de parties à jouer, dont celles à reprogrammer, et prépare un message qui donne, en tête, les parties dont la date est passée sans résultat publié, chacune avec la mention qu'une date est à trouver au plus vite et, au Trinquet Paris, le lien vers l'aide au report ; puis les parties à venir, avec date, heure, adversaire et lieu, ou « date à fixer » ; et enfin le lien vers la page de l'équipe. Quand la ligue a un numéro exploitable pour le responsable de l'équipe, un bouton WhatsApp lui ouvre une conversation avec ce message prérempli, sans afficher son nom ni son numéro. Un second bouton confie le message à la feuille de partage de l'appareil, ou le copie quand il n'y en a pas. Rien n'est envoyé par le site lui-même.
+
+#### Scenario: Partie à la date passée
+- **WHEN** une partie de l'équipe était prévue avant aujourd'hui et n'a pas de score
+- **THEN** le message la place sous « À reprogrammer au plus vite », avec sa date d'origine et la mention qu'une date est à trouver au plus vite
+
+#### Scenario: Responsable joignable
+- **WHEN** le responsable de l'équipe affichée a un numéro déclaré à la ligue
+- **THEN** le bouton « Au responsable » ouvre WhatsApp vers ce numéro avec le message prérempli
+
+#### Scenario: Toutes les parties jouées
+- **WHEN** toutes les parties de l'équipe ont un score
+- **THEN** le bloc « Prévenir l'équipe » n'apparaît pas
+

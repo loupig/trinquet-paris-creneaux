@@ -144,3 +144,31 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     expect(copie).toContain("Programme complet");
   });
 });
+
+test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () => {
+  test("le message met en tête la partie à reprogrammer", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
+    });
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
+    await attendreChargement(page);
+
+    const bloc = page.locator(".prevenir");
+    await expect(bloc).toContainText("à reprogrammer au plus vite");
+
+    // WhatsApp vers le responsable, message prérempli, sans numéro affiché.
+    const wa = bloc.locator("a.prevenir-btn.wa");
+    await expect(wa).toHaveAttribute("href", /^https:\/\/wa\.me\/33\d+\?text=/);
+    await expect(page.locator("body")).not.toContainText("0600000");
+
+    await bloc.getByRole("button", { name: "Partager" }).click();
+    const texte = await page.evaluate(() => window.__partage && window.__partage.text);
+    expect(texte).toContain("Charlie (éq. 1)");
+    const retard = texte.indexOf("*À reprogrammer au plus vite*");
+    const aVenir = texte.indexOf("*À venir*");
+    expect(retard).toBeGreaterThan(0);
+    expect(aVenir).toBeGreaterThan(retard);
+    expect(texte).toContain("Une date est à trouver au plus vite.");
+    expect(texte).toMatch(/Le détail : http.*equipe\.html\?equipe=/);
+  });
+});

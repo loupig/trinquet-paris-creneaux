@@ -399,6 +399,31 @@
   .contact-btn.wa { color: #25D366; }
   .contact-btn.sms, .contact-btn.tel { color: var(--accent); }
   .contact-btn:active { opacity: 0.7; }
+  /* --- Prévenir l'équipe : message des parties qui lui restent --- */
+  .prevenir { padding: 10px 14px 12px; border-top: 1px solid var(--border); background: var(--bg); }
+  .prevenir-titre { font-size: 12px; font-weight: 700; }
+  .prevenir-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 2px 0 8px; }
+  .prevenir-note b { color: var(--loss-text); }
+  .prevenir-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .prevenir-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--card-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .prevenir-btn.wa { color: #fff; background: #1f9d55; border-color: #1f9d55; }
+  .prevenir-btn svg { display: block; }
+  .prevenir-btn:active { opacity: 0.75; }
+  .prevenir-ok { font-size: 11px; font-weight: 600; color: var(--muted); }
   .objectif .forme-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
 
   .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
@@ -481,7 +506,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.04</p>
+    <p>Version 2026.10.18</p>
   </footer>
 </main>
 
@@ -1585,7 +1610,119 @@
       var fiche = buildFicheAdversaire(team, m);
       if (fiche) carte.appendChild(fiche);
     });
+    var prevenir = buildPrevenir(team);
+    if (prevenir) carte.appendChild(prevenir);
     return carte;
+  }
+
+  // ---------------------------------------------------------------
+  // Prévenir l'équipe de ce qui lui reste à jouer
+  // ---------------------------------------------------------------
+  // Les parties sans score, contre un adversaire connu. Celles dont la date
+  // est passée sont à reprogrammer : sans résultat publié, la ligue les
+  // considère comme non jouées.
+  function partiesAJouer(team, today) {
+    var restantes = team.matches.filter(function (m) { return m.scoreSoi === null && !clubFictif(m.clubAdv); });
+    return {
+      enRetard: restantes.filter(function (m) { return m.date && m.date < today; }),
+      aVenir: restantes.filter(function (m) { return !m.date || m.date >= today; })
+    };
+  }
+
+  function lieuCourt(lieu) {
+    var m = /\(([^)]+)\)/.exec(lieu || "");
+    return m ? m[1].split(" - ")[0].trim() : (lieu || "");
+  }
+
+  function lienSite(page) {
+    return new URL(page, window.location.href).href;
+  }
+
+  // Texte prêt à envoyer, mis en forme pour WhatsApp (*…* en gras) et lisible
+  // tel quel en SMS. Les parties en retard d'abord : ce sont elles qui
+  // demandent une action.
+  function messageAJouer(team, cle, parts) {
+    var equipe = clubLabel(etat.clubMap, team.clubCode, team.numero);
+    var lignes = ["Bonjour, voici les parties qu'il reste à jouer pour " +
+                  [equipe, team.serieLabel, team.poule].filter(Boolean).join(", ") + " :"];
+    if (parts.enRetard.length) {
+      lignes.push("", "*À reprogrammer au plus vite*");
+      parts.enRetard.forEach(function (m) {
+        lignes.push("• contre " + m.adversaire + " : prévue le " + formatShortDate(m.date) +
+                    ", sans résultat publié. Une date est à trouver au plus vite.");
+        if (canReport(m)) lignes.push("  Dates possibles au Trinquet Paris : " + lienSite("report.html?oid=" + encodeURIComponent(m.oid)));
+      });
+    }
+    if (parts.aVenir.length) {
+      lignes.push("", "*À venir*");
+      parts.aVenir.forEach(function (m) {
+        var quand = m.date ? formatShortDate(m.date) + (m.hour !== null ? " " + formatHour(m.hour, m.minute) : "") : "date à fixer";
+        lignes.push("• " + quand + " · contre " + m.adversaire + (m.lieu ? " · " + lieuCourt(m.lieu) : ""));
+      });
+    }
+    lignes.push("", "Le détail : " + lienSite("equipe.html?equipe=" + encodeURIComponent(cle)));
+    return lignes.join("\n");
+  }
+
+  function copier(texte) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texte);
+    return Promise.reject(new Error("presse-papiers indisponible"));
+  }
+
+  // WhatsApp directement vers le responsable de l'équipe quand la ligue en
+  // a un numéro (ni le nom ni le numéro ne s'affichent), et dans tous les cas
+  // la feuille de partage du téléphone, ou la copie sur ordinateur, pour
+  // l'envoyer à qui l'on veut.
+  function buildPrevenir(team) {
+    var parts = partiesAJouer(team, startOfDay(new Date()));
+    var n = parts.enRetard.length + parts.aVenir.length;
+    if (!n) return null;
+    var cle = teamKey(team.spec, team.cat, team.clubCode, team.numero);
+    var texte = messageAJouer(team, cle, parts);
+
+    var bloc = el("div", { class: "prevenir" });
+    bloc.appendChild(el("div", { class: "prevenir-titre", text: "Prévenir l'équipe" }));
+    var note = el("div", { class: "prevenir-note", text: "Un message avec ses " + pluriel(n, "partie") + " à jouer" });
+    if (parts.enRetard.length) {
+      note.appendChild(document.createTextNode(", dont "));
+      note.appendChild(el("b", { text: parts.enRetard.length + " à reprogrammer au plus vite" }));
+    }
+    note.appendChild(document.createTextNode("."));
+    bloc.appendChild(note);
+
+    var btns = el("div", { class: "prevenir-btns" });
+    var numero = team.contact ? normalizePhoneForWhatsapp(team.contact.tel) : null;
+    if (numero) {
+      var wa = el("a", {
+        class: "prevenir-btn wa",
+        href: "https://wa.me/" + numero + "?text=" + encodeURIComponent(texte),
+        target: "_blank",
+        rel: "noopener"
+      });
+      wa.innerHTML = ICON_SVG_WHATSAPP;
+      wa.appendChild(el("span", { text: "Au responsable" }));
+      btns.appendChild(wa);
+    }
+    var info = el("span", { class: "prevenir-ok", "aria-live": "polite" });
+    var partager = el("button", { type: "button", class: "prevenir-btn" });
+    partager.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+    partager.appendChild(el("span", { text: navigator.share ? "Partager" : "Copier le message" }));
+    partager.addEventListener("click", function () {
+      info.textContent = "";
+      if (navigator.share) {
+        navigator.share({ text: texte }).catch(function (e) {
+          if (e && e.name === "AbortError") return;   // partage annulé
+          copier(texte).then(function () { info.textContent = "Message copié"; });
+        });
+        return;
+      }
+      copier(texte).then(function () { info.textContent = "Message copié, à coller"; },
+                         function () { info.textContent = "Copie impossible sur ce navigateur"; });
+    });
+    btns.appendChild(partager);
+    btns.appendChild(info);
+    bloc.appendChild(btns);
+    return bloc;
   }
 
   function buildReste(reste) {
