@@ -67,11 +67,15 @@ La page SHALL mettre en avant la prochaine partie à venir de l'équipe, toutes 
 - **THEN** la page indique « plus de partie programmée » à la place de la prochaine partie
 
 ### Requirement: Parties de l'équipe
-La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, dans l'ordre chronologique : date et heure, adversaire, phase ou poule, lieu, et score du point de vue de l'équipe, en vert si elle l'emporte et en rouge sinon. Une partie sans score est marquée « à venir ». Les parties sans score au Trinquet Paris portent le bouton de report, comme dans la page Parties.
+La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, dans l'ordre chronologique : date et heure, adversaire, phase ou poule, lieu, et score du point de vue de l'équipe, en vert si elle l'emporte et en rouge sinon. Une partie sans score est marquée « à venir », ou « à reprogrammer », en rouge, quand sa date est passée sans résultat publié. Les parties sans score au Trinquet Paris portent le bouton de report, comme dans la page Parties.
 
 #### Scenario: Partie gagnée
 - **WHEN** l'équipe a gagné une partie 40 à 32 en tant que visiteur
 - **THEN** la ligne affiche « 40 - 32 » en vert
+
+#### Scenario: Date passée sans score
+- **WHEN** une partie de l'équipe était prévue hier et n'a pas de score
+- **THEN** la ligne affiche « à reprogrammer » en rouge au lieu de « à venir »
 
 #### Scenario: Partie sans date lisible
 - **WHEN** une partie de l'équipe n'a pas de date lisible
