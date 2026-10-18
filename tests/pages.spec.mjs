@@ -85,7 +85,20 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(quarts.nth(2)).toContainText("3e P2");
     await expect(quarts.nth(3)).toContainText("4e P1");
     await expect(quarts.nth(3)).toContainText("1er P2");
-    await expect(page.locator(".finales-card .demies").first()).toHaveText(/D1 : V\.Q1 – V\.Q2.*D2 : V\.Q3 – V\.Q4/);
+    // Arbre : D1, D2 et Finale, reliés aux quarts par des traits.
+    const arbre = page.locator(".finales-card .tableau-arbre").first();
+    await expect(arbre.locator(".arbre-etape")).toHaveText(["D1", "D2", "Finale"]);
+    await expect(arbre.locator("path")).toHaveCount(6);
+    // L'équipe suivie (Charlie) a son chemin surligné jusqu'à sa demie.
+    await expect(arbre.locator(".arbre-etape.mien")).toHaveCount(1);
+    // Les étapes sont dessinées dans la carte, pas ailleurs dans la page.
+    const boite = await arbre.boundingBox();
+    for (const etape of await arbre.locator(".arbre-etape").all()) {
+      const b = await etape.boundingBox();
+      expect(b.y).toBeGreaterThanOrEqual(boite.y);
+      expect(b.y + b.height).toBeLessThanOrEqual(boite.y + boite.height);
+      expect(b.x + b.width).toBeLessThanOrEqual(boite.x + boite.width);
+    }
     await expect(page.locator(".finales-card .statut").first()).toHaveText("Prévision");
   });
 

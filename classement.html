@@ -388,34 +388,44 @@
   .finales-card { border: 2px solid var(--text); }
   .finales-card .poule-head { background: var(--text); color: #fff; border-bottom: none; }
   .finales-card .poule-head .poule-sub { color: rgba(255, 255, 255, 0.7); }
-  /* Un quart tient sur une ligne : le rang de poule en étiquette sur le
-     bord extérieur, accolé au nom plutôt qu'en dessous. */
+  /* Tableau final : les quarts à gauche, chacun ses deux équipes l'une sur
+     l'autre, et à droite l'arbre qui les mène aux demies puis à la finale.
+     L'arbre est dessiné d'après la hauteur réelle des quarts, qu'un nom
+     long fait varier. */
+  /* position: relative : les quarts y mesurent leur hauteur (offsetTop),
+     dans le même repère que l'arbre. */
+  .tableau { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 100px; }
+  .tableau-quarts { min-width: 0; }
   .quart-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1fr);
+    grid-template-columns: 22px minmax(0, 1fr);
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: 2px;
+    padding: 4px 4px 4px 8px;
     border-top: 1px solid var(--border);
   }
   .quart-row:first-of-type { border-top: none; }
+  .quart-row.moitie { border-top: 2px solid var(--text); }
+  .quart-num { font-size: 10px; font-weight: 900; color: var(--accent); }
   .quart-side {
     min-width: 0;
-    padding: 4px 6px;
+    padding: 2px 6px;
     border-radius: 7px;
     border: 1px solid transparent;
     font-size: 12px;
     font-weight: 800;
-    line-height: 1.25;
+    line-height: 1.3;
     overflow-wrap: anywhere;
   }
-  .quart-side.droite { text-align: right; }
   .quart-side.suivie { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
   .quart-side.vide { color: var(--muted); font-weight: 600; }
   .quart-seed {
     display: inline-block;
+    min-width: 36px;
+    margin-right: 5px;
     font-size: 9px;
     font-weight: 700;
+    text-align: center;
     color: var(--muted);
     background: var(--bg);
     border-radius: 20px;
@@ -423,25 +433,25 @@
     vertical-align: 1px;
     white-space: nowrap;
   }
-  .quart-side:not(.droite) .quart-seed { margin-right: 4px; }
-  .quart-side.droite .quart-seed { margin-left: 4px; }
-  .quart-mid { text-align: center; line-height: 1; }
-  .quart-num { display: block; font-size: 9px; font-weight: 800; color: var(--accent); }
-  .quart-vs { display: block; font-size: 11px; font-weight: 900; color: var(--text); }
-  .quart-row.moitie { border-top: 2px solid var(--text); }
-  .demies {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 10px;
-    padding: 6px 14px;
-    border-top: 1px solid var(--border);
+  .tableau-arbre { position: relative; border-left: 1px solid var(--border); }
+  .tableau-arbre svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .tableau-arbre path { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+  .tableau-arbre path.mien { stroke: var(--accent); stroke-width: 2.5; }
+  .arbre-etape {
+    position: absolute;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 20px;
     background: var(--bg);
-    font-size: 11px;
-    font-weight: 700;
+    border: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
   }
-  .demies-titre { font-weight: 900; color: var(--accent); }
-  .demie { color: var(--text); white-space: nowrap; }
+  .arbre-etape.mien { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  .arbre-etape.finale { background: var(--text); border-color: var(--text); color: #fff; }
   .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
 
   /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
@@ -1254,7 +1264,7 @@
     return {
       nbPoules: 2,
       quarts: QUARTS.map(function (q, i) {
-        // Poule 1 à gauche, poule 2 à droite, comme le tableau de la ligue.
+        // Poule 1 au-dessus, poule 2 en dessous, comme le tableau de la ligue.
         var cotes = [[0, q[0]], [1, q[1]]];
         return {
           num: i + 1,
@@ -1267,14 +1277,12 @@
     };
   }
 
-  function buildSlot(cote, suivies, droite) {
+  function buildSlot(cote, suivies) {
     var t = cote.team;
     var suivie = t && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
-    var side = el("div", { class: "quart-side" + (droite ? " droite" : "") + (t ? "" : " vide") + (suivie ? " suivie" : "") });
-    var seed = el("span", { class: "quart-seed", text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule });
-    var nom = document.createTextNode(t ? t.label : "À déterminer");
-    if (droite) { side.appendChild(nom); side.appendChild(seed); }
-    else { side.appendChild(seed); side.appendChild(nom); }
+    var side = el("div", { class: "quart-side" + (t ? "" : " vide") + (suivie ? " suivie" : "") });
+    side.appendChild(el("span", { class: "quart-seed", text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule }));
+    side.appendChild(document.createTextNode(t ? t.label : "À déterminer"));
     return side;
   }
 
@@ -1301,24 +1309,27 @@
       note = "Les quarts croisent les deux poules d'une série ; celle-ci en compte " + tableau.nbPoules +
              ", le tableau n'est pas prévu.";
     } else {
+      var grille = el("div", { class: "tableau" });
+      var colonne = el("div", { class: "tableau-quarts" });
+      var rangees = [];
+      var mienQ = null;   // numéro du quart d'une équipe suivie, pour surligner son chemin
       tableau.quarts.forEach(function (q) {
         // Un trait plus marqué sépare les deux moitiés du tableau, Q1-Q2 et
         // Q3-Q4, qui donnent chacune une demie.
         var row = el("div", { class: "quart-row" + (q.num === DEMIES[1][0] ? " moitie" : "") });
-        row.appendChild(buildSlot(q.cotes[0], suivies, false));
-        var mid = el("div", { class: "quart-mid" });
-        mid.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
-        mid.appendChild(el("span", { class: "quart-vs", text: "VS" }));
-        row.appendChild(mid);
-        row.appendChild(buildSlot(q.cotes[1], suivies, true));
-        carte.appendChild(row);
+        row.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
+        var duo = el("div", {});
+        q.cotes.forEach(function (c) {
+          duo.appendChild(buildSlot(c, suivies));
+          if (mienQ === null && c.team && estSuivie(suivies, c.team.spec, c.team.cat, c.team.clubCode, c.team.numero)) mienQ = q.num;
+        });
+        row.appendChild(duo);
+        colonne.appendChild(row);
+        rangees.push(row);
       });
-      var demies = el("div", { class: "demies" });
-      demies.appendChild(el("span", { class: "demies-titre", text: "1/2" }));
-      DEMIES.forEach(function (d, i) {
-        demies.appendChild(el("span", { class: "demie", text: "D" + (i + 1) + " : V.Q" + d[0] + " – V.Q" + d[1] }));
-      });
-      carte.appendChild(demies);
+      grille.appendChild(colonne);
+      grille.appendChild(buildArbre(colonne, rangees, mienQ));
+      carte.appendChild(grille);
       if (restantes.length === 0) {
         note = "D'après le classement final des poules. Le tableau officiel reste celui de la ligue.";
       } else {
@@ -1329,6 +1340,66 @@
     }
     carte.appendChild(el("p", { class: "finales-note", text: note }));
     return carte;
+  }
+
+  // Arbre des demies et de la finale, à droite des quarts. Les étapes sont
+  // posées et les traits tracés d'après le milieu réel de chaque quart, et
+  // retracés quand la carte change de taille (nom long, rotation d'écran).
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  function buildArbre(colonne, rangees, mienQ) {
+    var arbre = el("div", { class: "tableau-arbre", "aria-hidden": "true" });
+    var svg = document.createElementNS(SVG_NS, "svg");
+    arbre.appendChild(svg);
+    var etapes = DEMIES.map(function (d, i) {
+      var mien = mienQ !== null && d.indexOf(mienQ) !== -1;
+      var e = el("span", { class: "arbre-etape" + (mien ? " mien" : ""), text: "D" + (i + 1) });
+      arbre.appendChild(e);
+      return { quarts: d, el: e, mien: mien };
+    });
+    var finale = el("span", { class: "arbre-etape finale", text: "Finale" });
+    arbre.appendChild(finale);
+
+    function trait(d, mien) {
+      var p = document.createElementNS(SVG_NS, "path");
+      p.setAttribute("d", d);
+      if (mien) p.setAttribute("class", "mien");
+      svg.appendChild(p);
+    }
+
+    function dessiner() {
+      if (!arbre.isConnected) return;
+      svg.innerHTML = "";
+      var X_DEMIE = 10, X_FINALE = 50;
+      var milieux = rangees.map(function (r) { return r.offsetTop + r.offsetHeight / 2; });
+      var yDemies = etapes.map(function (e) {
+        var y1 = milieux[e.quarts[0] - 1], y2 = milieux[e.quarts[1] - 1];
+        var y = (y1 + y2) / 2;
+        e.quarts.forEach(function (n, k) {
+          trait("M0 " + (k ? y2 : y1) + "H" + X_DEMIE + "V" + y, e.mien && n === mienQ);
+        });
+        e.el.style.left = (X_DEMIE + 2) + "px";
+        e.el.style.top = y + "px";
+        return y;
+      });
+      var yFinale = (yDemies[0] + yDemies[1]) / 2;
+      etapes.forEach(function (e, i) {
+        trait("M" + (X_DEMIE + 2 + e.el.offsetWidth) + " " + yDemies[i] + "H" + X_FINALE + "V" + yFinale, e.mien);
+      });
+      finale.style.left = (X_FINALE + 2) + "px";
+      finale.style.top = yFinale + "px";
+    }
+
+    if (window.ResizeObserver) {
+      var obs = new ResizeObserver(function () {
+        if (!arbre.isConnected) { obs.disconnect(); return; }
+        dessiner();
+      });
+      obs.observe(colonne);
+    } else {
+      requestAnimationFrame(dessiner);
+    }
+    return arbre;
   }
 
   // Ce que le classement, réel ou simulé, donne pour chaque équipe suivie de
