@@ -319,6 +319,39 @@
     text-overflow: ellipsis;
   }
 
+  /* Pied du bloc « D'ici dimanche » : le bouton Partager ne peut pas vivre
+     dans la tuile, qui est tout entière un lien vers le programme. Il s'y
+     accroche par en dessous. */
+  .tile.avec-pied { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .tile-pied {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 7px 14px;
+    margin-bottom: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+  .partage-ok { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .partager {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .partager:active { opacity: 0.75; }
+
   /* --- Barre de progression de la saison --- */
   .progress {
     height: 7px;
@@ -424,7 +457,7 @@
   <div id="tiles"></div>
 
   <footer>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.11</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.18</p>
   </footer>
 </main>
 
@@ -1203,6 +1236,71 @@
     return bloc;
   }
 
+  // ---------------------------------------------------------------
+  // Partage des parties d'ici dimanche
+  // ---------------------------------------------------------------
+  // Un texte prêt à poster plutôt qu'une image ou une page : il se lit dans
+  // la conversation WhatsApp sans rien ouvrir, avec noms complets et lieu,
+  // et le lien vers le programme pour le détail.
+  // Regroupé par jour, jours en gras au sens de WhatsApp (*…*).
+  function textePartage(titre, parties) {
+    var lignes = ["*Pala gomme pleine · " + titre + "*"];
+    var jour = null;
+    parties.forEach(function (a) {
+      var m = a.partie;
+      var j = formatShortDate(m.date);
+      if (j !== jour) {
+        jour = j;
+        lignes.push("", "*" + j.charAt(0).toUpperCase() + j.slice(1) + "*");
+      }
+      lignes.push(formatHour(m.hour, m.minute) + " · " + m.serieLabel + (m.lieu ? " · " + lieuCourt(m.lieu) : "") +
+                  " · " + m.teamsLong + (a.etiquette ? " → " + a.etiquette : ""));
+    });
+    lignes.push("");
+    lignes.push("Programme complet : " + new URL("programme.html", window.location.href).href);
+    return lignes.join("\n");
+  }
+
+  function copier(texte) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texte);
+    return new Promise(function (resolve, reject) {
+      var zone = el("textarea", { style: "position:fixed;opacity:0" });
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { /* refusé */ }
+      zone.remove();
+      if (ok) resolve(); else reject(new Error("copie impossible"));
+    });
+  }
+
+  // Sur téléphone, la feuille de partage du système (WhatsApp, SMS…) ; sans
+  // elle, ordinateur surtout, le texte est copié pour être collé.
+  function buildPartage(titre, parties) {
+    var pied = el("div", { class: "tile-pied" });
+    var info = el("span", { class: "partage-ok", "aria-live": "polite" });
+    var bouton = el("button", { type: "button", class: "partager" });
+    bouton.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+    bouton.appendChild(el("span", { text: "Partager ces parties" }));
+    bouton.addEventListener("click", function () {
+      var texte = textePartage(titre, parties);
+      info.textContent = "";
+      if (navigator.share) {
+        navigator.share({ text: texte }).catch(function (e) {
+          if (e && e.name === "AbortError") return;   // partage annulé
+          copier(texte).then(function () { info.textContent = "Texte copié"; });
+        });
+        return;
+      }
+      copier(texte).then(function () { info.textContent = "Texte copié, à coller"; },
+                         function () { info.textContent = "Copie impossible sur ce navigateur"; });
+    });
+    pied.appendChild(info);
+    pied.appendChild(bouton);
+    return pied;
+  }
+
   function renderTiles(data, today) {
     var box = document.getElementById("tiles");
     box.innerHTML = "";
@@ -1249,6 +1347,10 @@
       t1.body.appendChild(item);
     });
     box.appendChild(t1);
+    if (ici.parties.length) {
+      t1.classList.add("avec-pied");
+      box.appendChild(buildPartage(titre, ici.parties));
+    }
 
     // --- Avancement de la saison ---
     var total = data.rencontres.length;

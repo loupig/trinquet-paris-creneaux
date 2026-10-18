@@ -6,12 +6,12 @@ Afficher le classement de chaque poule des championnats, ou un classement géné
 
 ## Requirements
 
-### Requirement: Règle rappelée en tête
-La page SHALL rappeler en tête qu'elle classe la phase de poules, avec le barème (victoire 3 points, défaite 1 point) et le critère (total de points divisé par le nombre de parties jouées, puis goal average moyen). Le classement suit la spec `calcul-classement`. Les résultats des phases finales n'apparaissent pas sur la page : seule la prévision des quarts, déduite du classement des poules, y figure.
+### Requirement: Règle rappelée sous les filtres
+L'en-tête de la page SHALL être celui des pages Parties et Mon équipe : titre, ligue, source et dernière synchro. Le barème (victoire 3 points, défaite 1 point), le critère (points par partie jouée, puis goal average moyen) et les quatre qualifiés par poule sont rappelés en une phrase courte dans le bloc Filtres. Le classement suit la spec `calcul-classement`. Les résultats des phases finales n'apparaissent pas sur la page : seule la prévision des quarts, déduite du classement des poules, y figure.
 
 #### Scenario: Ouverture de la page
 - **WHEN** un visiteur ouvre la page Classement
-- **THEN** l'en-tête rappelle le barème et le critère de classement
+- **THEN** l'en-tête ne donne que la source et la synchro, et le bloc Filtres rappelle le barème et le critère de classement
 
 ### Requirement: Découpage par poule ou général
 La page SHALL proposer deux découpages exclusifs : « Par poule », par défaut, avec une carte par poule, et « Général », qui fusionne en une seule carte les poules d'une même spécialité et d'une même série et les classe selon la même règle. Les cartes sont rangées par spécialité, puis par série, puis par poule. Chaque carte porte la série, son titre (« Poule N » ou « Classement général ») et son nombre d'équipes.
