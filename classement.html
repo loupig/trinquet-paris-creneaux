@@ -496,6 +496,7 @@
   .sim-impact-ligne .verdict.ok { color: var(--win-text); background: #e3f4ea; }
   .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
   .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
+  .sim-impact-ligne .montrer { margin-top: 6px; }
   .sim-impact-ligne .chemin { margin-top: 4px; font-size: 12px; line-height: 1.45; }
   .sim-impact.astuce { font-size: 11px; color: var(--muted); line-height: 1.45; }
 
@@ -1314,13 +1315,17 @@
 
   // « Le prono du comptoir » : remplit les parties restantes de la série
   // encore libres, sans toucher à celles déjà simulées à la main.
-  function appliquerStats(spec, cat) {
-    var cle = spec + "|" + cat;
-    var ecarts = ecartsReels(spec, cat);
+  function contexteStats(spec, cat) {
     var forme = {};
     buildStandings(lastData.rencontres, lastData.clubMap).forEach(function (t) {
       forme[teamKey(t.spec, t.cat, t.poule, t.clubCode, t.numero)] = t;
     });
+    return { ecarts: ecartsReels(spec, cat), forme: forme };
+  }
+
+  function appliquerStats(spec, cat) {
+    var cle = spec + "|" + cat;
+    var ctx = contexteStats(spec, cat), ecarts = ctx.ecarts, forme = ctx.forme;
     var suivies = mesEquipes();
     var libres = partiesRestantes(spec, cat).filter(function (r) { return !simValide(simulation[r.oid]); });
     var faits = 0, indecis = 0, bilan = {};
@@ -1368,13 +1373,19 @@
   var CHEMIN_MAX_PARTIES = 16;   // 65 536 issues : au-delà, trop tôt pour conclure
   var cheminCache = {};
 
+  // { texte, scenario } : scenario, quand il y en a un à montrer, est l'issue
+  // qualifiante la plus probable selon le comptoir.
   function cheminVersQuarts(t) {
     var cle = teamKey(t.spec, t.cat, t.poule, t.clubCode, t.numero);
-    if (!(cle in cheminCache)) cheminCache[cle] = calculerChemin(t, cle);
+    if (!(cle in cheminCache)) {
+      var sortie = {};
+      sortie.texte = calculerChemin(t, cle, sortie);
+      cheminCache[cle] = sortie;
+    }
     return cheminCache[cle];
   }
 
-  function calculerChemin(t, moi) {
+  function calculerChemin(t, moi, sortie) {
     var base = {};
     buildStandings(lastData.rencontres, lastData.clubMap).forEach(function (x) {
       if (x.spec === t.spec && x.cat === t.cat && x.poule === t.poule) {
@@ -1384,7 +1395,7 @@
     var parties = partiesRestantes(t.spec, t.cat).filter(function (r) {
       return String(r.Poule || "").trim() === t.poule;
     }).map(function (r) {
-      return { a: cleRencontre(r, true), b: cleRencontre(r, false) };
+      return { a: cleRencontre(r, true), b: cleRencontre(r, false), row: r };
     }).filter(function (m) { return base[m.a] && base[m.b]; });
     var n = parties.length;
     if (n > CHEMIN_MAX_PARTIES) return "🧮 Encore " + n + " parties à jouer dans la poule : trop tôt pour tracer le chemin, revenez en fin de poule.";
@@ -1396,6 +1407,16 @@
     // toutes en commun (bit à bit : vainqueur receveur à 1).
     var parVictoires = [];
     for (var k = 0; k <= miennes; k++) parVictoires.push({ ok: 0, ga: 0, ko: 0, et: -1, ou: 0 });
+
+    // L'avis du comptoir sur chaque partie, pour retenir parmi les issues
+    // qualifiantes celle qui le contredit le moins.
+    var ctx = contexteStats(t.spec, t.cat), avisMasque = 0, avisBits = 0;
+    var pronos = parties.map(function (m, i) {
+      var p = pronostiquer(m.row, ctx.ecarts, ctx.forme);
+      if (p) { avisMasque |= 1 << i; if (parseInt(p.cr, 10) > parseInt(p.cv, 10)) avisBits |= 1 << i; }
+      return p;
+    });
+    var meilleure = -1, desaccords = Infinity;
 
     for (var issue = 0; issue < (1 << n); issue++) {
       var pts = {}, j = {}, victoires = 0;
@@ -1415,12 +1436,26 @@
       var v = parVictoires[victoires];
       if (devant >= QUALIFIES_PAR_POULE) v.ko++;
       else if (devant + egales >= QUALIFIES_PAR_POULE) v.ga++;
-      else { v.ok++; v.et &= issue; v.ou |= issue; }
+      else {
+        v.ok++; v.et &= issue; v.ou |= issue;
+        var d = 0;
+        for (var x = (issue ^ avisBits) & avisMasque; x; x &= x - 1) d++;
+        if (d < desaccords) { desaccords = d; meilleure = issue; }
+      }
     }
 
     function somme(champ) { return parVictoires.reduce(function (s, v) { return s + v[champ]; }, 0); }
     var total = 1 << n;
     if (somme("ok") === total) return "✅ Qualifiée quoi qu'il arrive. Le comptoir peut déjà trinquer 🍻";
+    if (meilleure !== -1) {
+      sortie.scenario = parties.map(function (m, i) {
+        var recGagne = !!((meilleure >> i) & 1), p = pronos[i];
+        if (p && (parseInt(p.cr, 10) > parseInt(p.cv, 10)) === recGagne) return { oid: m.row.oid, s: p };
+        var g = String(SIM_SCORE_GAGNANT), pe = String(SIM_SCORE_PERDANT);
+        return { oid: m.row.oid, s: { cr: recGagne ? g : pe, cv: recGagne ? pe : g } };
+      });
+      sortie.desaccords = desaccords;
+    }
     if (somme("ko") === total) return "❌ Plus de quart possible, même en gagnant tout. Reste l'honneur… et la tournée de consolation 🍻";
 
     // Victoires qui qualifient à coup sûr, quels que soient les autres résultats.
@@ -1471,6 +1506,25 @@
       return "🤞 Ça passe en gagnant " + sur_n(possible) + ", mais pas sans aide : " + conditions(possible) + ".";
     }
     return "⚖️ Au mieux, ça se jouera au goal average" + (miennes ? " : gagnez " + sur_n(miennes) + ", et largement." : ".");
+  }
+
+  // Remplace la simulation de la poule par le scénario qualifiant retenu :
+  // les parties où il suit le comptoir en gardent le score et l'étiquette.
+  function montrerScenario(t, chemin) {
+    var cle = t.spec + "|" + t.cat;
+    partiesRestantes(t.spec, t.cat).forEach(function (r) {
+      if (String(r.Poule || "").trim() === t.poule) delete simulation[r.oid];
+    });
+    chemin.scenario.forEach(function (x) { simulation[x.oid] = Object.assign({}, x.s); });
+    var d = chemin.desaccords;
+    pronoMessage[cle] = "🗺️ Le scénario qui qualifie " + t.label + " le plus probable" +
+      (d ? " selon le comptoir, avec " + d + " surprise" + (d > 1 ? "s" : "") + " à créer (les parties sans étiquette 🍻)."
+         : " ? Celui du comptoir, qui y croit déjà 🍻") +
+      " Retouchez-le à volonté.";
+    simOuvert[cle] = true;
+    derniereSerieSimulee = cle;
+    lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
+    renderResults(lastTeams);
   }
 
   function mesEquipes() {
@@ -1682,9 +1736,15 @@
       }
       ligne.appendChild(document.createElement("br"));
       ligne.appendChild(el("span", { class: "verdict " + genre, text: verdict }));
+      var chemin = cheminVersQuarts(t);
       ligne.appendChild(el("div", { class: "chemin" }, [
-        el("b", { text: "Chemin vers les quarts : " }), document.createTextNode(cheminVersQuarts(t))
+        el("b", { text: "Chemin vers les quarts : " }), document.createTextNode(chemin.texte)
       ]));
+      if (chemin.scenario) {
+        var montrer = el("button", { type: "button", class: "sim-stats montrer", text: "🗺️ Montre-moi ce scénario" });
+        montrer.addEventListener("click", function () { montrerScenario(t, chemin); });
+        ligne.appendChild(montrer);
+      }
       bloc.appendChild(ligne);
     });
   }
