@@ -150,6 +150,21 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".sim-card").first().locator(".sim-impact .chemin")).toHaveText(texte);
   });
 
+  test("« Montre-moi ce scénario » remplit la poule d'un scénario qui qualifie", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+
+    // Charlie (4e, poule 1) : 7 parties restent dans sa poule.
+    await page.getByRole("button", { name: /Montre-moi ce scénario/ }).click();
+    const sim = page.locator(".sim-card").first();
+    await expect(sim.locator(".sim-toggle")).toHaveAttribute("aria-expanded", "true");
+    await expect(sim.locator(".sim-compteur")).toHaveText(/^7\//);
+    await expect(sim.locator(".sim-stats-msg")).toContainText("Le scénario qui qualifie Charlie (éq. 1)");
+    // Le scénario tient : Charlie y est qualifiée.
+    await expect(sim.locator(".sim-impact .verdict")).toContainText(" · qualifiée");
+    await expect(page.locator("#sim-slot")).toContainText("Simulation en cours");
+  });
+
   test("le comptoir pronostique les parties libres, sans écraser la main", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
