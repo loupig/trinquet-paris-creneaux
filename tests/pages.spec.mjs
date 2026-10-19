@@ -134,28 +134,28 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".sim-card").first().locator(".sim-compteur")).toHaveText(/^0\//);
   });
 
-  test("les stats pronostiquent les parties libres, sans écraser la main", async ({ page }) => {
+  test("le comptoir pronostique les parties libres, sans écraser la main", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
 
     let sim = page.locator(".sim-card").first();
     await sim.locator(".sim-toggle").click();
-    // Une partie simulée à la main avant : les stats la laissent telle quelle.
+    // Une partie simulée à la main avant : le comptoir la laisse telle quelle.
     await sim.locator(".sim-match").first().locator(".sim-pick").nth(1).click();
 
-    await sim.getByRole("button", { name: /Laisser parler les stats/ }).click();
+    await sim.getByRole("button", { name: /Le prono du comptoir/ }).click();
     sim = page.locator(".sim-card").first();
     const compteur = await sim.locator(".sim-compteur").textContent();
     const [faites, total] = compteur.split("/");
     expect(faites).toBe(total);
-    await expect(sim.locator(".sim-stats-msg")).toContainText("Les stats ont parlé");
+    await expect(sim.locator(".sim-stats-msg")).toContainText("Le comptoir a tranché");
     // Charlie perd contre Bravo d'après les adversaires communs : on le lui dit.
     await expect(sim.locator(".sim-stats-msg")).toContainText("Charlie");
 
     const premiere = sim.locator(".sim-match").first();
     await expect(premiere.locator(".sim-prono")).toBeHidden();
     await expect(premiere.locator(".sim-score").nth(1)).toHaveValue("40");
-    await expect(sim.locator(".sim-match .sim-prono:visible").first()).toHaveText("📊 Stats");
+    await expect(sim.locator(".sim-match .sim-prono:visible").first()).toHaveText("🍻 Comptoir");
 
     await page.locator("#sim-slot .sim-reset").click();
     await expect(page.locator(".sim-stats-msg")).toHaveCount(0);

@@ -774,7 +774,7 @@
   var simulation = {};
   // Bloc de simulation déplié, par série : il survit aux re-rendus.
   var simOuvert = {};
-  // Dernier verdict des stats, par série, affiché sous les boutons du
+  // Dernier verdict du comptoir, par série, affiché sous les boutons du
   // simulateur jusqu'au prochain « Tout effacer ».
   var pronoMessage = {};
   var SIM_SCORE_GAGNANT = 40, SIM_SCORE_PERDANT = 30;
@@ -1311,7 +1311,7 @@
     return { cr: marge > 0 ? gagnant : perdant, cv: marge > 0 ? perdant : gagnant, prono: raison };
   }
 
-  // « Laisser parler les stats » : remplit les parties restantes de la série
+  // « Le prono du comptoir » : remplit les parties restantes de la série
   // encore libres, sans toucher à celles déjà simulées à la main.
   function appliquerStats(spec, cat) {
     var cle = spec + "|" + cat;
@@ -1338,18 +1338,18 @@
 
     var msg;
     if (!libres.length) {
-      msg = "Toutes les parties sont déjà simulées. Annulez-en une pour laisser parler les stats.";
+      msg = "Toutes les parties sont déjà simulées. Annulez-en une pour demander l'avis du comptoir.";
     } else if (!faits) {
-      msg = "Les stats restent muettes : pas encore assez de résultats pour départager qui que ce soit.";
+      msg = "Le comptoir reste sans voix : pas encore assez de résultats pour départager qui que ce soit.";
     } else {
-      msg = "🔮 Les stats ont parlé : " + faits + " partie" + (faits > 1 ? "s pronostiquées" : " pronostiquée") +
-            (indecis ? ", " + indecis + " trop serrée" + (indecis > 1 ? "s" : "") + " pour elles, à vous de trancher" : "") + ".";
+      msg = "🍻 Le comptoir a tranché : " + faits + " partie" + (faits > 1 ? "s pronostiquées" : " pronostiquée") +
+            (indecis ? ", " + indecis + " trop serrée" + (indecis > 1 ? "s" : "") + " même pour lui, à vous de voir" : "") + ".";
       Object.keys(bilan).forEach(function (nom) {
         var b = bilan[nom];
-        if (b.perdues && !b.gagnees) msg += " Elles ne donnent pas cher de " + nom + "… Raison de plus pour les faire mentir 😏";
+        if (b.perdues && !b.gagnees) msg += " Au comptoir, on ne donne pas cher de " + nom + "… Raison de plus pour leur donner tort 😏";
         else if (b.perdues) msg += " " + nom + " : " + b.gagnees + " victoire" + (b.gagnees > 1 ? "s" : "") + " et " + b.perdues +
-                                   " défaite" + (b.perdues > 1 ? "s" : "") + " annoncées. Les stats ne sont pas des arbitres 😉";
-        else msg += " " + nom + " gagne tout sur le papier. Reste à le prouver sur le trinquet 💪";
+                                   " défaite" + (b.perdues > 1 ? "s" : "") + " annoncées. Mais le comptoir n'a jamais tenu une pala 😉";
+        else msg += " " + nom + " gagne tout au comptoir. Reste à le prouver sur le trinquet 💪";
       });
     }
     pronoMessage[cle] = msg;
@@ -1622,7 +1622,7 @@
     }
 
     // En tête de liste : on n'a pas à dérouler toutes les parties pour le voir.
-    var stats = el("button", { type: "button", class: "sim-stats", text: "🔮 Laisser parler les stats" });
+    var stats = el("button", { type: "button", class: "sim-stats", text: "🍻 Le prono du comptoir" });
     stats.addEventListener("click", function () { appliquerStats(spec, cat); });
     corps.appendChild(el("div", { class: "sim-actions" }, [stats]));
     if (pronoMessage[cle]) corps.appendChild(el("p", { class: "sim-stats-msg", text: pronoMessage[cle] }));
@@ -1649,7 +1649,7 @@
     corps.appendChild(el("p", {
       class: "finales-note",
       text: "Vainqueur touché : " + SIM_SCORE_GAGNANT + "–" + SIM_SCORE_PERDANT + ", à corriger au besoin, le goal average départageant les égalités. " +
-            "Les stats pronostiquent les parties encore libres d'après les vrais résultats de la saison : qui a battu qui, et de combien. " +
+            "Le prono du comptoir remplit les parties encore libres d'après les vrais résultats de la saison : qui a battu qui, et de combien. " +
             "Rien n'est enregistré ni envoyé."
     }));
 
@@ -1690,10 +1690,10 @@
         c.marque.textContent = gagne ? "✓ GAGNE" : "";
       });
       bloc.classList.toggle("simulee", complet);
-      // Une partie retouchée à la main n'est plus le pronostic des stats.
+      // Une partie retouchée à la main n'est plus le prono du comptoir.
       prono.hidden = !(complet && s.prono);
-      prono.textContent = "📊 Stats";
-      prono.title = s.prono ? "Pronostic des stats : " + s.prono : "";
+      prono.textContent = "🍻 Comptoir";
+      prono.title = s.prono ? "Prono du comptoir : " + s.prono : "";
       annuler.hidden = !simulation[oid];
     }
 
