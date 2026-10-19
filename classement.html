@@ -496,6 +496,7 @@
   .sim-impact-ligne .verdict.ok { color: var(--win-text); background: #e3f4ea; }
   .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
   .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
+  .sim-impact-ligne .chemin { margin-top: 4px; font-size: 12px; line-height: 1.45; }
   .sim-impact.astuce { font-size: 11px; color: var(--muted); line-height: 1.45; }
 
   .sim-liste { padding: 4px 10px 2px; }
@@ -1358,6 +1359,120 @@
     renderResults(lastTeams);
   }
 
+  // ---------------------------------------------------------------
+  // Mon chemin vers les quarts : toutes les issues des parties de poule
+  // restantes, en victoires et défaites, d'après les seuls résultats réels.
+  // Les nuls ne sont pas envisagés ; à égalité de moyenne, c'est le goal
+  // average qui tranche, et lui dépend des scores : on le dit, sans deviner.
+  // ---------------------------------------------------------------
+  var CHEMIN_MAX_PARTIES = 16;   // 65 536 issues : au-delà, trop tôt pour conclure
+  var cheminCache = {};
+
+  function cheminVersQuarts(t) {
+    var cle = teamKey(t.spec, t.cat, t.poule, t.clubCode, t.numero);
+    if (!(cle in cheminCache)) cheminCache[cle] = calculerChemin(t, cle);
+    return cheminCache[cle];
+  }
+
+  function calculerChemin(t, moi) {
+    var base = {};
+    buildStandings(lastData.rencontres, lastData.clubMap).forEach(function (x) {
+      if (x.spec === t.spec && x.cat === t.cat && x.poule === t.poule) {
+        base[teamKey(x.spec, x.cat, x.poule, x.clubCode, x.numero)] = { pts: x.points, j: x.jouees, label: x.label };
+      }
+    });
+    var parties = partiesRestantes(t.spec, t.cat).filter(function (r) {
+      return String(r.Poule || "").trim() === t.poule;
+    }).map(function (r) {
+      return { a: cleRencontre(r, true), b: cleRencontre(r, false) };
+    }).filter(function (m) { return base[m.a] && base[m.b]; });
+    var n = parties.length;
+    if (n > CHEMIN_MAX_PARTIES) return "🧮 Encore " + n + " parties à jouer dans la poule : trop tôt pour tracer le chemin, revenez en fin de poule.";
+
+    var miennes = parties.filter(function (m) { return m.a === moi || m.b === moi; }).length;
+    var equipes = Object.keys(base);
+    // Par nombre de victoires de mon équipe : issues qualifiées, au goal
+    // average, éliminées, et pour les qualifiées, les résultats qu'elles ont
+    // toutes en commun (bit à bit : vainqueur receveur à 1).
+    var parVictoires = [];
+    for (var k = 0; k <= miennes; k++) parVictoires.push({ ok: 0, ga: 0, ko: 0, et: -1, ou: 0 });
+
+    for (var issue = 0; issue < (1 << n); issue++) {
+      var pts = {}, j = {}, victoires = 0;
+      equipes.forEach(function (e) { pts[e] = base[e].pts; j[e] = base[e].j; });
+      for (var i = 0; i < n; i++) {
+        var m = parties[i], recGagne = (issue >> i) & 1;
+        var g = recGagne ? m.a : m.b, p = recGagne ? m.b : m.a;
+        pts[g] += PTS_VICTOIRE; pts[p] += PTS_DEFAITE; j[g]++; j[p]++;
+        if (g === moi) victoires++;
+      }
+      var maMoy = j[moi] ? pts[moi] / j[moi] : -1, devant = 0, egales = 0;
+      equipes.forEach(function (e) {
+        if (e === moi) return;
+        var moy = j[e] ? pts[e] / j[e] : -1;
+        if (moy > maMoy) devant++; else if (moy === maMoy) egales++;
+      });
+      var v = parVictoires[victoires];
+      if (devant >= QUALIFIES_PAR_POULE) v.ko++;
+      else if (devant + egales >= QUALIFIES_PAR_POULE) v.ga++;
+      else { v.ok++; v.et &= issue; v.ou |= issue; }
+    }
+
+    function somme(champ) { return parVictoires.reduce(function (s, v) { return s + v[champ]; }, 0); }
+    var total = 1 << n;
+    if (somme("ok") === total) return "✅ Qualifiée quoi qu'il arrive. Le comptoir peut déjà trinquer 🍻";
+    if (somme("ko") === total) return "❌ Plus de quart possible, même en gagnant tout. Reste l'honneur… et la tournée de consolation 🍻";
+
+    // Victoires qui qualifient à coup sûr, quels que soient les autres résultats.
+    // Et celles qui, au pire, laissent le goal average trancher.
+    var sur = null, surGa = null;
+    for (k = miennes; k >= 0 && !parVictoires[k].ga && !parVictoires[k].ko; k--) sur = k;
+    for (k = miennes; k >= 0 && !parVictoires[k].ko; k--) surGa = k;
+    var possible = null;
+    for (k = 0; k <= miennes; k++) if (parVictoires[k].ok) { possible = k; break; }
+
+    function sur_n(k) {
+      return k === miennes ? (miennes > 1 ? "vos " + miennes + " parties" : "votre dernière partie")
+                           : k + " de vos " + miennes + " parties";
+    }
+    function que(nom) { return (/^[aeiouyéèêàâîôû]/i.test(nom) ? "qu'" : "que ") + nom; }
+    // Résultats communs à toutes les issues qualifiées avec k victoires :
+    // ceux sans lesquels ça ne passe pas.
+    function conditions(k) {
+      var v = parVictoires[k], liste = [];
+      parties.forEach(function (m, i) {
+        var bit = 1 << i;
+        var toujours = (v.et & bit) ? true : (!(v.ou & bit) ? false : null);
+        if (toujours === null) return;
+        var g = toujours ? m.a : m.b, p = toujours ? m.b : m.a;
+        // Mes propres parties d'abord : c'est ce qui dépend de nous.
+        if (g === moi) { if (k < miennes) liste.unshift("que vous battiez " + base[p].label); }
+        else if (p !== moi) liste.push(que(base[g].label) + " batte " + base[p].label);
+      });
+      if (!liste.length) return "il faudra que les autres résultats vous sourient";
+      var retenus = liste.slice(0, 3);
+      var fin = retenus.pop();
+      return "il faut " + (liste.length > 3 ? "notamment " : "") + (retenus.length ? retenus.join(", ") + " et " : "") + fin;
+    }
+
+    var cible = (sur !== null && sur > 0) ? sur : surGa;
+    if (cible !== null && cible > 0) {
+      var msg = cible === sur ? "🎯 Qualifiée à coup sûr en gagnant " + sur_n(sur) + "."
+                              : "🎯 En gagnant " + sur_n(surGa) + ", c'est quasi fait : au pire, ça se jouera au goal average.";
+      if (possible !== null && possible < cible) {
+        msg += " " + (possible ? "Avec " + possible + " victoire" + (possible > 1 ? "s" : "") : "Même sans victoire") +
+               ", ça reste jouable : " + conditions(possible) + ".";
+      }
+      return msg;
+    }
+    if (possible !== null) {
+      if (!miennes) return "⏳ Vos parties sont jouées, tout dépend des autres : " + conditions(0) + ".";
+      if (!possible) return "🤞 Ça peut passer même sans victoire, mais rien n'est sûr, même en gagnant tout : " + conditions(0) + ".";
+      return "🤞 Ça passe en gagnant " + sur_n(possible) + ", mais pas sans aide : " + conditions(possible) + ".";
+    }
+    return "⚖️ Au mieux, ça se jouera au goal average" + (miennes ? " : gagnez " + sur_n(miennes) + ", et largement." : ".");
+  }
+
   function mesEquipes() {
     var suivies = {};
     try {
@@ -1567,6 +1682,9 @@
       }
       ligne.appendChild(document.createElement("br"));
       ligne.appendChild(el("span", { class: "verdict " + genre, text: verdict }));
+      ligne.appendChild(el("div", { class: "chemin" }, [
+        el("b", { text: "Chemin vers les quarts : " }), document.createTextNode(cheminVersQuarts(t))
+      ]));
       bloc.appendChild(ligne);
     });
   }
@@ -1919,6 +2037,7 @@
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       var clubMap = buildClubMap(data.clubs);
       lastData = { rencontres: data.rencontres, clubMap: clubMap };
+      cheminCache = {};
       lastTeams = buildStandings(avecSimulation(data.rencontres), clubMap);
       renderSpecChips(lastTeams);
       renderResults(lastTeams);
