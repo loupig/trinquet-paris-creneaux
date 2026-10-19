@@ -1624,7 +1624,10 @@
     // En tête de liste : on n'a pas à dérouler toutes les parties pour le voir.
     var stats = el("button", { type: "button", class: "sim-stats", text: "🍻 Le prono du comptoir" });
     stats.addEventListener("click", function () { appliquerStats(spec, cat); });
-    corps.appendChild(el("div", { class: "sim-actions" }, [stats]));
+    // « Tout effacer » aussi en haut : on défait le prono sans redescendre.
+    var effacerHaut = el("button", { type: "button", class: "sim-reset", text: "Tout effacer" });
+    effacerHaut.addEventListener("click", effacerSimulation);
+    corps.appendChild(el("div", { class: "sim-actions" }, [stats, effacerHaut]));
     if (pronoMessage[cle]) corps.appendChild(el("p", { class: "sim-stats-msg", text: pronoMessage[cle] }));
 
     // Les parties de mes équipes d'abord, puis par poule.
