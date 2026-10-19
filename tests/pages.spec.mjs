@@ -157,8 +157,10 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(premiere.locator(".sim-score").nth(1)).toHaveValue("40");
     await expect(sim.locator(".sim-match .sim-prono:visible").first()).toHaveText("🍻 Comptoir");
 
-    await page.locator("#sim-slot .sim-reset").click();
+    // « Tout effacer », à côté du prono, défait tout sans redescendre.
+    await sim.locator(".sim-actions").first().getByRole("button", { name: "Tout effacer" }).click();
     await expect(page.locator(".sim-stats-msg")).toHaveCount(0);
+    await expect(page.locator("#sim-slot")).toBeEmpty();
   });
 });
 

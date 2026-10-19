@@ -70,7 +70,7 @@ En bas de chaque série, la page SHALL proposer un simulateur, encadré en point
 #### Scenario: Le prono du comptoir
 - **WHEN** le visiteur touche « 🍻 Le prono du comptoir » dans le simulateur d'une série
 - **THEN** chaque partie restante encore libre reçoit un pronostic tiré des seuls résultats réels de la saison : la confrontation directe si elle a déjà eu lieu, sinon l'écart moyen contre les adversaires communs, sinon la moyenne de points puis le goal average moyen ; le vainqueur pronostiqué marque 40, le perdant 40 moins l'écart attendu (au moins 1 point) ; une partie que rien ne départage reste libre
-- **AND** les parties déjà simulées à la main ne changent pas, chaque partie pronostiquée porte l'étiquette « 🍻 Comptoir » jusqu'à ce qu'on la retouche, et un message sur le ton de l'humour dit combien de parties sont pronostiquées et ce que le comptoir prédit aux équipes suivies, en les invitant à lui donner tort
+- **AND** les parties déjà simulées à la main ne changent pas, chaque partie pronostiquée porte l'étiquette « 🍻 Comptoir » jusqu'à ce qu'on la retouche, et un message sur le ton de l'humour dit combien de parties sont pronostiquées et ce que le comptoir prédit aux équipes suivies, en les invitant à lui donner tort ; un bouton « Tout effacer », à côté du prono, défait toute la simulation sans redescendre en bas de la liste
 
 #### Scenario: Simuler une victoire
 - **WHEN** le visiteur touche une équipe dans une partie restante
