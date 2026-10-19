@@ -510,6 +510,20 @@
   .sim-match-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-height: 20px; }
   .sim-poule { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .sim-mienne { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-prono { font-size: 10px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-prono[hidden] { display: none; }
+  .sim-stats {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .sim-stats-msg { margin: 0 14px 8px; font-size: 12px; line-height: 1.45; }
   .sim-annuler {
     margin-left: auto;
     font: inherit;
@@ -564,6 +578,7 @@
   }
   .sim-score:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
   .sim-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 14px 12px; }
+  .sim-actions:first-child { padding: 10px 14px 4px; }
   .sim-reset {
     font: inherit;
     font-size: 12px;
@@ -759,6 +774,9 @@
   var simulation = {};
   // Bloc de simulation déplié, par série : il survit aux re-rendus.
   var simOuvert = {};
+  // Dernier verdict des stats, par série, affiché sous les boutons du
+  // simulateur jusqu'au prochain « Tout effacer ».
+  var pronoMessage = {};
   var SIM_SCORE_GAGNANT = 40, SIM_SCORE_PERDANT = 30;
 
   // Barème fixé par la ligue. Un nul est impossible en pratique (une équipe
@@ -1234,6 +1252,112 @@
     }).length;
   }
 
+  // Écarts réels de la série, par équipe puis par adversaire : ce que dit
+  // « qui a battu qui, et de combien ». Les simulations n'y entrent pas.
+  function ecartsReels(spec, cat) {
+    var ecarts = {};
+    lastData.rencontres.forEach(function (row) {
+      if (!estPhaseDePoules(row) || !hasScore(row)) return;
+      if (String(row["Spécialité"] || "").trim() !== spec || String(row["Catégorie"] || "").trim() !== cat) return;
+      var sr = parseInt(row.score_cr, 10), sv = parseInt(row.score_cv, 10);
+      if (Number.isNaN(sr) || Number.isNaN(sv)) return;
+      var a = cleRencontre(row, true), b = cleRencontre(row, false);
+      ((ecarts[a] = ecarts[a] || {})[b] = ecarts[a][b] || []).push(sr - sv);
+      ((ecarts[b] = ecarts[b] || {})[a] = ecarts[b][a] || []).push(sv - sr);
+    });
+    return ecarts;
+  }
+
+  function cleRencontre(row, chezSoi) {
+    return teamKey(row["Spécialité"], row["Catégorie"], row.Poule,
+                   chezSoi ? row.club_rec : row.club_vis, chezSoi ? row.equip_rec : row.equip_vis);
+  }
+
+  function moyenneDe(liste) {
+    return liste.reduce(function (s, x) { return s + x; }, 0) / liste.length;
+  }
+
+  // Pronostic d'une partie restante, marge vue du receveur : la confrontation
+  // directe si elle a déjà eu lieu, sinon les adversaires communs, sinon la
+  // forme (moyenne de points, puis goal average moyen). null quand rien ne
+  // départage : la partie reste au visiteur.
+  function pronostiquer(row, ecarts, forme) {
+    var a = cleRencontre(row, true), b = cleRencontre(row, false);
+    var ea = ecarts[a] || {}, eb = ecarts[b] || {};
+    var marge = 0, raison = "";
+    if (ea[b]) {
+      marge = moyenneDe(ea[b]);
+      raison = "déjà joué l'un contre l'autre";
+    }
+    if (!marge) {
+      var communs = Object.keys(ea).filter(function (x) { return x !== b && eb[x]; });
+      if (communs.length) {
+        marge = moyenneDe(communs.map(function (x) { return moyenneDe(ea[x]) - moyenneDe(eb[x]); }));
+        raison = communs.length + " adversaire" + (communs.length > 1 ? "s" : "") + " en commun";
+      }
+    }
+    if (!marge) {
+      var ta = forme[a], tb = forme[b];
+      if (ta && tb && ta.jouees && tb.jouees) {
+        var ecartGa = Math.abs(ta.gaMoyen - tb.gaMoyen);
+        if (ta.moyenne !== tb.moyenne) marge = (ta.moyenne > tb.moyenne ? 1 : -1) * Math.max(1, ecartGa);
+        else marge = ta.gaMoyen - tb.gaMoyen;
+        raison = "meilleure forme de la saison";
+      }
+    }
+    if (!marge) return null;
+    var perdant = String(SIM_SCORE_GAGNANT - Math.min(SIM_SCORE_GAGNANT, Math.max(1, Math.round(Math.abs(marge)))));
+    var gagnant = String(SIM_SCORE_GAGNANT);
+    return { cr: marge > 0 ? gagnant : perdant, cv: marge > 0 ? perdant : gagnant, prono: raison };
+  }
+
+  // « Laisser parler les stats » : remplit les parties restantes de la série
+  // encore libres, sans toucher à celles déjà simulées à la main.
+  function appliquerStats(spec, cat) {
+    var cle = spec + "|" + cat;
+    var ecarts = ecartsReels(spec, cat);
+    var forme = {};
+    buildStandings(lastData.rencontres, lastData.clubMap).forEach(function (t) {
+      forme[teamKey(t.spec, t.cat, t.poule, t.clubCode, t.numero)] = t;
+    });
+    var suivies = mesEquipes();
+    var libres = partiesRestantes(spec, cat).filter(function (r) { return !simValide(simulation[r.oid]); });
+    var faits = 0, indecis = 0, bilan = {};
+    libres.forEach(function (row) {
+      var p = pronostiquer(row, ecarts, forme);
+      if (!p) { indecis++; return; }
+      simulation[row.oid] = p;
+      faits++;
+      [[row.club_rec, row.equip_rec, p.cr, p.cv], [row.club_vis, row.equip_vis, p.cv, p.cr]].forEach(function (c) {
+        if (!estSuivie(suivies, spec, cat, c[0], c[1])) return;
+        var nom = clubLabel(lastData.clubMap, String(c[0] || "").trim(), c[1]);
+        var b = bilan[nom] = bilan[nom] || { gagnees: 0, perdues: 0 };
+        if (parseInt(c[2], 10) > parseInt(c[3], 10)) b.gagnees++; else b.perdues++;
+      });
+    });
+
+    var msg;
+    if (!libres.length) {
+      msg = "Toutes les parties sont déjà simulées. Annulez-en une pour laisser parler les stats.";
+    } else if (!faits) {
+      msg = "Les stats restent muettes : pas encore assez de résultats pour départager qui que ce soit.";
+    } else {
+      msg = "🔮 Les stats ont parlé : " + faits + " partie" + (faits > 1 ? "s pronostiquées" : " pronostiquée") +
+            (indecis ? ", " + indecis + " trop serrée" + (indecis > 1 ? "s" : "") + " pour elles, à vous de trancher" : "") + ".";
+      Object.keys(bilan).forEach(function (nom) {
+        var b = bilan[nom];
+        if (b.perdues && !b.gagnees) msg += " Elles ne donnent pas cher de " + nom + "… Raison de plus pour les faire mentir 😏";
+        else if (b.perdues) msg += " " + nom + " : " + b.gagnees + " victoire" + (b.gagnees > 1 ? "s" : "") + " et " + b.perdues +
+                                   " défaite" + (b.perdues > 1 ? "s" : "") + " annoncées. Les stats ne sont pas des arbitres 😉";
+        else msg += " " + nom + " gagne tout sur le papier. Reste à le prouver sur le trinquet 💪";
+      });
+    }
+    pronoMessage[cle] = msg;
+    derniereSerieSimulee = cle;
+    lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
+    renderResults(lastTeams);
+  }
+
   function mesEquipes() {
     var suivies = {};
     try {
@@ -1497,6 +1621,12 @@
       return estSuivie(suivies, spec, cat, row.club_rec, row.equip_rec) || estSuivie(suivies, spec, cat, row.club_vis, row.equip_vis);
     }
 
+    // En tête de liste : on n'a pas à dérouler toutes les parties pour le voir.
+    var stats = el("button", { type: "button", class: "sim-stats", text: "🔮 Laisser parler les stats" });
+    stats.addEventListener("click", function () { appliquerStats(spec, cat); });
+    corps.appendChild(el("div", { class: "sim-actions" }, [stats]));
+    if (pronoMessage[cle]) corps.appendChild(el("p", { class: "sim-stats-msg", text: pronoMessage[cle] }));
+
     // Les parties de mes équipes d'abord, puis par poule.
     var liste = el("div", { class: "sim-liste" });
     restantes.slice().sort(function (a, b) {
@@ -1519,6 +1649,7 @@
     corps.appendChild(el("p", {
       class: "finales-note",
       text: "Vainqueur touché : " + SIM_SCORE_GAGNANT + "–" + SIM_SCORE_PERDANT + ", à corriger au besoin, le goal average départageant les égalités. " +
+            "Les stats pronostiquent les parties encore libres d'après les vrais résultats de la saison : qui a battu qui, et de combien. " +
             "Rien n'est enregistré ni envoyé."
     }));
 
@@ -1534,6 +1665,8 @@
     var tete = el("div", { class: "sim-match-head" });
     tete.appendChild(el("span", { class: "sim-poule", text: row.Poule ? ("Poule " + String(row.Poule).trim()) : "Poule" }));
     if (mienne) tete.appendChild(el("span", { class: "sim-mienne", text: "Mon équipe" }));
+    var prono = el("span", { class: "sim-prono" });
+    tete.appendChild(prono);
     var annuler = el("button", { type: "button", class: "sim-annuler", text: "Annuler" });
     tete.appendChild(annuler);
     bloc.appendChild(tete);
@@ -1557,6 +1690,10 @@
         c.marque.textContent = gagne ? "✓ GAGNE" : "";
       });
       bloc.classList.toggle("simulee", complet);
+      // Une partie retouchée à la main n'est plus le pronostic des stats.
+      prono.hidden = !(complet && s.prono);
+      prono.textContent = "📊 Stats";
+      prono.title = s.prono ? "Pronostic des stats : " + s.prono : "";
       annuler.hidden = !simulation[oid];
     }
 
@@ -1634,6 +1771,7 @@
 
   function effacerSimulation() {
     simulation = {};
+    pronoMessage = {};
     lastTeams = buildStandings(lastData.rencontres, lastData.clubMap);
     renderResults(lastTeams);
   }
