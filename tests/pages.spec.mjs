@@ -134,6 +134,22 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".sim-card").first().locator(".sim-compteur")).toHaveText(/^0\//);
   });
 
+  test("le chemin vers les quarts de l'équipe suivie, d'après les résultats réels", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+
+    // Charlie, 4e, a 3 parties à jouer : toutes les issues sont passées en revue.
+    const chemin = page.locator(".sim-card").first().locator(".sim-impact .chemin");
+    await expect(chemin).toHaveText("Chemin vers les quarts : 🎯 Qualifiée à coup sûr en gagnant vos 3 parties. " +
+      "Avec 1 victoire, ça reste jouable : il faut qu'Alpha (éq. 1) batte Echo (éq. 1) et que Bravo (éq. 1) batte Foxtrot (éq. 1).");
+
+    // Une simulation ne change pas le chemin, tiré des seuls résultats réels.
+    const texte = await chemin.textContent();
+    await page.locator(".sim-card").first().locator(".sim-toggle").click();
+    await page.locator(".sim-card").first().locator(".sim-match").first().locator(".sim-pick").first().click();
+    await expect(page.locator(".sim-card").first().locator(".sim-impact .chemin")).toHaveText(texte);
+  });
+
   test("le comptoir pronostique les parties libres, sans écraser la main", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
