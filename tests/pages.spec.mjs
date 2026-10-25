@@ -254,7 +254,12 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
     // Pas de lien, mais le numéro du responsable adverse pour fixer la date.
     expect(texte).not.toContain("http");
     expect(texte).toMatch(/Responsable : .*06 00 00 0\d \d\d/);
-    // Les quarts, sur quatre soirs, sont rappelés en plage.
-    expect(texte).toMatch(/\*Phases finales, à bloquer\*\n• 1\/4 de finale : du .+ au .+$/);
+    // Les phases finales, une date chacune, tant que la finale de la saison
+    // (6 déc. 2026) n'est pas passée ; les quarts de la série 1 sont le 14 nov.
+    if (new Date() < new Date(2026, 10, 14)) {
+      expect(texte).toMatch(/\*Rappel des phases finales\*\n• 1\/4 de finale : sam\. 14 nov\.\n• 1\/2 finale : dim\. 29 nov\.\n• Finale : dim\. 6 déc\.$/);
+    } else if (new Date() >= new Date(2026, 11, 7)) {
+      expect(texte).not.toContain("Rappel des phases finales");
+    }
   });
 });
