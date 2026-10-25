@@ -215,7 +215,7 @@ Sur la fiche de l'adversaire, la page SHALL proposer trois boutons pour joindre 
 - **THEN** ni le numéro ni le nom du responsable n'apparaissent en clair dans la page
 
 ### Requirement: Prévenir l'équipe de ses parties à jouer
-Sous la liste de ses parties, la page SHALL proposer un bloc « Prévenir l'équipe » quand l'équipe affichée a au moins une partie sans score contre un adversaire connu. Le bloc annonce le nombre de parties à jouer, dont celles à reprogrammer, et prépare un message qui donne, en tête, les parties dont la date est passée sans résultat publié, chacune avec la mention qu'une date est à trouver au plus vite ; puis les parties à venir, avec date, heure, adversaire et lieu, ou « date à fixer ». Sous chaque partie, quand la ligue a un numéro exploitable pour le responsable de l'équipe adverse, le message donne son nom et son numéro, lisible au téléphone, pour fixer la date avec lui. Le message MUST NOT contenir de lien. Quand la ligue a un numéro exploitable pour le responsable de l'équipe, un bouton WhatsApp lui ouvre une conversation avec ce message prérempli, sans afficher son nom ni son numéro. Un second bouton confie le message à la feuille de partage de l'appareil, ou le copie quand il n'y en a pas. Rien n'est envoyé par le site lui-même.
+Sous la liste de ses parties, la page SHALL proposer un bloc « Prévenir l'équipe » quand l'équipe affichée a au moins une partie sans score contre un adversaire connu. Le bloc annonce le nombre de parties à jouer, dont celles à reprogrammer, et prépare un message qui donne, en tête, les parties dont la date est passée sans résultat publié, chacune avec la mention qu'une date est à trouver au plus vite ; puis les parties à venir, avec date, heure, adversaire et lieu, ou « date à fixer ». Sous chaque partie, quand la ligue a un numéro exploitable pour le responsable de l'équipe adverse, le message donne son nom et son numéro, lisible au téléphone, pour fixer la date avec lui. Le message se termine par un rappel des dates des 1/4, 1/2 et finale qui ne sont pas encore passées, une date par phase, fixée chaque saison d'après la ligue (les quarts diffèrent selon la série). Le message MUST NOT contenir de lien. Quand la ligue a un numéro exploitable pour le responsable de l'équipe, un bouton WhatsApp lui ouvre une conversation avec ce message prérempli, sans afficher son nom ni son numéro. Un second bouton confie le message à la feuille de partage de l'appareil, ou le copie quand il n'y en a pas. Rien n'est envoyé par le site lui-même.
 
 #### Scenario: Partie à la date passée
 - **WHEN** une partie de l'équipe était prévue avant aujourd'hui et n'a pas de score
@@ -224,6 +224,10 @@ Sous la liste de ses parties, la page SHALL proposer un bloc « Prévenir l'équ
 #### Scenario: Responsable adverse dans le message
 - **WHEN** le responsable d'une équipe adverse a un numéro déclaré à la ligue
 - **THEN** le message donne, sous la partie contre cette équipe, le nom et le numéro de ce responsable, et aucun lien
+
+#### Scenario: Dates des phases finales
+- **WHEN** des quarts, demies ou finale de la saison sont encore à venir
+- **THEN** le message se termine par « Rappel des phases finales » avec la date de chacune, celle des quarts étant propre à la série de l'équipe
 
 #### Scenario: Responsable joignable
 - **WHEN** le responsable de l'équipe affichée a un numéro déclaré à la ligue

@@ -1640,6 +1640,25 @@
     return m ? m[1].split(" - ")[0].trim() : (lieu || "");
   }
 
+  // Dates des 1/4, 1/2 et finale de la saison, une par phase, données par
+  // la ligue : celles de son site s'étalent sur plusieurs jours. Seuls les
+  // quarts diffèrent d'une série à l'autre. Une phase passée n'est plus
+  // rappelée : à mettre à jour chaque saison.
+  var PHASES_FINALES = [
+    { label: "1/4 de finale", dates: { "1": new Date(2026, 10, 14), "2": new Date(2026, 10, 22) } },
+    { label: "1/2 finale", dates: { "1": new Date(2026, 10, 29), "2": new Date(2026, 10, 29) } },
+    { label: "Finale", dates: { "1": new Date(2026, 11, 6), "2": new Date(2026, 11, 6) } }
+  ];
+
+  function datesPhasesFinales(team, today) {
+    return PHASES_FINALES.filter(function (ph) {
+      var d = ph.dates[team.cat];
+      return d && d >= today;
+    }).map(function (ph) {
+      return "• " + ph.label + " : " + formatShortDate(ph.dates[team.cat]);
+    });
+  }
+
   // Numéro lisible au téléphone ("06 12 34 56 78"), à partir du format
   // international de normalizePhoneForWhatsapp. Un numéro étranger reste en +.
   function telLisible(raw) {
@@ -1683,6 +1702,8 @@
         if (resp) lignes.push(resp);
       });
     }
+    var finales = datesPhasesFinales(team, startOfDay(new Date()));
+    if (finales.length) lignes = lignes.concat("", "*Rappel des phases finales*", finales);
     return lignes.join("\n");
   }
 
