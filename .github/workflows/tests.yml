@@ -12,7 +12,9 @@ permissions:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    # Version figée : ubuntu-latest est passé en 26.04, que Playwright 1.56
+    # ne sait pas équiper en Chromium.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
