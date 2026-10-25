@@ -254,5 +254,7 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
     // Pas de lien, mais le numéro du responsable adverse pour fixer la date.
     expect(texte).not.toContain("http");
     expect(texte).toMatch(/Responsable : .*06 00 00 0\d \d\d/);
+    // Les quarts, sur quatre soirs, sont rappelés en plage.
+    expect(texte).toMatch(/\*Phases finales, à bloquer\*\n• 1\/4 de finale : du .+ au .+$/);
   });
 });

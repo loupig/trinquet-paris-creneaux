@@ -1640,6 +1640,34 @@
     return m ? m[1].split(" - ")[0].trim() : (lieu || "");
   }
 
+  // Dates des 1/4, 1/2 et finale de la série, pour que l'équipe les bloque
+  // dès maintenant. Une phase déjà passée n'est plus rappelée ; une phase sur
+  // plusieurs jours est donnée en plage.
+  var PHASES_RAPPELEES = ["10", "11", "12"];
+
+  function datesPhasesFinales(team, today) {
+    var jours = {};
+    etat.data.rencontres.forEach(function (row) {
+      var phase = String(row.Phase || "").trim();
+      if (PHASES_RAPPELEES.indexOf(phase) === -1) return;
+      if (String(row["Spécialité"] || "").trim() !== team.spec || String(row["Catégorie"] || "").trim() !== team.cat) return;
+      var d = effectiveDate(row);
+      if (!d) return;
+      (jours[phase] = jours[phase] || {})[d.getTime()] = d;
+    });
+    return PHASES_RAPPELEES.filter(function (ph) { return jours[ph]; }).map(function (ph) {
+      var dates = Object.keys(jours[ph]).map(function (k) { return jours[ph][k]; })
+        .sort(function (a, b) { return a - b; });
+      return { label: PHASE_LABELS[ph], dates: dates };
+    }).filter(function (ph) { return ph.dates[ph.dates.length - 1] >= today; }).map(function (ph) {
+      var d = ph.dates;
+      var quand = d.length === 1 ? formatShortDate(d[0])
+                : d.length === 2 ? formatShortDate(d[0]) + " et " + formatShortDate(d[1])
+                : "du " + formatShortDate(d[0]) + " au " + formatShortDate(d[d.length - 1]);
+      return "• " + ph.label + " : " + quand;
+    });
+  }
+
   // Numéro lisible au téléphone ("06 12 34 56 78"), à partir du format
   // international de normalizePhoneForWhatsapp. Un numéro étranger reste en +.
   function telLisible(raw) {
@@ -1683,6 +1711,8 @@
         if (resp) lignes.push(resp);
       });
     }
+    var finales = datesPhasesFinales(team, startOfDay(new Date()));
+    if (finales.length) lignes = lignes.concat("", "*Phases finales, à bloquer*", finales);
     return lignes.join("\n");
   }
 
