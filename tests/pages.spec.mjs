@@ -251,6 +251,8 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
     expect(retard).toBeGreaterThan(0);
     expect(aVenir).toBeGreaterThan(retard);
     expect(texte).toContain("Une date est à trouver au plus vite.");
-    expect(texte).toMatch(/Le détail : http.*equipe\.html\?equipe=/);
+    // Pas de lien, mais le numéro du responsable adverse pour fixer la date.
+    expect(texte).not.toContain("http");
+    expect(texte).toMatch(/Responsable : .*06 00 00 0\d \d\d/);
   });
 });

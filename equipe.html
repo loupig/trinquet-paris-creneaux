@@ -1640,14 +1640,28 @@
     return m ? m[1].split(" - ")[0].trim() : (lieu || "");
   }
 
-  function lienSite(page) {
-    return new URL(page, window.location.href).href;
+  // Numéro lisible au téléphone ("06 12 34 56 78"), à partir du format
+  // international de normalizePhoneForWhatsapp. Un numéro étranger reste en +.
+  function telLisible(raw) {
+    var n = normalizePhoneForWhatsapp(raw);
+    if (!n) return null;
+    if (n.slice(0, 2) === "33" && n.length === 11) return ("0" + n.slice(2)).replace(/(\d\d)(?=\d)/g, "$1 ");
+    return "+" + n;
+  }
+
+  // Le responsable adverse, pour que l'équipe prévenue l'appelle sans
+  // chercher : c'est elle qui doit fixer la date avec lui.
+  function ligneResponsableAdverse(team, m) {
+    var adv = etat.index[teamKey(team.spec, team.cat, m.clubAdv, m.numAdv)];
+    var tel = adv && adv.contact ? telLisible(adv.contact.tel) : null;
+    if (!tel) return null;
+    return "  Responsable : " + [adv.contact.responsable, tel].filter(Boolean).join(", ");
   }
 
   // Texte prêt à envoyer, mis en forme pour WhatsApp (*…* en gras) et lisible
   // tel quel en SMS. Les parties en retard d'abord : ce sont elles qui
   // demandent une action.
-  function messageAJouer(team, cle, parts) {
+  function messageAJouer(team, parts) {
     var equipe = clubLabel(etat.clubMap, team.clubCode, team.numero);
     var lignes = ["Bonjour, voici les parties qu'il reste à jouer pour " +
                   [equipe, team.serieLabel, team.poule].filter(Boolean).join(", ") + " :"];
@@ -1656,7 +1670,8 @@
       parts.enRetard.forEach(function (m) {
         lignes.push("• contre " + m.adversaire + " : prévue le " + formatShortDate(m.date) +
                     ", sans résultat publié. Une date est à trouver au plus vite.");
-        if (canReport(m)) lignes.push("  Dates possibles au Trinquet Paris : " + lienSite("report.html?oid=" + encodeURIComponent(m.oid)));
+        var resp = ligneResponsableAdverse(team, m);
+        if (resp) lignes.push(resp);
       });
     }
     if (parts.aVenir.length) {
@@ -1664,9 +1679,10 @@
       parts.aVenir.forEach(function (m) {
         var quand = m.date ? formatShortDate(m.date) + (m.hour !== null ? " " + formatHour(m.hour, m.minute) : "") : "date à fixer";
         lignes.push("• " + quand + " · contre " + m.adversaire + (m.lieu ? " · " + lieuCourt(m.lieu) : ""));
+        var resp = ligneResponsableAdverse(team, m);
+        if (resp) lignes.push(resp);
       });
     }
-    lignes.push("", "Le détail : " + lienSite("equipe.html?equipe=" + encodeURIComponent(cle)));
     return lignes.join("\n");
   }
 
@@ -1683,8 +1699,7 @@
     var parts = partiesAJouer(team, startOfDay(new Date()));
     var n = parts.enRetard.length + parts.aVenir.length;
     if (!n) return null;
-    var cle = teamKey(team.spec, team.cat, team.clubCode, team.numero);
-    var texte = messageAJouer(team, cle, parts);
+    var texte = messageAJouer(team, parts);
 
     var bloc = el("div", { class: "prevenir" });
     bloc.appendChild(el("div", { class: "prevenir-titre", text: "Prévenir l'équipe" }));
