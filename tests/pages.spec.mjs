@@ -263,3 +263,18 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
     }
   });
 });
+
+test.describe("Habillage d'Halloween", () => {
+  test("forcé, la citrouille répond ; coupé, rien ne s'ajoute", async ({ page }) => {
+    await page.goto("index.html?halloween=1");
+    await attendreChargement(page);
+    const citrouille = page.locator("header h1 .hw-citrouille");
+    await expect(citrouille).toHaveCount(1);
+    await citrouille.click();
+    await expect(page.locator(".hw-bouh")).toBeVisible();
+
+    await page.goto("index.html?halloween=0");
+    await attendreChargement(page);
+    await expect(page.locator(".hw-citrouille, .hw-araignee, .hw-chauve-souris")).toHaveCount(0);
+  });
+});

@@ -19,6 +19,16 @@ for (const fichier of readdirSync(".").filter((f) => f.endsWith(".html")).sort()
   });
   console.log(`${erreurs ? "…" : "✓"} ${fichier} : ${scripts.length} script(s)`);
 }
+// Les scripts partagés entre pages, comme halloween.js.
+for (const fichier of readdirSync(".").filter((f) => f.endsWith(".js")).sort()) {
+  try {
+    new Script(readFileSync(fichier, "utf8"), { filename: fichier });
+    console.log(`✓ ${fichier}`);
+  } catch (e) {
+    erreurs++;
+    console.error(`✗ ${fichier} : ${e.message}`);
+  }
+}
 if (erreurs) {
   console.error(`${erreurs} erreur(s) de syntaxe.`);
   process.exit(1);
