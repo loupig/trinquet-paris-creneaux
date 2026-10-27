@@ -192,11 +192,12 @@ voudrait construire autre chose avec les mêmes données.
 - **Pas de fenêtre surgissante** : un popup d'accueil et un popup d'aide ont
   été retirés, leur bouton de fermeture restant bloqué chez au moins un
   utilisateur, cause jamais identifiée.
-- **Habillages de fête** (`fetes.js`) : Halloween du 24 au 31 octobre
-  (citrouille et blagues de trinquet), Toussaint le 1er novembre (blanc et
-  or, saints de France et du Pays basque). Hors de ces dates ils s'effacent seuls, sans rien à
-  retirer. Absents du compteur, outil de match. `?theme=halloween` ou
-  `?theme=toussaint` en montre un hors saison, `?theme=aucun` les coupe.
+- **Habillages de fête** (`fetes.js`) : Halloween (citrouille et blagues de
+  trinquet) et Toussaint (blanc et or, saints de France et du Pays basque),
+  seulement du 24 octobre au 1er novembre. Par défaut Halloween, puis la
+  Toussaint dès le 30 octobre ; l'accueil permet de choisir l'un, l'autre ou
+  aucun, choix gardé sur l'appareil. Hors période, rien ne s'affiche, quel
+  que soit le choix, sans rien à retirer. Absents du compteur, outil de match.
 - **Pas de service worker** : jamais de fonctionnement hors connexion, pour ne
   pas laisser un joueur bloqué sur une ancienne version mise en cache.
 - **Palette imposée du compteur** (rouge, vert, blanc, noir) : deux équipes ne

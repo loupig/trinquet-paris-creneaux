@@ -1,17 +1,18 @@
-// Habillages de fête, légers et sans effet sur les données. Chaque fête a sa
-// période, son accent, un emblème à toucher dans le titre et un décor :
-// - Halloween, du 24 au 31 octobre : citrouille et blagues de trinquet,
-//   araignée pendue sous l'en-tête, chauve-souris qui traverse une fois ;
-// - Toussaint, le 1er novembre : la fête de tous les saints, en blanc et or,
-//   avec un halo dans l'en-tête, des étincelles qui s'éteignent une fois, et
-//   des saints de France et du Pays basque à découvrir en touchant l'étoile.
-// Hors de ces dates la page reste comme avant, sans rien à retirer.
-// "?theme=halloween" ou "?theme=toussaint" en montre une hors saison,
-// "?theme=aucun" les coupe.
+// Habillages de fête, légers et sans effet sur les données. Chaque fête a son
+// accent, un emblème à toucher dans le titre et un décor :
+// - Halloween : citrouille et blagues de trinquet, araignée pendue sous
+//   l'en-tête, chauve-souris qui traverse une fois ;
+// - Toussaint : la fête de tous les saints, en blanc et or, avec un halo dans
+//   l'en-tête, des étincelles qui s'éteignent une fois, et des saints de
+//   France et du Pays basque à découvrir en touchant l'étoile.
+// Les habillages n'existent que du 24 octobre au 1er novembre : avant et
+// après, la page reste comme avant, quoi qu'on ait choisi, sans rien à
+// retirer. Pendant la période, Halloween s'affiche par défaut jusqu'au 29
+// octobre, puis la Toussaint ; l'accueil propose de choisir l'un, l'autre ou
+// aucun, choix gardé sur l'appareil.
 (function () {
   var FETES = {
     halloween: {
-      du: [9, 24], au: [9, 31],
       embleme: "🎃", libellé: "Bouh !",
       phrases: [
         "Bouh ! Même les fantômes respectent la ligne de faute.",
@@ -39,7 +40,6 @@
       }
     },
     toussaint: {
-      du: [10, 1], au: [10, 1],
       embleme: "✨", libellé: "Un saint de France ou du Pays basque",
       phrases: [
         "Sainte Geneviève, patronne de Paris, rassura la ville face à Attila, en 451.",
@@ -87,21 +87,36 @@
     return e;
   }
 
-  function feteDuJour(d) {
-    var jour = d.getMonth() * 100 + d.getDate();
-    for (var nom in FETES) {
-      var f = FETES[nom];
-      if (jour >= f.du[0] * 100 + f.du[1] && jour <= f.au[0] * 100 + f.au[1]) return nom;
-    }
-    return null;
-  }
+  var PERIODE = { du: [9, 24], au: [10, 1] };
+  var TOUSSAINT_DES = [9, 30];
+  var CLE_CHOIX = "lidfpb_theme_v1";
+  var CHOIX = [["halloween", "🎃 Halloween"], ["toussaint", "✨ Toussaint"], ["aucun", "Sans"]];
 
-  var force = /[?&]theme=([a-z]+)/.exec(window.location.search);
-  var fete = FETES[force ? force[1] : feteDuJour(new Date())];
-  if (!fete) return;
+  function jour(md) { return md[0] * 100 + md[1]; }
+
+  var d = new Date();
+  var aujourdhui = jour([d.getMonth(), d.getDate()]);
+  if (aujourdhui < jour(PERIODE.du) || aujourdhui > jour(PERIODE.au)) return;
+  var parDefaut = aujourdhui >= jour(TOUSSAINT_DES) ? "toussaint" : "halloween";
+
+  // Le stockage peut être refusé (navigation privée) : on retombe alors sur
+  // l'habillage du jour, sans message.
+  function lireChoix() {
+    try {
+      var c = localStorage.getItem(CLE_CHOIX);
+      return c === "aucun" || FETES[c] ? c : null;
+    } catch (e) { return null; }
+  }
+  function garderChoix(c) {
+    try { localStorage.setItem(CLE_CHOIX, c); } catch (e) { /* choix pour cette visite seulement */ }
+  }
 
   var CSS_COMMUN =
     "header{position:relative}" +
+    ".fete-choix{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0 0;font-size:11px;color:var(--muted)}" +
+    ".fete-choix button{font:inherit;font-size:11px;font-weight:600;color:var(--text);background:var(--card-bg);border:1px solid var(--border);" +
+    "border-radius:14px;padding:4px 10px;cursor:pointer}" +
+    ".fete-choix button[aria-pressed=true]{color:var(--accent);background:var(--accent-bg);border-color:var(--accent-border)}" +
     ".fete-embleme{background:none;border:0;padding:0 0 0 6px;font:inherit;cursor:pointer;display:inline-block;transform-origin:50% 80%}" +
     ".fete-embleme:active{transform:scale(1.25) rotate(-10deg)}" +
     ".fete-bulle{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100% - 32px);" +
@@ -110,9 +125,20 @@
     "@keyframes fete-apparait{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}" +
     "@media (prefers-reduced-motion:reduce){.fete-bulle{animation:none}}";
 
-  function habiller() {
+  // Retire l'habillage en place (style, emblème, décor), pour en changer sans
+  // recharger la page.
+  function deshabiller() {
+    document.querySelectorAll("#fete-style, .fete-embleme, .fete-bulle, .fete-araignee, .fete-chauve-souris, .fete-etincelle")
+      .forEach(function (e) { e.remove(); });
+  }
+
+  function habiller(nom) {
+    deshabiller();
+    var fete = FETES[nom];
+    if (!fete) return;
     var style = document.createElement("style");
-    style.textContent = CSS_COMMUN + fete.css;
+    style.id = "fete-style";
+    style.textContent = fete.css;
     document.head.appendChild(style);
 
     var titre = document.querySelector("header h1");
@@ -139,6 +165,42 @@
     fete.decor(document.querySelector("header"));
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", habiller);
-  else habiller();
+  // Sur l'accueil seulement : la page réserve la place du choix.
+  function proposerChoix(actuel) {
+    var place = document.getElementById("choixTheme");
+    if (!place) return;
+    var ligne = document.createElement("div");
+    ligne.className = "fete-choix";
+    ligne.setAttribute("role", "group");
+    ligne.setAttribute("aria-label", "Thème du site");
+    ligne.appendChild(document.createTextNode("Thème :"));
+    CHOIX.forEach(function (c) {
+      var bouton = document.createElement("button");
+      bouton.type = "button";
+      bouton.dataset.theme = c[0];
+      bouton.textContent = c[1];
+      bouton.setAttribute("aria-pressed", String(c[0] === actuel));
+      bouton.addEventListener("click", function () {
+        garderChoix(c[0]);
+        habiller(c[0]);
+        ligne.querySelectorAll("button").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.dataset.theme === c[0]));
+        });
+      });
+      ligne.appendChild(bouton);
+    });
+    place.appendChild(ligne);
+  }
+
+  function demarrer() {
+    var commun = document.createElement("style");
+    commun.textContent = CSS_COMMUN;
+    document.head.appendChild(commun);
+    var actuel = lireChoix() || parDefaut;
+    habiller(actuel);
+    proposerChoix(actuel);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", demarrer);
+  else demarrer();
 })();
