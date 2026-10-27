@@ -4,7 +4,7 @@
 //   araignée pendue sous l'en-tête, chauve-souris qui traverse une fois ;
 // - Toussaint, le 1er novembre : la fête de tous les saints, en blanc et or,
 //   avec un halo dans l'en-tête, des étincelles qui s'éteignent une fois, et
-//   des saints de France à découvrir en touchant l'étoile.
+//   des saints de France et du Pays basque à découvrir en touchant l'étoile.
 // Hors de ces dates la page reste comme avant, sans rien à retirer.
 // "?theme=halloween" ou "?theme=toussaint" en montre une hors saison,
 // "?theme=aucun" les coupe.
@@ -40,11 +40,16 @@
     },
     toussaint: {
       du: [10, 1], au: [10, 1],
-      embleme: "✨", libellé: "Un saint de France",
+      embleme: "✨", libellé: "Un saint de France ou du Pays basque",
       phrases: [
         "Sainte Geneviève, patronne de Paris, rassura la ville face à Attila, en 451.",
         "Saint Denis, premier évêque de Paris, martyr à Montmartre.",
         "Saint Michel Garicoïts, né à Ibarre : un saint du Pays basque, comme la pelote.",
+        "Saint Ignace de Loyola, né à Azpeitia, en Gipuzkoa, fondateur des jésuites.",
+        "Saint François Xavier, né au château de Javier, en Navarre, patron des missions.",
+        "Saint Léon, patron de Bayonne, premier évêque de la ville selon la tradition.",
+        "Saint Firmin, né à Pampelune, premier évêque d'Amiens : c'est lui qu'on fête aux San Fermín.",
+        "Saint Valentin de Berrio-Otxoa, né à Elorrio, en Biscaye, martyr au Vietnam.",
         "Sainte Jeanne d'Arc, patronne secondaire de la France.",
         "Sainte Thérèse de Lisieux, patronne secondaire de la France et docteure de l'Église.",
         "Saint Louis, roi de France, rendait la justice sous un chêne à Vincennes.",

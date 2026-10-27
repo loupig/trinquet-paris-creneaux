@@ -194,7 +194,7 @@ voudrait construire autre chose avec les mêmes données.
   utilisateur, cause jamais identifiée.
 - **Habillages de fête** (`fetes.js`) : Halloween du 24 au 31 octobre
   (citrouille et blagues de trinquet), Toussaint le 1er novembre (blanc et
-  or, saints de France). Hors de ces dates ils s'effacent seuls, sans rien à
+  or, saints de France et du Pays basque). Hors de ces dates ils s'effacent seuls, sans rien à
   retirer. Absents du compteur, outil de match. `?theme=halloween` ou
   `?theme=toussaint` en montre un hors saison, `?theme=aucun` les coupe.
 - **Pas de service worker** : jamais de fonctionnement hors connexion, pour ne
