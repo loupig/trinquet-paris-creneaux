@@ -161,6 +161,8 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
 
   test("couleur libre au sélecteur, lisible, gardée, et signalée si trop proche", async ({ page }) => {
     await page.goto("compteur.html");
+    // Rouge, vert, puis la couleur libre : trois pastilles par équipe.
+    await expect(page.locator(".team-setup").first().locator(".swatch")).toHaveCount(3);
     const selecteurs = page.locator(".swatch-libre input");
     await expect(selecteurs).toHaveCount(2);
 
@@ -247,6 +249,27 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     const avant = await page.evaluate(() => window.__dit.length);
     await bera.click();
     expect(await page.evaluate(() => window.__dit.length)).toBe(avant);
+  });
+
+  test("confettis au point gagnant, pas au rechargement ni si moins d'animations", async ({ page }) => {
+    await page.goto("compteur.html");
+    await page.getByRole("button", { name: "30 points" }).click();
+    const bera = page.locator(".score-btn").nth(0);
+    for (let i = 0; i < 29; i++) await bera.click();
+    await expect(page.locator("#confettis")).toHaveCount(0);
+    await bera.click();                                   // 30-0 : victoire
+    await expect(page.locator("#confettis")).toHaveCount(1);
+    await expect(page.locator("#confettis")).toHaveCount(0, { timeout: 6000 });   // s'efface seule
+
+    await page.reload();                                  // partie finie relue : pas de fête
+    await expect(page.locator("#fin")).toBeVisible();
+    await expect(page.locator("#confettis")).toHaveCount(0);
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.getByRole("button", { name: "Annuler le dernier point" }).click();
+    await bera.click();
+    await expect(page.locator("#fin")).toBeVisible();
+    await expect(page.locator("#confettis")).toHaveCount(0);
   });
 
   test("en cours de partie, le score se copie sans feuille de partage", async ({ page, context }) => {

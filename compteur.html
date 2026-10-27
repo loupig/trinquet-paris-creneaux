@@ -659,7 +659,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.3</p>
+    <p>Version 2026.10.27.5</p>
   </footer>
 </main>
 
@@ -693,9 +693,10 @@
 
   var STORAGE_KEY = "lidfpb_compteur_v1";
 
-  // Les couleurs de l'ikurriña (rouge, vert, blanc), plus le noir. Palette
-  // imposée plutôt qu'un sélecteur libre : deux équipes qui choisiraient deux
-  // teintes voisines rendraient le graphe illisible.
+  // Les couleurs de l'ikurriña (rouge, vert, blanc), plus le noir. Seuls le
+  // rouge et le vert sont proposés en pastilles, avec le sélecteur libre ; le
+  // blanc et le noir restent connus pour les parties enregistrées avec eux,
+  // et pour qui les reprend au sélecteur.
   //
   // "fill" sert au fond (pastille, teinte de la carte) et "trait" à tout ce
   // qui doit rester lisible sur blanc : bordure, texte, courbe. Les deux ne
@@ -710,6 +711,8 @@
     { nom: "Blanc", fill: "#ffffff", trait: "#767986", sombre: "#f4f5f7" },
     { nom: "Noir",  fill: "#1a1a2e", trait: "#1a1a2e", sombre: "#9aa0b4" }
   ];
+
+  var PROPOSEES = PALETTE.slice(0, 2);
 
   function entree(fill) {
     for (var i = 0; i < PALETTE.length; i++) { if (PALETTE[i].fill === fill) return PALETTE[i]; }
@@ -987,7 +990,7 @@
       ligne.appendChild(champ);
 
       var pastilles = el("div", { class: "swatches" });
-      PALETTE.forEach(function (couleur) {
+      PROPOSEES.forEach(function (couleur) {
         var b = el("button", {
           type: "button",
           class: "swatch" + (team.color === couleur.fill ? " on" : ""),
@@ -1007,7 +1010,7 @@
       });
 
       // Couleur libre, en dernier choix.
-      var libre = PALETTE.every(function (c) { return c.fill !== team.color; });
+      var libre = PROPOSEES.every(function (c) { return c.fill !== team.color; });
       var etiquette = el("label", {
         class: "swatch swatch-libre" + (libre ? " on" : ""),
         style: libre ? "background:" + team.color : "",
@@ -1029,7 +1032,7 @@
       selecteur.addEventListener("change", function () {
         team.color = selecteur.value.toLowerCase();
         var autre = state.teams[1 - i];
-        if (autre.color === team.color) autre.color = PALETTE.filter(function (c) { return c.fill !== team.color; })[0].fill;
+        if (autre.color === team.color) autre.color = PROPOSEES.filter(function (c) { return c.fill !== team.color; })[0].fill;
         save();
         renderAll();
       });
@@ -1121,6 +1124,7 @@
         renderAll();
         var touche = document.querySelectorAll("#scoreboard .score-btn")[i];
         if (touche) touche.classList.add("flash");
+        if (fini) confettis(touche);
       });
       box.appendChild(b);
     });
@@ -1487,6 +1491,89 @@
     }
     if (changements) resume += " " + changements + " changement" + (changements > 1 ? "s" : "") + " de leader.";
     legende.appendChild(el("span", { text: resume }));
+  }
+
+  // ---------------------------------------------------------------
+  // Confettis du point gagnant
+  // ---------------------------------------------------------------
+  // Une gerbe partie du bouton de l'équipe gagnante, aux couleurs de
+  // l'équipe et de l'ikurriña, sur une toile posée par-dessus tout (plein
+  // écran compris) qui laisse passer les touchers et s'efface d'elle-même.
+  // Seulement au point gagnant, jamais en rechargeant une partie finie, et
+  // pas du tout si le téléphone demande moins d'animations.
+  function confettis(depuis) {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var ancienne = document.getElementById("confettis");
+    if (ancienne) ancienne.remove();
+    var toile = el("canvas", { id: "confettis", "aria-hidden": "true" });
+    toile.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200";
+    document.body.appendChild(toile);
+    var ctx = toile.getContext && toile.getContext("2d");
+    if (!ctx) { toile.remove(); return; }
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var L = window.innerWidth, H = window.innerHeight;
+    toile.width = L * dpr;
+    toile.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    var gagnant = vainqueur();
+    var equipe = gagnant !== null ? state.teams[gagnant].color : PALETTE[0].fill;
+    var couleurs = [trait(equipe), equipe, "#CE1126", "#009B48", "#f5b301", sombreActif() ? "#ffffff" : "#1a1a2e"];
+    var r = depuis ? depuis.getBoundingClientRect() : { left: L / 2 - 1, width: 2, top: H / 2, height: 0 };
+    var ox = r.left + r.width / 2, oy = r.top + r.height / 3;
+
+    var morceaux = [];
+    function gerbe(x, y, n, ecart) {
+      for (var k = 0; k < n; k++) {
+        var angle = -Math.PI / 2 + (Math.random() - 0.5) * ecart;
+        var vitesse = 7 + Math.random() * 9;
+        morceaux.push({
+          x: x, y: y,
+          vx: Math.cos(angle) * vitesse, vy: Math.sin(angle) * vitesse,
+          l: 6 + Math.random() * 6, h: 3 + Math.random() * 4,
+          rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 0.4,
+          couleur: couleurs[k % couleurs.length],
+          rond: Math.random() < 0.25,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    gerbe(ox, oy, 120, Math.PI * 0.9);
+    // Une seconde volée, depuis les deux coins du bas.
+    setTimeout(function () {
+      gerbe(0, H, 40, Math.PI * 0.5);
+      gerbe(L, H, 40, Math.PI * 0.5);
+      morceaux.slice(-80).forEach(function (m, k) { m.vx = Math.abs(m.vx) * (k < 40 ? 1 : -1) + (k < 40 ? 3 : -3); });
+    }, 350);
+
+    var debut = null, precedent = null, DUREE = 3600;
+    function image(t) {
+      if (!debut) { debut = t; precedent = t; }
+      var dt = Math.min(2.5, (t - precedent) / 16.7);
+      precedent = t;
+      var ecoule = t - debut;
+      ctx.clearRect(0, 0, L, H);
+      ctx.globalAlpha = ecoule > DUREE - 800 ? Math.max(0, (DUREE - ecoule) / 800) : 1;
+      morceaux.forEach(function (m) {
+        m.vy += 0.32 * dt;
+        m.vx *= Math.pow(0.985, dt);
+        m.vy *= Math.pow(0.985, dt);
+        m.x += (m.vx + Math.sin(m.phase + ecoule / 220) * 0.6) * dt;
+        m.y += m.vy * dt;
+        m.rot += m.spin * dt;
+        ctx.save();
+        ctx.translate(m.x, m.y);
+        ctx.rotate(m.rot);
+        ctx.fillStyle = m.couleur;
+        if (m.rond) { ctx.beginPath(); ctx.arc(0, 0, m.h / 1.4, 0, Math.PI * 2); ctx.fill(); }
+        // Le cosinus aplatit le rectangle : le confetti a l'air de tourner sur lui-même.
+        else ctx.fillRect(-m.l / 2, -m.h / 2 * Math.abs(Math.cos(m.phase + ecoule / 140)), m.l, m.h * Math.abs(Math.cos(m.phase + ecoule / 140)) + 0.5);
+        ctx.restore();
+      });
+      if (ecoule < DUREE) requestAnimationFrame(image);
+      else toile.remove();
+    }
+    requestAnimationFrame(image);
   }
 
   // ---------------------------------------------------------------
