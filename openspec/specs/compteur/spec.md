@@ -36,6 +36,17 @@ Chaque équipe SHALL prendre une couleur parmi quatre, celles de l'ikurriña plu
 - **WHEN** les deux équipes ont deux violets très proches
 - **THEN** un avertissement signale que le score et le graphe seront difficiles à distinguer
 
+### Requirement: Partie ouverte depuis Parties ou Mon équipe
+Ouverte par « Compter cette partie », la page SHALL reprendre les deux équipes, le score à atteindre et la partie (« Série 1 · Poule 2 ») transmis par le lien, sans interroger l'API de la ligue. « Club (éq. 2) » devient « Club 2 », et un nom est coupé à 24 caractères. La partie s'affiche au-dessus des réglages, et elle ouvre le message partagé. Le lien MUST ne servir qu'une fois : il est retiré de l'adresse, et un rechargement ne repose pas la question. Si une autre partie a déjà des points, elle MUST NOT être effacée sans le demander : un encart dans la page propose de compter la nouvelle partie, en effaçant le score en cours, ou de garder la partie en cours. Si c'est la même partie, elle reprend là où elle en était. « Nouvelle partie » oublie la partie de championnat.
+
+#### Scenario: Compteur libre
+- **WHEN** aucun point n'est marqué et le visiteur arrive par « Compter cette partie » pour Sare (éq. 2) contre Ainhoa
+- **THEN** le compteur affiche Sare 2 contre Ainhoa, en 40, avec la série et la poule
+
+#### Scenario: Une autre partie en cours
+- **WHEN** Bera mène Ahetze 2-0 et le visiteur arrive par « Compter cette partie » pour Sare 2 contre Ainhoa
+- **THEN** un encart propose « Compter Sare 2 – Ainhoa » ou « Garder la partie en cours », et le score de Bera reste intact tant que rien n'est choisi
+
 ### Requirement: Score à atteindre
 Avant ou pendant la partie, la page SHALL laisser choisir le score à atteindre parmi 30, 35 et 40 points, ou « Libre » pour compter sans fin. Par défaut, une partie se joue en 40, comme en championnat. En cours de partie, un score déjà atteint par l'une des équipes MUST NOT être proposé, pour ne pas désigner un vainqueur après coup.
 
@@ -80,7 +91,7 @@ Pendant une partie en cours, la page SHALL demander au téléphone de garder l'�
 - **THEN** l'écran reste allumé, sur un téléphone qui le permet
 
 ### Requirement: Partager le score
-Dès qu'un point est marqué, la page SHALL permettre de partager le score, par la feuille de partage du téléphone (WhatsApp, SMS…) ou, à défaut, en le copiant. Le message donne les deux équipes et le score, le vainqueur ou l'état de la partie en cours, le score visé, la durée de jeu, les égalités et le plus gros écart, puis le lien vers la page Découvrir.
+Dès qu'un point est marqué, la page SHALL permettre de partager le score, par la feuille de partage du téléphone (WhatsApp, SMS…) ou, à défaut, en le copiant. Le message donne les deux équipes et le score, la partie de championnat quand elle est connue, le vainqueur ou l'état de la partie en cours, le score visé, la durée de jeu, les égalités et le plus gros écart, puis le lien vers la page Découvrir.
 
 #### Scenario: Résultat envoyé au groupe
 - **WHEN** à la fin d'une partie gagnée 40-37 par Bera contre Ahetze, le visiteur touche « Partager le résultat »

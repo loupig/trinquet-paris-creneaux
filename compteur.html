@@ -272,6 +272,25 @@
   .swatch-libre:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
   .couleurs-proches { margin: 10px 0 0; font-size: 12px; color: #8a5a00; }
 
+  /* Partie proposée depuis Parties ou Mon équipe alors qu'une autre est en
+     cours : le choix se fait dans la page, sans fenêtre. */
+  .arrivee {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .arrivee[hidden] { display: none; }
+  .arrivee p { margin: 0 0 10px; }
+  .arrivee .boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .arrivee button { flex: 1 1 auto; }
+  .arrivee .action-btn.principal { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .contexte { margin: 0 0 10px; font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+  .contexte[hidden] { display: none; }
+
   /* --- Tableau de score --- */
   .scoreboard { display: flex; gap: 10px; margin-bottom: 10px; }
   .score-btn {
@@ -586,6 +605,8 @@
 </header>
 
 <main>
+  <div class="arrivee" id="arrivee" hidden></div>
+  <p class="contexte" id="contexte" hidden></p>
   <details class="card setup-box" id="setupBox">
     <summary>
       <span class="card-title">Les deux équipes</span>
@@ -638,7 +659,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27</p>
+    <p>Version 2026.10.27.2</p>
   </footer>
 </main>
 
@@ -769,7 +790,10 @@
     // Pause en cours (instant de début) et pauses terminées [début, fin] :
     // retirées des durées de jeu et d'échange.
     pause: null,
-    pauses: []
+    pauses: [],
+    // Partie de championnat comptée (« Série 1 · Poule 2 »), quand le
+    // compteur a été ouvert depuis Parties ou Mon équipe.
+    info: ""
   };
 
   var pleinEcran = false;
@@ -812,6 +836,7 @@
       if (saved.sombre === true || saved.sombre === false) state.sombre = saved.sombre;
       if (saved.voix === "eu" || saved.voix === "fr") state.voix = saved.voix;
       if (typeof saved.pause === "number") state.pause = saved.pause;
+      if (typeof saved.info === "string") state.info = saved.info.slice(0, 80);
       if (Array.isArray(saved.pauses)) {
         state.pauses = saved.pauses.filter(function (p) {
           return Array.isArray(p) && typeof p[0] === "number" && typeof p[1] === "number" && p[1] >= p[0];
@@ -1143,6 +1168,7 @@
     var duree = dureePartie();
     var lignes = ["*" + nomEquipe(0) + " " + s[0] + " – " + s[1] + " " + nomEquipe(1) + "*"];
     var info = [];
+    if (state.info) info.push(state.info);
     if (gagnant !== null) info.push("Victoire de " + nomEquipe(gagnant));
     else info.push("Partie en cours, " + state.points.length + (state.points.length > 1 ? " points joués" : " point joué"));
     if (state.cible) info.push("partie en " + state.cible);
@@ -1679,6 +1705,9 @@
     majResumeGraphe();
     majPause();
     majVoix();
+    var ctx = document.getElementById("contexte");
+    ctx.hidden = !state.info;
+    ctx.textContent = state.info;
     majFs();
     majActions();
     majChrono();
@@ -1706,6 +1735,7 @@
     state.points = [];
     state.pause = null;
     state.pauses = [];
+    state.info = "";
     save();
     document.getElementById("partageInfo").textContent = "";
     document.getElementById("setupBox").open = true;
@@ -1731,6 +1761,64 @@
   });
 
   load();
+
+  // ---------------------------------------------------------------
+  // Partie ouverte depuis Parties ou Mon équipe
+  // ---------------------------------------------------------------
+  // compteur.html?e1=…&e2=…&cible=40&info=… : les noms arrivent par le lien,
+  // le compteur n'interroge toujours pas l'API de la ligue. « Club (éq. 2) »
+  // devient « Club 2 », pour tenir dans les 24 caractères d'un nom.
+  function nomCourt(nom) {
+    return String(nom || "").replace(/\s*\(éq\.\s*([^)]+)\)\s*$/, " $1").trim().slice(0, 24);
+  }
+  function lireArrivee() {
+    var q = new URLSearchParams(window.location.search);
+    if (!q.get("e1") || !q.get("e2")) return null;
+    var cible = parseInt(q.get("cible"), 10);
+    return {
+      noms: [nomCourt(q.get("e1")), nomCourt(q.get("e2"))],
+      cible: CIBLES.indexOf(cible) !== -1 ? cible : state.cible,
+      info: String(q.get("info") || "").slice(0, 80)
+    };
+  }
+  function adopter(a) {
+    state.teams[0].name = a.noms[0];
+    state.teams[1].name = a.noms[1];
+    state.cible = a.cible;
+    state.info = a.info;
+    state.points = [];
+    state.pause = null;
+    state.pauses = [];
+    save();
+  }
+  var arrivee = lireArrivee();
+  if (arrivee) {
+    // Le lien a servi : un rechargement ne doit pas reposer la question.
+    try { history.replaceState(null, "", window.location.pathname); } catch (e) { /* pas bloquant */ }
+    var memes = arrivee.noms[0] === state.teams[0].name && arrivee.noms[1] === state.teams[1].name;
+    if (!state.points.length) adopter(arrivee);
+    else if (!memes) {
+      // Une autre partie est en cours : on ne l'efface pas sans le demander.
+      var sc = scores();
+      var boite = document.getElementById("arrivee");
+      boite.appendChild(el("p", { text: "Une partie est en cours : " + nomEquipe(0) + " " + sc[0] + " – " + sc[1] + " " + nomEquipe(1) + ". Compter la nouvelle efface ce score." }));
+      var boutons = el("div", { class: "boutons" });
+      var go = el("button", { type: "button", class: "action-btn principal", text: "Compter " + arrivee.noms[0] + " – " + arrivee.noms[1] });
+      var garde = el("button", { type: "button", class: "action-btn", text: "Garder la partie en cours" });
+      go.addEventListener("click", function () {
+        adopter(arrivee);
+        boite.hidden = true;
+        document.getElementById("setupBox").open = true;
+        renderAll();
+      });
+      garde.addEventListener("click", function () { boite.hidden = true; });
+      boutons.appendChild(go);
+      boutons.appendChild(garde);
+      boite.appendChild(boutons);
+      boite.hidden = false;
+    }
+  }
+
   document.querySelectorAll("#chartModes .chip").forEach(function (c) {
     c.classList.toggle("on", c.getAttribute("data-mode") === state.mode);
   });

@@ -255,6 +255,56 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
   });
 });
 
+test.describe("Compter une partie depuis Parties ou Mon équipe", () => {
+  test("Mon équipe : la prochaine partie s'ouvre au compteur, équipes nommées", async ({ page }) => {
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
+    await attendreChargement(page);
+    await page.getByRole("link", { name: "Compter cette partie" }).click();
+    await expect(page).toHaveURL(/compteur\.html$/);     // lien consommé
+    const noms = await page.locator(".team-name").evaluateAll((l) => l.map((e) => e.value));
+    expect(noms).toContain("Charlie 1");
+    expect(noms.join(" ")).not.toContain("éq.");
+    await expect(page.locator("#contexte")).toHaveText(/^Série 1 · /);
+    await expect(page.locator("#setupResume")).toContainText("en 40");
+  });
+
+  test("Parties : le détail d'une partie à jouer ouvre le compteur", async ({ page }) => {
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    // Le détail, replié, se déplie au toucher de la ligne.
+    const item = page.locator(".match-item").filter({ has: page.locator("a", { hasText: "Compter cette partie" }) }).first();
+    await item.locator(".match-row").click();
+    const lien = item.getByRole("link", { name: "Compter cette partie" });
+    const href = await lien.getAttribute("href");
+    expect(href).toMatch(/^compteur\.html\?e1=.+&e2=.+&cible=40&info=/);
+    await lien.click();
+    await expect(page.locator(".team-name").first()).not.toHaveValue("Équipe 1");
+  });
+
+  test("une autre partie en cours n'est pas effacée sans le demander", async ({ page }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem("deja")) return;
+      sessionStorage.setItem("deja", "1");
+      localStorage.setItem("lidfpb_compteur_v1", JSON.stringify({
+        teams: [{ name: "Bera", color: "#CE1126" }, { name: "Ahetze", color: "#009B48" }],
+        points: [{ t: 0, at: Date.now() - 5000 }, { t: 0, at: Date.now() - 2000 }]
+      }));
+    });
+    await page.goto("compteur.html?e1=" + encodeURIComponent("Sare (éq. 2)") + "&e2=Ainhoa&cible=40&info=" + encodeURIComponent("Série 2 · Poule 1"));
+    const arrivee = page.locator("#arrivee");
+    await expect(arrivee).toContainText("Bera 2 – 0 Ahetze");
+    await arrivee.getByRole("button", { name: "Garder la partie en cours" }).click();
+    await expect(arrivee).toBeHidden();
+    await expect(page.locator(".score-btn").first()).toContainText("Bera");
+
+    await page.goto("compteur.html?e1=" + encodeURIComponent("Sare (éq. 2)") + "&e2=Ainhoa&cible=40&info=" + encodeURIComponent("Série 2 · Poule 1"));
+    await arrivee.getByRole("button", { name: "Compter Sare 2 – Ainhoa" }).click();
+    await expect(page.locator(".score-btn").first()).toContainText("Sare 2");
+    await expect(page.locator(".score-btn .score-value").first()).toHaveText("0");
+    await expect(page.locator("#contexte")).toHaveText("Série 2 · Poule 1");
+  });
+});
+
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
   await page.goto("index.html");
   await page.getByRole("link", { name: "Présenter le site à un joueur" }).click();

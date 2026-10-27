@@ -52,7 +52,7 @@ La dernière équipe consultée SHALL être conservée dans le navigateur du vis
 - **THEN** la page s'affiche normalement, avec la liste de choix et l'invitation
 
 ### Requirement: Prochaine partie
-La page SHALL mettre en avant la prochaine partie à venir de l'équipe, toutes phases confondues : jour, heure, adversaire et lieu. Quand cette partie n'a pas de score et se joue au Trinquet Paris, elle MUST porter le bouton « Chercher une date de report », qui mène à la page de report de cette partie. Une équipe sans partie à venir est indiquée « plus de partie programmée ».
+La page SHALL mettre en avant la prochaine partie à venir de l'équipe, toutes phases confondues : jour, heure, adversaire et lieu. Quand cette partie n'a pas de score et se joue au Trinquet Paris, elle MUST porter le bouton « Chercher une date de report », qui mène à la page de report de cette partie. Elle porte aussi le bouton « Compter cette partie », qui ouvre le compteur de points avec les deux équipes déjà nommées, l'équipe qui reçoit en premier, en 40 points, et la série avec la poule ou la phase. Une équipe sans partie à venir est indiquée « plus de partie programmée ».
 
 #### Scenario: Prochaine partie au Trinquet Paris
 - **WHEN** la prochaine partie de l'équipe se joue dimanche à 16h au Trinquet Paris
@@ -65,6 +65,10 @@ La page SHALL mettre en avant la prochaine partie à venir de l'équipe, toutes 
 #### Scenario: Plus de partie
 - **WHEN** l'équipe n'a plus aucune partie à venir
 - **THEN** la page indique « plus de partie programmée » à la place de la prochaine partie
+
+#### Scenario: Compter la prochaine partie
+- **WHEN** le visiteur touche « Compter cette partie » sur la prochaine partie de Charlie 1, qui reçoit Foxtrot 1 en poule 1 de la série 1
+- **THEN** le compteur s'ouvre sur Charlie 1 contre Foxtrot 1, en 40, avec « Série 1 · Poule 1 »
 
 ### Requirement: Parties de l'équipe
 La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, dans l'ordre chronologique : date et heure, adversaire, phase ou poule, lieu, et score du point de vue de l'équipe, en vert si elle l'emporte et en rouge sinon. Une partie sans score est marquée « à venir », ou « à reprogrammer », en rouge, quand sa date est passée sans résultat publié. Les parties sans score au Trinquet Paris portent le bouton de report, comme dans la page Parties.
