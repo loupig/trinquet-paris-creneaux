@@ -361,7 +361,7 @@
   .wa-icon.icon-sms { color: var(--accent); }
   .wa-icon.icon-tel { color: var(--accent); }
 
-  .report-actions { margin-top: 8px; }
+  .report-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
   .report-btn {
     display: inline-block;
     font-size: 12px;
@@ -498,7 +498,7 @@
     <p>Cette page se contente d'afficher le calendrier communiqué par la ligue, elle n'a aucun effet sur le site de la ligue.</p>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.3</p>
+    <p>Version 2026.10.27.4</p>
   </footer>
 </main>
 
@@ -1154,6 +1154,11 @@
     return !match.score && !!match.oid && matchesTrinquetParis(match.lieu);
   }
 
+  function lienCompteur(e1, e2, info) {
+    return "compteur.html?e1=" + encodeURIComponent(e1) + "&e2=" + encodeURIComponent(e2) +
+      "&cible=40&info=" + encodeURIComponent(info);
+  }
+
   function buildMatchDetail(match) {
     var detail = el("div", { class: "match-detail" });
     detail.hidden = true;
@@ -1173,13 +1178,22 @@
 
     // Le détail est un frère de la ligne cliquable (cf. buildMatchRow), pas
     // un enfant : un clic ici ne déclenche donc pas le repli de la ligne.
-    if (canReport(match)) {
+    if (!match.score) {
       var actions = el("div", { class: "report-actions" });
+      // Ouvre le compteur avec les deux équipes déjà nommées : les noms
+      // passent par le lien, le compteur n'appelle pas l'API.
       actions.appendChild(el("a", {
         class: "report-btn",
-        href: "report.html?oid=" + encodeURIComponent(match.oid),
-        text: "Chercher une date de report"
+        href: lienCompteur(match.labelRec, match.labelVis, match.serieLabel + (match.meta ? " · " + match.meta : "")),
+        text: "Compter cette partie"
       }));
+      if (canReport(match)) {
+        actions.appendChild(el("a", {
+          class: "report-btn",
+          href: "report.html?oid=" + encodeURIComponent(match.oid),
+          text: "Chercher une date de report"
+        }));
+      }
       detail.appendChild(actions);
     }
 

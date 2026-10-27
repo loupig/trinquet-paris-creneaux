@@ -95,6 +95,13 @@ Dans le détail d'une partie, chaque équipe dont le responsable a un numéro ex
 - **WHEN** le responsable d'une équipe n'a pas de numéro exploitable
 - **THEN** cette équipe n'a pas d'icônes de contact
 
+### Requirement: Compter une partie
+Le détail d'une partie sans score SHALL porter le bouton « Compter cette partie », quel que soit son lieu, qui ouvre le compteur de points avec les deux équipes déjà nommées, l'équipe qui reçoit en premier, en 40 points, et la série avec la poule ou la phase. Une partie déjà jouée n'a pas le bouton.
+
+#### Scenario: Partie à jouer
+- **WHEN** le visiteur déplie une partie sans score et touche « Compter cette partie »
+- **THEN** le compteur s'ouvre avec les deux équipes de la partie
+
 ### Requirement: Accès au report
 Le détail d'une partie sans score qui se joue au Trinquet Paris SHALL porter le bouton « Chercher une date de report », qui ouvre l'aide au report pour cette partie. La date de la partie n'entre pas en compte : une partie passée restée sans score a aussi le bouton, pour régulariser une partie non jouée. Une partie jouée ou qui se joue ailleurs n'a pas le bouton.
 

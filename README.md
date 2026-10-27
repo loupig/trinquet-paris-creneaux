@@ -215,7 +215,8 @@ voudrait construire autre chose avec les mêmes données.
   que soit le choix, sans rien à retirer. Absents du compteur, outil de match.
 - **Pas de service worker** : jamais de fonctionnement hors connexion, pour ne
   pas laisser un joueur bloqué sur une ancienne version mise en cache.
-- **Palette imposée du compteur** (rouge, vert, blanc, noir) : deux équipes ne
-  peuvent pas choisir deux teintes voisines et rendre le graphe illisible.
+- **Palette du compteur** (rouge, vert, blanc, noir), plus une couleur libre
+  en dernier choix pour les couleurs d'un club : deux teintes voisines ne sont
+  pas interdites, mais signalées, le graphe devenant difficile à lire.
 - **Pas de compte** : aucune connexion, rien n'est enregistré au nom d'un
   visiteur ; les préférences ne suivent pas d'un appareil à l'autre.

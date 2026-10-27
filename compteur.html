@@ -184,6 +184,41 @@
   }
   .card-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
 
+  /* --- Réglages : ouverts avant le premier point, repliés ensuite pour
+     laisser l'écran aux boutons de score. Dépliés dans la page, jamais en
+     fenêtre (spec navigation). --- */
+  .setup-box { padding: 0; }
+  .setup-box > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .setup-box > summary::-webkit-details-marker { display: none; }
+  .setup-box > summary .card-title { margin: 0; flex: 0 0 auto; }
+  .setup-resume {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .setup-box[open] .setup-resume { visibility: hidden; }
+  .setup-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
+  .setup-box[open] > summary svg { transform: rotate(180deg); }
+  .setup-corps { padding: 0 14px 14px; }
+  /* Loin des boutons de score et d'« Annuler » : effacer une partie ne doit
+     jamais partir d'un toucher de trop. */
+  .setup-corps .action-btn.danger { display: block; width: 100%; margin-top: 14px; }
+  .action-btn.danger[hidden] { display: none; }
+  .cible-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; font-size: 12px; font-weight: 600; }
+  .cible-row > span { margin-right: 4px; }
+  .chip[disabled] { opacity: 0.4; cursor: default; }
+
   /* --- Réglages d'équipe --- */
   .team-setup { display: flex; align-items: center; gap: 10px; }
   .team-setup + .team-setup { margin-top: 10px; }
@@ -220,6 +255,42 @@
     left: -3px; right: -3px; top: -7px; bottom: -7px;
   }
 
+  /* Dernière pastille : couleur libre. Arc-en-ciel tant qu'elle n'est pas
+     choisie, puis la couleur choisie ; le sélecteur du téléphone s'ouvre
+     par-dessus, le champ lui-même reste invisible. */
+  .swatch-libre { display: block; background: conic-gradient(#ce1126, #f5a524, #f2e600, #009b48, #2f5ce0, #8b3fd9, #ce1126); }
+  .swatch-libre input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .swatch-libre:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .couleurs-proches { margin: 10px 0 0; font-size: 12px; color: #8a5a00; }
+
+  /* Partie proposée depuis Parties ou Mon équipe alors qu'une autre est en
+     cours : le choix se fait dans la page, sans fenêtre. */
+  .arrivee {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .arrivee[hidden] { display: none; }
+  .arrivee p { margin: 0 0 10px; }
+  .arrivee .boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .arrivee button { flex: 1 1 auto; }
+  .arrivee .action-btn.principal { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .contexte { margin: 0 0 10px; font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+  .contexte[hidden] { display: none; }
+
   /* --- Tableau de score --- */
   .scoreboard { display: flex; gap: 10px; margin-bottom: 10px; }
   .score-btn {
@@ -235,6 +306,22 @@
     color: var(--text);
   }
   .score-btn:active { transform: scale(0.98); }
+  /* Partie lancée : les deux boutons prennent l'écran, pour viser sans
+     regarder entre deux échanges. */
+  .scoreboard.en-jeu .score-btn {
+    min-height: clamp(220px, 44vh, 440px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .scoreboard.en-jeu .score-value { font-size: 96px; }
+  .score-btn[disabled] { cursor: default; }
+  .score-btn[disabled]:active { transform: none; }
+  .score-btn.perdant { opacity: 0.55; }
+  .score-btn.flash { animation: flash 0.35s ease-out; }
+  @keyframes flash { from { box-shadow: 0 0 0 6px rgba(26, 26, 46, 0.18); } to { box-shadow: 0 0 0 0 rgba(26, 26, 46, 0); } }
+  @media (prefers-reduced-motion: reduce) { .score-btn.flash { animation: none; } }
   .score-team {
     font-size: 12px;
     font-weight: 700;
@@ -248,16 +335,50 @@
     margin: 6px 0 4px;
     font-variant-numeric: tabular-nums;
   }
-  .score-add { font-size: 12px; font-weight: 700; opacity: 0.75; }
+  .score-add { font-size: 12px; font-weight: 700; min-height: 15px; }
+  /* Le score en basque, comme le chante le kantari. */
+  .score-eus { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; margin: -2px 0 6px; opacity: 0.8; }
+  .scoreboard.en-jeu .score-eus { font-size: 15px; }
+  .badge {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #fff;
+  }
   .score-serve { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 4px; min-height: 12px; }
 
   .chrono {
-    margin: 0 0 10px;
+    margin: 0;
     text-align: center;
     font-size: 12px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
+  .chrono-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 10px; margin: 0 0 10px; }
+  .pause-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .pause-btn[hidden] { display: none; }
+  .pause-btn:active { opacity: 0.75; }
+  .pause-btn.on { background: #fff3cd; border-color: #f0dd9a; color: #7a5b00; }
+  /* En pause, les scores s'estompent : un toucher reprend la partie. */
+  .scoreboard.en-pause .score-btn { opacity: 0.6; }
 
   .actions { display: flex; gap: 8px; }
   .action-btn {
@@ -275,15 +396,43 @@
   .action-btn:active { background: var(--accent-bg); }
   .action-btn[disabled] { color: var(--muted); opacity: 0.5; cursor: default; }
   .action-btn.danger { color: #b3261e; }
+  .action-btn.partager { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 8px; }
+  .action-btn.partager[hidden] { display: none; }
+  .partage-info { margin: 6px 0 0; min-height: 15px; text-align: center; font-size: 12px; color: var(--muted); }
 
-  /* --- Graphe --- */
-  .chart-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
+  /* --- Fin de partie --- */
+  .fin {
+    border: 2px solid;
+    border-radius: 14px;
+    padding: 16px 14px;
     margin-bottom: 10px;
+    text-align: center;
+    background: var(--card-bg);
   }
+  .fin h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .fin .fin-score { margin: 4px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .fin .fin-details { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .fin .action-btn.partager { margin-top: 12px; color: #fff; border: 0; }
+  .fin .action-btn.partager:active { opacity: 0.85; }
+  .fin .action-btn.danger { width: 100%; margin-top: 8px; }
+
+  /* --- Graphe, repliable comme les réglages --- */
+  .chart-box { padding: 0; margin-top: 10px; }
+  .chart-box > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .chart-box > summary::-webkit-details-marker { display: none; }
+  .chart-box > summary .card-title { margin: 0; flex: 0 0 auto; }
+  .chart-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
+  .chart-box[open] > summary svg { transform: rotate(180deg); }
+  .chart-box[open] .setup-resume { visibility: hidden; }
+  .chart-corps { padding: 0 14px 14px; }
+  .chart-head { margin-bottom: 10px; }
   .chip-group { display: flex; gap: 6px; }
   .chip {
     font: inherit;
@@ -349,6 +498,86 @@
   }
   .fab-btn:active { opacity: 0.85; }
 
+  /* --- Plein écran, à la demande : rien que les deux scores. Le bouton
+     « Quitter » reste toujours en haut à gauche, Échap et le bouton Retour
+     du téléphone referment aussi. --- */
+  .actions .action-btn.fs-btn { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; }
+  .fs {
+    --fs-bg: #f4f5f7;
+    --fs-surface: #ffffff;
+    --fs-text: #1a1a2e;
+    --fs-muted: #767986;
+    --fs-border: #e6e7eb;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px));
+    background: var(--fs-bg);
+    color: var(--fs-text);
+  }
+  .fs[hidden] { display: none; }
+  .fs.sombre {
+    color-scheme: dark;
+    --fs-bg: #000000;
+    --fs-surface: #181818;
+    --fs-text: #f4f5f7;
+    --fs-muted: #9b9b9b;
+    --fs-border: #313131;
+  }
+  .fs-bar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .fs-bar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 20px;
+    border: 1px solid var(--fs-border);
+    background: var(--fs-surface);
+    color: var(--fs-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .fs-bar button:active { opacity: 0.75; }
+  .fs-bar button.icone { width: 40px; padding: 0; justify-content: center; flex: 0 0 auto; }
+  .fs-bar button.icone.on { background: #fff3cd; border-color: #f0dd9a; color: #7a5b00; }
+  .fs-bar button.icone small { font-size: 9px; font-weight: 800; margin-left: -3px; }
+  .fs-bar button[disabled] { opacity: 0.4; cursor: default; }
+  .fs-resume { flex: 1 1 auto; min-width: 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--fs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-slot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .fs .scoreboard { flex: 1 1 auto; min-height: 0; margin: 0; }
+  .fs .scoreboard .score-btn,
+  .fs .scoreboard.en-jeu .score-btn {
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--fs-surface);
+  }
+  .fs .score-team { font-size: 20px; }
+  .fs .score-value, .fs .scoreboard.en-jeu .score-value { font-size: min(34vw, 30vh); }
+  .fs .score-eus, .fs .scoreboard.en-jeu .score-eus { font-size: 18px; }
+  .fs .score-add { font-size: 16px; }
+  .fs .badge { font-size: 14px; padding: 4px 12px; }
+  .fs .score-serve { font-size: 12px; color: var(--fs-muted); }
+  .fs .fin { flex: 0 0 auto; margin: 0; background-color: var(--fs-surface); }
+  .fs .fin .fin-score { color: var(--fs-text); }
+  .fs .fin .fin-details { color: var(--fs-muted); }
+  .fs .fin .action-btn.danger { background: var(--fs-surface); border-color: var(--fs-border); }
+  .fs.sombre .fin .action-btn.danger { color: #ff8a80; }
+  /* En paysage, l'encart de fin se glisse à côté des scores. */
+  @media (orientation: landscape) {
+    .fs-slot { flex-direction: row; }
+    .fs .fin { flex: 0 0 300px; align-self: center; }
+  }
+
   footer {
     text-align: center;
     padding: 20px 4px 10px;
@@ -372,41 +601,65 @@
 <header>
   <h1><a href="index.html" class="home-link">Compteur de points</a></h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, rien n'est partagé avec la ligue.</p>
+  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, sauf le score si tu choisis de le partager.</p>
 </header>
 
 <main>
-  <div class="card">
-    <div class="card-title">Les deux équipes</div>
-    <div id="setup"></div>
-  </div>
+  <div class="arrivee" id="arrivee" hidden></div>
+  <p class="contexte" id="contexte" hidden></p>
+  <details class="card setup-box" id="setupBox">
+    <summary>
+      <span class="card-title">Les deux équipes</span>
+      <span class="setup-resume" id="setupResume"></span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </summary>
+    <div class="setup-corps">
+      <div id="setup"></div>
+      <div class="cible-row" id="cibles"><span>Partie en</span></div>
+      <div class="cible-row" id="voix" hidden><span>Annonce du score</span></div>
+      <button type="button" class="action-btn danger" id="resetBtn" hidden>Nouvelle partie</button>
+    </div>
+  </details>
 
   <div class="scoreboard" id="scoreboard"></div>
 
-  <p class="chrono" id="chrono" hidden></p>
+  <div class="fin" id="fin" hidden></div>
+
+  <div class="chrono-row">
+    <p class="chrono" id="chrono" hidden></p>
+    <button type="button" class="pause-btn" id="pauseBtn" hidden></button>
+  </div>
 
   <div class="actions">
     <button type="button" class="action-btn" id="undoBtn">Annuler le dernier point</button>
-    <button type="button" class="action-btn danger" id="resetBtn">Nouvelle partie</button>
+    <button type="button" class="action-btn fs-btn" id="fsBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Plein écran</span></button>
   </div>
+  <button type="button" class="action-btn partager" id="shareBtn" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Partager le score</span></button>
+  <p class="partage-info" id="partageInfo" aria-live="polite"></p>
 
-  <div class="card" style="margin-top:10px">
-    <div class="chart-head">
-      <div class="card-title" style="margin:0">Déroulé de la partie</div>
-      <div class="chip-group" id="chartModes">
-        <button type="button" class="chip on" data-mode="scores">Scores</button>
-        <button type="button" class="chip" data-mode="ecart">Écart</button>
-        <button type="button" class="chip" data-mode="echanges">Échanges</button>
+  <details class="card chart-box" id="chartBox" open>
+    <summary>
+      <span class="card-title">Déroulé de la partie</span>
+      <span class="setup-resume" id="chartResume"></span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </summary>
+    <div class="chart-corps">
+      <div class="chart-head">
+        <div class="chip-group" id="chartModes">
+          <button type="button" class="chip on" data-mode="scores">Scores</button>
+          <button type="button" class="chip" data-mode="ecart">Écart</button>
+          <button type="button" class="chip" data-mode="echanges">Échanges</button>
+        </div>
       </div>
+      <div id="chart"></div>
+      <div class="chart-legend" id="chartLegend"></div>
     </div>
-    <div id="chart"></div>
-    <div class="chart-legend" id="chartLegend"></div>
-  </div>
+  </details>
 
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.04</p>
+    <p>Version 2026.10.27.3</p>
   </footer>
 </main>
 
@@ -418,6 +671,18 @@
   <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
 </nav>
 
+
+<div class="fs" id="fs" hidden aria-label="Compteur en plein écran">
+  <div class="fs-bar">
+    <button type="button" id="fsQuit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Quitter</span></button>
+    <span class="fs-resume" id="fsResume"></span>
+    <button type="button" class="icone" id="fsPause"></button>
+    <button type="button" class="icone" id="fsUndo" aria-label="Annuler le dernier point" title="Annuler le dernier point"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+    <button type="button" class="icone" id="fsVoix" hidden></button>
+    <button type="button" class="icone" id="fsTheme"></button>
+  </div>
+  <div class="fs-slot" id="fsSlot"></div>
+</div>
 
 <div class="fab-row">
 </div>
@@ -436,24 +701,73 @@
   // qui doit rester lisible sur blanc : bordure, texte, courbe. Les deux ne
   // coïncident pas pour le blanc, invisible sur fond blanc, ni pour le vert
   // de l'ikurriña, trop clair pour du texte de 12 px.
+  //
+  // "sombre" remplace "trait" en plein écran sombre : sur fond noir, le noir
+  // disparaîtrait et le rouge et le vert foncés manqueraient d'éclat.
   var PALETTE = [
-    { nom: "Rouge", fill: "#CE1126", trait: "#CE1126" },
-    { nom: "Vert",  fill: "#009B48", trait: "#00713a" },
-    { nom: "Blanc", fill: "#ffffff", trait: "#767986" },
-    { nom: "Noir",  fill: "#1a1a2e", trait: "#1a1a2e" }
+    { nom: "Rouge", fill: "#CE1126", trait: "#CE1126", sombre: "#ff4d5e" },
+    { nom: "Vert",  fill: "#009B48", trait: "#00713a", sombre: "#2fd17a" },
+    { nom: "Blanc", fill: "#ffffff", trait: "#767986", sombre: "#f4f5f7" },
+    { nom: "Noir",  fill: "#1a1a2e", trait: "#1a1a2e", sombre: "#9aa0b4" }
   ];
 
   function entree(fill) {
     for (var i = 0; i < PALETTE.length; i++) { if (PALETTE[i].fill === fill) return PALETTE[i]; }
-    return PALETTE[0];
+    return couleurLibre(fill);
   }
-  function trait(fill) { return entree(fill).trait; }
+
+  // Couleur libre, choisie au sélecteur : ses variantes "trait" et "sombre"
+  // sont calculées pour rester lisibles, en la foncant sur fond blanc et en
+  // l'éclaircissant sur fond noir jusqu'à un contraste suffisant.
+  function rvb(hex) {
+    var h = hex.replace("#", "");
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function versHex(c) {
+    return "#" + c.map(function (v) { return Math.round(v).toString(16).padStart(2, "0"); }).join("");
+  }
+  function luminance(c) {
+    var l = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+  }
+  function contraste(a, b) {
+    var la = luminance(a), lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+  function versCible(c, cible, fond, mini) {
+    for (var k = 0; k <= 10; k++) {
+      var m = c.map(function (v, j) { return v + (cible[j] - v) * k / 10; });
+      if (contraste(m, fond) >= mini) return versHex(m);
+    }
+    return versHex(cible);
+  }
+  var cacheLibres = {};
+  function couleurLibre(fill) {
+    if (!cacheLibres[fill]) {
+      var c = rvb(fill);
+      cacheLibres[fill] = {
+        nom: "Autre couleur", fill: fill,
+        trait: versCible(c, [26, 26, 46], [255, 255, 255], 3.5),
+        sombre: versCible(c, [255, 255, 255], [0, 0, 0], 5)
+      };
+    }
+    return cacheLibres[fill];
+  }
+  var HEX = /^#[0-9a-f]{6}$/;
+
+  // Deux couleurs trop voisines rendent le graphe illisible : on le signale
+  // sans l'interdire, la couleur libre étant un choix assumé.
+  function couleursProches(a, b) {
+    var x = rvb(a), y = rvb(b);
+    return Math.sqrt(Math.pow(x[0] - y[0], 2) + Math.pow(x[1] - y[1], 2) + Math.pow(x[2] - y[2], 2)) < 90;
+  }
+  function trait(fill) { return sombreActif() ? entree(fill).sombre : entree(fill).trait; }
 
   // Teinte de fond très légère, tirée de la couleur de l'équipe. Le blanc ne
   // produit rien de visible, ce qui est cohérent : c'est l'équipe en blanc.
   function teinte(fill) {
     var h = fill.replace("#", "");
-    return "rgba(" + parseInt(h.slice(0, 2), 16) + "," + parseInt(h.slice(2, 4), 16) + "," + parseInt(h.slice(4, 6), 16) + ",0.08)";
+    return "rgba(" + parseInt(h.slice(0, 2), 16) + "," + parseInt(h.slice(2, 4), 16) + "," + parseInt(h.slice(4, 6), 16) + "," + (sombreActif() ? "0.16" : "0.08") + ")";
   }
 
   // Tout l'état tient dans la liste ordonnée des points marqués — l'équipe qui
@@ -466,8 +780,35 @@
       { name: "Équipe 2", color: PALETTE[1].fill }
     ],
     points: [],
-    mode: "scores"
+    mode: "scores",
+    cible: 40,
+    graphe: true,
+    // Thème du plein écran : null suit le réglage du téléphone.
+    sombre: null,
+    // Annonce du score à voix haute : "" (aucune), "eu" ou "fr".
+    voix: "",
+    // Pause en cours (instant de début) et pauses terminées [début, fin] :
+    // retirées des durées de jeu et d'échange.
+    pause: null,
+    pauses: [],
+    // Partie de championnat comptée (« Série 1 · Poule 2 »), quand le
+    // compteur a été ouvert depuis Parties ou Mon équipe.
+    info: ""
   };
+
+  var pleinEcran = false;
+  function sombre() {
+    if (state.sombre !== null) return state.sombre;
+    return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+  function sombreActif() { return pleinEcran && sombre(); }
+  // Texte posé sur la couleur d'une équipe : en sombre, les couleurs sont
+  // claires, le texte passe au noir.
+  function surCouleur() { return sombreActif() ? "#000000" : "#ffffff"; }
+
+  // Score à atteindre. Une partie de championnat se joue en 40 ; « Libre »
+  // (0) compte sans fin, pour l'entraînement.
+  var CIBLES = [30, 35, 40, 0];
 
   function load() {
     try {
@@ -476,7 +817,7 @@
       if (Array.isArray(saved.teams) && saved.teams.length === 2) {
         saved.teams.forEach(function (t, i) {
           if (t && typeof t.name === "string") state.teams[i].name = t.name;
-          if (t && PALETTE.some(function (c) { return c.fill === t.color; })) state.teams[i].color = t.color;
+          if (t && typeof t.color === "string" && (PALETTE.some(function (c) { return c.fill === t.color; }) || HEX.test(t.color))) state.teams[i].color = t.color;
         });
       }
       if (Array.isArray(saved.points)) {
@@ -489,6 +830,18 @@
         }).filter(Boolean);
       }
       if (["scores", "ecart", "echanges"].indexOf(saved.mode) !== -1) state.mode = saved.mode;
+      // Une partie enregistrée avant le score à atteindre se relit en 40.
+      if (CIBLES.indexOf(saved.cible) !== -1) state.cible = saved.cible;
+      if (saved.graphe === false) state.graphe = false;
+      if (saved.sombre === true || saved.sombre === false) state.sombre = saved.sombre;
+      if (saved.voix === "eu" || saved.voix === "fr") state.voix = saved.voix;
+      if (typeof saved.pause === "number") state.pause = saved.pause;
+      if (typeof saved.info === "string") state.info = saved.info.slice(0, 80);
+      if (Array.isArray(saved.pauses)) {
+        state.pauses = saved.pauses.filter(function (p) {
+          return Array.isArray(p) && typeof p[0] === "number" && typeof p[1] === "number" && p[1] >= p[0];
+        });
+      }
     } catch (e) { /* stockage indisponible ou entrée corrompue : on repart à zéro */ }
   }
 
@@ -509,9 +862,70 @@
     var d = [];
     for (var i = 1; i < state.points.length; i++) {
       var a = state.points[i - 1].at, b = state.points[i].at;
-      d.push((a && b && b > a) ? Math.round((b - a) / 1000) : null);
+      d.push((a && b && b > a) ? Math.round(tempsJeu(a, b) / 1000) : null);
     }
     return d;
+  }
+
+  // Temps écoulé entre deux instants, pauses retirées, en millisecondes.
+  function tempsJeu(a, b) {
+    var t = b - a;
+    var toutes = state.pause ? state.pauses.concat([[state.pause, Date.now()]]) : state.pauses;
+    toutes.forEach(function (p) { t -= Math.max(0, Math.min(b, p[1]) - Math.max(a, p[0])); });
+    return Math.max(0, t);
+  }
+
+  // Les nombres en basque, comme le kantari chante le score. Le basque compte
+  // par vingtaines : 37 se dit « vingt et dix-sept », hogeita hamazazpi.
+  var EUS_UNITES = ["zero", "bat", "bi", "hiru", "lau", "bost", "sei", "zazpi", "zortzi", "bederatzi",
+    "hamar", "hamaika", "hamabi", "hamahiru", "hamalau", "hamabost", "hamasei", "hamazazpi", "hemezortzi", "hemeretzi"];
+  var EUS_VINGTAINES = ["", "hogei", "berrogei", "hirurogei", "laurogei"];
+  function euskaraz(n) {
+    if (n < 20) return EUS_UNITES[n];
+    if (n < 100) {
+      var v = EUS_VINGTAINES[Math.floor(n / 20)], reste = n % 20;
+      return reste ? v + "ta " + EUS_UNITES[reste] : v;
+    }
+    if (n === 100) return "ehun";
+    if (n < 200) return "ehun eta " + euskaraz(n - 100);
+    return "";
+  }
+
+  function nomEquipe(i) { return state.teams[i].name || "Équipe " + (i + 1); }
+
+  // L'équipe qui a atteint la première le score à atteindre, ou null. Tiré
+  // des points comme tout le reste : annuler le point gagnant relance la
+  // partie sans rien d'autre à défaire.
+  function vainqueur() {
+    if (!state.cible) return null;
+    var s = [0, 0];
+    for (var i = 0; i < state.points.length; i++) {
+      s[state.points[i].t] += 1;
+      if (s[state.points[i].t] >= state.cible) return state.points[i].t;
+    }
+    return null;
+  }
+
+  // Durée de jeu, du premier au dernier point, en secondes (ou null).
+  function dureePartie() {
+    var n = state.points.length;
+    if (n < 2) return null;
+    var a = state.points[0].at, b = state.points[n - 1].at;
+    return (a && b && b > a) ? Math.round(tempsJeu(a, b) / 1000) : null;
+  }
+
+  // Les faits marquants du déroulé, communs au résumé du graphe, à la fin de
+  // partie et au message partagé.
+  function faits() {
+    var e = 0, ecart = [0];
+    state.points.forEach(function (p) { e += p.t === 0 ? 1 : -1; ecart.push(e); });
+    var egalites = 0, changements = 0, maxEcart = 0, iMax = 0;
+    ecart.forEach(function (v, i) {
+      if (i > 0 && v === 0) egalites += 1;
+      if (i > 0 && v !== 0 && ecart[i - 1] !== 0 && (v > 0) !== (ecart[i - 1] > 0)) changements += 1;
+      if (Math.abs(v) > Math.abs(maxEcart)) { maxEcart = v; iMax = i; }
+    });
+    return { ecart: ecart, egalites: egalites, changements: changements, maxEcart: maxEcart, iMax: iMax };
   }
 
   function formatDuree(sec) {
@@ -567,6 +981,8 @@
         save();
         renderScoreboard();
         renderChart();
+        renderFin();
+        majResume();
       });
       ligne.appendChild(champ);
 
@@ -589,10 +1005,70 @@
         });
         pastilles.appendChild(b);
       });
+
+      // Couleur libre, en dernier choix.
+      var libre = PALETTE.every(function (c) { return c.fill !== team.color; });
+      var etiquette = el("label", {
+        class: "swatch swatch-libre" + (libre ? " on" : ""),
+        style: libre ? "background:" + team.color : "",
+        title: "Autre couleur"
+      });
+      var selecteur = el("input", {
+        type: "color",
+        value: libre ? team.color : "#2f5ce0",
+        "aria-label": "Autre couleur pour l'équipe " + (i + 1)
+      });
+      // Pendant qu'on fait glisser dans le sélecteur, seul le score suit :
+      // redessiner les réglages refermerait le sélecteur.
+      selecteur.addEventListener("input", function () {
+        team.color = selecteur.value.toLowerCase();
+        etiquette.style.background = team.color;
+        renderScoreboard();
+        renderChart();
+      });
+      selecteur.addEventListener("change", function () {
+        team.color = selecteur.value.toLowerCase();
+        var autre = state.teams[1 - i];
+        if (autre.color === team.color) autre.color = PALETTE.filter(function (c) { return c.fill !== team.color; })[0].fill;
+        save();
+        renderAll();
+      });
+      etiquette.appendChild(selecteur);
+      pastilles.appendChild(etiquette);
       ligne.appendChild(pastilles);
 
       box.appendChild(ligne);
     });
+
+    if (couleursProches(state.teams[0].color, state.teams[1].color)) {
+      box.appendChild(el("p", { class: "couleurs-proches", text: "Couleurs très proches : le score et le graphe seront difficiles à distinguer." }));
+    }
+
+    // Score à atteindre : un score déjà dépassé n'est pas proposé en cours
+    // de partie, il désignerait un vainqueur après coup.
+    var cibles = document.getElementById("cibles");
+    cibles.querySelectorAll("button").forEach(function (b) { b.remove(); });
+    var max = Math.max.apply(null, scores());
+    CIBLES.forEach(function (c) {
+      var b = el("button", {
+        type: "button",
+        class: "chip" + (state.cible === c ? " on" : ""),
+        text: c ? c + " points" : "Libre"
+      });
+      if (c && c <= max && state.cible !== c) b.disabled = true;
+      b.addEventListener("click", function () {
+        state.cible = c;
+        save();
+        renderAll();
+      });
+      cibles.appendChild(b);
+    });
+    majResume();
+  }
+
+  function majResume() {
+    document.getElementById("setupResume").textContent =
+      nomEquipe(0) + " contre " + nomEquipe(1) + " · " + (state.cible ? "en " + state.cible : "sans limite");
   }
 
   // ---------------------------------------------------------------
@@ -603,30 +1079,166 @@
     box.innerHTML = "";
     var s = scores();
     var dernier = state.points.length ? state.points[state.points.length - 1].t : null;
+    var gagnant = vainqueur();
+    box.classList.toggle("en-jeu", state.points.length > 0 && gagnant === null);
+    box.classList.toggle("en-pause", !!state.pause);
 
     state.teams.forEach(function (team, i) {
       var couleur = trait(team.color);
       var b = el("button", {
         type: "button",
-        class: "score-btn",
+        class: "score-btn" + (gagnant !== null && gagnant !== i ? " perdant" : ""),
         style: "border-color:" + couleur + ";background:" + teinte(team.color),
-        "aria-label": "Ajouter un point à " + (team.name || "l'équipe " + (i + 1))
+        "aria-label": "Ajouter un point à " + nomEquipe(i) + ", " + s[i] + " points"
       });
-      b.appendChild(el("div", { class: "score-team", style: "color:" + couleur, text: team.name || "Équipe " + (i + 1) }));
+      if (gagnant !== null) b.disabled = true;
+      b.appendChild(el("div", { class: "score-team", style: "color:" + couleur, text: nomEquipe(i) }));
       b.appendChild(el("div", { class: "score-value", style: "color:" + couleur, text: String(s[i]) }));
-      b.appendChild(el("div", { class: "score-add", style: "color:" + couleur, text: "+1" }));
+      b.appendChild(el("div", { class: "score-eus", style: "color:" + couleur, lang: "eu", text: euskaraz(s[i]) }));
+
+      // Sous le score : ce qu'il reste à faire, puis la balle de partie.
+      var sous = el("div", { class: "score-add", style: "color:" + couleur });
+      if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), text: "Victoire" }));
+      // À un point du but : « Nobia », la balle de partie en basque.
+      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), lang: "eu", title: "Balle de partie", text: "Nobia" }));
+      else if (gagnant === null && state.cible) sous.textContent = "encore " + (state.cible - s[i]);
+      else if (gagnant === null) sous.textContent = "+1";
+      b.appendChild(sous);
       b.appendChild(el("div", { class: "score-serve", text: dernier === i ? "dernier point" : "" }));
+
       b.addEventListener("click", function () {
+        if (vainqueur() !== null) return;
+        var premier = state.points.length === 0;
+        // Un point marqué pendant une pause la termine.
+        finirPause();
         state.points.push({ t: i, at: Date.now() });
         save();
-        renderScoreboard();
-        renderChart();
-        majActions();
-        majChrono();
+        var fini = vainqueur() !== null;
+        annoncer(fini ? "fin" : "point");
+        // Un toucher sans regarder l'écran : la vibration confirme (Android).
+        try { if (navigator.vibrate) navigator.vibrate(fini ? [80, 60, 80, 60, 200] : 15); } catch (e) { /* refusé */ }
+        if (premier) document.getElementById("setupBox").open = false;
+        renderAll();
+        var touche = document.querySelectorAll("#scoreboard .score-btn")[i];
+        if (touche) touche.classList.add("flash");
       });
       box.appendChild(b);
     });
   }
+
+  // ---------------------------------------------------------------
+  // Fin de partie et partage
+  // ---------------------------------------------------------------
+  function renderFin() {
+    var box = document.getElementById("fin");
+    var gagnant = vainqueur();
+    box.innerHTML = "";
+    box.hidden = gagnant === null;
+    document.getElementById("shareBtn").hidden = gagnant !== null || state.points.length === 0;
+    if (gagnant === null) return;
+
+    var s = scores();
+    var couleur = trait(state.teams[gagnant].color);
+    var f = faits();
+    var duree = dureePartie();
+    box.style.borderColor = couleur;
+    box.style.background = teinte(state.teams[gagnant].color);
+    box.appendChild(el("h2", { style: "color:" + couleur, text: "Victoire de " + nomEquipe(gagnant) }));
+    box.appendChild(el("p", { class: "fin-score", text: s[gagnant] + " à " + s[1 - gagnant] }));
+    var details = [];
+    if (duree) details.push(formatDuree(duree) + " de jeu");
+    details.push(f.egalites ? f.egalites + " égalité" + (f.egalites > 1 ? "s" : "") : "aucune égalité");
+    if (f.changements) details.push(f.changements + " changement" + (f.changements > 1 ? "s" : "") + " de leader");
+    box.appendChild(el("p", { class: "fin-details", text: details.join(" · ") }));
+
+    var bouton = el("button", { type: "button", class: "action-btn partager", style: "background:" + couleur + ";color:" + surCouleur() });
+    bouton.innerHTML = document.getElementById("shareBtn").innerHTML;
+    bouton.querySelector("span").textContent = "Partager le résultat";
+    bouton.addEventListener("click", partager);
+    box.appendChild(bouton);
+    var nouvelle = el("button", { type: "button", class: "action-btn danger", text: "Nouvelle partie" });
+    nouvelle.addEventListener("click", nouvellePartie);
+    box.appendChild(nouvelle);
+  }
+
+  function textePartage() {
+    var s = scores();
+    var gagnant = vainqueur();
+    var f = faits();
+    var duree = dureePartie();
+    var lignes = ["*" + nomEquipe(0) + " " + s[0] + " – " + s[1] + " " + nomEquipe(1) + "*"];
+    var info = [];
+    if (state.info) info.push(state.info);
+    if (gagnant !== null) info.push("Victoire de " + nomEquipe(gagnant));
+    else info.push("Partie en cours, " + state.points.length + (state.points.length > 1 ? " points joués" : " point joué"));
+    if (state.cible) info.push("partie en " + state.cible);
+    if (duree) info.push(formatDuree(duree) + " de jeu");
+    lignes.push(info.join(" · "));
+    var deroule = [];
+    if (f.egalites) deroule.push(f.egalites + " égalité" + (f.egalites > 1 ? "s" : ""));
+    if (Math.abs(f.maxEcart) > 1) deroule.push("plus gros écart : " + Math.abs(f.maxEcart) + " points pour " + nomEquipe(f.maxEcart > 0 ? 0 : 1));
+    if (deroule.length) lignes.push(deroule.join(" · "));
+    lignes.push("");
+    lignes.push("Compté avec le site des championnats LIDFPB : " + new URL("decouvrir.html", window.location.href).href);
+    return lignes.join("\n");
+  }
+
+  function copier(texte) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texte);
+    return new Promise(function (resolve, reject) {
+      var zone = el("textarea", { style: "position:fixed;opacity:0" });
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { /* refusé */ }
+      zone.remove();
+      if (ok) resolve(); else reject(new Error("copie impossible"));
+    });
+  }
+
+  // Sur téléphone, la feuille de partage du système (WhatsApp, SMS…) ; sans
+  // elle, le texte est copié pour être collé. Seul envoi de la page, et
+  // seulement quand le visiteur le demande.
+  function partager() {
+    var texte = textePartage();
+    var info = document.getElementById("partageInfo");
+    info.textContent = "";
+    if (navigator.share) {
+      navigator.share({ text: texte }).catch(function (e) {
+        if (e && e.name === "AbortError") return;   // partage annulé
+        copier(texte).then(function () { info.textContent = "Score copié"; });
+      });
+      return;
+    }
+    copier(texte).then(function () { info.textContent = "Score copié, à coller"; },
+                       function () { info.textContent = "Copie impossible sur ce navigateur"; });
+  }
+
+  // ---------------------------------------------------------------
+  // Écran gardé allumé pendant la partie
+  // ---------------------------------------------------------------
+  // Entre deux points, le téléphone posé se mettrait en veille. Le verrou
+  // n'est tenu que pendant une partie en cours, et le système le relâche de
+  // lui-même quand la page passe en arrière-plan : on le reprend au retour.
+  var verrou = null, demandeEnCours = false;
+  function majVeille() {
+    if (!("wakeLock" in navigator)) return;
+    var enJeu = state.points.length > 0 && vainqueur() === null;
+    if (enJeu && !verrou && !demandeEnCours && document.visibilityState === "visible") {
+      demandeEnCours = true;
+      navigator.wakeLock.request("screen").then(function (v) {
+        demandeEnCours = false;
+        verrou = v;
+        v.addEventListener("release", function () { verrou = null; majChrono(); });
+        majChrono();
+      }, function () { demandeEnCours = false; /* refusé : pas bloquant */ });
+    } else if (!enJeu && verrou) {
+      verrou.release().catch(function () {});
+      verrou = null;
+    }
+  }
+  document.addEventListener("visibilitychange", majVeille);
 
   // Rafraîchi chaque seconde tant qu'une partie est en cours : le temps depuis
   // le dernier point est la seule valeur qui bouge sans qu'on touche à l'écran.
@@ -644,8 +1256,10 @@
 
     var premier = state.points[0].at, dernier = state.points[n - 1].at;
     var morceaux = [n + " point" + (n > 1 ? "s" : "")];
-    if (premier && dernier && dernier > premier) morceaux.push("partie : " + formatDuree(Math.round((dernier - premier) / 1000)));
-    if (dernier) morceaux.push("dernier point il y a " + formatDuree(Math.max(0, Math.round((Date.now() - dernier) / 1000))));
+    if (premier && dernier && dernier > premier) morceaux.push("partie : " + formatDuree(Math.round(tempsJeu(premier, dernier) / 1000)));
+    if (state.pause) morceaux.push("en pause depuis " + formatDuree(Math.max(0, Math.round((Date.now() - state.pause) / 1000))));
+    else if (dernier && vainqueur() === null) morceaux.push("dernier point il y a " + formatDuree(Math.max(0, Math.round((Date.now() - dernier) / 1000))));
+    if (verrou) morceaux.push("écran gardé allumé");
     box.textContent = morceaux.join(" · ");
 
     if (!chronoTimer) chronoTimer = setInterval(majChrono, 1000);
@@ -654,7 +1268,7 @@
   function majActions() {
     var vide = state.points.length === 0;
     document.getElementById("undoBtn").disabled = vide;
-    document.getElementById("resetBtn").disabled = vide;
+    document.getElementById("resetBtn").hidden = vide;
   }
 
   // Étoile à 5 branches centrée en (cx, cy), en unités du viewBox.
@@ -851,8 +1465,8 @@
       return;
     }
 
-    var egalites = 0;
-    for (var e = 1; e < ecart.length; e++) { if (ecart[e] === 0) egalites += 1; }
+    var f = faits();
+    var egalites = f.egalites;
 
     if (state.mode === "scores" && egalites) {
       var sp = el("span");
@@ -861,12 +1475,7 @@
       legende.appendChild(sp);
     }
 
-    var maxEcart = 0, iMax = 0;
-    ecart.forEach(function (v, i) { if (Math.abs(v) > Math.abs(maxEcart)) { maxEcart = v; iMax = i; } });
-    var changements = 0;
-    for (var k = 1; k < ecart.length; k++) {
-      if (ecart[k] !== 0 && ecart[k - 1] !== 0 && (ecart[k] > 0) !== (ecart[k - 1] > 0)) changements += 1;
-    }
+    var maxEcart = f.maxEcart, iMax = f.iMax, changements = f.changements;
     var resume = Math.abs(maxEcart) <= 1
       ? "Jamais plus d'un point d'écart."
       : "Plus gros écart : " + Math.abs(maxEcart) + " point" + (Math.abs(maxEcart) > 1 ? "s" : "") +
@@ -880,36 +1489,266 @@
     legende.appendChild(el("span", { text: resume }));
   }
 
+  // ---------------------------------------------------------------
+  // Pause entre deux jeux
+  // ---------------------------------------------------------------
+  // La pause ne touche pas aux points : elle est retirée des durées de jeu
+  // et d'échange, pour que le graphe des échanges et la durée de la partie
+  // ne comptent pas le temps passé à boire un coup.
+  var ICONE_PAUSE = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  var ICONE_REPRISE = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>';
+
+  function finirPause() {
+    if (!state.pause) return;
+    state.pauses.push([state.pause, Date.now()]);
+    state.pause = null;
+  }
+  function basculerPause() {
+    if (!state.points.length || vainqueur() !== null) return;
+    if (state.pause) finirPause(); else state.pause = Date.now();
+    save();
+    renderAll();
+  }
+  function majPause() {
+    var possible = state.points.length > 0 && vainqueur() === null;
+    if (!possible && state.pause) { finirPause(); save(); }
+    var b = document.getElementById("pauseBtn");
+    b.hidden = !possible;
+    b.classList.toggle("on", !!state.pause);
+    b.innerHTML = (state.pause ? ICONE_REPRISE : ICONE_PAUSE) + "<span>" + (state.pause ? "Reprendre" : "Pause") + "</span>";
+    var f = document.getElementById("fsPause");
+    f.disabled = !possible;
+    f.classList.toggle("on", !!state.pause);
+    f.innerHTML = state.pause ? ICONE_REPRISE : ICONE_PAUSE;
+    f.setAttribute("aria-label", state.pause ? "Reprendre la partie" : "Mettre en pause");
+    f.title = f.getAttribute("aria-label");
+  }
+  document.getElementById("pauseBtn").addEventListener("click", basculerPause);
+  document.getElementById("fsPause").addEventListener("click", basculerPause);
+
+  // ---------------------------------------------------------------
+  // Le kantari : annonce du score à voix haute
+  // ---------------------------------------------------------------
+  // Par la synthèse vocale du téléphone, sans rien envoyer. Les voix basques
+  // sont rares : à défaut, une voix espagnole, dont la prononciation est la
+  // plus proche du basque, lit les nombres en basque.
+  var parole = ("speechSynthesis" in window) && typeof window.SpeechSynthesisUtterance === "function";
+  var VOIX = [["", "Non"], ["eu", "Euskara"], ["fr", "Français"]];
+
+  function voixPour(langue) {
+    var voix = window.speechSynthesis.getVoices() || [];
+    var prefixes = langue === "eu" ? ["eu", "es"] : ["fr"];
+    for (var k = 0; k < prefixes.length; k++) {
+      for (var j = 0; j < voix.length; j++) {
+        if ((voix[j].lang || "").toLowerCase().indexOf(prefixes[k]) === 0) return voix[j];
+      }
+    }
+    return null;
+  }
+
+  function texteAnnonce(quoi) {
+    var s = scores();
+    var gagnant = vainqueur();
+    var eu = state.voix === "eu";
+    var dire = function (n) { return eu ? euskaraz(n) : String(n); };
+    // Comme le kantari : le score de l'équipe qui mène d'abord.
+    var haut = Math.max(s[0], s[1]), bas = Math.min(s[0], s[1]);
+    var texte = dire(haut) + ", " + dire(bas) + ".";
+    if (quoi === "fin" && gagnant !== null) return texte + " " + nomEquipe(gagnant) + (eu ? " !" : " gagne la partie !");
+    if (quoi === "annule") texte = (eu ? "" : "Point annulé. ") + texte;
+    if (gagnant === null && state.cible && (s[0] === state.cible - 1 || s[1] === state.cible - 1)) texte += " Nobia !";
+    return texte;
+  }
+
+  function annoncer(quoi) {
+    if (!parole || !state.voix || !state.points.length && quoi !== "annule") return;
+    try {
+      var u = new window.SpeechSynthesisUtterance(texteAnnonce(quoi));
+      var v = voixPour(state.voix);
+      u.lang = v ? v.lang : (state.voix === "eu" ? "eu-ES" : "fr-FR");
+      try { if (v) u.voice = v; } catch (e) { /* voix refusée : la langue suffit */ }
+      u.rate = 0.95;
+      // Un point chasse l'annonce précédente : jamais de retard sur le jeu.
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* synthèse indisponible : pas bloquant */ }
+  }
+
+  function majVoix() {
+    if (!parole) return;
+    var ligne = document.getElementById("voix");
+    ligne.hidden = false;
+    ligne.querySelectorAll("button").forEach(function (b) { b.remove(); });
+    VOIX.forEach(function (v) {
+      var b = el("button", { type: "button", class: "chip" + (state.voix === v[0] ? " on" : ""), text: v[1] });
+      if (v[0] === "eu") b.setAttribute("lang", "eu");
+      b.addEventListener("click", function () { choisirVoix(v[0]); });
+      ligne.appendChild(b);
+    });
+    var f = document.getElementById("fsVoix");
+    f.hidden = false;
+    f.classList.toggle("on", !!state.voix);
+    f.innerHTML = state.voix
+      ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg><small>' + state.voix.toUpperCase() + "</small>"
+      : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="m17 9 4 6M21 9l-4 6"/></svg>';
+    var suivante = VOIX[(VOIX.findIndex(function (v) { return v[0] === state.voix; }) + 1) % VOIX.length];
+    f.setAttribute("aria-label", "Annonce du score : " + (suivante[0] ? suivante[1] : "couper"));
+    f.title = f.getAttribute("aria-label");
+  }
+  function choisirVoix(v) {
+    state.voix = v;
+    save();
+    majVoix();
+    // Le premier choix sert d'essai, et débloque la parole sur iPhone.
+    if (v && state.points.length) annoncer("point");
+  }
+  document.getElementById("fsVoix").addEventListener("click", function () {
+    var i = VOIX.findIndex(function (v) { return v[0] === state.voix; });
+    choisirVoix(VOIX[(i + 1) % VOIX.length][0]);
+  });
+  if (parole && window.speechSynthesis.addEventListener) {
+    window.speechSynthesis.addEventListener("voiceschanged", function () { /* liste prête pour voixPour */ });
+  }
+
+  function majResumeGraphe() {
+    var n = state.points.length;
+    var f = faits();
+    var morceaux = [];
+    if (n) {
+      morceaux.push(f.egalites ? f.egalites + " égalité" + (f.egalites > 1 ? "s" : "") : "aucune égalité");
+      if (Math.abs(f.maxEcart) > 1) morceaux.push("écart max " + Math.abs(f.maxEcart));
+    }
+    document.getElementById("chartResume").textContent = morceaux.join(" · ");
+  }
+
+  // ---------------------------------------------------------------
+  // Plein écran
+  // ---------------------------------------------------------------
+  // Le tableau de score et l'encart de fin sont déplacés tels quels dans le
+  // calque plein écran, puis remis à leur place : un seul rendu, une seule
+  // source de vérité. Le calque s'appuie sur l'API plein écran quand le
+  // navigateur l'offre (Android), et reste un calque dans la page sinon
+  // (iPhone). Une entrée d'historique fait que le bouton Retour le referme
+  // au lieu de quitter la page.
+  var fsSysteme = false;
+  var metaTheme = document.querySelector('meta[name="theme-color"]');
+
+  function majFs() {
+    var fs = document.getElementById("fs");
+    fs.classList.toggle("sombre", sombre());
+    var t = document.getElementById("fsTheme");
+    t.innerHTML = sombre()
+      ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+    t.setAttribute("aria-label", sombre() ? "Passer en thème clair" : "Passer en thème sombre");
+    t.title = t.getAttribute("aria-label");
+    document.getElementById("fsUndo").disabled = state.points.length === 0;
+    var s = scores();
+    document.getElementById("fsResume").textContent = state.pause ? "En pause"
+      : state.points.length
+      ? s[0] + " – " + s[1] + (state.cible ? " · en " + state.cible : "")
+      : (state.cible ? "Partie en " + state.cible : "Partie libre");
+    if (pleinEcran && metaTheme) metaTheme.setAttribute("content", sombre() ? "#000000" : "#f4f5f7");
+  }
+
+  function ouvrirPleinEcran() {
+    if (pleinEcran) return;
+    pleinEcran = true;
+    var slot = document.getElementById("fsSlot");
+    slot.appendChild(document.getElementById("scoreboard"));
+    slot.appendChild(document.getElementById("fin"));
+    document.getElementById("fs").hidden = false;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ pleinEcran: true }, ""); } catch (e) { /* pas d'historique : Quitter suffit */ }
+    var racine = document.documentElement;
+    if (racine.requestFullscreen) {
+      racine.requestFullscreen({ navigationUI: "hide" }).then(function () { fsSysteme = true; }, function () { /* refusé : le calque suffit */ });
+    }
+    renderAll();
+    document.getElementById("fsQuit").focus();
+  }
+
+  function fermerPleinEcran(depuisHistorique) {
+    if (!pleinEcran) return;
+    pleinEcran = false;
+    var ancre = document.getElementById("chrono");
+    ancre.parentNode.insertBefore(document.getElementById("scoreboard"), ancre);
+    ancre.parentNode.insertBefore(document.getElementById("fin"), ancre);
+    document.getElementById("fs").hidden = true;
+    document.body.style.overflow = "";
+    if (metaTheme) metaTheme.setAttribute("content", "#ffffff");
+    if (fsSysteme && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    fsSysteme = false;
+    if (!depuisHistorique && history.state && history.state.pleinEcran) history.back();
+    renderAll();
+    document.getElementById("fsBtn").focus();
+  }
+
+  document.getElementById("fsBtn").addEventListener("click", ouvrirPleinEcran);
+  document.getElementById("fsQuit").addEventListener("click", function () { fermerPleinEcran(false); });
+  document.getElementById("fsUndo").addEventListener("click", function () { document.getElementById("undoBtn").click(); });
+  document.getElementById("fsTheme").addEventListener("click", function () {
+    state.sombre = !sombre();
+    save();
+    renderAll();
+  });
+  window.addEventListener("popstate", function () { fermerPleinEcran(true); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") fermerPleinEcran(false); });
+  // Sortie du plein écran système (geste Retour sur Android) : le calque suit.
+  document.addEventListener("fullscreenchange", function () {
+    if (!document.fullscreenElement && fsSysteme) { fsSysteme = false; fermerPleinEcran(false); }
+  });
+
   function renderAll() {
     renderSetup();
     renderScoreboard();
+    renderFin();
     renderChart();
+    majResumeGraphe();
+    majPause();
+    majVoix();
+    var ctx = document.getElementById("contexte");
+    ctx.hidden = !state.info;
+    ctx.textContent = state.info;
+    majFs();
     majActions();
     majChrono();
+    majVeille();
   }
 
   document.getElementById("undoBtn").addEventListener("click", function () {
     if (!state.points.length) return;
     state.points.pop();
+    if (!state.points.length) { state.pause = null; state.pauses = []; }
     save();
-    renderScoreboard();
-    renderChart();
-    majActions();
-    majChrono();
+    document.getElementById("partageInfo").textContent = "";
+    annoncer("annule");
+    renderAll();
   });
 
-  document.getElementById("resetBtn").addEventListener("click", function () {
+  document.getElementById("shareBtn").addEventListener("click", partager);
+
+  function nouvellePartie() {
     if (!state.points.length) return;
     var s = scores();
     // Une partie de trinquet se joue en 40 points : effacer par erreur après
     // une heure de jeu n'est pas rattrapable, d'où la confirmation.
     if (!window.confirm("Effacer la partie en cours (" + s[0] + " - " + s[1] + ") ? Les noms et les couleurs sont conservés.")) return;
     state.points = [];
+    state.pause = null;
+    state.pauses = [];
+    state.info = "";
     save();
-    renderScoreboard();
-    renderChart();
-    majActions();
-    majChrono();
+    document.getElementById("partageInfo").textContent = "";
+    document.getElementById("setupBox").open = true;
+    renderAll();
+  }
+  document.getElementById("resetBtn").addEventListener("click", nouvellePartie);
+
+  // Graphe replié ou ouvert : gardé d'une visite à l'autre.
+  document.getElementById("chartBox").addEventListener("toggle", function () {
+    state.graphe = this.open;
+    save();
   });
 
   document.querySelectorAll("#chartModes .chip").forEach(function (chip) {
@@ -924,9 +1763,71 @@
   });
 
   load();
+
+  // ---------------------------------------------------------------
+  // Partie ouverte depuis Parties ou Mon équipe
+  // ---------------------------------------------------------------
+  // compteur.html?e1=…&e2=…&cible=40&info=… : les noms arrivent par le lien,
+  // le compteur n'interroge toujours pas l'API de la ligue. « Club (éq. 2) »
+  // devient « Club 2 », pour tenir dans les 24 caractères d'un nom.
+  function nomCourt(nom) {
+    return String(nom || "").replace(/\s*\(éq\.\s*([^)]+)\)\s*$/, " $1").trim().slice(0, 24);
+  }
+  function lireArrivee() {
+    var q = new URLSearchParams(window.location.search);
+    if (!q.get("e1") || !q.get("e2")) return null;
+    var cible = parseInt(q.get("cible"), 10);
+    return {
+      noms: [nomCourt(q.get("e1")), nomCourt(q.get("e2"))],
+      cible: CIBLES.indexOf(cible) !== -1 ? cible : state.cible,
+      info: String(q.get("info") || "").slice(0, 80)
+    };
+  }
+  function adopter(a) {
+    state.teams[0].name = a.noms[0];
+    state.teams[1].name = a.noms[1];
+    state.cible = a.cible;
+    state.info = a.info;
+    state.points = [];
+    state.pause = null;
+    state.pauses = [];
+    save();
+  }
+  var arrivee = lireArrivee();
+  if (arrivee) {
+    // Le lien a servi : un rechargement ne doit pas reposer la question.
+    try { history.replaceState(null, "", window.location.pathname); } catch (e) { /* pas bloquant */ }
+    var memes = arrivee.noms[0] === state.teams[0].name && arrivee.noms[1] === state.teams[1].name;
+    if (!state.points.length) adopter(arrivee);
+    else if (!memes) {
+      // Une autre partie est en cours : on ne l'efface pas sans le demander.
+      var sc = scores();
+      var boite = document.getElementById("arrivee");
+      boite.appendChild(el("p", { text: "Une partie est en cours : " + nomEquipe(0) + " " + sc[0] + " – " + sc[1] + " " + nomEquipe(1) + ". Compter la nouvelle efface ce score." }));
+      var boutons = el("div", { class: "boutons" });
+      var go = el("button", { type: "button", class: "action-btn principal", text: "Compter " + arrivee.noms[0] + " – " + arrivee.noms[1] });
+      var garde = el("button", { type: "button", class: "action-btn", text: "Garder la partie en cours" });
+      go.addEventListener("click", function () {
+        adopter(arrivee);
+        boite.hidden = true;
+        document.getElementById("setupBox").open = true;
+        renderAll();
+      });
+      garde.addEventListener("click", function () { boite.hidden = true; });
+      boutons.appendChild(go);
+      boutons.appendChild(garde);
+      boite.appendChild(boutons);
+      boite.hidden = false;
+    }
+  }
+
   document.querySelectorAll("#chartModes .chip").forEach(function (c) {
     c.classList.toggle("on", c.getAttribute("data-mode") === state.mode);
   });
+  // Avant le premier point, les réglages sont ouverts ; partie entamée, ils
+  // restent repliés pour laisser la place au score.
+  document.getElementById("setupBox").open = state.points.length === 0;
+  document.getElementById("chartBox").open = state.graphe;
   renderAll();
 })();
 </script>

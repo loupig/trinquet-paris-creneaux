@@ -332,6 +332,8 @@
   .prochaine { padding: 10px 14px 12px; }
   .prochaine-quand { font-size: 15px; font-weight: 800; }
   .prochaine-adv { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .prochaine-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .prochaine-actions .report-btn { margin-top: 0; }
   .report-btn {
     display: inline-flex;
     align-items: center;
@@ -507,7 +509,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.3</p>
+    <p>Version 2026.10.27.4</p>
   </footer>
 </main>
 
@@ -1143,6 +1145,7 @@
     return m.scoreSoi === null && !!m.oid && matchesTrinquetParis(m.lieu);
   }
 
+  var ICON_SVG_COMPTEUR = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.5h0M12 15.5h0M15.5 15.5h0"/></svg>';
   var ICON_SVG_REPLAN = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-7.5-7.5V16l3 1.8.75-1.23-2.25-1.32V12.5h-1.5z"/></svg>';
   // Icônes de contact, copiées de programme.html.
   var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/><path d="M12.05 2C6.53 2 2.05 6.48 2.05 12c0 1.77.46 3.5 1.35 5.02L2 22l5.11-1.34a9.95 9.95 0 0 0 4.94 1.31c5.52 0 10-4.48 10-10S17.57 2 12.05 2zm0 18.16a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.09.81.82-3.01-.19-.3a8.13 8.13 0 0 1-1.25-4.34c0-4.5 3.66-8.16 8.16-8.16 2.18 0 4.23.85 5.77 2.39a8.1 8.1 0 0 1 2.39 5.77c0 4.5-3.66 8.16-8.16 8.16z"/></svg>';
@@ -1562,12 +1565,25 @@
     corps.appendChild(contreAdversaire("prochaine-adv", team, m));
     var meta = [m.meta, m.lieu].filter(function (x) { return !!x; }).join(" · ");
     if (meta) corps.appendChild(el("div", { class: "match-meta", text: meta }));
+    var boutons = el("div", { class: "prochaine-actions" });
+    // Le compteur, avec les deux équipes déjà nommées, recevante d'abord.
+    var nous = team.clubNom + (team.numero ? " " + team.numero : "");
+    var compteur = el("a", {
+      class: "report-btn",
+      href: "compteur.html?e1=" + encodeURIComponent(m.chezSoi ? nous : m.adversaire) +
+        "&e2=" + encodeURIComponent(m.chezSoi ? m.adversaire : nous) +
+        "&cible=40&info=" + encodeURIComponent(team.serieLabel + (m.meta ? " · " + m.meta : ""))
+    });
+    compteur.innerHTML = ICON_SVG_COMPTEUR;
+    compteur.appendChild(el("span", { text: "Compter cette partie" }));
+    boutons.appendChild(compteur);
     if (canReport(m)) {
       var btn = el("a", { class: "report-btn", href: "report.html?oid=" + encodeURIComponent(m.oid) });
       btn.innerHTML = ICON_SVG_REPLAN;
       btn.appendChild(el("span", { text: "Chercher une date de report" }));
-      corps.appendChild(btn);
+      boutons.appendChild(btn);
     }
+    corps.appendChild(boutons);
     var fiche = buildFicheAdversaire(team, m);
     if (fiche) corps.appendChild(fiche);
     carte.appendChild(corps);
