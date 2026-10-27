@@ -156,11 +156,15 @@ Pendant une partie en cours, un bouton « Pause » SHALL arrêter le décompte d
 - **THEN** la pause prend fin et le point est compté
 
 ### Requirement: Annonce du score à voix haute
-La page SHALL proposer d'annoncer le score à voix haute après chaque point, comme le kantari, en basque ou en français, par la synthèse vocale du téléphone ; par défaut, rien n'est annoncé. En basque, les nombres sont dits en basque (« hogeita bat, hamazazpi ») et, faute de voix basque sur le téléphone, une voix espagnole les lit. L'annonce ajoute « Nobia » à un point du but, le nom du vainqueur à la fin, et redit le score après une annulation. Une annonce en cours est coupée par la suivante. Le choix se fait dans les réglages et en plein écran, et il est gardé. Rien n'est envoyé : la voix est produite par le téléphone.
+La page SHALL proposer d'annoncer le score à voix haute après chaque point, comme le kantari, en basque ou en français, par la synthèse vocale du téléphone ; par défaut, rien n'est annoncé. Comme le kantari, le score de l'équipe qui mène est annoncé en premier. En basque, les nombres sont dits en basque (« hogeita bat, hamazazpi ») et, faute de voix basque sur le téléphone, une voix espagnole les lit. L'annonce ajoute « Nobia » à un point du but, le nom du vainqueur à la fin, et redit le score après une annulation. Une annonce en cours est coupée par la suivante. Le choix se fait dans les réglages et en plein écran, et il est gardé. Rien n'est envoyé : la voix est produite par le téléphone.
 
 #### Scenario: Score annoncé en basque
 - **WHEN** l'annonce est en basque et l'équipe 1 marque le premier point
 - **THEN** le téléphone dit « bat, zero »
+
+#### Scenario: L'équipe qui mène d'abord
+- **WHEN** l'annonce est en français et l'équipe 2 mène 21 à 17
+- **THEN** le téléphone dit « 21, 17 »
 
 #### Scenario: Annonce coupée
 - **WHEN** le visiteur choisit « Non »

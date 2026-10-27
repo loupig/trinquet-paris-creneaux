@@ -235,6 +235,13 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     dit = await page.evaluate(() => window.__dit.at(-1));
     expect(dit.texte).toBe("Point annulé. 1, 0.");
 
+    // Le score de l'équipe qui mène est annoncé en premier.
+    const ahetze = page.locator(".score-btn").nth(1);
+    await ahetze.click();
+    await ahetze.click();
+    dit = await page.evaluate(() => window.__dit.at(-1));
+    expect(dit.texte).toBe("2, 1.");
+
     // Couper l'annonce : plus rien n'est dit.
     await page.locator("#voix").getByRole("button", { name: "Non" }).click();
     const avant = await page.evaluate(() => window.__dit.length);

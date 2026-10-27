@@ -659,7 +659,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.2</p>
+    <p>Version 2026.10.27.3</p>
   </footer>
 </main>
 
@@ -1551,7 +1551,9 @@
     var gagnant = vainqueur();
     var eu = state.voix === "eu";
     var dire = function (n) { return eu ? euskaraz(n) : String(n); };
-    var texte = dire(s[0]) + ", " + dire(s[1]) + ".";
+    // Comme le kantari : le score de l'équipe qui mène d'abord.
+    var haut = Math.max(s[0], s[1]), bas = Math.min(s[0], s[1]);
+    var texte = dire(haut) + ", " + dire(bas) + ".";
     if (quoi === "fin" && gagnant !== null) return texte + " " + nomEquipe(gagnant) + (eu ? " !" : " gagne la partie !");
     if (quoi === "annule") texte = (eu ? "" : "Point annulé. ") + texte;
     if (gagnant === null && state.cible && (s[0] === state.cible - 1 || s[1] === state.cible - 1)) texte += " Nobia !";
