@@ -161,6 +161,8 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
 
   test("couleur libre au sélecteur, lisible, gardée, et signalée si trop proche", async ({ page }) => {
     await page.goto("compteur.html");
+    // Rouge, vert, puis la couleur libre : trois pastilles par équipe.
+    await expect(page.locator(".team-setup").first().locator(".swatch")).toHaveCount(3);
     const selecteurs = page.locator(".swatch-libre input");
     await expect(selecteurs).toHaveCount(2);
 

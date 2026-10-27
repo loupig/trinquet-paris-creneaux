@@ -18,14 +18,14 @@ La page SHALL laisser nommer librement les deux équipes, en 24 caractères au p
 - **THEN** le bouton de score affiche « Équipe 2 »
 
 ### Requirement: Couleurs d'équipe
-Chaque équipe SHALL prendre une couleur parmi quatre, celles de l'ikurriña plus le noir : rouge, vert, blanc et noir, ou, en dernier choix, une couleur libre prise au sélecteur du téléphone. Par défaut, la première équipe est rouge et la seconde verte. Choisir une des quatre couleurs de l'autre équipe MUST échanger les couleurs des deux équipes, et une couleur libre identique à celle de l'autre équipe fait changer l'autre, pour que deux équipes n'aient jamais la même couleur. Une couleur libre trop proche de celle de l'autre équipe n'est pas interdite, mais un avertissement le signale. Pour le texte, les bordures et les courbes, le blanc s'affiche en gris et le vert en vert foncé, et une couleur libre trop claire est foncée jusqu'à rester lisible sur fond blanc (éclaircie sur le fond noir du thème sombre).
+Chaque équipe SHALL prendre le rouge ou le vert de l'ikurriña, ou, en dernier choix, une couleur libre prise au sélecteur du téléphone. Seules ces trois pastilles sont proposées ; une partie enregistrée avec le blanc ou le noir, proposés auparavant, les garde, sous la pastille de couleur libre. Par défaut, la première équipe est rouge et la seconde verte. Choisir le rouge ou le vert de l'autre équipe MUST échanger les couleurs des deux équipes, et une couleur libre identique à celle de l'autre équipe fait changer l'autre, pour que deux équipes n'aient jamais la même couleur. Une couleur libre trop proche de celle de l'autre équipe n'est pas interdite, mais un avertissement le signale. Pour le texte, les bordures et les courbes, le blanc s'affiche en gris et le vert en vert foncé, et une couleur libre trop claire est foncée jusqu'à rester lisible sur fond blanc (éclaircie sur le fond noir du thème sombre).
 
 #### Scenario: Choisir la couleur de l'adversaire
 - **WHEN** l'équipe 1 est rouge, l'équipe 2 verte, et le visiteur choisit le vert pour l'équipe 1
 - **THEN** l'équipe 1 devient verte et l'équipe 2 rouge
 
 #### Scenario: Équipe en blanc
-- **WHEN** une équipe a la couleur blanche
+- **WHEN** une équipe a la couleur blanche, prise au sélecteur
 - **THEN** son nom, son score et sa courbe sont tracés en gris
 
 #### Scenario: Couleur du club
