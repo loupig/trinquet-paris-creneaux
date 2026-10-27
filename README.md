@@ -77,8 +77,12 @@ git push
 
 GitHub Pages redéploie automatiquement (~30s à 2min) à chaque push sur
 `main`. Penser à mettre à jour le numéro de version dans le pied de page
-(`Version AAAA.MM.JJ`) de chaque page modifiée : pas de build ici pour le
-faire automatiquement.
+(`Version AAAA.MM.JJ`, suffixée `.2`, `.3`… pour une deuxième mise en ligne
+le même jour) de chaque page modifiée : pas de build ici pour le faire
+automatiquement. Quand un script partagé change (`fetes.js`), changer aussi
+son `?v=` dans chaque page qui le charge : GitHub Pages laisse les
+navigateurs garder les fichiers une dizaine de minutes, et une page à jour
+tournerait sinon avec l'ancien script.
 
 ## Tests
 

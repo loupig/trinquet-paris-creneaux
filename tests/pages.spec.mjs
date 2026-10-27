@@ -272,8 +272,12 @@ test.describe("Habillages de fête", () => {
     await page.goto("index.html");
     await attendreChargement(page);
     await expect(embleme(page)).toHaveText("🎃");
+    // La bulle vient seule, puis une autre phrase au toucher de l'emblème.
+    const bulle = page.locator(".fete-bulle");
+    await expect(bulle).toBeVisible();
+    const premiere = await bulle.textContent();
     await embleme(page).click();
-    await expect(page.locator(".fete-bulle")).toBeVisible();
+    await expect(bulle).not.toHaveText(premiere);
 
     await page.getByRole("button", { name: "✨ Toussaint" }).click();
     await expect(embleme(page)).toHaveText("✨");
