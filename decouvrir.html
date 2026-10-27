@@ -492,12 +492,13 @@
   .avatar.a1 { background: var(--rouge); }
   .avatar.a2 { background: var(--vert); }
   .avatar.a3 { background: #1a1a2e; }
+  .avatar.a4 { background: #8a5a00; }
   .hero-quote { display: flex; gap: 12px; align-items: flex-start; max-width: 680px; margin: 32px 0 0; }
   .hero-quote blockquote { margin: 0; font-weight: 600; }
   .hero-quote figcaption { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--muted); }
   .hero-quote figcaption a { text-underline-offset: 2px; }
   .quotes { display: grid; gap: 16px; margin-top: 40px; }
-  @media (min-width: 960px) { .quotes { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  @media (min-width: 768px) { .quotes { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
   .quote {
     display: flex;
     flex-direction: column;
@@ -749,9 +750,9 @@
         </article>
         <article class="benefit">
           <span class="ico"><svg class="i" aria-hidden="true"><use href="#i-calc"/></svg></span>
-          <h3>Le score, sans papier</h3>
-          <p>Un compteur de points pour le bord du trinquet, avec la courbe de la partie. Il retrouve le score si l'écran se recharge.</p>
-          <p class="onglet">Bouton calculette, <a href="compteur.html">Compteur</a></p>
+          <h3>Le compteur du kantari</h3>
+          <p>Le score en plein écran, annoncé à voix haute en basque après chaque point, «&nbsp;Nobia&nbsp;» à la balle de partie, puis le résultat envoyé au groupe d'un geste.</p>
+          <p class="onglet">Bouton calculette, ou «&nbsp;Compter cette partie&nbsp;» depuis <a href="programme.html">Parties</a> · <a href="compteur.html">Ouvrir le compteur</a></p>
         </article>
       </div>
     </div>
@@ -796,6 +797,10 @@
         <figure class="quote">
           <blockquote>« Le simulateur nous a montré qu'une victoire suffisait pour le quart, même courte. On l'a gagnée 40 à 37, et on savait déjà contre qui on jouerait. »</blockquote>
           <figcaption><span class="avatar a3" aria-hidden="true">PL</span><span><strong>Peio Larralde</strong><br>Joueur, série 1</span></figcaption>
+        </figure>
+        <figure class="quote">
+          <blockquote>« Je mets le compteur en plein écran, le téléphone annonce le score en basque après chaque point. Au dernier match, tout le trinquet a crié “Nobia&nbsp;!” avec lui, et le résultat était sur le groupe avant qu'on ait rangé les palas. »</blockquote>
+          <figcaption><span class="avatar a4" aria-hidden="true">MI</span><span><strong>Maddi Irigoyen</strong><br>Capitaine, série 2</span></figcaption>
         </figure>
       </div>
       <p class="note">Avis d'illustration, en attendant les vôtres : <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">envoyez-nous le vôtre</a>.</p>
