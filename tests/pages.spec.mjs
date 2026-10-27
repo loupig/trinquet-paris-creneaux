@@ -58,6 +58,23 @@ test("Compteur s'affiche sans erreur", async ({ page }) => {
   await expect(page.locator("#setup")).toBeVisible();
 });
 
+test("Découvrir : la présentation mène à l'accueil", async ({ page }) => {
+  await page.goto("decouvrir.html");
+  await expect(page.locator("h1")).toBeVisible();
+  // Une seule action : chaque bouton d'appel ouvre l'accueil.
+  const appels = page.locator("a.btn-primary");
+  await expect(appels).toHaveCount(3);
+  for (const a of await appels.all()) await expect(a).toHaveAttribute("href", "index.html");
+  // Les questions se déplient dans la page, sans fenêtre.
+  const question = page.locator(".faq details").first();
+  await question.locator("summary").click();
+  await expect(question.locator("p")).toBeVisible();
+  // La phrase s'allume mot à mot une fois à l'écran.
+  await page.locator("#tagline").scrollIntoViewIfNeeded();
+  await page.mouse.wheel(0, 300);
+  await expect(page.locator("#tagline .w").last()).toHaveClass(/\bon\b/);
+});
+
 test("Ancienne adresse equipes.html redirige vers Mon équipe", async ({ page }) => {
   await page.goto("equipes.html");
   await expect(page).toHaveURL(/equipe\.html/);
