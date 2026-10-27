@@ -34,3 +34,10 @@ L'accueil SHALL ne plus afficher de tuile pour les créneaux libres du Trinquet 
 #### Scenario: Ouvrir le compteur
 - **WHEN** un visiteur veut marquer une partie depuis l'accueil
 - **THEN** le bouton calculette de l'en-tête ouvre le compteur de points
+
+### Requirement: Lien vers la présentation
+Le pied de page de l'accueil SHALL porter un lien « Présenter le site à un joueur » vers la page Découvrir (spec `decouvrir`), à partager à qui ne connaît pas le site. Ce lien n'est pas un bloc de contenu : il ne change pas la composition de l'accueil.
+
+#### Scenario: Faire connaître le site
+- **WHEN** un visiteur touche « Présenter le site à un joueur » en bas de l'accueil
+- **THEN** la page Découvrir s'ouvre

@@ -58,6 +58,12 @@ test("Compteur s'affiche sans erreur", async ({ page }) => {
   await expect(page.locator("#setup")).toBeVisible();
 });
 
+test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
+  await page.goto("index.html");
+  await page.getByRole("link", { name: "Présenter le site à un joueur" }).click();
+  await expect(page).toHaveURL(/decouvrir\.html/);
+});
+
 test("Découvrir : la présentation mène à l'accueil", async ({ page }) => {
   await page.goto("decouvrir.html");
   await expect(page.locator("h1")).toBeVisible();
