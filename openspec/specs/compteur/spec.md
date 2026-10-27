@@ -133,6 +133,28 @@ Le plein écran SHALL proposer un thème clair et un thème sombre, fond noir, c
 - **WHEN** le visiteur touche « Sombre » en plein écran
 - **THEN** le fond devient noir, et le plein écran s'ouvrira en sombre aux visites suivantes
 
+### Requirement: Pause entre deux jeux
+Pendant une partie en cours, un bouton « Pause » SHALL arrêter le décompte du temps de jeu : la ligne de chronologie indique « en pause depuis… », les scores s'estompent, et le bouton devient « Reprendre ». Marquer un point pendant une pause la termine. Le temps passé en pause MUST être retiré de la durée de la partie et de la durée des échanges, pour que le graphe des échanges et la durée annoncée ne comptent que le jeu. Le plein écran porte le même bouton.
+
+#### Scenario: Pause de dix minutes
+- **WHEN** entre le 2e et le 3e point, la partie a été mise en pause dix minutes, et les trois points s'étalent sur 11 min 40 s
+- **THEN** la durée de la partie affichée est de 1 min 40 s
+
+#### Scenario: Reprise par un point
+- **WHEN** la partie est en pause et le visiteur marque un point
+- **THEN** la pause prend fin et le point est compté
+
+### Requirement: Annonce du score à voix haute
+La page SHALL proposer d'annoncer le score à voix haute après chaque point, comme le kantari, en basque ou en français, par la synthèse vocale du téléphone ; par défaut, rien n'est annoncé. En basque, les nombres sont dits en basque (« hogeita bat, hamazazpi ») et, faute de voix basque sur le téléphone, une voix espagnole les lit. L'annonce ajoute « Nobia » à un point du but, le nom du vainqueur à la fin, et redit le score après une annulation. Une annonce en cours est coupée par la suivante. Le choix se fait dans les réglages et en plein écran, et il est gardé. Rien n'est envoyé : la voix est produite par le téléphone.
+
+#### Scenario: Score annoncé en basque
+- **WHEN** l'annonce est en basque et l'équipe 1 marque le premier point
+- **THEN** le téléphone dit « bat, zero »
+
+#### Scenario: Annonce coupée
+- **WHEN** le visiteur choisit « Non »
+- **THEN** plus aucun score n'est annoncé
+
 ### Requirement: Graphe repliable
 Le déroulé de la partie SHALL pouvoir se replier, sous une ligne qui garde l'essentiel (« 8 égalités · écart max 6 »), et se déplier dans la page. Replié ou ouvert, il le reste d'une visite à l'autre.
 
@@ -173,7 +195,7 @@ Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros éc
 - **THEN** le résumé indique « Jamais plus d'un point d'écart. »
 
 ### Requirement: Partie conservée sur l'appareil
-La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe, graphe replié ou non, et thème du plein écran. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
+La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe, graphe replié ou non, thème du plein écran, annonce du score et pauses. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
 
 #### Scenario: Rechargement en pleine partie
 - **WHEN** le visiteur recharge la page à 25-21

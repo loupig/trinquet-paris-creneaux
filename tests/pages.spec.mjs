@@ -184,6 +184,64 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(page.locator(".score-btn").nth(0)).toHaveCSS("border-top-color", "rgb(139, 63, 217)");
   });
 
+  test("pause : retirée de la durée de jeu, reprise au point suivant", async ({ page }) => {
+    // Trois points, dont un après dix minutes de pause : 100 s de jeu.
+    const t0 = Date.now() - 3600 * 1000;
+    await page.addInitScript((t) => {
+      localStorage.setItem("lidfpb_compteur_v1", JSON.stringify({
+        teams: [{ name: "Bera", color: "#CE1126" }, { name: "Ahetze", color: "#009B48" }],
+        points: [{ t: 0, at: t }, { t: 1, at: t + 60000 }, { t: 0, at: t + 700000 }],
+        pauses: [[t + 70000, t + 670000]], cible: 40
+      }));
+    }, t0);
+    await page.goto("compteur.html");
+    await expect(page.locator("#chrono")).toContainText("partie : 1 min 40 s");
+
+    await page.getByRole("button", { name: "Pause" }).click();
+    await expect(page.locator("#chrono")).toContainText("en pause depuis");
+    await expect(page.locator("#scoreboard")).toHaveClass(/en-pause/);
+    // Un point marqué reprend la partie.
+    await page.locator(".score-btn").nth(1).click();
+    await expect(page.locator("#scoreboard")).not.toHaveClass(/en-pause/);
+    await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+  });
+
+  test("le kantari annonce le score, en basque ou en français", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.__dit = [];
+      Object.defineProperty(window, "speechSynthesis", { value: {
+        speak: (u) => window.__dit.push({ texte: u.text, langue: u.lang }),
+        cancel: () => {},
+        getVoices: () => [{ lang: "es-ES", name: "Espagnol" }, { lang: "fr-FR", name: "Français" }],
+        addEventListener: () => {}
+      } });
+    });
+    await page.goto("compteur.html");
+    await page.locator(".team-name").nth(0).fill("Bera");
+    await page.locator("#voix").getByRole("button", { name: "Euskara" }).click();
+    const bera = page.locator(".score-btn").nth(0);
+    await bera.click();
+    let dit = await page.evaluate(() => window.__dit.at(-1));
+    // Sans voix basque, une voix espagnole lit les nombres en basque.
+    expect(dit).toEqual({ texte: "bat, zero.", langue: "es-ES" });
+
+    await page.locator("#setupBox > summary").click();
+    await page.locator("#voix").getByRole("button", { name: "Français" }).click();
+    await bera.click();
+    dit = await page.evaluate(() => window.__dit.at(-1));
+    expect(dit).toEqual({ texte: "2, 0.", langue: "fr-FR" });
+
+    await page.getByRole("button", { name: "Annuler le dernier point" }).click();
+    dit = await page.evaluate(() => window.__dit.at(-1));
+    expect(dit.texte).toBe("Point annulé. 1, 0.");
+
+    // Couper l'annonce : plus rien n'est dit.
+    await page.locator("#voix").getByRole("button", { name: "Non" }).click();
+    const avant = await page.evaluate(() => window.__dit.length);
+    await bera.click();
+    expect(await page.evaluate(() => window.__dit.length)).toBe(avant);
+  });
+
   test("en cours de partie, le score se copie sans feuille de partage", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.addInitScript(() => { delete Navigator.prototype.share; });
