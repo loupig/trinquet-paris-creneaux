@@ -73,11 +73,15 @@ Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montr
 - **THEN** son bouton affiche « hogeita hemeretzi » et « Nobia »
 
 ### Requirement: Fin de partie
-La première équipe à atteindre le score visé SHALL gagner la partie. Les boutons de score deviennent inactifs, l'équipe gagnante affiche « Victoire », et un encart annonce le vainqueur, le score, la durée de jeu, le nombre d'égalités et de changements de leader, avec les boutons « Partager le résultat » et « Nouvelle partie ». Annuler le point gagnant MUST relancer la partie là où elle en était.
+La première équipe à atteindre le score visé SHALL gagner la partie. Les boutons de score deviennent inactifs, l'équipe gagnante affiche « Victoire », et un encart annonce le vainqueur, le score, la durée de jeu, le nombre d'égalités et de changements de leader, avec les boutons « Partager le résultat » et « Nouvelle partie ». Annuler le point gagnant MUST relancer la partie là où elle en était. Au point gagnant, une gerbe de confettis aux couleurs de l'équipe gagnante et de l'ikurriña part de son bouton, puis s'efface d'elle-même en quelques secondes, sans gêner les touchers ; elle ne revient pas au rechargement d'une partie finie, et n'a pas lieu quand le téléphone demande moins d'animations.
 
 #### Scenario: Point gagnant
 - **WHEN** l'équipe 1 marque son 40e point à 40-37, dans une partie en 40
 - **THEN** l'encart annonce « Victoire » de l'équipe 1, 40 à 37, et plus aucun point ne peut être marqué
+
+#### Scenario: Confettis
+- **WHEN** l'équipe 1 marque le point gagnant
+- **THEN** des confettis partent de son bouton, puis disparaissent
 
 #### Scenario: Point gagnant donné par erreur
 - **WHEN** le visiteur annule le dernier point d'une partie terminée
