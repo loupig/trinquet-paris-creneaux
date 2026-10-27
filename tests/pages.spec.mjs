@@ -265,20 +265,43 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
 });
 
 test.describe("Habillages de fête", () => {
-  for (const [theme, embleme] of [["halloween", "🎃"], ["toussaint", "✨"]]) {
-    test(`${theme} forcé : l'emblème répond`, async ({ page }) => {
-      await page.goto("index.html?theme=" + theme);
-      await attendreChargement(page);
-      const bouton = page.locator("header h1 .fete-embleme");
-      await expect(bouton).toHaveText(embleme);
-      await bouton.click();
-      await expect(page.locator(".fete-bulle")).toBeVisible();
-    });
-  }
+  const embleme = (page) => page.locator("header h1 .fete-embleme");
 
-  test("coupé, rien ne s'ajoute", async ({ page }) => {
-    await page.goto("index.html?theme=aucun");
+  test("Halloween par défaut, choix gardé d'une visite à l'autre", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 27, 12));
+    await page.goto("index.html");
     await attendreChargement(page);
-    await expect(page.locator(".fete-embleme, .fete-araignee, .fete-chauve-souris, .fete-etincelle")).toHaveCount(0);
+    await expect(embleme(page)).toHaveText("🎃");
+    await embleme(page).click();
+    await expect(page.locator(".fete-bulle")).toBeVisible();
+
+    await page.getByRole("button", { name: "✨ Toussaint" }).click();
+    await expect(embleme(page)).toHaveText("✨");
+    await page.reload();
+    await attendreChargement(page);
+    await expect(embleme(page)).toHaveText("✨");
+    await expect(page.getByRole("button", { name: "✨ Toussaint" })).toHaveAttribute("aria-pressed", "true");
+
+    await page.getByRole("button", { name: "Sans" }).click();
+    await expect(embleme(page)).toHaveCount(0);
+    await page.goto("equipe.html");
+    await expect(embleme(page)).toHaveCount(0);
+  });
+
+  test("Toussaint par défaut dès le 30 octobre, sur toutes les pages", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 30, 12));
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    await expect(embleme(page)).toHaveText("✨");
+    // Le choix ne se fait que depuis l'accueil.
+    await expect(page.locator(".fete-choix")).toHaveCount(0);
+  });
+
+  test("après le 1er novembre, plus rien, même choisi", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("lidfpb_theme_v1", "halloween"));
+    await page.clock.setFixedTime(new Date(2026, 10, 2, 12));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator(".fete-embleme, .fete-choix, .fete-araignee, .fete-chauve-souris, .fete-etincelle")).toHaveCount(0);
   });
 });
