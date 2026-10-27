@@ -43,7 +43,13 @@ Le comportement de chaque page est décrit par sa spec, dans
 - [`decouvrir.html`](decouvrir.html) — la page de présentation, à partager à
   un joueur qui ne connaît pas le site : une seule action, ouvrir l'accueil.
   Hors barre d'onglets, sans appel à l'API. Spec
-  [`decouvrir`](openspec/specs/decouvrir/spec.md).
+  [`decouvrir`](openspec/specs/decouvrir/spec.md). Sa police, Manrope, est
+  servie depuis [`fonts/`](fonts/) (licence OFL), et son image de partage
+  est [`icons/og-decouvrir.png`](icons/og-decouvrir.png), une capture du
+  haut de la page à refaire si l'accroche change.
+- [`404.html`](404.html) — la page « introuvable » que GitHub Pages sert
+  pour toute adresse inconnue, en chemins absolus pour marcher depuis
+  n'importe quel dossier.
 - [`equipes.html`](equipes.html) — simple redirection vers `equipe.html`,
   gardée pour les anciens favoris.
 
