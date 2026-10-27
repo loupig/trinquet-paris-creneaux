@@ -70,6 +70,8 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await page.locator(".team-name").nth(1).fill("Ahetze");
     await page.getByRole("button", { name: "30 points" }).click();
     await expect(page.locator("#shareBtn")).toBeHidden();
+    await expect(page.locator("#resetBtn")).toBeHidden();
+    await expect(page.locator(".score-eus").first()).toHaveText("zero");
 
     const bera = page.locator(".score-btn").nth(0);
     const ahetze = page.locator(".score-btn").nth(1);
@@ -78,17 +80,23 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(reglages).not.toHaveAttribute("open", "");
     await expect(page.locator("#setupResume")).toHaveText("Bera contre Ahetze · en 30");
     await expect(bera).toContainText("encore 29");
+    await expect(bera.locator(".score-eus")).toHaveText("bat");
 
     for (let i = 0; i < 27; i++) await bera.click();
     for (let i = 0; i < 25; i++) await ahetze.click();
     await bera.click();                                   // 29-25
-    await expect(bera).toContainText("Balle de partie");
+    // À un point du but : « Nobia », et le score chanté en basque.
+    await expect(bera).toContainText("Nobia");
+    await expect(bera.locator(".score-eus")).toHaveText("hogeita bederatzi");
+    await expect(ahetze.locator(".score-eus")).toHaveText("hogeita bost");
 
     await bera.click();                                   // 30-25 : fin
     await expect(page.locator("#fin")).toContainText("Victoire de Bera");
     await expect(page.locator("#fin")).toContainText("30 à 25");
     await expect(bera).toBeDisabled();
     await expect(ahetze).toBeDisabled();
+    await expect(bera.locator(".score-eus")).toHaveText("hogeita hamar");
+    await expect(page.locator("#fin").getByRole("button", { name: "Nouvelle partie" })).toBeVisible();
 
     await page.getByRole("button", { name: "Partager le résultat" }).click();
     const texte = await page.evaluate(() => window.__partage && window.__partage.text);
@@ -101,10 +109,23 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(page.locator("#fin")).toBeHidden();
     await expect(ahetze).toBeEnabled();
 
-    // Rechargement : score et score visé retrouvés.
+    // Le graphe se replie, et le reste après un rechargement.
+    await page.locator("#chartBox > summary").click();
+    await expect(page.locator("#chart")).toBeHidden();
+    await expect(page.locator("#chartResume")).not.toBeEmpty();
+
+    // Rechargement : score, score visé et graphe replié retrouvés.
     await page.reload();
     await expect(bera).toContainText("29");
     await expect(page.locator("#setupResume")).toHaveText("Bera contre Ahetze · en 30");
+    await expect(page.locator("#chart")).toBeHidden();
+
+    // « Nouvelle partie » en cours de jeu : dans les réglages, loin du score.
+    await reglages.locator("summary").click();
+    page.once("dialog", (d) => d.accept());
+    await reglages.getByRole("button", { name: "Nouvelle partie" }).click();
+    await expect(bera.locator(".score-value")).toHaveText("0");
+    await expect(reglages).toHaveAttribute("open", "");
   });
 
   test("en cours de partie, le score se copie sans feuille de partage", async ({ page, context }) => {

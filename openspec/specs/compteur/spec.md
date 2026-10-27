@@ -43,18 +43,18 @@ Les noms, les couleurs et le score à atteindre SHALL être ouverts tant qu'aucu
 - **THEN** les réglages se replient et les boutons de score s'agrandissent
 
 ### Requirement: Marquer un point
-Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Balle de partie ». La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
+Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Nobia », la balle de partie en basque. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
 
 #### Scenario: Point marqué
 - **WHEN** le visiteur touche le bouton de l'équipe 2 à 1-1, dans une partie en 40
-- **THEN** le score passe à 1-2, « encore 38 » et « dernier point » apparaissent sous l'équipe 2
+- **THEN** le score passe à 1-2, « bi », « encore 38 » et « dernier point » apparaissent sous l'équipe 2
 
-#### Scenario: Balle de partie
+#### Scenario: Nobia
 - **WHEN** l'équipe 1 atteint 39 dans une partie en 40
-- **THEN** son bouton affiche « Balle de partie »
+- **THEN** son bouton affiche « hogeita hemeretzi » et « Nobia »
 
 ### Requirement: Fin de partie
-La première équipe à atteindre le score visé SHALL gagner la partie. Les boutons de score deviennent inactifs, l'équipe gagnante affiche « Victoire », et un encart annonce le vainqueur, le score, la durée de jeu, le nombre d'égalités et de changements de leader, avec un bouton « Partager le résultat ». Annuler le point gagnant MUST relancer la partie là où elle en était.
+La première équipe à atteindre le score visé SHALL gagner la partie. Les boutons de score deviennent inactifs, l'équipe gagnante affiche « Victoire », et un encart annonce le vainqueur, le score, la durée de jeu, le nombre d'égalités et de changements de leader, avec les boutons « Partager le résultat » et « Nouvelle partie ». Annuler le point gagnant MUST relancer la partie là où elle en était.
 
 #### Scenario: Point gagnant
 - **WHEN** l'équipe 1 marque son 40e point à 40-37, dans une partie en 40
@@ -90,7 +90,7 @@ La page SHALL permettre d'annuler le dernier point marqué, sans confirmation, a
 - **THEN** ce point disparaît du score et du graphe
 
 ### Requirement: Nouvelle partie
-Le bouton « Nouvelle partie » SHALL effacer les points après confirmation, en conservant les noms et les couleurs des équipes. Il est inactif quand aucun point n'est marqué.
+Le bouton « Nouvelle partie » SHALL effacer les points après confirmation, en conservant les noms et les couleurs des équipes. Il MUST rester loin des boutons de score et d'« Annuler le dernier point », pour qu'un toucher de trop n'efface pas une partie : en cours de jeu, il se trouve dans les réglages repliés ; partie finie, dans l'encart de fin. Il n'apparaît pas quand aucun point n'est marqué.
 
 #### Scenario: Enchaîner une partie
 - **WHEN** le visiteur touche « Nouvelle partie » puis confirme
@@ -106,6 +106,13 @@ Dès qu'un point est marqué, une ligne sous le score SHALL donner le nombre de 
 #### Scenario: Partie en cours
 - **WHEN** 12 points ont été marqués et que le dernier remonte à 40 secondes
 - **THEN** la ligne indique 12 points, la durée de la partie, et « dernier point il y a 40 s », qui avance chaque seconde
+
+### Requirement: Graphe repliable
+Le déroulé de la partie SHALL pouvoir se replier, sous une ligne qui garde l'essentiel (« 8 égalités · écart max 6 »), et se déplier dans la page. Replié ou ouvert, il le reste d'une visite à l'autre.
+
+#### Scenario: Écran gardé pour le score
+- **WHEN** le visiteur replie le déroulé puis recharge la page
+- **THEN** le déroulé reste replié
 
 ### Requirement: Graphe en mode Scores
 En mode « Scores », mode par défaut, le graphe SHALL tracer une courbe par équipe, à sa couleur, et une bande grise entre les deux, dont la largeur traduit l'écart. Une étoile marque chaque retour à égalité. Au-delà de douze égalités, seule une étoile sur N est tracée pour ne pas masquer les courbes, chaque étoile tracée restant une vraie égalité, et le résumé le signale.
@@ -140,7 +147,7 @@ Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros éc
 - **THEN** le résumé indique « Jamais plus d'un point d'écart. »
 
 ### Requirement: Partie conservée sur l'appareil
-La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, et mode du graphe. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
+La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe et graphe replié ou non. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
 
 #### Scenario: Rechargement en pleine partie
 - **WHEN** le visiteur recharge la page à 25-21

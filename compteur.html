@@ -211,6 +211,10 @@
   .setup-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
   .setup-box[open] > summary svg { transform: rotate(180deg); }
   .setup-corps { padding: 0 14px 14px; }
+  /* Loin des boutons de score et d'« Annuler » : effacer une partie ne doit
+     jamais partir d'un toucher de trop. */
+  .setup-corps .action-btn.danger { display: block; width: 100%; margin-top: 14px; }
+  .action-btn.danger[hidden] { display: none; }
   .cible-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; font-size: 12px; font-weight: 600; }
   .cible-row > span { margin-right: 4px; }
   .chip[disabled] { opacity: 0.4; cursor: default; }
@@ -296,6 +300,9 @@
     font-variant-numeric: tabular-nums;
   }
   .score-add { font-size: 12px; font-weight: 700; min-height: 15px; }
+  /* Le score en basque, comme le chante le kantari. */
+  .score-eus { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; margin: -2px 0 6px; opacity: 0.8; }
+  .scoreboard.en-jeu .score-eus { font-size: 15px; }
   .badge {
     display: inline-block;
     margin-top: 2px;
@@ -351,15 +358,25 @@
   .fin .fin-details { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
   .fin .action-btn.partager { margin-top: 12px; color: #fff; border: 0; }
   .fin .action-btn.partager:active { opacity: 0.85; }
+  .fin .action-btn.danger { width: 100%; margin-top: 8px; }
 
-  /* --- Graphe --- */
-  .chart-head {
+  /* --- Graphe, repliable comme les réglages --- */
+  .chart-box { padding: 0; margin-top: 10px; }
+  .chart-box > summary {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    list-style: none;
+    cursor: pointer;
   }
+  .chart-box > summary::-webkit-details-marker { display: none; }
+  .chart-box > summary .card-title { margin: 0; flex: 0 0 auto; }
+  .chart-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
+  .chart-box[open] > summary svg { transform: rotate(180deg); }
+  .chart-box[open] .setup-resume { visibility: hidden; }
+  .chart-corps { padding: 0 14px 14px; }
+  .chart-head { margin-bottom: 10px; }
   .chip-group { display: flex; gap: 6px; }
   .chip {
     font: inherit;
@@ -461,6 +478,7 @@
     <div class="setup-corps">
       <div id="setup"></div>
       <div class="cible-row" id="cibles"><span>Partie en</span></div>
+      <button type="button" class="action-btn danger" id="resetBtn" hidden>Nouvelle partie</button>
     </div>
   </details>
 
@@ -472,23 +490,28 @@
 
   <div class="actions">
     <button type="button" class="action-btn" id="undoBtn">Annuler le dernier point</button>
-    <button type="button" class="action-btn danger" id="resetBtn">Nouvelle partie</button>
   </div>
   <button type="button" class="action-btn partager" id="shareBtn" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Partager le score</span></button>
   <p class="partage-info" id="partageInfo" aria-live="polite"></p>
 
-  <div class="card" style="margin-top:10px">
-    <div class="chart-head">
-      <div class="card-title" style="margin:0">Déroulé de la partie</div>
-      <div class="chip-group" id="chartModes">
-        <button type="button" class="chip on" data-mode="scores">Scores</button>
-        <button type="button" class="chip" data-mode="ecart">Écart</button>
-        <button type="button" class="chip" data-mode="echanges">Échanges</button>
+  <details class="card chart-box" id="chartBox" open>
+    <summary>
+      <span class="card-title">Déroulé de la partie</span>
+      <span class="setup-resume" id="chartResume"></span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </summary>
+    <div class="chart-corps">
+      <div class="chart-head">
+        <div class="chip-group" id="chartModes">
+          <button type="button" class="chip on" data-mode="scores">Scores</button>
+          <button type="button" class="chip" data-mode="ecart">Écart</button>
+          <button type="button" class="chip" data-mode="echanges">Échanges</button>
+        </div>
       </div>
+      <div id="chart"></div>
+      <div class="chart-legend" id="chartLegend"></div>
     </div>
-    <div id="chart"></div>
-    <div class="chart-legend" id="chartLegend"></div>
-  </div>
+  </details>
 
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
@@ -554,7 +577,8 @@
     ],
     points: [],
     mode: "scores",
-    cible: 40
+    cible: 40,
+    graphe: true
   };
 
   // Score à atteindre. Une partie de championnat se joue en 40 ; « Libre »
@@ -583,6 +607,7 @@
       if (["scores", "ecart", "echanges"].indexOf(saved.mode) !== -1) state.mode = saved.mode;
       // Une partie enregistrée avant le score à atteindre se relit en 40.
       if (CIBLES.indexOf(saved.cible) !== -1) state.cible = saved.cible;
+      if (saved.graphe === false) state.graphe = false;
     } catch (e) { /* stockage indisponible ou entrée corrompue : on repart à zéro */ }
   }
 
@@ -606,6 +631,22 @@
       d.push((a && b && b > a) ? Math.round((b - a) / 1000) : null);
     }
     return d;
+  }
+
+  // Les nombres en basque, comme le kantari chante le score. Le basque compte
+  // par vingtaines : 37 se dit « vingt et dix-sept », hogeita hamazazpi.
+  var EUS_UNITES = ["zero", "bat", "bi", "hiru", "lau", "bost", "sei", "zazpi", "zortzi", "bederatzi",
+    "hamar", "hamaika", "hamabi", "hamahiru", "hamalau", "hamabost", "hamasei", "hamazazpi", "hemezortzi", "hemeretzi"];
+  var EUS_VINGTAINES = ["", "hogei", "berrogei", "hirurogei", "laurogei"];
+  function euskaraz(n) {
+    if (n < 20) return EUS_UNITES[n];
+    if (n < 100) {
+      var v = EUS_VINGTAINES[Math.floor(n / 20)], reste = n % 20;
+      return reste ? v + "ta " + EUS_UNITES[reste] : v;
+    }
+    if (n === 100) return "ehun";
+    if (n < 200) return "ehun eta " + euskaraz(n - 100);
+    return "";
   }
 
   function nomEquipe(i) { return state.teams[i].name || "Équipe " + (i + 1); }
@@ -776,11 +817,13 @@
       if (gagnant !== null) b.disabled = true;
       b.appendChild(el("div", { class: "score-team", style: "color:" + couleur, text: nomEquipe(i) }));
       b.appendChild(el("div", { class: "score-value", style: "color:" + couleur, text: String(s[i]) }));
+      b.appendChild(el("div", { class: "score-eus", style: "color:" + couleur, lang: "eu", text: euskaraz(s[i]) }));
 
       // Sous le score : ce qu'il reste à faire, puis la balle de partie.
       var sous = el("div", { class: "score-add", style: "color:" + couleur });
       if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, text: "Victoire" }));
-      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, text: "Balle de partie" }));
+      // À un point du but : « Nobia », la balle de partie en basque.
+      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, lang: "eu", title: "Balle de partie", text: "Nobia" }));
       else if (gagnant === null && state.cible) sous.textContent = "encore " + (state.cible - s[i]);
       else if (gagnant === null) sous.textContent = "+1";
       b.appendChild(sous);
@@ -833,6 +876,9 @@
     bouton.querySelector("span").textContent = "Partager le résultat";
     bouton.addEventListener("click", partager);
     box.appendChild(bouton);
+    var nouvelle = el("button", { type: "button", class: "action-btn danger", text: "Nouvelle partie" });
+    nouvelle.addEventListener("click", nouvellePartie);
+    box.appendChild(nouvelle);
   }
 
   function textePartage() {
@@ -940,7 +986,7 @@
   function majActions() {
     var vide = state.points.length === 0;
     document.getElementById("undoBtn").disabled = vide;
-    document.getElementById("resetBtn").disabled = vide;
+    document.getElementById("resetBtn").hidden = vide;
   }
 
   // Étoile à 5 branches centrée en (cx, cy), en unités du viewBox.
@@ -1161,11 +1207,23 @@
     legende.appendChild(el("span", { text: resume }));
   }
 
+  function majResumeGraphe() {
+    var n = state.points.length;
+    var f = faits();
+    var morceaux = [];
+    if (n) {
+      morceaux.push(f.egalites ? f.egalites + " égalité" + (f.egalites > 1 ? "s" : "") : "aucune égalité");
+      if (Math.abs(f.maxEcart) > 1) morceaux.push("écart max " + Math.abs(f.maxEcart));
+    }
+    document.getElementById("chartResume").textContent = morceaux.join(" · ");
+  }
+
   function renderAll() {
     renderSetup();
     renderScoreboard();
     renderFin();
     renderChart();
+    majResumeGraphe();
     majActions();
     majChrono();
     majVeille();
@@ -1181,7 +1239,7 @@
 
   document.getElementById("shareBtn").addEventListener("click", partager);
 
-  document.getElementById("resetBtn").addEventListener("click", function () {
+  function nouvellePartie() {
     if (!state.points.length) return;
     var s = scores();
     // Une partie de trinquet se joue en 40 points : effacer par erreur après
@@ -1192,6 +1250,13 @@
     document.getElementById("partageInfo").textContent = "";
     document.getElementById("setupBox").open = true;
     renderAll();
+  }
+  document.getElementById("resetBtn").addEventListener("click", nouvellePartie);
+
+  // Graphe replié ou ouvert : gardé d'une visite à l'autre.
+  document.getElementById("chartBox").addEventListener("toggle", function () {
+    state.graphe = this.open;
+    save();
   });
 
   document.querySelectorAll("#chartModes .chip").forEach(function (chip) {
@@ -1212,6 +1277,7 @@
   // Avant le premier point, les réglages sont ouverts ; partie entamée, ils
   // restent repliés pour laisser la place au score.
   document.getElementById("setupBox").open = state.points.length === 0;
+  document.getElementById("chartBox").open = state.graphe;
   renderAll();
 })();
 </script>
