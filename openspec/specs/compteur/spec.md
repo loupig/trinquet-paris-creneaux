@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Marquer sur place les points d'une partie entre deux équipes, suivre son déroulé sur un graphe, et retrouver la partie en cours après un rechargement, sans rien envoyer à la ligue ni ailleurs.
+Marquer sur place, au bord du trinquet, les points d'une partie entre deux équipes jusqu'au score visé, suivre son déroulé sur un graphe, retrouver la partie en cours après un rechargement et, si on le choisit, envoyer le score à son groupe ; rien d'autre ne quitte le navigateur.
 
 ## Requirements
 
@@ -28,12 +28,59 @@ Chaque équipe SHALL prendre une couleur parmi quatre, celles de l'ikurriña plu
 - **WHEN** une équipe a la couleur blanche
 - **THEN** son nom, son score et sa courbe sont tracés en gris
 
+### Requirement: Score à atteindre
+Avant ou pendant la partie, la page SHALL laisser choisir le score à atteindre parmi 30, 35 et 40 points, ou « Libre » pour compter sans fin. Par défaut, une partie se joue en 40, comme en championnat. En cours de partie, un score déjà atteint par l'une des équipes MUST NOT être proposé, pour ne pas désigner un vainqueur après coup.
+
+#### Scenario: Partie d'entraînement
+- **WHEN** le visiteur choisit « Libre »
+- **THEN** les points s'ajoutent sans fin de partie
+
+### Requirement: Réglages repliés pendant la partie
+Les noms, les couleurs et le score à atteindre SHALL être ouverts tant qu'aucun point n'est marqué, puis repliés dès le premier point, sous une ligne qui les résume (« Bera contre Ahetze · en 40 ») et qui les déplie dans la page. Partie lancée, les deux boutons de score MUST occuper l'essentiel de l'écran, pour être touchés sans viser.
+
+#### Scenario: Premier point
+- **WHEN** le visiteur marque le premier point d'une partie
+- **THEN** les réglages se replient et les boutons de score s'agrandissent
+
 ### Requirement: Marquer un point
-Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom et son score. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté.
+Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Balle de partie ». La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
 
 #### Scenario: Point marqué
-- **WHEN** le visiteur touche le bouton de l'équipe 2 à 1-1
-- **THEN** le score passe à 1-2 et « dernier point » apparaît sous l'équipe 2
+- **WHEN** le visiteur touche le bouton de l'équipe 2 à 1-1, dans une partie en 40
+- **THEN** le score passe à 1-2, « encore 38 » et « dernier point » apparaissent sous l'équipe 2
+
+#### Scenario: Balle de partie
+- **WHEN** l'équipe 1 atteint 39 dans une partie en 40
+- **THEN** son bouton affiche « Balle de partie »
+
+### Requirement: Fin de partie
+La première équipe à atteindre le score visé SHALL gagner la partie. Les boutons de score deviennent inactifs, l'équipe gagnante affiche « Victoire », et un encart annonce le vainqueur, le score, la durée de jeu, le nombre d'égalités et de changements de leader, avec un bouton « Partager le résultat ». Annuler le point gagnant MUST relancer la partie là où elle en était.
+
+#### Scenario: Point gagnant
+- **WHEN** l'équipe 1 marque son 40e point à 40-37, dans une partie en 40
+- **THEN** l'encart annonce « Victoire » de l'équipe 1, 40 à 37, et plus aucun point ne peut être marqué
+
+#### Scenario: Point gagnant donné par erreur
+- **WHEN** le visiteur annule le dernier point d'une partie terminée
+- **THEN** l'encart disparaît et les points peuvent de nouveau être marqués
+
+### Requirement: Écran gardé allumé
+Pendant une partie en cours, la page SHALL demander au téléphone de garder l'écran allumé, quand il le permet, et le signaler dans la ligne de chronologie. La demande est relâchée à la fin de la partie, et reprise quand la page revient au premier plan.
+
+#### Scenario: Téléphone posé entre deux points
+- **WHEN** une partie est en cours et que personne ne touche l'écran pendant plusieurs minutes
+- **THEN** l'écran reste allumé, sur un téléphone qui le permet
+
+### Requirement: Partager le score
+Dès qu'un point est marqué, la page SHALL permettre de partager le score, par la feuille de partage du téléphone (WhatsApp, SMS…) ou, à défaut, en le copiant. Le message donne les deux équipes et le score, le vainqueur ou l'état de la partie en cours, le score visé, la durée de jeu, les égalités et le plus gros écart, puis le lien vers la page Découvrir.
+
+#### Scenario: Résultat envoyé au groupe
+- **WHEN** à la fin d'une partie gagnée 40-37 par Bera contre Ahetze, le visiteur touche « Partager le résultat »
+- **THEN** la feuille de partage reçoit « *Bera 40 – 37 Ahetze* », la victoire de Bera, et le lien vers la page Découvrir
+
+#### Scenario: Sans feuille de partage
+- **WHEN** le navigateur ne propose pas de feuille de partage
+- **THEN** le message est copié et la page indique « Score copié, à coller »
 
 ### Requirement: Annuler le dernier point
 La page SHALL permettre d'annuler le dernier point marqué, sans confirmation, autant de fois qu'il y a de points. Le bouton est inactif quand aucun point n'est marqué.
@@ -47,7 +94,7 @@ Le bouton « Nouvelle partie » SHALL effacer les points après confirmation, en
 
 #### Scenario: Enchaîner une partie
 - **WHEN** le visiteur touche « Nouvelle partie » puis confirme
-- **THEN** le score revient à 0-0, avec les mêmes noms et les mêmes couleurs
+- **THEN** le score revient à 0-0, avec les mêmes noms, les mêmes couleurs et le même score à atteindre, et les réglages se rouvrent
 
 #### Scenario: Refus de la confirmation
 - **WHEN** le visiteur touche « Nouvelle partie » puis annule la confirmation
@@ -93,15 +140,15 @@ Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros éc
 - **THEN** le résumé indique « Jamais plus d'un point d'écart. »
 
 ### Requirement: Partie conservée sur l'appareil
-La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, points avec leur horodatage, et mode du graphe. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
+La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, et mode du graphe. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
 
 #### Scenario: Rechargement en pleine partie
 - **WHEN** le visiteur recharge la page à 25-21
 - **THEN** il retrouve 25-21, les mêmes équipes, le même graphe, et le temps depuis le dernier point reste juste
 
 ### Requirement: Rien ne quitte le navigateur
-La page MUST NOT appeler l'API de la ligue ni envoyer de données à un service, et le dit en en-tête : tout reste dans le navigateur.
+La page MUST NOT appeler l'API de la ligue ni envoyer de données à un service, et le dit en en-tête. Seul le message de score quitte la page, et seulement quand le visiteur le partage lui-même.
 
 #### Scenario: Utilisation hors des données de la ligue
-- **WHEN** le visiteur marque une partie complète
+- **WHEN** le visiteur marque une partie complète sans la partager
 - **THEN** aucune donnée de la partie ne quitte son navigateur

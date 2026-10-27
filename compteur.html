@@ -184,6 +184,37 @@
   }
   .card-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
 
+  /* --- Réglages : ouverts avant le premier point, repliés ensuite pour
+     laisser l'écran aux boutons de score. Dépliés dans la page, jamais en
+     fenêtre (spec navigation). --- */
+  .setup-box { padding: 0; }
+  .setup-box > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .setup-box > summary::-webkit-details-marker { display: none; }
+  .setup-box > summary .card-title { margin: 0; flex: 0 0 auto; }
+  .setup-resume {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .setup-box[open] .setup-resume { visibility: hidden; }
+  .setup-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
+  .setup-box[open] > summary svg { transform: rotate(180deg); }
+  .setup-corps { padding: 0 14px 14px; }
+  .cible-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; font-size: 12px; font-weight: 600; }
+  .cible-row > span { margin-right: 4px; }
+  .chip[disabled] { opacity: 0.4; cursor: default; }
+
   /* --- Réglages d'équipe --- */
   .team-setup { display: flex; align-items: center; gap: 10px; }
   .team-setup + .team-setup { margin-top: 10px; }
@@ -235,6 +266,22 @@
     color: var(--text);
   }
   .score-btn:active { transform: scale(0.98); }
+  /* Partie lancée : les deux boutons prennent l'écran, pour viser sans
+     regarder entre deux échanges. */
+  .scoreboard.en-jeu .score-btn {
+    min-height: clamp(220px, 44vh, 440px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .scoreboard.en-jeu .score-value { font-size: 96px; }
+  .score-btn[disabled] { cursor: default; }
+  .score-btn[disabled]:active { transform: none; }
+  .score-btn.perdant { opacity: 0.55; }
+  .score-btn.flash { animation: flash 0.35s ease-out; }
+  @keyframes flash { from { box-shadow: 0 0 0 6px rgba(26, 26, 46, 0.18); } to { box-shadow: 0 0 0 0 rgba(26, 26, 46, 0); } }
+  @media (prefers-reduced-motion: reduce) { .score-btn.flash { animation: none; } }
   .score-team {
     font-size: 12px;
     font-weight: 700;
@@ -248,7 +295,18 @@
     margin: 6px 0 4px;
     font-variant-numeric: tabular-nums;
   }
-  .score-add { font-size: 12px; font-weight: 700; opacity: 0.75; }
+  .score-add { font-size: 12px; font-weight: 700; min-height: 15px; }
+  .badge {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #fff;
+  }
   .score-serve { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 4px; min-height: 12px; }
 
   .chrono {
@@ -275,6 +333,24 @@
   .action-btn:active { background: var(--accent-bg); }
   .action-btn[disabled] { color: var(--muted); opacity: 0.5; cursor: default; }
   .action-btn.danger { color: #b3261e; }
+  .action-btn.partager { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 8px; }
+  .action-btn.partager[hidden] { display: none; }
+  .partage-info { margin: 6px 0 0; min-height: 15px; text-align: center; font-size: 12px; color: var(--muted); }
+
+  /* --- Fin de partie --- */
+  .fin {
+    border: 2px solid;
+    border-radius: 14px;
+    padding: 16px 14px;
+    margin-bottom: 10px;
+    text-align: center;
+    background: var(--card-bg);
+  }
+  .fin h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .fin .fin-score { margin: 4px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .fin .fin-details { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .fin .action-btn.partager { margin-top: 12px; color: #fff; border: 0; }
+  .fin .action-btn.partager:active { opacity: 0.85; }
 
   /* --- Graphe --- */
   .chart-head {
@@ -372,16 +448,25 @@
 <header>
   <h1><a href="index.html" class="home-link">Compteur de points</a></h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, rien n'est partagé avec la ligue.</p>
+  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, sauf le score si tu choisis de le partager.</p>
 </header>
 
 <main>
-  <div class="card">
-    <div class="card-title">Les deux équipes</div>
-    <div id="setup"></div>
-  </div>
+  <details class="card setup-box" id="setupBox">
+    <summary>
+      <span class="card-title">Les deux équipes</span>
+      <span class="setup-resume" id="setupResume"></span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </summary>
+    <div class="setup-corps">
+      <div id="setup"></div>
+      <div class="cible-row" id="cibles"><span>Partie en</span></div>
+    </div>
+  </details>
 
   <div class="scoreboard" id="scoreboard"></div>
+
+  <div class="fin" id="fin" hidden></div>
 
   <p class="chrono" id="chrono" hidden></p>
 
@@ -389,6 +474,8 @@
     <button type="button" class="action-btn" id="undoBtn">Annuler le dernier point</button>
     <button type="button" class="action-btn danger" id="resetBtn">Nouvelle partie</button>
   </div>
+  <button type="button" class="action-btn partager" id="shareBtn" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Partager le score</span></button>
+  <p class="partage-info" id="partageInfo" aria-live="polite"></p>
 
   <div class="card" style="margin-top:10px">
     <div class="chart-head">
@@ -406,7 +493,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.04</p>
+    <p>Version 2026.10.27</p>
   </footer>
 </main>
 
@@ -466,8 +553,13 @@
       { name: "Équipe 2", color: PALETTE[1].fill }
     ],
     points: [],
-    mode: "scores"
+    mode: "scores",
+    cible: 40
   };
+
+  // Score à atteindre. Une partie de championnat se joue en 40 ; « Libre »
+  // (0) compte sans fin, pour l'entraînement.
+  var CIBLES = [30, 35, 40, 0];
 
   function load() {
     try {
@@ -489,6 +581,8 @@
         }).filter(Boolean);
       }
       if (["scores", "ecart", "echanges"].indexOf(saved.mode) !== -1) state.mode = saved.mode;
+      // Une partie enregistrée avant le score à atteindre se relit en 40.
+      if (CIBLES.indexOf(saved.cible) !== -1) state.cible = saved.cible;
     } catch (e) { /* stockage indisponible ou entrée corrompue : on repart à zéro */ }
   }
 
@@ -512,6 +606,43 @@
       d.push((a && b && b > a) ? Math.round((b - a) / 1000) : null);
     }
     return d;
+  }
+
+  function nomEquipe(i) { return state.teams[i].name || "Équipe " + (i + 1); }
+
+  // L'équipe qui a atteint la première le score à atteindre, ou null. Tiré
+  // des points comme tout le reste : annuler le point gagnant relance la
+  // partie sans rien d'autre à défaire.
+  function vainqueur() {
+    if (!state.cible) return null;
+    var s = [0, 0];
+    for (var i = 0; i < state.points.length; i++) {
+      s[state.points[i].t] += 1;
+      if (s[state.points[i].t] >= state.cible) return state.points[i].t;
+    }
+    return null;
+  }
+
+  // Durée de jeu, du premier au dernier point, en secondes (ou null).
+  function dureePartie() {
+    var n = state.points.length;
+    if (n < 2) return null;
+    var a = state.points[0].at, b = state.points[n - 1].at;
+    return (a && b && b > a) ? Math.round((b - a) / 1000) : null;
+  }
+
+  // Les faits marquants du déroulé, communs au résumé du graphe, à la fin de
+  // partie et au message partagé.
+  function faits() {
+    var e = 0, ecart = [0];
+    state.points.forEach(function (p) { e += p.t === 0 ? 1 : -1; ecart.push(e); });
+    var egalites = 0, changements = 0, maxEcart = 0, iMax = 0;
+    ecart.forEach(function (v, i) {
+      if (i > 0 && v === 0) egalites += 1;
+      if (i > 0 && v !== 0 && ecart[i - 1] !== 0 && (v > 0) !== (ecart[i - 1] > 0)) changements += 1;
+      if (Math.abs(v) > Math.abs(maxEcart)) { maxEcart = v; iMax = i; }
+    });
+    return { ecart: ecart, egalites: egalites, changements: changements, maxEcart: maxEcart, iMax: iMax };
   }
 
   function formatDuree(sec) {
@@ -567,6 +698,8 @@
         save();
         renderScoreboard();
         renderChart();
+        renderFin();
+        majResume();
       });
       ligne.appendChild(champ);
 
@@ -593,6 +726,32 @@
 
       box.appendChild(ligne);
     });
+
+    // Score à atteindre : un score déjà dépassé n'est pas proposé en cours
+    // de partie, il désignerait un vainqueur après coup.
+    var cibles = document.getElementById("cibles");
+    cibles.querySelectorAll("button").forEach(function (b) { b.remove(); });
+    var max = Math.max.apply(null, scores());
+    CIBLES.forEach(function (c) {
+      var b = el("button", {
+        type: "button",
+        class: "chip" + (state.cible === c ? " on" : ""),
+        text: c ? c + " points" : "Libre"
+      });
+      if (c && c <= max && state.cible !== c) b.disabled = true;
+      b.addEventListener("click", function () {
+        state.cible = c;
+        save();
+        renderAll();
+      });
+      cibles.appendChild(b);
+    });
+    majResume();
+  }
+
+  function majResume() {
+    document.getElementById("setupResume").textContent =
+      nomEquipe(0) + " contre " + nomEquipe(1) + " · " + (state.cible ? "en " + state.cible : "sans limite");
   }
 
   // ---------------------------------------------------------------
@@ -603,30 +762,156 @@
     box.innerHTML = "";
     var s = scores();
     var dernier = state.points.length ? state.points[state.points.length - 1].t : null;
+    var gagnant = vainqueur();
+    box.classList.toggle("en-jeu", state.points.length > 0 && gagnant === null);
 
     state.teams.forEach(function (team, i) {
       var couleur = trait(team.color);
       var b = el("button", {
         type: "button",
-        class: "score-btn",
+        class: "score-btn" + (gagnant !== null && gagnant !== i ? " perdant" : ""),
         style: "border-color:" + couleur + ";background:" + teinte(team.color),
-        "aria-label": "Ajouter un point à " + (team.name || "l'équipe " + (i + 1))
+        "aria-label": "Ajouter un point à " + nomEquipe(i) + ", " + s[i] + " points"
       });
-      b.appendChild(el("div", { class: "score-team", style: "color:" + couleur, text: team.name || "Équipe " + (i + 1) }));
+      if (gagnant !== null) b.disabled = true;
+      b.appendChild(el("div", { class: "score-team", style: "color:" + couleur, text: nomEquipe(i) }));
       b.appendChild(el("div", { class: "score-value", style: "color:" + couleur, text: String(s[i]) }));
-      b.appendChild(el("div", { class: "score-add", style: "color:" + couleur, text: "+1" }));
+
+      // Sous le score : ce qu'il reste à faire, puis la balle de partie.
+      var sous = el("div", { class: "score-add", style: "color:" + couleur });
+      if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, text: "Victoire" }));
+      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, text: "Balle de partie" }));
+      else if (gagnant === null && state.cible) sous.textContent = "encore " + (state.cible - s[i]);
+      else if (gagnant === null) sous.textContent = "+1";
+      b.appendChild(sous);
       b.appendChild(el("div", { class: "score-serve", text: dernier === i ? "dernier point" : "" }));
+
       b.addEventListener("click", function () {
+        if (vainqueur() !== null) return;
+        var premier = state.points.length === 0;
         state.points.push({ t: i, at: Date.now() });
         save();
-        renderScoreboard();
-        renderChart();
-        majActions();
-        majChrono();
+        var fini = vainqueur() !== null;
+        // Un toucher sans regarder l'écran : la vibration confirme (Android).
+        try { if (navigator.vibrate) navigator.vibrate(fini ? [80, 60, 80, 60, 200] : 15); } catch (e) { /* refusé */ }
+        if (premier) document.getElementById("setupBox").open = false;
+        renderAll();
+        var touche = document.querySelectorAll("#scoreboard .score-btn")[i];
+        if (touche) touche.classList.add("flash");
       });
       box.appendChild(b);
     });
   }
+
+  // ---------------------------------------------------------------
+  // Fin de partie et partage
+  // ---------------------------------------------------------------
+  function renderFin() {
+    var box = document.getElementById("fin");
+    var gagnant = vainqueur();
+    box.innerHTML = "";
+    box.hidden = gagnant === null;
+    document.getElementById("shareBtn").hidden = gagnant !== null || state.points.length === 0;
+    if (gagnant === null) return;
+
+    var s = scores();
+    var couleur = trait(state.teams[gagnant].color);
+    var f = faits();
+    var duree = dureePartie();
+    box.style.borderColor = couleur;
+    box.style.background = teinte(state.teams[gagnant].color);
+    box.appendChild(el("h2", { style: "color:" + couleur, text: "Victoire de " + nomEquipe(gagnant) }));
+    box.appendChild(el("p", { class: "fin-score", text: s[gagnant] + " à " + s[1 - gagnant] }));
+    var details = [];
+    if (duree) details.push(formatDuree(duree) + " de jeu");
+    details.push(f.egalites ? f.egalites + " égalité" + (f.egalites > 1 ? "s" : "") : "aucune égalité");
+    if (f.changements) details.push(f.changements + " changement" + (f.changements > 1 ? "s" : "") + " de leader");
+    box.appendChild(el("p", { class: "fin-details", text: details.join(" · ") }));
+
+    var bouton = el("button", { type: "button", class: "action-btn partager", style: "background:" + couleur });
+    bouton.innerHTML = document.getElementById("shareBtn").innerHTML;
+    bouton.querySelector("span").textContent = "Partager le résultat";
+    bouton.addEventListener("click", partager);
+    box.appendChild(bouton);
+  }
+
+  function textePartage() {
+    var s = scores();
+    var gagnant = vainqueur();
+    var f = faits();
+    var duree = dureePartie();
+    var lignes = ["*" + nomEquipe(0) + " " + s[0] + " – " + s[1] + " " + nomEquipe(1) + "*"];
+    var info = [];
+    if (gagnant !== null) info.push("Victoire de " + nomEquipe(gagnant));
+    else info.push("Partie en cours, " + state.points.length + (state.points.length > 1 ? " points joués" : " point joué"));
+    if (state.cible) info.push("partie en " + state.cible);
+    if (duree) info.push(formatDuree(duree) + " de jeu");
+    lignes.push(info.join(" · "));
+    var deroule = [];
+    if (f.egalites) deroule.push(f.egalites + " égalité" + (f.egalites > 1 ? "s" : ""));
+    if (Math.abs(f.maxEcart) > 1) deroule.push("plus gros écart : " + Math.abs(f.maxEcart) + " points pour " + nomEquipe(f.maxEcart > 0 ? 0 : 1));
+    if (deroule.length) lignes.push(deroule.join(" · "));
+    lignes.push("");
+    lignes.push("Compté avec le site des championnats LIDFPB : " + new URL("decouvrir.html", window.location.href).href);
+    return lignes.join("\n");
+  }
+
+  function copier(texte) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texte);
+    return new Promise(function (resolve, reject) {
+      var zone = el("textarea", { style: "position:fixed;opacity:0" });
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { /* refusé */ }
+      zone.remove();
+      if (ok) resolve(); else reject(new Error("copie impossible"));
+    });
+  }
+
+  // Sur téléphone, la feuille de partage du système (WhatsApp, SMS…) ; sans
+  // elle, le texte est copié pour être collé. Seul envoi de la page, et
+  // seulement quand le visiteur le demande.
+  function partager() {
+    var texte = textePartage();
+    var info = document.getElementById("partageInfo");
+    info.textContent = "";
+    if (navigator.share) {
+      navigator.share({ text: texte }).catch(function (e) {
+        if (e && e.name === "AbortError") return;   // partage annulé
+        copier(texte).then(function () { info.textContent = "Score copié"; });
+      });
+      return;
+    }
+    copier(texte).then(function () { info.textContent = "Score copié, à coller"; },
+                       function () { info.textContent = "Copie impossible sur ce navigateur"; });
+  }
+
+  // ---------------------------------------------------------------
+  // Écran gardé allumé pendant la partie
+  // ---------------------------------------------------------------
+  // Entre deux points, le téléphone posé se mettrait en veille. Le verrou
+  // n'est tenu que pendant une partie en cours, et le système le relâche de
+  // lui-même quand la page passe en arrière-plan : on le reprend au retour.
+  var verrou = null, demandeEnCours = false;
+  function majVeille() {
+    if (!("wakeLock" in navigator)) return;
+    var enJeu = state.points.length > 0 && vainqueur() === null;
+    if (enJeu && !verrou && !demandeEnCours && document.visibilityState === "visible") {
+      demandeEnCours = true;
+      navigator.wakeLock.request("screen").then(function (v) {
+        demandeEnCours = false;
+        verrou = v;
+        v.addEventListener("release", function () { verrou = null; majChrono(); });
+        majChrono();
+      }, function () { demandeEnCours = false; /* refusé : pas bloquant */ });
+    } else if (!enJeu && verrou) {
+      verrou.release().catch(function () {});
+      verrou = null;
+    }
+  }
+  document.addEventListener("visibilitychange", majVeille);
 
   // Rafraîchi chaque seconde tant qu'une partie est en cours : le temps depuis
   // le dernier point est la seule valeur qui bouge sans qu'on touche à l'écran.
@@ -645,7 +930,8 @@
     var premier = state.points[0].at, dernier = state.points[n - 1].at;
     var morceaux = [n + " point" + (n > 1 ? "s" : "")];
     if (premier && dernier && dernier > premier) morceaux.push("partie : " + formatDuree(Math.round((dernier - premier) / 1000)));
-    if (dernier) morceaux.push("dernier point il y a " + formatDuree(Math.max(0, Math.round((Date.now() - dernier) / 1000))));
+    if (dernier && vainqueur() === null) morceaux.push("dernier point il y a " + formatDuree(Math.max(0, Math.round((Date.now() - dernier) / 1000))));
+    if (verrou) morceaux.push("écran gardé allumé");
     box.textContent = morceaux.join(" · ");
 
     if (!chronoTimer) chronoTimer = setInterval(majChrono, 1000);
@@ -851,8 +1137,8 @@
       return;
     }
 
-    var egalites = 0;
-    for (var e = 1; e < ecart.length; e++) { if (ecart[e] === 0) egalites += 1; }
+    var f = faits();
+    var egalites = f.egalites;
 
     if (state.mode === "scores" && egalites) {
       var sp = el("span");
@@ -861,12 +1147,7 @@
       legende.appendChild(sp);
     }
 
-    var maxEcart = 0, iMax = 0;
-    ecart.forEach(function (v, i) { if (Math.abs(v) > Math.abs(maxEcart)) { maxEcart = v; iMax = i; } });
-    var changements = 0;
-    for (var k = 1; k < ecart.length; k++) {
-      if (ecart[k] !== 0 && ecart[k - 1] !== 0 && (ecart[k] > 0) !== (ecart[k - 1] > 0)) changements += 1;
-    }
+    var maxEcart = f.maxEcart, iMax = f.iMax, changements = f.changements;
     var resume = Math.abs(maxEcart) <= 1
       ? "Jamais plus d'un point d'écart."
       : "Plus gros écart : " + Math.abs(maxEcart) + " point" + (Math.abs(maxEcart) > 1 ? "s" : "") +
@@ -883,20 +1164,22 @@
   function renderAll() {
     renderSetup();
     renderScoreboard();
+    renderFin();
     renderChart();
     majActions();
     majChrono();
+    majVeille();
   }
 
   document.getElementById("undoBtn").addEventListener("click", function () {
     if (!state.points.length) return;
     state.points.pop();
     save();
-    renderScoreboard();
-    renderChart();
-    majActions();
-    majChrono();
+    document.getElementById("partageInfo").textContent = "";
+    renderAll();
   });
+
+  document.getElementById("shareBtn").addEventListener("click", partager);
 
   document.getElementById("resetBtn").addEventListener("click", function () {
     if (!state.points.length) return;
@@ -906,10 +1189,9 @@
     if (!window.confirm("Effacer la partie en cours (" + s[0] + " - " + s[1] + ") ? Les noms et les couleurs sont conservés.")) return;
     state.points = [];
     save();
-    renderScoreboard();
-    renderChart();
-    majActions();
-    majChrono();
+    document.getElementById("partageInfo").textContent = "";
+    document.getElementById("setupBox").open = true;
+    renderAll();
   });
 
   document.querySelectorAll("#chartModes .chip").forEach(function (chip) {
@@ -927,6 +1209,9 @@
   document.querySelectorAll("#chartModes .chip").forEach(function (c) {
     c.classList.toggle("on", c.getAttribute("data-mode") === state.mode);
   });
+  // Avant le premier point, les réglages sont ouverts ; partie entamée, ils
+  // restent repliés pour laisser la place au score.
+  document.getElementById("setupBox").open = state.points.length === 0;
   renderAll();
 })();
 </script>

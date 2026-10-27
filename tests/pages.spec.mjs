@@ -58,6 +58,68 @@ test("Compteur s'affiche sans erreur", async ({ page }) => {
   await expect(page.locator("#setup")).toBeVisible();
 });
 
+test.describe("Compteur : mode match, fin de partie et partage", () => {
+  test("réglages repliés au premier point, victoire au score visé, partage, annulation", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
+    });
+    await page.goto("compteur.html");
+    const reglages = page.locator("#setupBox");
+    await expect(reglages).toHaveAttribute("open", "");
+    await page.locator(".team-name").nth(0).fill("Bera");
+    await page.locator(".team-name").nth(1).fill("Ahetze");
+    await page.getByRole("button", { name: "30 points" }).click();
+    await expect(page.locator("#shareBtn")).toBeHidden();
+
+    const bera = page.locator(".score-btn").nth(0);
+    const ahetze = page.locator(".score-btn").nth(1);
+    await bera.click();
+    // Partie lancée : les réglages se replient, le résumé les rappelle.
+    await expect(reglages).not.toHaveAttribute("open", "");
+    await expect(page.locator("#setupResume")).toHaveText("Bera contre Ahetze · en 30");
+    await expect(bera).toContainText("encore 29");
+
+    for (let i = 0; i < 27; i++) await bera.click();
+    for (let i = 0; i < 25; i++) await ahetze.click();
+    await bera.click();                                   // 29-25
+    await expect(bera).toContainText("Balle de partie");
+
+    await bera.click();                                   // 30-25 : fin
+    await expect(page.locator("#fin")).toContainText("Victoire de Bera");
+    await expect(page.locator("#fin")).toContainText("30 à 25");
+    await expect(bera).toBeDisabled();
+    await expect(ahetze).toBeDisabled();
+
+    await page.getByRole("button", { name: "Partager le résultat" }).click();
+    const texte = await page.evaluate(() => window.__partage && window.__partage.text);
+    expect(texte).toMatch(/^\*Bera 30 – 25 Ahetze\*/);
+    expect(texte).toContain("Victoire de Bera · partie en 30");
+    expect(texte).toMatch(/decouvrir\.html$/);
+
+    // Point gagnant donné par erreur : l'annuler relance la partie.
+    await page.getByRole("button", { name: "Annuler le dernier point" }).click();
+    await expect(page.locator("#fin")).toBeHidden();
+    await expect(ahetze).toBeEnabled();
+
+    // Rechargement : score et score visé retrouvés.
+    await page.reload();
+    await expect(bera).toContainText("29");
+    await expect(page.locator("#setupResume")).toHaveText("Bera contre Ahetze · en 30");
+  });
+
+  test("en cours de partie, le score se copie sans feuille de partage", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.goto("compteur.html");
+    await page.locator(".score-btn").nth(1).click();
+    await page.getByRole("button", { name: "Partager le score" }).click();
+    await expect(page.locator("#partageInfo")).toHaveText("Score copié, à coller");
+    const copie = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copie).toContain("Équipe 1 0 – 1 Équipe 2");
+    expect(copie).toContain("Partie en cours, 1 point joué");
+  });
+});
+
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
   await page.goto("index.html");
   await page.getByRole("link", { name: "Présenter le site à un joueur" }).click();
