@@ -159,6 +159,31 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(page).toHaveURL(/compteur\.html/);
   });
 
+  test("couleur libre au sélecteur, lisible, gardée, et signalée si trop proche", async ({ page }) => {
+    await page.goto("compteur.html");
+    const selecteurs = page.locator(".swatch-libre input");
+    await expect(selecteurs).toHaveCount(2);
+
+    // Violet pour l'équipe 1 : assez foncé pour servir tel quel.
+    await selecteurs.nth(0).fill("#8b3fd9");
+    const bouton1 = page.locator(".score-btn").nth(0);
+    await expect(bouton1).toHaveCSS("border-top-color", "rgb(139, 63, 217)");
+    await expect(page.locator(".swatch-libre").nth(0)).toHaveClass(/\bon\b/);
+
+    // Jaune pour l'équipe 2 : trop clair sur blanc, son texte est foncé.
+    await selecteurs.nth(1).fill("#f2e600");
+    const couleur2 = await page.locator(".score-btn").nth(1).locator(".score-value").evaluate((e) => getComputedStyle(e).color);
+    expect(couleur2).not.toBe("rgb(242, 230, 0)");
+    await expect(page.locator(".couleurs-proches")).toHaveCount(0);
+
+    // Un violet voisin n'est pas interdit, mais signalé.
+    await selecteurs.nth(1).fill("#a040e0");
+    await expect(page.locator(".couleurs-proches")).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator(".score-btn").nth(0)).toHaveCSS("border-top-color", "rgb(139, 63, 217)");
+  });
+
   test("en cours de partie, le score se copie sans feuille de partage", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.addInitScript(() => { delete Navigator.prototype.share; });

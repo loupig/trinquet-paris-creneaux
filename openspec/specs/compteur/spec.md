@@ -17,8 +17,8 @@ La page SHALL laisser nommer librement les deux équipes, en 24 caractères au p
 - **WHEN** le visiteur vide le champ de la seconde équipe
 - **THEN** le bouton de score affiche « Équipe 2 »
 
-### Requirement: Couleurs d'équipe imposées
-Chaque équipe SHALL prendre une couleur parmi quatre, celles de l'ikurriña plus le noir : rouge, vert, blanc et noir. Par défaut, la première équipe est rouge et la seconde verte. Choisir la couleur de l'autre équipe MUST échanger les couleurs des deux équipes, pour que deux équipes n'aient jamais la même couleur et que le graphe reste lisible. Pour le texte, les bordures et les courbes, le blanc s'affiche en gris et le vert en vert foncé, parce que le blanc est invisible sur fond blanc et le vert de l'ikurriña trop clair pour du petit texte.
+### Requirement: Couleurs d'équipe
+Chaque équipe SHALL prendre une couleur parmi quatre, celles de l'ikurriña plus le noir : rouge, vert, blanc et noir, ou, en dernier choix, une couleur libre prise au sélecteur du téléphone. Par défaut, la première équipe est rouge et la seconde verte. Choisir une des quatre couleurs de l'autre équipe MUST échanger les couleurs des deux équipes, et une couleur libre identique à celle de l'autre équipe fait changer l'autre, pour que deux équipes n'aient jamais la même couleur. Une couleur libre trop proche de celle de l'autre équipe n'est pas interdite, mais un avertissement le signale. Pour le texte, les bordures et les courbes, le blanc s'affiche en gris et le vert en vert foncé, et une couleur libre trop claire est foncée jusqu'à rester lisible sur fond blanc (éclaircie sur le fond noir du thème sombre).
 
 #### Scenario: Choisir la couleur de l'adversaire
 - **WHEN** l'équipe 1 est rouge, l'équipe 2 verte, et le visiteur choisit le vert pour l'équipe 1
@@ -27,6 +27,14 @@ Chaque équipe SHALL prendre une couleur parmi quatre, celles de l'ikurriña plu
 #### Scenario: Équipe en blanc
 - **WHEN** une équipe a la couleur blanche
 - **THEN** son nom, son score et sa courbe sont tracés en gris
+
+#### Scenario: Couleur du club
+- **WHEN** le visiteur choisit un jaune vif au sélecteur pour l'équipe 2
+- **THEN** sa pastille et le fond de son bouton prennent ce jaune, et son nom et son score s'écrivent dans un jaune foncé lisible
+
+#### Scenario: Couleurs voisines
+- **WHEN** les deux équipes ont deux violets très proches
+- **THEN** un avertissement signale que le score et le graphe seront difficiles à distinguer
 
 ### Requirement: Score à atteindre
 Avant ou pendant la partie, la page SHALL laisser choisir le score à atteindre parmi 30, 35 et 40 points, ou « Libre » pour compter sans fin. Par défaut, une partie se joue en 40, comme en championnat. En cours de partie, un score déjà atteint par l'une des équipes MUST NOT être proposé, pour ne pas désigner un vainqueur après coup.
