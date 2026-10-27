@@ -4,7 +4,9 @@
 //   l'en-tête, chauve-souris qui traverse une fois ;
 // - Toussaint : la fête de tous les saints, en blanc et or, avec un halo dans
 //   l'en-tête, des étincelles qui s'éteignent une fois, et des saints de
-//   France et du Pays basque à découvrir en touchant l'étoile.
+//   France et du Pays basque.
+// À chaque page, une bulle donne une blague ou un saint, une autre à chaque
+// fois ; toucher l'emblème en donne une de plus.
 // Les habillages n'existent que du 24 octobre au 1er novembre : avant et
 // après, la page reste comme avant, quoi qu'on ait choisi, sans rien à
 // retirer. Pendant la période, Halloween s'affiche par défaut jusqu'au 29
@@ -111,6 +113,29 @@
     try { localStorage.setItem(CLE_CHOIX, c); } catch (e) { /* choix pour cette visite seulement */ }
   }
 
+  // Une phrase différente à chaque page affichée : on reprend où la dernière
+  // s'était arrêtée, sur cet appareil. Sans stockage, on part au hasard.
+  function phraseSuivante(nom) {
+    var phrases = FETES[nom].phrases;
+    var cle = "lidfpb_fete_phrase_" + nom;
+    var n;
+    try { n = parseInt(localStorage.getItem(cle), 10); } catch (e) { /* pas de stockage */ }
+    if (!(n >= 0)) n = Math.floor(Math.random() * phrases.length);
+    try { localStorage.setItem(cle, String(n + 1)); } catch (e) { /* pas de stockage */ }
+    return phrases[n % phrases.length];
+  }
+
+  function afficherBulle(texte) {
+    var vieille = document.querySelector(".fete-bulle");
+    if (vieille) vieille.remove();
+    var bulle = document.createElement("div");
+    bulle.className = "fete-bulle";
+    bulle.setAttribute("role", "status");
+    bulle.textContent = texte;
+    document.body.appendChild(bulle);
+    setTimeout(function () { bulle.remove(); }, 4500);
+  }
+
   var CSS_COMMUN =
     "header{position:relative}" +
     ".fete-choix{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0 0;font-size:11px;color:var(--muted)}" +
@@ -132,7 +157,10 @@
       .forEach(function (e) { e.remove(); });
   }
 
+  var habillage = 0;
+
   function habiller(nom) {
+    var celuiCi = ++habillage;
     deshabiller();
     var fete = FETES[nom];
     if (!fete) return;
@@ -148,21 +176,16 @@
       embleme.className = "fete-embleme";
       embleme.textContent = fete.embleme;
       embleme.setAttribute("aria-label", fete.libellé);
-      var n = Math.floor(Math.random() * fete.phrases.length);
-      embleme.addEventListener("click", function () {
-        var vieille = document.querySelector(".fete-bulle");
-        if (vieille) vieille.remove();
-        var bulle = document.createElement("div");
-        bulle.className = "fete-bulle";
-        bulle.setAttribute("role", "status");
-        bulle.textContent = fete.phrases[n++ % fete.phrases.length];
-        document.body.appendChild(bulle);
-        setTimeout(function () { bulle.remove(); }, 3600);
-      });
+      embleme.addEventListener("click", function () { afficherBulle(phraseSuivante(nom)); });
       titre.appendChild(embleme);
     }
 
     fete.decor(document.querySelector("header"));
+    // La bulle vient d'elle-même à chaque page, le temps que la page se pose ;
+    // toucher l'emblème en donne une autre.
+    setTimeout(function () {
+      if (celuiCi === habillage) afficherBulle(phraseSuivante(nom));
+    }, 800);
   }
 
   // Sur l'accueil seulement : la page réserve la place du choix.
