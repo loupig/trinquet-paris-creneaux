@@ -63,7 +63,7 @@ test("Découvrir : la présentation mène à l'accueil", async ({ page }) => {
   await expect(page.locator("h1")).toBeVisible();
   // Une seule action : chaque bouton d'appel ouvre l'accueil.
   const appels = page.locator("a.btn-primary");
-  await expect(appels).toHaveCount(3);
+  await expect(appels).toHaveCount(4);   // haut, barre, menu et bas de page
   for (const a of await appels.all()) await expect(a).toHaveAttribute("href", "index.html");
   // Les questions se déplient dans la page, sans fenêtre.
   const question = page.locator(".faq details").first();
@@ -73,6 +73,35 @@ test("Découvrir : la présentation mène à l'accueil", async ({ page }) => {
   await page.locator("#tagline").scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 300);
   await expect(page.locator("#tagline .w").last()).toHaveClass(/\bon\b/);
+  // Les avis inventés sont signalés comme tels.
+  await expect(page.locator("#avis .note")).toContainText("illustration");
+});
+
+test("Découvrir : le menu plein écran s'ouvre et se referme", async ({ page }) => {
+  await page.goto("decouvrir.html");
+  const bouton = page.locator(".menu-btn");
+  const menu = page.locator("#menu");
+  await expect(menu).toBeHidden();
+  await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-expanded", "true");
+  await expect(menu.getByRole("link", { name: "Questions" })).toBeVisible();
+  // Le même bouton referme, toujours accessible au-dessus du panneau.
+  await bouton.click();
+  await expect(menu).toBeHidden();
+  // Un lien touché referme le menu et mène à sa section.
+  await bouton.click();
+  await menu.getByRole("link", { name: "Questions" }).click();
+  await expect(menu).toBeHidden();
+  await expect(page.locator("#questions")).toBeInViewport();
+});
+
+test("Page 404 propose de revenir à l'accueil", async ({ page }) => {
+  // En ligne, le site vit sous /trinquet-paris-creneaux/ : on y sert les fichiers locaux.
+  await page.route("**/trinquet-paris-creneaux/**", (route) =>
+    route.continue({ url: route.request().url().replace("/trinquet-paris-creneaux/", "/") }));
+  await page.goto("404.html");
+  await expect(page.locator("h1")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Revenir à l'accueil" })).toHaveAttribute("href", "/trinquet-paris-creneaux/index.html");
 });
 
 test("Ancienne adresse equipes.html redirige vers Mon équipe", async ({ page }) => {
