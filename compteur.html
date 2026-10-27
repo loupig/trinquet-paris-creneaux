@@ -442,6 +442,83 @@
   }
   .fab-btn:active { opacity: 0.85; }
 
+  /* --- Plein écran, à la demande : rien que les deux scores. Le bouton
+     « Quitter » reste toujours en haut à gauche, Échap et le bouton Retour
+     du téléphone referment aussi. --- */
+  .actions .action-btn.fs-btn { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; }
+  .fs {
+    --fs-bg: #f4f5f7;
+    --fs-surface: #ffffff;
+    --fs-text: #1a1a2e;
+    --fs-muted: #767986;
+    --fs-border: #e6e7eb;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px));
+    background: var(--fs-bg);
+    color: var(--fs-text);
+  }
+  .fs[hidden] { display: none; }
+  .fs.sombre {
+    color-scheme: dark;
+    --fs-bg: #000000;
+    --fs-surface: #181818;
+    --fs-text: #f4f5f7;
+    --fs-muted: #9b9b9b;
+    --fs-border: #313131;
+  }
+  .fs-bar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .fs-bar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 20px;
+    border: 1px solid var(--fs-border);
+    background: var(--fs-surface);
+    color: var(--fs-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .fs-bar button:active { opacity: 0.75; }
+  .fs-bar button[disabled] { opacity: 0.4; cursor: default; }
+  .fs-resume { flex: 1 1 auto; min-width: 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--fs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-slot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .fs .scoreboard { flex: 1 1 auto; min-height: 0; margin: 0; }
+  .fs .scoreboard .score-btn,
+  .fs .scoreboard.en-jeu .score-btn {
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--fs-surface);
+  }
+  .fs .score-team { font-size: 20px; }
+  .fs .score-value, .fs .scoreboard.en-jeu .score-value { font-size: min(34vw, 30vh); }
+  .fs .score-eus, .fs .scoreboard.en-jeu .score-eus { font-size: 18px; }
+  .fs .score-add { font-size: 16px; }
+  .fs .badge { font-size: 14px; padding: 4px 12px; }
+  .fs .score-serve { font-size: 12px; color: var(--fs-muted); }
+  .fs .fin { flex: 0 0 auto; margin: 0; background-color: var(--fs-surface); }
+  .fs .fin .fin-score { color: var(--fs-text); }
+  .fs .fin .fin-details { color: var(--fs-muted); }
+  .fs .fin .action-btn.danger { background: var(--fs-surface); border-color: var(--fs-border); }
+  .fs.sombre .fin .action-btn.danger { color: #ff8a80; }
+  /* En paysage, l'encart de fin se glisse à côté des scores. */
+  @media (orientation: landscape) {
+    .fs-slot { flex-direction: row; }
+    .fs .fin { flex: 0 0 300px; align-self: center; }
+  }
+
   footer {
     text-align: center;
     padding: 20px 4px 10px;
@@ -490,6 +567,7 @@
 
   <div class="actions">
     <button type="button" class="action-btn" id="undoBtn">Annuler le dernier point</button>
+    <button type="button" class="action-btn fs-btn" id="fsBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Plein écran</span></button>
   </div>
   <button type="button" class="action-btn partager" id="shareBtn" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Partager le score</span></button>
   <p class="partage-info" id="partageInfo" aria-live="polite"></p>
@@ -529,6 +607,16 @@
 </nav>
 
 
+<div class="fs" id="fs" hidden aria-label="Compteur en plein écran">
+  <div class="fs-bar">
+    <button type="button" id="fsQuit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Quitter</span></button>
+    <span class="fs-resume" id="fsResume"></span>
+    <button type="button" id="fsUndo" aria-label="Annuler le dernier point"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>Annuler</span></button>
+    <button type="button" id="fsTheme"></button>
+  </div>
+  <div class="fs-slot" id="fsSlot"></div>
+</div>
+
 <div class="fab-row">
 </div>
 
@@ -546,24 +634,27 @@
   // qui doit rester lisible sur blanc : bordure, texte, courbe. Les deux ne
   // coïncident pas pour le blanc, invisible sur fond blanc, ni pour le vert
   // de l'ikurriña, trop clair pour du texte de 12 px.
+  //
+  // "sombre" remplace "trait" en plein écran sombre : sur fond noir, le noir
+  // disparaîtrait et le rouge et le vert foncés manqueraient d'éclat.
   var PALETTE = [
-    { nom: "Rouge", fill: "#CE1126", trait: "#CE1126" },
-    { nom: "Vert",  fill: "#009B48", trait: "#00713a" },
-    { nom: "Blanc", fill: "#ffffff", trait: "#767986" },
-    { nom: "Noir",  fill: "#1a1a2e", trait: "#1a1a2e" }
+    { nom: "Rouge", fill: "#CE1126", trait: "#CE1126", sombre: "#ff4d5e" },
+    { nom: "Vert",  fill: "#009B48", trait: "#00713a", sombre: "#2fd17a" },
+    { nom: "Blanc", fill: "#ffffff", trait: "#767986", sombre: "#f4f5f7" },
+    { nom: "Noir",  fill: "#1a1a2e", trait: "#1a1a2e", sombre: "#9aa0b4" }
   ];
 
   function entree(fill) {
     for (var i = 0; i < PALETTE.length; i++) { if (PALETTE[i].fill === fill) return PALETTE[i]; }
     return PALETTE[0];
   }
-  function trait(fill) { return entree(fill).trait; }
+  function trait(fill) { return sombreActif() ? entree(fill).sombre : entree(fill).trait; }
 
   // Teinte de fond très légère, tirée de la couleur de l'équipe. Le blanc ne
   // produit rien de visible, ce qui est cohérent : c'est l'équipe en blanc.
   function teinte(fill) {
     var h = fill.replace("#", "");
-    return "rgba(" + parseInt(h.slice(0, 2), 16) + "," + parseInt(h.slice(2, 4), 16) + "," + parseInt(h.slice(4, 6), 16) + ",0.08)";
+    return "rgba(" + parseInt(h.slice(0, 2), 16) + "," + parseInt(h.slice(2, 4), 16) + "," + parseInt(h.slice(4, 6), 16) + "," + (sombreActif() ? "0.16" : "0.08") + ")";
   }
 
   // Tout l'état tient dans la liste ordonnée des points marqués — l'équipe qui
@@ -578,8 +669,20 @@
     points: [],
     mode: "scores",
     cible: 40,
-    graphe: true
+    graphe: true,
+    // Thème du plein écran : null suit le réglage du téléphone.
+    sombre: null
   };
+
+  var pleinEcran = false;
+  function sombre() {
+    if (state.sombre !== null) return state.sombre;
+    return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+  function sombreActif() { return pleinEcran && sombre(); }
+  // Texte posé sur la couleur d'une équipe : en sombre, les couleurs sont
+  // claires, le texte passe au noir.
+  function surCouleur() { return sombreActif() ? "#000000" : "#ffffff"; }
 
   // Score à atteindre. Une partie de championnat se joue en 40 ; « Libre »
   // (0) compte sans fin, pour l'entraînement.
@@ -608,6 +711,7 @@
       // Une partie enregistrée avant le score à atteindre se relit en 40.
       if (CIBLES.indexOf(saved.cible) !== -1) state.cible = saved.cible;
       if (saved.graphe === false) state.graphe = false;
+      if (saved.sombre === true || saved.sombre === false) state.sombre = saved.sombre;
     } catch (e) { /* stockage indisponible ou entrée corrompue : on repart à zéro */ }
   }
 
@@ -821,9 +925,9 @@
 
       // Sous le score : ce qu'il reste à faire, puis la balle de partie.
       var sous = el("div", { class: "score-add", style: "color:" + couleur });
-      if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, text: "Victoire" }));
+      if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), text: "Victoire" }));
       // À un point du but : « Nobia », la balle de partie en basque.
-      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur, lang: "eu", title: "Balle de partie", text: "Nobia" }));
+      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), lang: "eu", title: "Balle de partie", text: "Nobia" }));
       else if (gagnant === null && state.cible) sous.textContent = "encore " + (state.cible - s[i]);
       else if (gagnant === null) sous.textContent = "+1";
       b.appendChild(sous);
@@ -871,7 +975,7 @@
     if (f.changements) details.push(f.changements + " changement" + (f.changements > 1 ? "s" : "") + " de leader");
     box.appendChild(el("p", { class: "fin-details", text: details.join(" · ") }));
 
-    var bouton = el("button", { type: "button", class: "action-btn partager", style: "background:" + couleur });
+    var bouton = el("button", { type: "button", class: "action-btn partager", style: "background:" + couleur + ";color:" + surCouleur() });
     bouton.innerHTML = document.getElementById("shareBtn").innerHTML;
     bouton.querySelector("span").textContent = "Partager le résultat";
     bouton.addEventListener("click", partager);
@@ -1218,12 +1322,87 @@
     document.getElementById("chartResume").textContent = morceaux.join(" · ");
   }
 
+  // ---------------------------------------------------------------
+  // Plein écran
+  // ---------------------------------------------------------------
+  // Le tableau de score et l'encart de fin sont déplacés tels quels dans le
+  // calque plein écran, puis remis à leur place : un seul rendu, une seule
+  // source de vérité. Le calque s'appuie sur l'API plein écran quand le
+  // navigateur l'offre (Android), et reste un calque dans la page sinon
+  // (iPhone). Une entrée d'historique fait que le bouton Retour le referme
+  // au lieu de quitter la page.
+  var fsSysteme = false;
+  var metaTheme = document.querySelector('meta[name="theme-color"]');
+
+  function majFs() {
+    var fs = document.getElementById("fs");
+    fs.classList.toggle("sombre", sombre());
+    var t = document.getElementById("fsTheme");
+    t.textContent = sombre() ? "Clair" : "Sombre";
+    t.setAttribute("aria-label", sombre() ? "Passer en thème clair" : "Passer en thème sombre");
+    document.getElementById("fsUndo").disabled = state.points.length === 0;
+    var s = scores();
+    document.getElementById("fsResume").textContent = state.points.length
+      ? s[0] + " – " + s[1] + (state.cible ? " · en " + state.cible : "")
+      : (state.cible ? "Partie en " + state.cible : "Partie libre");
+    if (pleinEcran && metaTheme) metaTheme.setAttribute("content", sombre() ? "#000000" : "#f4f5f7");
+  }
+
+  function ouvrirPleinEcran() {
+    if (pleinEcran) return;
+    pleinEcran = true;
+    var slot = document.getElementById("fsSlot");
+    slot.appendChild(document.getElementById("scoreboard"));
+    slot.appendChild(document.getElementById("fin"));
+    document.getElementById("fs").hidden = false;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ pleinEcran: true }, ""); } catch (e) { /* pas d'historique : Quitter suffit */ }
+    var racine = document.documentElement;
+    if (racine.requestFullscreen) {
+      racine.requestFullscreen({ navigationUI: "hide" }).then(function () { fsSysteme = true; }, function () { /* refusé : le calque suffit */ });
+    }
+    renderAll();
+    document.getElementById("fsQuit").focus();
+  }
+
+  function fermerPleinEcran(depuisHistorique) {
+    if (!pleinEcran) return;
+    pleinEcran = false;
+    var ancre = document.getElementById("chrono");
+    ancre.parentNode.insertBefore(document.getElementById("scoreboard"), ancre);
+    ancre.parentNode.insertBefore(document.getElementById("fin"), ancre);
+    document.getElementById("fs").hidden = true;
+    document.body.style.overflow = "";
+    if (metaTheme) metaTheme.setAttribute("content", "#ffffff");
+    if (fsSysteme && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    fsSysteme = false;
+    if (!depuisHistorique && history.state && history.state.pleinEcran) history.back();
+    renderAll();
+    document.getElementById("fsBtn").focus();
+  }
+
+  document.getElementById("fsBtn").addEventListener("click", ouvrirPleinEcran);
+  document.getElementById("fsQuit").addEventListener("click", function () { fermerPleinEcran(false); });
+  document.getElementById("fsUndo").addEventListener("click", function () { document.getElementById("undoBtn").click(); });
+  document.getElementById("fsTheme").addEventListener("click", function () {
+    state.sombre = !sombre();
+    save();
+    renderAll();
+  });
+  window.addEventListener("popstate", function () { fermerPleinEcran(true); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") fermerPleinEcran(false); });
+  // Sortie du plein écran système (geste Retour sur Android) : le calque suit.
+  document.addEventListener("fullscreenchange", function () {
+    if (!document.fullscreenElement && fsSysteme) { fsSysteme = false; fermerPleinEcran(false); }
+  });
+
   function renderAll() {
     renderSetup();
     renderScoreboard();
     renderFin();
     renderChart();
     majResumeGraphe();
+    majFs();
     majActions();
     majChrono();
     majVeille();

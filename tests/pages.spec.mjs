@@ -128,6 +128,37 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(reglages).toHaveAttribute("open", "");
   });
 
+  test("plein écran à la demande, thème sombre gardé, Quitter et Retour referment", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("compteur.html");
+    const fs = page.locator("#fs");
+    await expect(fs).toBeHidden();
+
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    await expect(fs).toBeVisible();
+    await expect(fs.locator("#scoreboard")).toBeVisible();
+    await fs.locator(".score-btn").first().click();
+    await expect(fs.locator("#fsResume")).toHaveText("1 – 0 · en 40");
+
+    // Thème sombre au choix, gardé d'une visite à l'autre.
+    await expect(fs).not.toHaveClass(/sombre/);
+    await fs.getByRole("button", { name: "Passer en thème sombre" }).click();
+    await expect(fs).toHaveClass(/sombre/);
+
+    await fs.getByRole("button", { name: "Quitter" }).click();
+    await expect(fs).toBeHidden();
+    await expect(page.locator("main #scoreboard")).toBeVisible();
+
+    await page.reload();
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    await expect(fs).toHaveClass(/sombre/);
+    await expect(fs.locator(".score-value").first()).toHaveText("1");
+    // Le bouton Retour du téléphone referme le plein écran sans quitter la page.
+    await page.goBack();
+    await expect(fs).toBeHidden();
+    await expect(page).toHaveURL(/compteur\.html/);
+  });
+
   test("en cours de partie, le score se copie sans feuille de partage", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.addInitScript(() => { delete Navigator.prototype.share; });

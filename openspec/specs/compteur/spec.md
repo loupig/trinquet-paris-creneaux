@@ -107,6 +107,24 @@ Dès qu'un point est marqué, une ligne sous le score SHALL donner le nombre de 
 - **WHEN** 12 points ont été marqués et que le dernier remonte à 40 secondes
 - **THEN** la ligne indique 12 points, la durée de la partie, et « dernier point il y a 40 s », qui avance chaque seconde
 
+### Requirement: Plein écran à la demande
+Un bouton « Plein écran » SHALL n'afficher que les deux boutons de score, aussi grands que l'écran le permet, sans en-tête ni barre d'onglets, avec en haut « Quitter », le score et le score visé, « Annuler » et le choix du thème. Partie gagnée, l'encart de fin s'y affiche aussi, sous les scores ou à côté en paysage. Le téléphone passe en plein écran quand il le permet. « Quitter » MUST rester visible et refermer le plein écran ; Échap, la sortie du plein écran par le téléphone et le bouton Retour le referment aussi, sans quitter la page.
+
+#### Scenario: Compter en plein écran
+- **WHEN** le visiteur touche « Plein écran » puis le bouton d'une équipe
+- **THEN** le point est compté, et la barre du haut affiche le nouveau score
+
+#### Scenario: Bouton Retour du téléphone
+- **WHEN** le visiteur est en plein écran et fait Retour
+- **THEN** le plein écran se referme et la page du compteur reste ouverte
+
+### Requirement: Thème sombre en plein écran
+Le plein écran SHALL proposer un thème clair et un thème sombre, fond noir, couleurs d'équipe éclaircies pour rester lisibles (le noir y devient gris clair). Sans choix, il suit le réglage du téléphone ; le choix est gardé d'une visite à l'autre.
+
+#### Scenario: Passer en sombre
+- **WHEN** le visiteur touche « Sombre » en plein écran
+- **THEN** le fond devient noir, et le plein écran s'ouvrira en sombre aux visites suivantes
+
 ### Requirement: Graphe repliable
 Le déroulé de la partie SHALL pouvoir se replier, sous une ligne qui garde l'essentiel (« 8 égalités · écart max 6 »), et se déplier dans la page. Replié ou ouvert, il le reste d'une visite à l'autre.
 
@@ -147,7 +165,7 @@ Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros éc
 - **THEN** le résumé indique « Jamais plus d'un point d'écart. »
 
 ### Requirement: Partie conservée sur l'appareil
-La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe et graphe replié ou non. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
+La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe, graphe replié ou non, et thème du plein écran. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
 
 #### Scenario: Rechargement en pleine partie
 - **WHEN** le visiteur recharge la page à 25-21
