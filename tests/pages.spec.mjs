@@ -264,17 +264,21 @@ test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () =>
   });
 });
 
-test.describe("Habillage d'Halloween", () => {
-  test("forcé, la citrouille répond ; coupé, rien ne s'ajoute", async ({ page }) => {
-    await page.goto("index.html?halloween=1");
-    await attendreChargement(page);
-    const citrouille = page.locator("header h1 .hw-citrouille");
-    await expect(citrouille).toHaveCount(1);
-    await citrouille.click();
-    await expect(page.locator(".hw-bouh")).toBeVisible();
+test.describe("Habillages de fête", () => {
+  for (const [theme, embleme] of [["halloween", "🎃"], ["toussaint", "✨"]]) {
+    test(`${theme} forcé : l'emblème répond`, async ({ page }) => {
+      await page.goto("index.html?theme=" + theme);
+      await attendreChargement(page);
+      const bouton = page.locator("header h1 .fete-embleme");
+      await expect(bouton).toHaveText(embleme);
+      await bouton.click();
+      await expect(page.locator(".fete-bulle")).toBeVisible();
+    });
+  }
 
-    await page.goto("index.html?halloween=0");
+  test("coupé, rien ne s'ajoute", async ({ page }) => {
+    await page.goto("index.html?theme=aucun");
     await attendreChargement(page);
-    await expect(page.locator(".hw-citrouille, .hw-araignee, .hw-chauve-souris")).toHaveCount(0);
+    await expect(page.locator(".fete-embleme, .fete-araignee, .fete-chauve-souris, .fete-etincelle")).toHaveCount(0);
   });
 });
