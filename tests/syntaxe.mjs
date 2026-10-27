@@ -11,7 +11,9 @@ for (const fichier of readdirSync(".").filter((f) => f.endsWith(".html")).sort()
   scripts.forEach((m, i) => {
     const ligne = html.slice(0, m.index).split("\n").length;
     try {
-      new Script(m[1], { filename: `${fichier} (script ${i + 1}, ligne ${ligne})` });
+      // Données structurées (questions fréquentes de Découvrir) : du JSON, pas du JS.
+      if (/\btype="application\/ld\+json"/.test(m[0])) JSON.parse(m[1]);
+      else new Script(m[1], { filename: `${fichier} (script ${i + 1}, ligne ${ligne})` });
     } catch (e) {
       erreurs++;
       console.error(`✗ ${fichier}, script ${i + 1} (ligne ${ligne}) : ${e.message}`);

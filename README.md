@@ -9,7 +9,8 @@ compteur de points.
 
 ## Pages
 
-Sept pages statiques indépendantes, plus une redirection, sans build ni
+Sept pages statiques indépendantes, plus une page de présentation et une
+redirection, sans build ni
 dépendance, chacune avec son CSS et son JS inline. La navigation est celle
 d'une application mobile plutôt que celle d'un site : une barre d'onglets en
 bas, des boutons flottants en haut, là où se posent les pouces (spec
@@ -39,6 +40,10 @@ Le comportement de chaque page est décrit par sa spec, dans
   depuis une partie. Spec [`report`](openspec/specs/report/spec.md).
 - [`compteur.html`](compteur.html) — le compteur de points, seule page qui
   n'appelle pas l'API. Spec [`compteur`](openspec/specs/compteur/spec.md).
+- [`decouvrir.html`](decouvrir.html) — la page de présentation, à partager à
+  un joueur qui ne connaît pas le site : une seule action, ouvrir l'accueil.
+  Hors barre d'onglets, sans appel à l'API. Spec
+  [`decouvrir`](openspec/specs/decouvrir/spec.md).
 - [`equipes.html`](equipes.html) — simple redirection vers `equipe.html`,
   gardée pour les anciens favoris.
 
