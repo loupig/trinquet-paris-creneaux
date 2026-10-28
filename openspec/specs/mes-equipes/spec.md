@@ -63,8 +63,8 @@ Pour chaque équipe suivie, le bloc « Mes équipes » de l'accueil SHALL indiqu
 - **THEN** elle n'apparaît ni dans le bloc ni dans les pastilles, sans message d'erreur
 
 ### Requirement: Invitation sans équipe suivie
-Tant qu'aucune équipe n'est suivie, le bloc « Mes équipes » de l'accueil SHALL se réduire à une tuile « Suivre mon équipe → » qui ouvre la page Mes équipes, avec une phrase qui dit comment faire : choisir son équipe, puis toucher « ☆ Suivre ».
+Tant qu'aucune équipe n'est suivie, le bloc « Mes équipes » de l'accueil SHALL se réduire à une tuile « Suivre une équipe → » qui ouvre la page Mes équipes, avec une phrase qui dit comment faire : choisir son équipe, puis toucher « ☆ Suivre ».
 
 #### Scenario: Première visite
 - **WHEN** un visiteur ouvre l'accueil pour la première fois
-- **THEN** il voit la tuile « Suivre mon équipe → », et la toucher ouvre la page Mes équipes
+- **THEN** il voit la tuile « Suivre une équipe → », et la toucher ouvre la page Mes équipes

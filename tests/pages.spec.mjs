@@ -593,7 +593,7 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
     await page.goto("index.html");
     await attendreChargement(page);
     const invite = page.locator("#tiles a.tile").first();
-    await expect(invite).toContainText("Suivre mon équipe →");
+    await expect(invite).toContainText("Suivre une équipe →");
     await expect(invite).toContainText("☆ Suivre");
     await expect(invite).toHaveAttribute("href", "equipe.html");
     // L'onglet renommé tient en entier dans la barre.

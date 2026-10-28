@@ -439,7 +439,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.28</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.28.2</p>
   </footer>
 </main>
 
@@ -1132,7 +1132,7 @@
   function buildMesEquipes(mes, aVenir, standings, clubMap) {
     var suivis = suiviMesEquipes(mes, aVenir, standings, clubMap);
     if (!suivis.length) {
-      var invite = buildTile("equipe.html", "Mes équipes", "Suivre mon équipe →");
+      var invite = buildTile("equipe.html", "Mes équipes", "Suivre une équipe →");
       invite.body.appendChild(el("p", { class: "tile-note", text: "Choisissez votre équipe et touchez « ☆ Suivre » : sa prochaine partie et son rang s'afficheront ici." }));
       return invite;
     }
