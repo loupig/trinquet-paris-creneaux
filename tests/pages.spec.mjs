@@ -431,6 +431,24 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".finales-card .statut").first()).toHaveText("Prévision");
   });
 
+  test("chaque équipe d'un quart a ses chances de victoire, qui font 100 %", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+
+    const quarts = page.locator(".finales-card").first().locator(".quart-row");
+    for (let i = 0; i < 4; i++) {
+      const textes = await quarts.nth(i).locator(".quart-proba").allTextContents();
+      expect(textes).toHaveLength(2);
+      const [a, b] = textes.map((t) => parseInt(t, 10));
+      expect(a + b).toBe(100);
+      expect(a % 5).toBe(0);
+      expect(Math.min(a, b)).toBeGreaterThanOrEqual(5);
+    }
+    // Q1 oppose le 1er de la poule 1 au 4e de la poule 2 : le 1er est favori.
+    await expect(quarts.nth(0).locator(".quart-proba").first()).toHaveClass(/favori/);
+    await expect(page.locator(".finales-card .finales-note").first()).toContainText("chances de gagner le quart");
+  });
+
   test("une simulation recalcule, se signale et s'efface", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
