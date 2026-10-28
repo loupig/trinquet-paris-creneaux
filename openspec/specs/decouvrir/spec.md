@@ -14,7 +14,7 @@ La page `decouvrir.html` SHALL n'avoir qu'une action principale, « Suivre mon �
 - **THEN** l'accueil s'ouvre
 
 ### Requirement: Contenu de la présentation
-La page SHALL présenter, dans cet ordre : l'accroche avec l'aperçu d'un téléphone, la situation avant et après le site, une phrase d'accroche en grand, les cinq fonctions avec l'onglet où les trouver, les trois étapes pour commencer, trois avis de joueurs, des faits vérifiables sur la source et les données, les questions fréquentes, puis l'appel final identique à celui du haut. Les questions se déplient dans la page, sans fenêtre (spec `navigation`). Un court avis accompagne l'appel du premier écran. Les avis sont inventés en attendant de vrais avis de joueurs : ils MUST rester signalés comme « avis d'illustration ». Les chiffres affichés MUST être réels ; l'aperçu du téléphone est signalé comme données d'exemple.
+La page SHALL rester courte et présenter, dans cet ordre : l'accroche avec l'aperçu d'un téléphone, une phrase d'accroche en grand, les cinq fonctions en une phrase chacune avec l'onglet où les trouver, les trois étapes pour commencer, six questions fréquentes, puis l'appel final identique à celui du haut. Les questions se déplient dans la page, sans fenêtre (spec `navigation`). La page MUST NOT afficher d'avis inventés : seuls de vrais avis de joueurs, avec leur accord, pourront y figurer. L'aperçu du téléphone est signalé comme données d'exemple.
 
 #### Scenario: Question fréquente
 - **WHEN** un visiteur touche une question

@@ -26,15 +26,54 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "C'est le site officiel de la ligue ?", "acceptedAnswer": { "@type": "Answer", "text": "Non. C'est un site tenu par un joueur, qui reprend ce que la ligue publie sur son propre site, sans rien y modifier. Pour une feuille de match ou une réclamation, c'est la ligue qu'il faut contacter." } },
-    { "@type": "Question", "name": "Les résultats sont à jour ?", "acceptedAnswer": { "@type": "Answer", "text": "Le site relit celui de la ligue toutes les heures, et chaque page affiche l'heure de sa dernière lecture. Un résultat saisi tard par la ligue apparaît à la lecture suivante." } },
-    { "@type": "Question", "name": "Il faut créer un compte ?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Les équipes que vous suivez sont gardées sur votre téléphone. En contrepartie, elles ne vous suivent pas d'un appareil à l'autre : choisissez-les une fois sur chacun." } },
-    { "@type": "Question", "name": "Comment l'avoir comme une application ?", "acceptedAnswer": { "@type": "Answer", "text": "Sur Android, Chrome propose « Installer l'application ». Sur iPhone, ouvrez le site dans Safari, touchez Partager puis « Sur l'écran d'accueil ». L'icône LIDFPB ouvre alors le site en plein écran." } },
-    { "@type": "Question", "name": "D'où sort le prono du comptoir ?", "acceptedAnswer": { "@type": "Answer", "text": "Des seuls vrais résultats de la saison. Pour chaque partie restante, le comptoir regarde d'abord la confrontation directe, sinon l'écart moyen contre les adversaires communs, sinon la moyenne de points puis le goal average. Le vainqueur annoncé marque 40, le perdant 40 moins l'écart attendu. Ce n'est qu'une simulation : elle ne change rien au vrai classement, n'est envoyée nulle part et disparaît au rechargement. À vous de lui donner tort sur le trinquet." } },
-    { "@type": "Question", "name": "Les créneaux libres, pour quel trinquet ?", "acceptedAnswer": { "@type": "Answer", "text": "Seulement le Trinquet Paris, dans le 16e. Pour les parties jouées ailleurs, le calendrier complet reste dans l'onglet Parties." } },
-    { "@type": "Question", "name": "Que voit-on des joueurs ?", "acceptedAnswer": { "@type": "Answer", "text": "Leur nom et leur prénom dans la composition des équipes, rien d'autre : ni numéro de licence, ni adresse, ni date de naissance. Le numéro des responsables d'équipe, déjà publié par la ligue, n'est jamais écrit dans la page : il sert seulement aux boutons Appeler, SMS et WhatsApp." } },
-    { "@type": "Question", "name": "Ça marche sans réseau ?", "acceptedAnswer": { "@type": "Answer", "text": "Non, et c'est voulu : le site ne garde pas de version hors connexion, pour ne jamais vous montrer un calendrier périmé. Le compteur de points, lui, retrouve la partie en cours si la page se recharge." } },
-    { "@type": "Question", "name": "Une erreur, une idée ?", "acceptedAnswer": { "@type": "Answer", "text": "Ouvrez un signalement sur GitHub, avec la page concernée et ce que vous attendiez. Les demandes des joueurs décident de ce qui arrive ensuite." } }
+    {
+      "@type": "Question",
+      "name": "C'est le site officiel de la ligue ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Non : un site tenu par un joueur, qui reprend ce que la ligue publie sans rien y modifier. Pour une feuille de match ou une réclamation, voyez la ligue."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Les résultats sont à jour ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Le site relit celui de la ligue chaque heure, et chaque page affiche l'heure de sa dernière lecture."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Il faut créer un compte ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Non. Vos équipes suivies restent sur votre téléphone, rien n'est envoyé."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Comment l'avoir comme une application ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sur Android, « Installer l'application ». Sur iPhone, dans Safari : Partager, puis « Sur l'écran d'accueil »."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "D'où sort le prono du comptoir ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Des seuls vrais résultats : confrontation directe, sinon adversaires communs, sinon moyenne de points. Ce n'est qu'une simulation, à vous de lui donner tort."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Une erreur, une idée ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ouvrez un signalement sur GitHub : les demandes des joueurs décident de la suite."
+      }
+    }
   ]
 }
 </script>
@@ -371,8 +410,8 @@
   .phone-caption { margin: 12px 0 0; text-align: center; font-size: 12px; line-height: 16px; color: var(--muted); }
 
   /* --- Sections --- */
-  section.block { padding: 64px 0; }
-  @media (min-width: 960px) { section.block { padding: 96px 0; } }
+  section.block { padding: 48px 0; }
+  @media (min-width: 960px) { section.block { padding: 80px 0; } }
   .kicker {
     margin: 0 0 12px;
     font-size: 14px;
@@ -390,23 +429,10 @@
     letter-spacing: -0.01em;
   }
   @media (min-width: 768px) { .block h2 { font-size: 36px; line-height: 40px; } }
-  .lead { max-width: 680px; margin: 16px 0 0; font-size: 18px; line-height: 28px; color: var(--muted); }
-
-  /* Avant / maintenant */
-  .compare { display: grid; gap: 16px; margin-top: 40px; }
-  @media (min-width: 768px) { .compare { grid-template-columns: 1fr 1fr; gap: 24px; } }
-  .compare article { border-radius: 16px; padding: 24px; border: 1px solid var(--border); background: var(--surface); }
-  .compare article.avant { background: transparent; }
-  .compare h3 { font-size: 18px; line-height: 28px; font-weight: 700; }
-  .compare ul { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
-  .compare li { display: flex; gap: 12px; align-items: flex-start; color: var(--muted); }
-  .compare li svg.i { margin-top: 2px; }
-  .avant li svg.i { color: #a0a3ad; }
-  .maintenant li { color: var(--text); }
-  .maintenant li svg.i { color: var(--vert); }
 
   /* Phrase qui s'allume mot à mot */
-  .tagline { padding: 96px 0; background: var(--surface); }
+  .tagline { padding: 64px 0; background: var(--surface); }
+  @media (min-width: 960px) { .tagline { padding: 96px 0; } }
   .tagline p {
     max-width: 680px;
     margin: 0;
@@ -446,6 +472,18 @@
   }
   .benefit .ico svg.i { width: 24px; height: 24px; }
   .benefit h3 { margin-top: 16px; font-size: 18px; line-height: 28px; font-weight: 700; }
+  @media (max-width: 639px) {
+    .benefits, .steps { gap: 12px; }
+    .benefit { display: grid; grid-template-columns: 40px 1fr; column-gap: 16px; padding: 16px; }
+    .benefit .ico { grid-row: span 3; }
+    .benefit h3 { margin-top: 0; }
+    .benefit p { margin-top: 4px; }
+    .benefit .onglet { padding-top: 4px; }
+    .steps li { display: grid; grid-template-columns: 32px 1fr; column-gap: 16px; padding: 16px; }
+    .steps li::before { grid-row: span 2; }
+    .steps li h3 { margin-top: 0; }
+    .steps li p { margin-top: 0; }
+  }
   .benefit p { margin: 8px 0 0; color: var(--muted); }
   .benefit .onglet {
     margin-top: auto;
@@ -476,51 +514,6 @@
   .steps h3 { margin-top: 16px; font-size: 18px; line-height: 28px; font-weight: 700; }
   .steps p { margin: 8px 0 0; color: var(--muted); }
 
-  /* Avis */
-  .avatar {
-    display: inline-flex;
-    flex: none;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 700;
-    color: #fff;
-  }
-  .avatar.a1 { background: var(--rouge); }
-  .avatar.a2 { background: var(--vert); }
-  .avatar.a3 { background: #1a1a2e; }
-  .avatar.a4 { background: #8a5a00; }
-  .hero-quote { display: flex; gap: 12px; align-items: flex-start; max-width: 680px; margin: 32px 0 0; }
-  .hero-quote blockquote { margin: 0; font-weight: 600; }
-  .hero-quote figcaption { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--muted); }
-  .hero-quote figcaption a { text-underline-offset: 2px; }
-  .quotes { display: grid; gap: 16px; margin-top: 40px; }
-  @media (min-width: 768px) { .quotes { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
-  .quote {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin: 0;
-    border-radius: 16px;
-    padding: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-  .quote blockquote { margin: 0; font-size: 18px; line-height: 28px; }
-  .quote figcaption { display: flex; gap: 12px; align-items: center; margin-top: auto; font-size: 14px; line-height: 20px; color: var(--muted); }
-  .quote strong { color: var(--text); }
-  .note { margin: 16px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
-
-  /* Preuves : des faits vérifiables */
-  .facts { display: grid; gap: 16px; margin: 40px 0 0; }
-  @media (min-width: 768px) { .facts { grid-template-columns: repeat(4, 1fr); gap: 24px; } }
-  .facts div { border-radius: 16px; padding: 24px; background: var(--surface); border: 1px solid var(--border); }
-  .facts dt { font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.01em; }
-  .facts dd { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 20px; }
 
   /* FAQ : questions dépliées dans la page, jamais en fenêtre */
   .faq { display: grid; gap: 12px; max-width: 760px; margin-top: 40px; }
@@ -544,7 +537,8 @@
   .faq details p { margin: 0; padding: 0 24px 24px; color: var(--muted); }
 
   /* Appel final */
-  .final { padding: 96px 0; }
+  .final { padding: 48px 0; }
+  @media (min-width: 960px) { .final { padding: 80px 0; } }
   .final .card {
     border-radius: 24px;
     padding: 48px 24px;
@@ -584,7 +578,6 @@
   <defs>
     <symbol id="i-arrow" viewBox="0 0 256 256"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></symbol>
     <symbol id="i-check" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></symbol>
-    <symbol id="i-plus" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></symbol>
     <symbol id="i-caret" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
     <symbol id="i-users" viewBox="0 0 256 256"><path d="M244.8,150.4a8,8,0,0,1-11.2-1.6A51.6,51.6,0,0,0,192,128a8,8,0,0,1-7.37-4.89,8,8,0,0,1,0-6.22A8,8,0,0,1,192,112a24,24,0,1,0-23.24-30,8,8,0,1,1-15.5-4A40,40,0,1,1,219,117.51a67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,244.8,150.4ZM190.92,212a8,8,0,1,1-13.84,8,57,57,0,0,0-98.16,0,8,8,0,1,1-13.84-8,72.06,72.06,0,0,1,33.74-29.92,48,48,0,1,1,58.36,0A72.06,72.06,0,0,1,190.92,212ZM128,176a32,32,0,1,0-32-32A32,32,0,0,0,128,176ZM72,120a8,8,0,0,0-8-8A24,24,0,1,1,87.24,82a8,8,0,1,0,15.5-4A40,40,0,1,0,37,117.51,67.94,67.94,0,0,0,9.6,139.19a8,8,0,1,0,12.8,9.61A51.6,51.6,0,0,1,64,128,8,8,0,0,0,72,120Z"/></symbol>
     <symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z"/></symbol>
@@ -605,7 +598,6 @@
   <nav class="links" aria-label="Sections de la page">
     <a href="#fonctions">Fonctions</a>
     <a href="#etapes">Comment ça marche</a>
-    <a href="#avis">Avis</a>
     <a href="#questions">Questions</a>
   </nav>
   <a class="btn btn-primary btn-sm" href="index.html">Ouvrir le site</a>
@@ -617,7 +609,6 @@
     <ul>
       <li><a href="#fonctions">Fonctions</a></li>
       <li><a href="#etapes">Comment ça marche</a></li>
-      <li><a href="#avis">Avis</a></li>
       <li><a href="#questions">Questions</a></li>
     </ul>
   </nav>
@@ -632,7 +623,7 @@
       <div>
         <p class="eyebrow"><span class="dot" aria-hidden="true"></span>Championnats d'Île-de-France de pala gomme pleine</p>
         <h1 id="titre">Toute la saison de votre équipe,<br class="br-md"> en un coup d'œil</h1>
-        <p class="sub">Votre prochaine partie, votre rang de poule et les créneaux libres du Trinquet Paris, repris chaque heure du site de la ligue. Pour les joueurs et les capitaines, sur le téléphone.</p>
+        <p class="sub">Prochaine partie, rang de poule et créneaux libres du Trinquet Paris, repris chaque heure du site de la ligue.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="index.html">Suivre mon équipe <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         </div>
@@ -640,15 +631,7 @@
           <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Gratuit</li>
           <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Sans compte</li>
           <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Rien à télécharger</li>
-          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Mis à jour chaque heure</li>
         </ul>
-        <figure class="hero-quote">
-          <span class="avatar a2" aria-hidden="true">CD</span>
-          <div>
-            <blockquote>« Je sais à quelle heure on joue sans le demander sur le groupe. »</blockquote>
-            <figcaption><a href="#avis">Claire Duhalde, série 2</a> · avis d'illustration</figcaption>
-          </div>
-        </figure>
       </div>
 
       <figure class="phone-fig" style="margin:0">
@@ -686,195 +669,106 @@
     </div>
   </section>
 
-  <!-- 2. Problème, puis solution -->
-  <section class="block reveal" aria-labelledby="avant-titre">
-    <div class="wrap">
-      <p class="kicker">Le jeudi soir, avant le week-end</p>
-      <h2 id="avant-titre">Fini de recouper trois sources pour savoir quand vous jouez</h2>
-      <div class="compare">
-        <article class="avant">
-          <h3>Sans le site</h3>
-          <ul>
-            <li><svg class="i" aria-hidden="true"><use href="#i-plus" transform="rotate(45 128 128)"/></svg>Chercher sa poule dans les tableaux de la ligue, page après page</li>
-            <li><svg class="i" aria-hidden="true"><use href="#i-plus" transform="rotate(45 128 128)"/></svg>Recompter les points à la main pour savoir si le quart est encore jouable</li>
-            <li><svg class="i" aria-hidden="true"><use href="#i-plus" transform="rotate(45 128 128)"/></svg>Demander dans le groupe qui a réservé le trinquet samedi à 20h30</li>
-          </ul>
-        </article>
-        <article class="maintenant">
-          <h3>Avec le site</h3>
-          <ul>
-            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Votre équipe en haut de l'accueil, avec son rang et sa prochaine partie</li>
-            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Le classement calculé, et les quarts prévus si la saison finissait ce soir</li>
-            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Les créneaux encore libres au Trinquet Paris, semaine par semaine</li>
-          </ul>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. Phrase qui s'allume mot à mot -->
+  <!-- 2. Phrase qui s'allume mot à mot -->
   <section class="tagline" aria-label="En une phrase">
     <div class="wrap">
       <p id="tagline">Moins de temps sur le téléphone,<br> plus de temps dans le trinquet.</p>
     </div>
   </section>
 
-  <!-- 4. Bénéfices -->
+  <!-- 3. Fonctions -->
   <section class="block reveal" id="fonctions" aria-labelledby="fonctions-titre">
     <div class="wrap">
       <p class="kicker">Ce que vous y trouvez</p>
-      <h2 id="fonctions-titre">Cinq réponses que vous cherchiez déjà</h2>
+      <h2 id="fonctions-titre">De la poule aux quarts, et jusqu'au dernier point</h2>
       <div class="benefits">
         <article class="benefit">
           <span class="ico"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></span>
           <h3>Où en est mon équipe</h3>
-          <p>Prochaine partie, rang de poule, bilan, forme et composition sur une seule page, que vous partagez au groupe par un lien.</p>
-          <p class="onglet">Onglet <a href="equipe.html">Mon équipe</a></p>
+          <p>Prochaine partie, rang, forme et composition, sur une page à partager.</p>
+          <p class="onglet"><a href="equipe.html">Mon équipe</a></p>
         </article>
         <article class="benefit">
           <span class="ico"><svg class="i" aria-hidden="true"><use href="#i-list"/></svg></span>
           <h3>Qui joue d'ici dimanche</h3>
-          <p>Toutes les parties jusqu'au prochain dimanche, et celles qui valent le déplacement, avec la raison en quelques mots.</p>
-          <p class="onglet">Sur l'<a href="index.html">accueil</a> et dans <a href="programme.html">Parties</a></p>
+          <p>Les parties à venir, et celles qui valent le déplacement.</p>
+          <p class="onglet"><a href="index.html">Accueil</a> · <a href="programme.html">Parties</a></p>
         </article>
         <article class="benefit">
           <span class="ico"><svg class="i" aria-hidden="true"><use href="#i-trophy"/></svg></span>
           <h3>Ce qu'il faut pour le quart</h3>
-          <p>Le classement de chaque poule et les quarts croisés prévus. Puis le prono du comptoir&nbsp;🍻&nbsp;: un toucher remplit les parties restantes d'après les vrais résultats de la saison, qui a battu qui et de combien. «&nbsp;Montre-moi ce scénario&nbsp;» trace le chemin de votre équipe jusqu'au quart.</p>
-          <p class="onglet">Onglet <a href="classement.html">Classement</a></p>
+          <p>Le classement, les quarts prévus et le prono du comptoir&nbsp;🍻, tiré des vrais résultats.</p>
+          <p class="onglet"><a href="classement.html">Classement</a></p>
         </article>
         <article class="benefit">
           <span class="ico"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg></span>
-          <h3>Quand rejouer une partie reportée</h3>
-          <p>Les créneaux de championnat encore libres au Trinquet Paris, les jours où l'une des deux équipes joue déjà, et le message prêt à envoyer à l'adversaire.</p>
-          <p class="onglet">Onglet <a href="creneaux.html">Créneaux</a></p>
+          <h3>Quand rejouer une partie</h3>
+          <p>Les créneaux libres du Trinquet Paris, et le message de report prêt à envoyer.</p>
+          <p class="onglet"><a href="creneaux.html">Créneaux</a></p>
         </article>
         <article class="benefit">
           <span class="ico"><svg class="i" aria-hidden="true"><use href="#i-calc"/></svg></span>
           <h3>Le compteur du kantari</h3>
-          <p>Le score en plein écran, annoncé à voix haute en basque après chaque point, «&nbsp;Nobia&nbsp;» à la balle de partie, puis le résultat envoyé au groupe d'un geste.</p>
-          <p class="onglet">Bouton calculette, ou «&nbsp;Compter cette partie&nbsp;» depuis <a href="programme.html">Parties</a> · <a href="compteur.html">Ouvrir le compteur</a></p>
+          <p>Le score en plein écran, annoncé en basque, «&nbsp;Nobia&nbsp;» à la balle de partie, puis envoyé au groupe.</p>
+          <p class="onglet"><a href="compteur.html">Compteur</a></p>
         </article>
       </div>
     </div>
   </section>
 
-  <!-- 5. Comment ça marche -->
+  <!-- 4. Comment ça marche -->
   <section class="block reveal" id="etapes" aria-labelledby="etapes-titre">
     <div class="wrap">
       <p class="kicker">Comment ça marche</p>
-      <h2 id="etapes-titre">Trois gestes, une minute, une seule fois</h2>
+      <h2 id="etapes-titre">Trois gestes, une seule fois</h2>
       <ol class="steps">
-        <li>
-          <h3>Ouvrez le site</h3>
-          <p>Depuis le lien partagé dans votre groupe ou depuis cette page. Rien à installer pour commencer.</p>
-        </li>
-        <li>
-          <h3>Choisissez vos équipes</h3>
-          <p>Touchez « Choisir mes équipes » sur l'accueil. Le choix reste sur votre téléphone, sans compte.</p>
-        </li>
-        <li>
-          <h3>Ajoutez-le à l'écran d'accueil</h3>
-          <p>Sur Android, « Installer l'application ». Sur iPhone, Partager puis « Sur l'écran d'accueil ».</p>
-        </li>
+        <li><h3>Ouvrez le site</h3><p>Rien à installer pour commencer.</p></li>
+        <li><h3>Choisissez vos équipes</h3><p>«&nbsp;Choisir mes équipes&nbsp;», sur l'accueil.</p></li>
+        <li><h3>Ajoutez-le à l'écran d'accueil</h3><p>Il s'ouvre alors comme une application.</p></li>
       </ol>
     </div>
   </section>
 
-  <!-- 6. Avis -->
-  <section class="block reveal" id="avis" aria-labelledby="avis-titre">
-    <div class="wrap">
-      <p class="kicker">Avis</p>
-      <h2 id="avis-titre">Ce que ça change, de la poule aux quarts</h2>
-      <div class="quotes">
-        <figure class="quote">
-          <blockquote>« Le jeudi, je regarde les créneaux libres et j'envoie le message de report depuis la page. Avant, ça prenait vingt messages sur le groupe et un coup de fil au trinquet. »</blockquote>
-          <figcaption><span class="avatar a1" aria-hidden="true">ME</span><span><strong>Mattin Etcheverry</strong><br>Capitaine, série 1</span></figcaption>
-        </figure>
-        <figure class="quote">
-          <blockquote>« J'ai mis l'icône sur mon écran d'accueil en septembre. Je sais à quelle heure on joue sans le demander sur le groupe. »</blockquote>
-          <figcaption><span class="avatar a2" aria-hidden="true">CD</span><span><strong>Claire Duhalde</strong><br>Joueuse, série 2</span></figcaption>
-        </figure>
-        <figure class="quote">
-          <blockquote>« Le comptoir nous donnait perdants. Le simulateur nous a montré qu'une victoire suffisait pour le quart, même courte : on l'a gagnée 40 à 37, et on savait déjà contre qui on jouerait. »</blockquote>
-          <figcaption><span class="avatar a3" aria-hidden="true">PL</span><span><strong>Peio Larralde</strong><br>Joueur, série 1</span></figcaption>
-        </figure>
-        <figure class="quote">
-          <blockquote>« Je mets le compteur en plein écran, le téléphone annonce le score en basque après chaque point. Au dernier match, tout le trinquet a crié “Nobia&nbsp;!” avec lui, et le résultat était sur le groupe avant qu'on ait rangé les palas. »</blockquote>
-          <figcaption><span class="avatar a4" aria-hidden="true">MI</span><span><strong>Maddi Irigoyen</strong><br>Capitaine, série 2</span></figcaption>
-        </figure>
-      </div>
-      <p class="note">Avis d'illustration, en attendant les vôtres : <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">envoyez-nous le vôtre</a>.</p>
-    </div>
-  </section>
-
-  <!-- 7. Preuves -->
-  <section class="block reveal" aria-labelledby="preuves-titre">
-    <div class="wrap">
-      <p class="kicker">Ce sur quoi vous pouvez compter</p>
-      <h2 id="preuves-titre">Les données de la ligue, rien de plus, rien de moins</h2>
-      <p class="lead">Chaque page affiche l'heure de sa dernière lecture du site de la ligue. Si la ligue ne répond pas, un bandeau vous le dit au lieu de vous montrer un vieux calendrier.</p>
-      <dl class="facts">
-        <div><dt>1 h</dt><dd>entre deux lectures du site de la ligue</dd></div>
-        <div><dt>0 compte</dt><dd>vos équipes suivies restent sur votre téléphone</dd></div>
-        <div><dt>0 envoi</dt><dd>rien de ce que vous faites ne quitte votre appareil</dd></div>
-        <div><dt>5 onglets</dt><dd>accueil, Mon équipe, Parties, Classement, Créneaux</dd></div>
-      </dl>
-    </div>
-  </section>
-
-  <!-- 8. Questions -->
+  <!-- 5. Questions -->
   <section class="block reveal" id="questions" aria-labelledby="questions-titre">
     <div class="wrap">
       <p class="kicker">Questions</p>
       <h2 id="questions-titre">Avant de l'ouvrir</h2>
       <div class="faq">
         <details>
-          <summary>C'est le site officiel de la ligue ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Non. C'est un site tenu par un joueur, qui reprend ce que la ligue publie sur son propre site, sans rien y modifier. Pour une feuille de match ou une réclamation, c'est la ligue qu'il faut contacter.</p>
+          <summary>C'est le site officiel de la ligue&nbsp;?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
+          <p>Non&nbsp;: un site tenu par un joueur, qui reprend ce que la ligue publie sans rien y modifier. Pour une feuille de match ou une réclamation, voyez la ligue.</p>
         </details>
         <details>
-          <summary>Les résultats sont à jour ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Le site relit celui de la ligue toutes les heures, et chaque page affiche l'heure de sa dernière lecture. Un résultat saisi tard par la ligue apparaît à la lecture suivante.</p>
+          <summary>Les résultats sont à jour&nbsp;?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
+          <p>Le site relit celui de la ligue chaque heure, et chaque page affiche l'heure de sa dernière lecture.</p>
         </details>
         <details>
-          <summary>Il faut créer un compte ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Non. Les équipes que vous suivez sont gardées sur votre téléphone. En contrepartie, elles ne vous suivent pas d'un appareil à l'autre : choisissez-les une fois sur chacun.</p>
+          <summary>Il faut créer un compte&nbsp;?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
+          <p>Non. Vos équipes suivies restent sur votre téléphone, rien n'est envoyé.</p>
         </details>
         <details>
-          <summary>Comment l'avoir comme une application ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Sur Android, Chrome propose « Installer l'application ». Sur iPhone, ouvrez le site dans Safari, touchez Partager puis « Sur l'écran d'accueil ». L'icône LIDFPB ouvre alors le site en plein écran.</p>
+          <summary>Comment l'avoir comme une application&nbsp;?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
+          <p>Sur Android, «&nbsp;Installer l'application&nbsp;». Sur iPhone, dans Safari&nbsp;: Partager, puis «&nbsp;Sur l'écran d'accueil&nbsp;».</p>
         </details>
         <details>
           <summary>D'où sort le prono du comptoir&nbsp;?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Des seuls vrais résultats de la saison. Pour chaque partie restante, le comptoir regarde d'abord la confrontation directe, sinon l'écart moyen contre les adversaires communs, sinon la moyenne de points puis le goal average. Le vainqueur annoncé marque 40, le perdant 40 moins l'écart attendu. Ce n'est qu'une simulation : elle ne change rien au vrai classement, n'est envoyée nulle part et disparaît au rechargement. À vous de lui donner tort sur le trinquet.</p>
+          <p>Des seuls vrais résultats&nbsp;: confrontation directe, sinon adversaires communs, sinon moyenne de points. Ce n'est qu'une simulation, à vous de lui donner tort.</p>
         </details>
         <details>
-          <summary>Les créneaux libres, pour quel trinquet ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Seulement le Trinquet Paris, dans le 16e. Pour les parties jouées ailleurs, le calendrier complet reste dans l'onglet Parties.</p>
-        </details>
-        <details>
-          <summary>Que voit-on des joueurs ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Leur nom et leur prénom dans la composition des équipes, rien d'autre : ni numéro de licence, ni adresse, ni date de naissance. Le numéro des responsables d'équipe, déjà publié par la ligue, n'est jamais écrit dans la page : il sert seulement aux boutons Appeler, SMS et WhatsApp.</p>
-        </details>
-        <details>
-          <summary>Ça marche sans réseau ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Non, et c'est voulu : le site ne garde pas de version hors connexion, pour ne jamais vous montrer un calendrier périmé. Le compteur de points, lui, retrouve la partie en cours si la page se recharge.</p>
-        </details>
-        <details>
-          <summary>Une erreur, une idée ?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
-          <p>Ouvrez un <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">signalement sur GitHub</a>, avec la page concernée et ce que vous attendiez. Les demandes des joueurs décident de ce qui arrive ensuite.</p>
+          <summary>Une erreur, une idée&nbsp;?<svg class="i" aria-hidden="true"><use href="#i-caret"/></svg></summary>
+          <p>Ouvrez un <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">signalement sur GitHub</a>&nbsp;: les demandes des joueurs décident de la suite.</p>
         </details>
       </div>
     </div>
   </section>
 
-  <!-- 9. Appel final, identique au haut de page -->
+  <!-- 6. Appel final, identique au haut de page -->
   <section class="final reveal" aria-labelledby="final-titre">
     <div class="wrap">
       <div class="card">
         <h2 id="final-titre">Votre prochaine partie est déjà dedans</h2>
-        <p>Choisissez votre équipe une fois. L'accueil vous montre ensuite son rang et sa prochaine partie à chaque ouverture.</p>
+        <p>Choisissez votre équipe une fois, l'accueil fait le reste.</p>
         <a class="btn btn-primary" href="index.html">Suivre mon équipe <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         <ul class="reassure" aria-label="Conditions">
           <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Gratuit</li>
@@ -894,7 +788,7 @@
       <a href="https://github.com/loupig/trinquet-paris-creneaux#rgpd-et-données-joueurs" target="_blank" rel="noopener">Données personnelles</a>
       <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a>
     </nav>
-    <p style="margin:0"><a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.27</p>
+    <p style="margin:0"><a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.28</p>
   </div>
 </footer>
 
@@ -985,7 +879,7 @@
     });
   }, { rootMargin: "-45% 0px -50% 0px" });
   // « haut » ne correspond à aucun lien : revenir en haut efface la marque.
-  ["haut", "fonctions", "etapes", "avis", "questions"].forEach(function (id) { courant.observe(document.getElementById(id)); });
+  ["haut", "fonctions", "etapes", "questions"].forEach(function (id) { courant.observe(document.getElementById(id)); });
 })();
 </script>
 </body>

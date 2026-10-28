@@ -356,8 +356,8 @@ test("Découvrir : la présentation mène à l'accueil", async ({ page }) => {
   await page.locator("#tagline").scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 300);
   await expect(page.locator("#tagline .w").last()).toHaveClass(/\bon\b/);
-  // Les avis inventés sont signalés comme tels.
-  await expect(page.locator("#avis .note")).toContainText("illustration");
+  // Pas d'avis inventés sur la page.
+  await expect(page.locator("#avis, blockquote")).toHaveCount(0);
 });
 
 test("Découvrir : le menu plein écran s'ouvre et se referme", async ({ page }) => {
