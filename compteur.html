@@ -548,7 +548,14 @@
   .fs-bar button.icone.on { background: #fff3cd; border-color: #f0dd9a; color: #7a5b00; }
   .fs-bar button.icone small { font-size: 9px; font-weight: 800; margin-left: -3px; }
   .fs-bar button[disabled] { opacity: 0.4; cursor: default; }
-  .fs-resume { flex: 1 1 auto; min-width: 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--fs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Au centre de la barre : le temps de jeu qui s'écoule, et sous lui le
+     score visé. */
+  .fs-centre { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+  .fs-temps { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  .fs-temps[hidden] { display: none; }
+  .fs-temps.arret { color: var(--fs-muted); }
+  .fs-resume { max-width: 100%; text-align: center; font-size: 13px; font-weight: 600; color: var(--fs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-temps:not([hidden]) + .fs-resume { font-size: 11px; }
   .fs-slot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
   .fs .scoreboard { flex: 1 1 auto; min-height: 0; margin: 0; }
   .fs .scoreboard .score-btn,
@@ -659,13 +666,13 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.5</p>
+    <p>Version 2026.10.28.2</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
   <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
-  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mon équipe</span></a>
+  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mes équipes</span></a>
   <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
   <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
   <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
@@ -675,7 +682,10 @@
 <div class="fs" id="fs" hidden aria-label="Compteur en plein écran">
   <div class="fs-bar">
     <button type="button" id="fsQuit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Quitter</span></button>
-    <span class="fs-resume" id="fsResume"></span>
+    <div class="fs-centre">
+      <span class="fs-temps" id="fsTemps" hidden></span>
+      <span class="fs-resume" id="fsResume"></span>
+    </div>
     <button type="button" class="icone" id="fsPause"></button>
     <button type="button" class="icone" id="fsUndo" aria-label="Annuler le dernier point" title="Annuler le dernier point"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
     <button type="button" class="icone" id="fsVoix" hidden></button>
@@ -1248,7 +1258,27 @@
   // le dernier point est la seule valeur qui bouge sans qu'on touche à l'écran.
   var chronoTimer = null;
 
+  // Le temps de jeu en horloge (m:ss, ou h:mm:ss), pour le plein écran : il
+  // part du premier point, s'arrête pendant une pause et au point gagnant.
+  function horloge(sec) {
+    var h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, r = sec % 60;
+    return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(r).padStart(2, "0");
+  }
+
+  function majTempsFs() {
+    var box = document.getElementById("fsTemps");
+    var n = state.points.length;
+    if (!n || !state.points[0].at) { box.hidden = true; return; }
+    box.hidden = false;
+    var fini = vainqueur() !== null;
+    var fin = fini ? state.points[n - 1].at : Date.now();
+    box.textContent = horloge(Math.round(tempsJeu(state.points[0].at, Math.max(fin, state.points[0].at)) / 1000));
+    box.classList.toggle("arret", fini || !!state.pause);
+    box.title = fini ? "Durée de la partie" : (state.pause ? "Temps de jeu, arrêté pendant la pause" : "Temps de jeu depuis le premier point");
+  }
+
   function majChrono() {
+    majTempsFs();
     var box = document.getElementById("chrono");
     var n = state.points.length;
     if (n === 0) {

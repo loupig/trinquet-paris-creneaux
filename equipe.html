@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mon équipe — LIDFPB</title>
+<title>Mes équipes — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
@@ -216,6 +216,42 @@
     padding: 10px 14px 8px;
   }
   .team-name { font-size: 13px; font-weight: 700; }
+  /* Suivre l'équipe affichée : le seul endroit du site où l'on choisit ses
+     équipes, à côté de l'équipe elle-même, pour que le geste se comprenne. */
+  .suivre-btn {
+    margin-left: auto;
+    align-self: center;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: #fff;
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .suivre-btn[aria-pressed="true"] { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .suivre-btn:active { opacity: 0.75; }
+  .suivre-aide { padding: 0 14px 10px; margin: 0; font-size: 11px; color: var(--muted); line-height: 1.45; }
+  /* Les équipes suivies, pour passer de l'une à l'autre d'un geste. */
+  .mes-chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -4px 12px; padding: 0 4px 2px; scrollbar-width: none; }
+  .mes-chips::-webkit-scrollbar { display: none; }
+  .mes-chip {
+    flex: 0 0 auto;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mes-chip[aria-current="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
   .badge {
     font-size: 10px;
     font-weight: 700;
@@ -496,7 +532,7 @@
   </div>
 </div>
 <header>
-  <h1><a href="index.html" class="home-link">Mon équipe</a></h1>
+  <h1><a href="index.html" class="home-link">Mes équipes</a></h1>
   <h1>Ligue d'Île-de-France</h1>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
   <select class="choix-equipe" id="choixEquipe" aria-label="Choisir une équipe"></select>
@@ -509,13 +545,13 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.4</p>
+    <p>Version 2026.10.28</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
   <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
-  <a href="equipe.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><circle cx="9" cy="7.8" r="3.5"/><path d="M2.6 19.4c0-3.6 2.9-6.3 6.4-6.3s6.4 2.7 6.4 6.3a1.1 1.1 0 0 1-1.1 1.1H3.7a1.1 1.1 0 0 1-1.1-1.1z"/><circle cx="16.8" cy="8.4" r="2.9"/><path d="M16.9 13.5c2.8.3 4.7 2.6 4.7 5.9a1.1 1.1 0 0 1-1.1 1.1h-3.4c.2-.3.3-.7.3-1.1 0-2.4-.9-4.5-2.4-5.8.6-.1 1.2-.1 1.9-.1z"/></svg><span>Mon équipe</span></a>
+  <a href="equipe.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><circle cx="9" cy="7.8" r="3.5"/><path d="M2.6 19.4c0-3.6 2.9-6.3 6.4-6.3s6.4 2.7 6.4 6.3a1.1 1.1 0 0 1-1.1 1.1H3.7a1.1 1.1 0 0 1-1.1-1.1z"/><circle cx="16.8" cy="8.4" r="2.9"/><path d="M16.9 13.5c2.8.3 4.7 2.6 4.7 5.9a1.1 1.1 0 0 1-1.1 1.1h-3.4c.2-.3.3-.7.3-1.1 0-2.4-.9-4.5-2.4-5.8.6-.1 1.2-.1 1.9-.1z"/></svg><span>Mes équipes</span></a>
   <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
   <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
   <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
@@ -535,8 +571,8 @@
   // ---------------------------------------------------------------
   var API_BASE = "https://script.google.com/macros/s/AKfycbw1s6iOk3L6yHAoFPtXvrZvyIhNHl-2nz5Q6BNDPmTuVAkXfo9nuYivvfyb-KJDtzr_/exec";
   var CACHE_TTL_MS = 5 * 60 * 1000;
-  // Les équipes suivies depuis l'accueil, sous la même clé qu'index.html. Cette
-  // page les lit pour les proposer en tête de liste, sans jamais les modifier.
+  // Les équipes suivies, sous la même clé qu'index.html et classement.html,
+  // qui les lisent. C'est ici, et seulement ici, qu'on les choisit.
   var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
   // La dernière équipe consultée, pour la retrouver en revenant par l'onglet.
   // Elle reste dans le navigateur : rien n'est envoyé nulle part.
@@ -1225,6 +1261,22 @@
     } catch (e) { return []; /* stockage indisponible ou corrompu : aucune équipe suivie */ }
   }
 
+  function ecrireMesEquipes(liste) {
+    try { localStorage.setItem(MES_EQUIPES_KEY, JSON.stringify(liste)); } catch (e) { /* pas bloquant */ }
+  }
+
+  // Suivre ou ne plus suivre l'équipe affichée. Une équipe suivie s'ajoute en
+  // fin de liste ; les équipes disparues des données sortent de la liste à
+  // cette occasion.
+  function basculerSuivi(cle) {
+    var suivies = etat.suivies.filter(function (k) { return k !== cle && etat.index[k]; });
+    if (etat.suivies.indexOf(cle) === -1) suivies.push(cle);
+    etat.suivies = suivies;
+    ecrireMesEquipes(suivies);
+    renderChoix(etat.cle);
+    renderEquipe(etat.cle);
+  }
+
   function lireEquipeVue() {
     try { return localStorage.getItem(EQUIPE_VUE_KEY) || ""; } catch (e) { return ""; /* stockage indisponible */ }
   }
@@ -1477,7 +1529,19 @@
     var head = el("div", { class: "team-head" });
     head.appendChild(el("div", { class: "team-name", text: clubLabel(etat.clubMap, team.clubCode, team.numero) }));
     head.appendChild(el("span", { class: "badge serie-" + team.cat, text: team.serieLabel }));
+    var cle = teamKey(team.spec, team.cat, team.clubCode, team.numero);
+    var suivie = etat.suivies.indexOf(cle) !== -1;
+    var suivre = el("button", {
+      type: "button", class: "suivre-btn", "aria-pressed": String(suivie),
+      text: suivie ? "★ Suivie" : "☆ Suivre",
+      title: suivie ? "Ne plus suivre cette équipe" : "Suivre cette équipe"
+    });
+    suivre.addEventListener("click", function () { basculerSuivi(cle); });
+    head.appendChild(suivre);
     carte.appendChild(head);
+    if (!suivie) {
+      carte.appendChild(el("p", { class: "suivre-aide", text: "Suivie, elle s'affiche en tête de l'accueil, avec sa prochaine partie et son rang, et ressort sur le Classement." }));
+    }
     if (p) {
       var rang = el("div", { class: "team-rang" });
       rang.appendChild(el("b", { text: rangEnClair(p) }));
@@ -1807,10 +1871,12 @@
     var results = document.getElementById("results");
     results.innerHTML = "";
     var team = cle ? etat.index[cle] : null;
+    var chips = buildMesChips(cle);
+    if (chips) results.appendChild(chips);
     if (!team) {
       results.appendChild(el("div", {
         class: "empty-state",
-        text: "Choisissez une équipe dans la liste ci-dessus : ses parties, son classement de poule et sa composition s'afficheront ici."
+        text: "Choisissez votre équipe dans la liste ci-dessus, puis touchez « ☆ Suivre » : vous la retrouverez ici et en tête de l'accueil."
       }));
       return;
     }
@@ -1824,6 +1890,29 @@
       var reste = resteAJouer(etat.data.rencontres, etat.clubMap, p, cle);
       if (reste.length) results.appendChild(buildReste(reste));
     }
+  }
+
+  // Une pastille par équipe suivie, dans l'ordre où elles ont été suivies.
+  // Inutile quand la seule équipe suivie est déjà à l'écran.
+  function buildMesChips(cle) {
+    var mes = etat.suivies.filter(function (k) { return etat.index[k]; });
+    if (!mes.length || (mes.length === 1 && mes[0] === cle)) return null;
+    var rang = el("div", { class: "mes-chips", role: "group", "aria-label": "Mes équipes suivies" });
+    mes.forEach(function (k) {
+      var t = etat.index[k];
+      var chip = el("button", {
+        type: "button", class: "mes-chip",
+        text: clubLabel(etat.clubMap, t.clubCode, t.numero) + " · " + t.serieLabel
+      });
+      if (k === cle) chip.setAttribute("aria-current", "true");
+      chip.addEventListener("click", function () {
+        if (k === etat.cle) return;
+        montrer(k);
+        window.scrollTo({ top: 0 });
+      });
+      rang.appendChild(chip);
+    });
+    return rang;
   }
 
   // Les équipes suivies d'abord, puis toutes les équipes par série, triées par

@@ -36,7 +36,7 @@ Chaque équipe SHALL prendre le rouge ou le vert de l'ikurriña, ou, en dernier 
 - **WHEN** les deux équipes ont deux violets très proches
 - **THEN** un avertissement signale que le score et le graphe seront difficiles à distinguer
 
-### Requirement: Partie ouverte depuis Parties ou Mon équipe
+### Requirement: Partie ouverte depuis Parties ou Mes équipes
 Ouverte par « Compter cette partie », la page SHALL reprendre les deux équipes, le score à atteindre et la partie (« Série 1 · Poule 2 ») transmis par le lien, sans interroger l'API de la ligue. « Club (éq. 2) » devient « Club 2 », et un nom est coupé à 24 caractères. La partie s'affiche au-dessus des réglages, et elle ouvre le message partagé. Le lien MUST ne servir qu'une fois : il est retiré de l'adresse, et un rechargement ne repose pas la question. Si une autre partie a déjà des points, elle MUST NOT être effacée sans le demander : un encart dans la page propose de compter la nouvelle partie, en effaçant le score en cours, ou de garder la partie en cours. Si c'est la même partie, elle reprend là où elle en était. « Nouvelle partie » oublie la partie de championnat.
 
 #### Scenario: Compteur libre
@@ -131,11 +131,19 @@ Dès qu'un point est marqué, une ligne sous le score SHALL donner le nombre de 
 - **THEN** la ligne indique 12 points, la durée de la partie, et « dernier point il y a 40 s », qui avance chaque seconde
 
 ### Requirement: Plein écran à la demande
-Un bouton « Plein écran » SHALL n'afficher que les deux boutons de score, aussi grands que l'écran le permet, sans en-tête ni barre d'onglets, avec en haut « Quitter », le score et le score visé, « Annuler » et le choix du thème. Partie gagnée, l'encart de fin s'y affiche aussi, sous les scores ou à côté en paysage. Le téléphone passe en plein écran quand il le permet. « Quitter » MUST rester visible et refermer le plein écran ; Échap, la sortie du plein écran par le téléphone et le bouton Retour le referment aussi, sans quitter la page.
+Un bouton « Plein écran » SHALL n'afficher que les deux boutons de score, aussi grands que l'écran le permet, sans en-tête ni barre d'onglets, avec en haut « Quitter », le temps de jeu qui s'écoule, le score et le score visé, « Annuler » et le choix du thème. Le temps de jeu s'affiche en horloge (m:ss, puis h:mm:ss au-delà d'une heure) dès le premier point et avance chaque seconde ; comme la durée de la partie, il ne compte pas les pauses, s'arrête, grisé, pendant une pause, et se fige au point gagnant. Partie gagnée, l'encart de fin s'y affiche aussi, sous les scores ou à côté en paysage. Le téléphone passe en plein écran quand il le permet. « Quitter » MUST rester visible et refermer le plein écran ; Échap, la sortie du plein écran par le téléphone et le bouton Retour le referment aussi, sans quitter la page.
 
 #### Scenario: Compter en plein écran
 - **WHEN** le visiteur touche « Plein écran » puis le bouton d'une équipe
 - **THEN** le point est compté, et la barre du haut affiche le nouveau score
+
+#### Scenario: Temps de jeu en plein écran
+- **WHEN** le premier point a été marqué il y a 2 minutes 5 secondes, sans pause, et que le visiteur est en plein écran
+- **THEN** la barre du haut affiche « 2:05 », puis « 2:06 » une seconde plus tard
+
+#### Scenario: Temps arrêté pendant la pause
+- **WHEN** le visiteur met la partie en pause en plein écran
+- **THEN** le temps de jeu cesse d'avancer et s'affiche grisé, jusqu'à la reprise
 
 #### Scenario: Bouton Retour du téléphone
 - **WHEN** le visiteur est en plein écran et fait Retour

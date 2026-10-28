@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Donner à chaque équipe engagée une page qui réunit tout ce qui la concerne : ses parties, son classement de poule, son bilan, sa forme et sa composition. La page est accessible par un onglet et se partage par un lien.
+Donner à chaque équipe engagée une page qui réunit tout ce qui la concerne : ses parties, son classement de poule, son bilan, sa forme et sa composition. La page est accessible par l'onglet « Mes équipes », se partage par un lien, et c'est là que le visiteur choisit les équipes qu'il suit (spec `mes-equipes`).
 
 ## Requirements
 
 ### Requirement: Équipe affichée
-La page SHALL porter sur une seule équipe, choisie dans cet ordre : l'équipe désignée dans l'adresse de la page, sinon la dernière équipe consultée sur cet appareil, sinon la première équipe suivie depuis l'accueil. Sans aucune des trois, la page MUST se limiter à la liste de choix et à une invitation à choisir une équipe. Une équipe désignée qui n'existe pas dans les rencontres publiées est traitée comme absente, sans message d'erreur.
+La page SHALL porter sur une seule équipe, choisie dans cet ordre : l'équipe désignée dans l'adresse de la page, sinon la dernière équipe consultée sur cet appareil, sinon la première équipe suivie. Sans aucune des trois, la page MUST se limiter à la liste de choix et à une invitation à choisir une équipe. Une équipe désignée qui n'existe pas dans les rencontres publiées est traitée comme absente, sans message d'erreur.
 
 #### Scenario: Lien partagé
 - **WHEN** un visiteur ouvre un lien de la page qui désigne une équipe
@@ -30,7 +30,7 @@ La page SHALL porter sur une seule équipe, choisie dans cet ordre : l'équipe d
 - **THEN** la page se comporte comme si aucune équipe n'était désignée, sans message d'erreur
 
 ### Requirement: Choix de l'équipe
-La page SHALL proposer, en tête, une liste déroulante de toutes les équipes engagées, hors clubs fictifs de la ligue (dont « Equipe à désigner »). Les équipes suivies depuis l'accueil y figurent d'abord, dans un groupe « Mes équipes », puis toutes les équipes, regroupées par série et triées par club puis par numéro. Choisir une équipe MUST l'afficher sans recharger les données et mettre à jour l'adresse de la page, pour que le lien se partage tel quel.
+La page SHALL proposer, en tête, une liste déroulante de toutes les équipes engagées, hors clubs fictifs de la ligue (dont « Equipe à désigner »). Les équipes suivies y figurent d'abord, dans un groupe « Mes équipes », puis toutes les équipes, regroupées par série et triées par club puis par numéro. Choisir une équipe MUST l'afficher sans recharger les données et mettre à jour l'adresse de la page, pour que le lien se partage tel quel.
 
 #### Scenario: Changer d'équipe
 - **WHEN** le visiteur choisit une autre équipe dans la liste
@@ -86,11 +86,11 @@ La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, 
 - **THEN** elle figure en fin de liste, avec « date à venir »
 
 ### Requirement: Aller à l'équipe adverse
-Dans la carte « Prochaine partie » et dans la liste des parties, le nom de l'adversaire SHALL être un lien vers la page Mon équipe de cet adversaire. Le lien ouvre une nouvelle page, pour que le bouton Retour ramène à l'équipe d'où l'on vient. Un adversaire pas encore désigné (club fictif de la ligue, « Equipe à désigner ») n'a pas de lien.
+Dans la carte « Prochaine partie » et dans la liste des parties, le nom de l'adversaire SHALL être un lien vers la page Mes équipes de cet adversaire. Le lien ouvre une nouvelle page, pour que le bouton Retour ramène à l'équipe d'où l'on vient. Un adversaire pas encore désigné (club fictif de la ligue, « Equipe à désigner ») n'a pas de lien.
 
 #### Scenario: Consulter un adversaire
 - **WHEN** le visiteur, sur la page de son équipe, touche le nom d'un adversaire dans la liste des parties
-- **THEN** la page Mon équipe s'affiche pour cet adversaire, et Retour ramène à son équipe
+- **THEN** la page Mes équipes s'affiche pour cet adversaire, et Retour ramène à son équipe
 
 #### Scenario: Adversaire à désigner
 - **WHEN** une partie de phase finale oppose l'équipe à « Equipe à désigner »

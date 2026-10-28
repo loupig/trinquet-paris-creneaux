@@ -7,7 +7,7 @@ Fixer comment les pages obtiennent les données de la ligue, comment elles réag
 ## Requirements
 
 ### Requirement: Source des données
-Les pages Accueil, Mon équipe, Parties, Classement, Créneaux et Report SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
+Les pages Accueil, Mes équipes, Parties, Classement, Créneaux et Report SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
 
 #### Scenario: Date de synchronisation
 - **WHEN** un visiteur ouvre la page Classement et que les données sont chargées
@@ -53,7 +53,7 @@ Les compositions d'équipe et les contacts des responsables SHALL être des donn
 - **THEN** la page Parties affiche le calendrier, et le détail des parties indique « composition non disponible »
 
 ### Requirement: Noms de joueurs seuls
-Les noms de joueurs SHALL n'apparaître que sur les pages Parties et Créneaux (au détail d'une partie) et Mon équipe, sous la forme « Prénom Nom ». Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report.
+Les noms de joueurs SHALL n'apparaître que sur les pages Parties et Créneaux (au détail d'une partie) et Mes équipes, sous la forme « Prénom Nom ». Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report.
 
 #### Scenario: Détail d'une partie
 - **WHEN** un visiteur déplie une partie dont les équipes ont déclaré leurs joueurs
@@ -75,7 +75,7 @@ Tant qu'une série a encore au moins une partie de poule sans score, le site SHA
 
 #### Scenario: Quart renseigné avant la fin des poules
 - **WHEN** la ligue a inscrit deux équipes sur un 1/4 de la série 1 et qu'une partie de poule de la série 1 n'a pas encore de score
-- **THEN** ce 1/4 s'affiche entre « Equipe à désigner » et « Equipe à désigner », sans joueurs, et n'apparaît pas dans la page Mon équipe de ces deux équipes
+- **THEN** ce 1/4 s'affiche entre « Equipe à désigner » et « Equipe à désigner », sans joueurs, et n'apparaît pas dans la page Mes équipes de ces deux équipes
 
 #### Scenario: Poules terminées
 - **WHEN** toutes les parties de poule de la série ont un score

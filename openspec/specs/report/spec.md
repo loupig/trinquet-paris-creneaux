@@ -7,7 +7,7 @@ Aider à trouver une date de remplacement pour une partie non jouée au Trinquet
 ## Requirements
 
 ### Requirement: Partie désignée dans l'adresse
-La page SHALL porter sur la partie désignée par son identifiant dans l'adresse (`report.html?oid=<identifiant>`). Elle s'ouvre depuis le bouton de report de la page Parties ou de la page Mon équipe. Sans partie utilisable, elle MUST afficher un message à la place de toute date, dans cet ordre de vérification :
+La page SHALL porter sur la partie désignée par son identifiant dans l'adresse (`report.html?oid=<identifiant>`). Elle s'ouvre depuis le bouton de report de la page Parties ou de la page Mes équipes. Sans partie utilisable, elle MUST afficher un message à la place de toute date, dans cet ordre de vérification :
 - aucun identifiant : « Aucune partie indiquée » ;
 - identifiant inconnu : « Partie introuvable » ;
 - partie qui a un score : « Partie déjà jouée », avec le score ;
