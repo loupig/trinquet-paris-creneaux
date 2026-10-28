@@ -408,6 +408,8 @@
   .quart-row.moitie { border-top: 2px solid var(--text); }
   .quart-num { font-size: 10px; font-weight: 900; color: var(--accent); }
   .quart-side {
+    display: flex;
+    align-items: baseline;
     min-width: 0;
     padding: 2px 6px;
     border-radius: 7px;
@@ -419,6 +421,17 @@
   }
   .quart-side.suivie { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
   .quart-side.vide { color: var(--muted); font-weight: 600; }
+  .quart-nom { flex: 1; min-width: 0; }
+  .quart-proba {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .quart-proba.favori { font-weight: 900; color: var(--text); }
+  .quart-side.suivie .quart-proba { color: var(--accent); }
   .quart-seed {
     display: inline-block;
     min-width: 36px;
@@ -714,7 +727,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.27.3</p>
+    <p>Version 2026.10.28</p>
   </footer>
 </main>
 
@@ -794,6 +807,11 @@
   // Demi-finales : vainqueurs de Q1 et Q2, puis de Q3 et Q4. Les deux 1ers de
   // poule ne peuvent donc se retrouver qu'en finale.
   var DEMIES = [[1, 2], [3, 4]];
+  // Chances de victoire d'un quart : écart moyen par partie de poule, tiré
+  // vers zéro par PROBA_PARTIES_FICTIVES parties nulles pour ne pas croire
+  // trois résultats, puis courbe logistique : PROBA_ECHELLE points d'écart
+  // attendu donnent environ 73 %. Arrondi à 5 %, borné à 5–95 %.
+  var PROBA_PARTIES_FICTIVES = 2, PROBA_ECHELLE = 8;
   var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
 
   // ---------------------------------------------------------------
@@ -1570,12 +1588,33 @@
     };
   }
 
-  function buildSlot(cote, suivies) {
+  // Chances de chaque côté d'un quart, en %, d'après les seuls résultats
+  // réels de poule (les simulations n'y entrent pas, comme au comptoir).
+  // null tant qu'un des deux côtés n'a pas de partie réelle.
+  function chancesQuart(q, forme) {
+    var f = q.cotes.map(function (c) {
+      return c.team && forme[teamKey(c.team.spec, c.team.cat, c.team.poule, c.team.clubCode, c.team.numero)];
+    });
+    if (!f[0] || !f[1] || !f[0].jouees || !f[1].jouees) return null;
+    function force(t) { return t.ga / (t.jouees + PROBA_PARTIES_FICTIVES); }
+    var p = 1 / (1 + Math.exp((force(f[1]) - force(f[0])) / PROBA_ECHELLE));
+    var haut = Math.min(95, Math.max(5, Math.round(p * 20) * 5));
+    return [haut, 100 - haut];
+  }
+
+  function buildSlot(cote, suivies, chances) {
     var t = cote.team;
     var suivie = t && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
     var side = el("div", { class: "quart-side" + (t ? "" : " vide") + (suivie ? " suivie" : "") });
     side.appendChild(el("span", { class: "quart-seed", text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule }));
-    side.appendChild(document.createTextNode(t ? t.label : "À déterminer"));
+    side.appendChild(el("span", { class: "quart-nom", text: t ? t.label : "À déterminer" }));
+    if (chances) {
+      side.appendChild(el("span", {
+        class: "quart-proba" + (chances[0] > chances[1] ? " favori" : ""),
+        text: chances[0] + " %",
+        title: chances[0] + " % de chances de gagner ce quart, d'après les résultats réels de poule"
+      }));
+    }
     return side;
   }
 
@@ -1606,14 +1645,18 @@
       var colonne = el("div", { class: "tableau-quarts" });
       var rangees = [];
       var mienQ = null;   // numéro du quart d'une équipe suivie, pour surligner son chemin
+      var forme = contexteStats(spec, cat).forme;
+      var avecChances = false;
       tableau.quarts.forEach(function (q) {
+        var chances = chancesQuart(q, forme);
+        if (chances) avecChances = true;
         // Un trait plus marqué sépare les deux moitiés du tableau, Q1-Q2 et
         // Q3-Q4, qui donnent chacune une demie.
         var row = el("div", { class: "quart-row" + (q.num === DEMIES[1][0] ? " moitie" : "") });
         row.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
         var duo = el("div", {});
-        q.cotes.forEach(function (c) {
-          duo.appendChild(buildSlot(c, suivies));
+        q.cotes.forEach(function (c, i) {
+          duo.appendChild(buildSlot(c, suivies, chances && [chances[i], chances[1 - i]]));
           if (mienQ === null && c.team && estSuivie(suivies, c.team.spec, c.team.cat, c.team.clubCode, c.team.numero)) mienQ = q.num;
         });
         row.appendChild(duo);
@@ -1630,6 +1673,7 @@
         note = "Selon le classement " + (simulees ? "simulé" : "actuel") + ", " + n + " partie" + (n > 1 ? "s" : "") +
                " de poule à jouer : le tableau peut encore changer.";
       }
+      if (avecChances) note += " Les % : chances de gagner le quart, d'après l'écart moyen par partie en poule (résultats réels).";
     }
     carte.appendChild(el("p", { class: "finales-note", text: note }));
     return carte;
