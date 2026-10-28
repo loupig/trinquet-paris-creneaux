@@ -514,43 +514,6 @@
   .steps h3 { margin-top: 16px; font-size: 18px; line-height: 28px; font-weight: 700; }
   .steps p { margin: 8px 0 0; color: var(--muted); }
 
-  /* Avis */
-  .avatar {
-    display: inline-flex;
-    flex: none;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 700;
-    color: #fff;
-  }
-  .avatar.a2 { background: var(--vert); }
-  .avatar.a3 { background: #1a1a2e; }
-  .avatar.a4 { background: #8a5a00; }
-  .hero-quote { display: flex; gap: 12px; align-items: flex-start; max-width: 680px; margin: 32px 0 0; }
-  .hero-quote blockquote { margin: 0; font-weight: 600; }
-  .hero-quote figcaption { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--muted); }
-  .hero-quote figcaption a { text-underline-offset: 2px; }
-  .quotes { display: grid; gap: 16px; margin-top: 40px; }
-  @media (min-width: 960px) { .quotes { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
-  .quote {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin: 0;
-    border-radius: 16px;
-    padding: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-  .quote blockquote { margin: 0; font-size: 18px; line-height: 28px; }
-  .quote figcaption { display: flex; gap: 12px; align-items: center; margin-top: auto; font-size: 14px; line-height: 20px; color: var(--muted); }
-  .quote strong { color: var(--text); }
-  .note { margin: 16px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
 
   /* FAQ : questions dépliées dans la page, jamais en fenêtre */
   .faq { display: grid; gap: 12px; max-width: 760px; margin-top: 40px; }
@@ -635,7 +598,6 @@
   <nav class="links" aria-label="Sections de la page">
     <a href="#fonctions">Fonctions</a>
     <a href="#etapes">Comment ça marche</a>
-    <a href="#avis">Avis</a>
     <a href="#questions">Questions</a>
   </nav>
   <a class="btn btn-primary btn-sm" href="index.html">Ouvrir le site</a>
@@ -647,7 +609,6 @@
     <ul>
       <li><a href="#fonctions">Fonctions</a></li>
       <li><a href="#etapes">Comment ça marche</a></li>
-      <li><a href="#avis">Avis</a></li>
       <li><a href="#questions">Questions</a></li>
     </ul>
   </nav>
@@ -671,13 +632,6 @@
           <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Sans compte</li>
           <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Rien à télécharger</li>
         </ul>
-        <figure class="hero-quote">
-          <span class="avatar a2" aria-hidden="true">CD</span>
-          <div>
-            <blockquote>«&nbsp;Je sais à quelle heure on joue sans le demander sur le groupe.&nbsp;»</blockquote>
-            <figcaption><a href="#avis">Claire Duhalde, série 2</a> · avis d'illustration</figcaption>
-          </div>
-        </figure>
       </div>
 
       <figure class="phone-fig" style="margin:0">
@@ -775,30 +729,7 @@
     </div>
   </section>
 
-  <!-- 5. Avis -->
-  <section class="block reveal" id="avis" aria-labelledby="avis-titre">
-    <div class="wrap">
-      <p class="kicker">Avis</p>
-      <h2 id="avis-titre">Ce que ça change au trinquet</h2>
-      <div class="quotes">
-        <figure class="quote">
-          <blockquote>«&nbsp;J'ai mis l'icône sur mon écran d'accueil en septembre. Je sais à quelle heure on joue sans le demander sur le groupe.&nbsp;»</blockquote>
-          <figcaption><span class="avatar a2" aria-hidden="true">CD</span><span><strong>Claire Duhalde</strong><br>Joueuse, série 2</span></figcaption>
-        </figure>
-        <figure class="quote">
-          <blockquote>«&nbsp;Le comptoir nous donnait perdants. On a gagné 40 à 37, et on savait déjà contre qui on jouerait en quart.&nbsp;»</blockquote>
-          <figcaption><span class="avatar a3" aria-hidden="true">PL</span><span><strong>Peio Larralde</strong><br>Joueur, série 1</span></figcaption>
-        </figure>
-        <figure class="quote">
-          <blockquote>«&nbsp;Le téléphone annonce le score en basque. Au dernier match, tout le trinquet a crié “Nobia&nbsp;!” avec lui.&nbsp;»</blockquote>
-          <figcaption><span class="avatar a4" aria-hidden="true">MI</span><span><strong>Maddi Irigoyen</strong><br>Capitaine, série 2</span></figcaption>
-        </figure>
-      </div>
-      <p class="note">Avis d'illustration, en attendant les vôtres&nbsp;: <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">envoyez-nous le vôtre</a>.</p>
-    </div>
-  </section>
-
-  <!-- 6. Questions -->
+  <!-- 5. Questions -->
   <section class="block reveal" id="questions" aria-labelledby="questions-titre">
     <div class="wrap">
       <p class="kicker">Questions</p>
@@ -832,7 +763,7 @@
     </div>
   </section>
 
-  <!-- 7. Appel final, identique au haut de page -->
+  <!-- 6. Appel final, identique au haut de page -->
   <section class="final reveal" aria-labelledby="final-titre">
     <div class="wrap">
       <div class="card">
@@ -948,7 +879,7 @@
     });
   }, { rootMargin: "-45% 0px -50% 0px" });
   // « haut » ne correspond à aucun lien : revenir en haut efface la marque.
-  ["haut", "fonctions", "etapes", "avis", "questions"].forEach(function (id) { courant.observe(document.getElementById(id)); });
+  ["haut", "fonctions", "etapes", "questions"].forEach(function (id) { courant.observe(document.getElementById(id)); });
 })();
 </script>
 </body>
