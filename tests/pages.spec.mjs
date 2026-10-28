@@ -208,6 +208,44 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
   });
 
+  test("plein écran : le temps de jeu s'écoule, s'arrête en pause et au point gagnant", async ({ page }) => {
+    // Horloge figée : le temps n'avance que quand le test le dit.
+    const maintenant = new Date(2026, 9, 28, 20, 0, 0);
+    await page.clock.install({ time: maintenant.getTime() - 5000 });
+    await page.clock.pauseAt(maintenant);
+    const t0 = maintenant.getTime() - 125000;   // premier point il y a 2:05
+    await page.addInitScript((t) => {
+      localStorage.setItem("lidfpb_compteur_v1", JSON.stringify({
+        teams: [{ name: "Bera", color: "#CE1126" }, { name: "Ahetze", color: "#009B48" }],
+        // 39 points d'avance, le premier il y a 2:05 : le prochain fait 40.
+        points: [{ t: 0, at: t }].concat(Array.from({ length: 38 }, () => ({ t: 0, at: t + 1000 }))), cible: 40
+      }));
+    }, t0);
+    await page.goto("compteur.html");
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    const temps = page.locator("#fsTemps");
+    await expect(temps).toBeVisible();
+    await expect(temps).toHaveText("2:05");
+    await page.clock.runFor(1000);
+    await expect(temps).toHaveText("2:06");
+
+    // En pause, le temps ne bouge plus et passe en grisé.
+    await page.locator("#fsPause").click();
+    await expect(temps).toHaveClass(/arret/);
+    await page.clock.runFor(5000);
+    await expect(temps).toHaveText("2:06");
+    await page.locator("#fsPause").click();
+    await expect(temps).not.toHaveClass(/arret/);
+
+    // Le point gagnant fige le temps.
+    await page.clock.runFor(2000);
+    await page.locator("#fs .score-btn").first().click();
+    await expect(temps).toHaveText("2:08");
+    await page.clock.runFor(5000);
+    await expect(temps).toHaveText("2:08");
+    await expect(temps).toHaveClass(/arret/);
+  });
+
   test("le kantari annonce le score, en basque ou en français", async ({ page }) => {
     await page.addInitScript(() => {
       window.__dit = [];
