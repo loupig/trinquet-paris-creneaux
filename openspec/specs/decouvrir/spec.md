@@ -7,7 +7,7 @@ Présenter le site à un joueur ou un capitaine qui ne le connaît pas encore, p
 ## Requirements
 
 ### Requirement: Une seule action
-La page `decouvrir.html` SHALL n'avoir qu'une action principale, « Suivre mon équipe », qui ouvre l'accueil, où un visiteur sans équipe suivie trouve « Choisir mes équipes ». Le bouton « Ouvrir le site » de la barre du haut et le bouton du menu mènent au même endroit. La page MUST NOT proposer d'autre appel concurrent au premier écran.
+La page `decouvrir.html` SHALL n'avoir qu'une action principale, « Suivre mon équipe », qui ouvre l'accueil, où un visiteur sans équipe suivie trouve « Suivre mon équipe », qui mène à la page Mes équipes. Le bouton « Ouvrir le site » de la barre du haut et le bouton du menu mènent au même endroit. La page MUST NOT proposer d'autre appel concurrent au premier écran.
 
 #### Scenario: Nouveau visiteur
 - **WHEN** un visiteur arrivé par un lien partagé touche « Suivre mon équipe »

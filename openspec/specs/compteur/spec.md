@@ -36,7 +36,7 @@ Chaque équipe SHALL prendre le rouge ou le vert de l'ikurriña, ou, en dernier 
 - **WHEN** les deux équipes ont deux violets très proches
 - **THEN** un avertissement signale que le score et le graphe seront difficiles à distinguer
 
-### Requirement: Partie ouverte depuis Parties ou Mon équipe
+### Requirement: Partie ouverte depuis Parties ou Mes équipes
 Ouverte par « Compter cette partie », la page SHALL reprendre les deux équipes, le score à atteindre et la partie (« Série 1 · Poule 2 ») transmis par le lien, sans interroger l'API de la ligue. « Club (éq. 2) » devient « Club 2 », et un nom est coupé à 24 caractères. La partie s'affiche au-dessus des réglages, et elle ouvre le message partagé. Le lien MUST ne servir qu'une fois : il est retiré de l'adresse, et un rechargement ne repose pas la question. Si une autre partie a déjà des points, elle MUST NOT être effacée sans le demander : un encart dans la page propose de compter la nouvelle partie, en effaçant le score en cours, ou de garder la partie en cours. Si c'est la même partie, elle reprend là où elle en était. « Nouvelle partie » oublie la partie de championnat.
 
 #### Scenario: Compteur libre

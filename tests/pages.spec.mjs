@@ -38,7 +38,7 @@ async function attendreChargement(page) {
 
 const PAGES = [
   { nom: "Accueil", url: "index.html", contenu: "#tiles" },
-  { nom: "Mon équipe", url: "equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE), contenu: "#results" },
+  { nom: "Mes équipes", url: "equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE), contenu: "#results" },
   { nom: "Parties", url: "programme.html", contenu: "#results" },
   { nom: "Classement", url: "classement.html", contenu: "#results" },
   { nom: "Créneaux", url: "creneaux.html", contenu: "#results" },
@@ -285,8 +285,8 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
   });
 });
 
-test.describe("Compter une partie depuis Parties ou Mon équipe", () => {
-  test("Mon équipe : la prochaine partie s'ouvre au compteur, équipes nommées", async ({ page }) => {
+test.describe("Compter une partie depuis Parties ou Mes équipes", () => {
+  test("Mes équipes : la prochaine partie s'ouvre au compteur, équipes nommées", async ({ page }) => {
     await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
     await attendreChargement(page);
     await page.getByRole("link", { name: "Compter cette partie" }).click();
@@ -387,7 +387,7 @@ test("Page 404 propose de revenir à l'accueil", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Revenir à l'accueil" })).toHaveAttribute("href", "/trinquet-paris-creneaux/index.html");
 });
 
-test("Ancienne adresse equipes.html redirige vers Mon équipe", async ({ page }) => {
+test("Ancienne adresse equipes.html redirige vers Mes équipes", async ({ page }) => {
   await page.goto("equipes.html");
   await expect(page).toHaveURL(/equipe\.html/);
 });
@@ -542,6 +542,67 @@ test.describe("Classement : quarts et simulation", () => {
   });
 });
 
+test.describe("Suivre ses équipes depuis Mes équipes", () => {
+  const ALPHA = "2|1|3750001|1";
+  const suivies = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("lidfpb_mes_equipes_v1")));
+
+  test("Suivre, passer d'une équipe suivie à l'autre, ne plus suivre", async ({ page }) => {
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(ALPHA));
+    await attendreChargement(page);
+
+    // Alpha n'est pas suivie : le bouton et la phrase disent ce que ça apporte.
+    const suivre = page.locator(".suivre-btn");
+    await expect(suivre).toHaveText("☆ Suivre");
+    await expect(page.locator(".suivre-aide")).toContainText("en tête de l'accueil");
+    // Charlie, déjà suivie, a sa pastille pour y revenir.
+    await expect(page.locator(".mes-chip")).toHaveText(["Charlie (éq. 1) · Série 1"]);
+
+    await suivre.click();
+    await expect(suivre).toHaveText("★ Suivie");
+    await expect(suivre).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".suivre-aide")).toHaveCount(0);
+    expect(await suivies(page)).toEqual([EQUIPE_SUIVIE, ALPHA]);
+    await expect(page.locator(".mes-chip")).toHaveCount(2);
+    await expect(page.locator('.mes-chip[aria-current="true"]')).toHaveText(/^Alpha/);
+
+    // Une pastille affiche l'autre équipe suivie, sans recharger.
+    await page.locator(".mes-chip").first().click();
+    await expect(page).toHaveURL(new RegExp("equipe=" + encodeURIComponent(EQUIPE_SUIVIE).replace(/\|/g, "\\|")));
+    await expect(page.locator('.mes-chip[aria-current="true"]')).toHaveText(/^Charlie/);
+
+    // Ne plus suivre Charlie : il ne reste qu'Alpha.
+    await page.locator(".suivre-btn").click();
+    await expect(page.locator(".suivre-btn")).toHaveText("☆ Suivre");
+    expect(await suivies(page)).toEqual([ALPHA]);
+  });
+
+  test("l'accueil résume les équipes suivies et mène à leur page", async ({ page }) => {
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const bloc = page.locator(".mes-equipes");
+    await expect(bloc.locator(".mes-row")).toHaveCount(1);
+    await expect(bloc.locator("input")).toHaveCount(0);   // plus de choix sur l'accueil
+    await expect(bloc.getByRole("link", { name: "Gérer →" })).toHaveAttribute("href", "equipe.html");
+    await bloc.locator(".mes-row").click();
+    await expect(page).toHaveURL(/equipe\.html\?equipe=/);
+    await expect(page.locator(".suivre-btn")).toHaveText("★ Suivie");
+  });
+
+  test("sans équipe suivie, l'accueil invite à en suivre une", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("lidfpb_mes_equipes_v1", "[]"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const invite = page.locator("#tiles a.tile").first();
+    await expect(invite).toContainText("Suivre mon équipe →");
+    await expect(invite).toContainText("☆ Suivre");
+    await expect(invite).toHaveAttribute("href", "equipe.html");
+    // L'onglet renommé tient en entier dans la barre.
+    const onglet = page.locator('.tab-bar a[href="equipe.html"] span');
+    await expect(onglet).toHaveText("Mes équipes");
+    expect(await onglet.evaluate((e) => e.scrollWidth <= e.parentElement.clientWidth)).toBe(true);
+  });
+});
+
 test.describe("Accueil : partage des parties d'ici dimanche", () => {
   test("la feuille de partage reçoit le texte des parties", async ({ page }) => {
     await page.addInitScript(() => {
@@ -571,7 +632,7 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
   });
 });
 
-test.describe("Mon équipe : prévenir l'équipe de ses parties à jouer", () => {
+test.describe("Mes équipes : prévenir l'équipe de ses parties à jouer", () => {
   test("le message met en tête la partie à reprogrammer", async ({ page }) => {
     await page.addInitScript(() => {
       navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
