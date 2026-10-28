@@ -123,6 +123,36 @@ Les tests ne joignent jamais la vraie API. Ils ne couvrent ni l'exactitude
 des données de la ligue ni le rendu fin de chaque page : une nouvelle
 fonctionnalité ajoute son scénario dans `tests/pages.spec.mjs`.
 
+## Revue de code
+
+Claude écrit l'essentiel du code : la lecture ligne à ligne passe aux
+machines, l'attention humaine va à ce qu'elles ne peuvent pas juger.
+
+1. **Avant la PR**, Claude lance les contrôles de [`CLAUDE.md`](CLAUDE.md)
+   et en montre la sortie.
+2. **Sur chaque PR**, les tests ci-dessus, et une revue Claude
+   ([`revue-claude.yml`](.github/workflows/revue-claude.yml)) qui suit
+   [`REVIEW.md`](REVIEW.md) : constats bloquants sur leurs lignes, résumé
+   qui dit ce qu'un humain doit encore regarder.
+3. **La décision reste humaine** : la personne qui a demandé le changement
+   coche la rubrique « Décision humaine » du
+   [modèle de PR](.github/pull_request_template.md), fusionne, et en répond
+   une fois en ligne.
+4. **Après la fusion**, un revert suffit à revenir en arrière. Un bug passé
+   en production fait se demander quelle étape aurait dû l'attraper, et
+   ajoute la règle qui manquait dans `CLAUDE.md` ou `REVIEW.md`.
+
+Réglages GitHub, hors du dépôt :
+
+- **Secret** `CLAUDE_CODE_OAUTH_TOKEN` (jeton d'un abonnement Claude, donné
+  par `claude setup-token`) ou `ANTHROPIC_API_KEY`, dans Settings → Secrets
+  and variables → Actions. Sans lui, la revue Claude est sautée.
+- **Règle sur `main`** (Settings → Rules → Rulesets) : passage par une PR,
+  check `tests` obligatoire, conversations résolues avant fusion, pas de
+  force push. Pas d'approbation obligatoire : les PR sont ouvertes au nom
+  du mainteneur, qui ne peut pas approuver la sienne ; sa fusion vaut
+  approbation.
+
 ## Configuration
 
 Chaque page porte ses propres réglages en tête de son `<script>`. Les

@@ -16,6 +16,15 @@ Le [README](README.md) décrit les pages et la configuration, les specs de
 - Avant d'ouvrir la PR : `/code-review` sur le diff, `/security-review` si
   le changement touche aux données de l'API, au `localStorage` ou à la CI.
 
+## Qui décide quoi
+
+Claude écrit le code, le vérifie et corrige les constats de la revue. La
+personne qui demande le changement décide s'il vaut la peine d'être
+construit, lit les preuves (tests, captures, revue), fusionne, et reste
+responsable du changement une fois en ligne, comme si elle l'avait tapé.
+Claude ne coche jamais la rubrique « Décision humaine » d'une PR et ne
+fusionne jamais.
+
 ## Conventions
 
 - Tout en français : interface, commentaires, commits, specs.
