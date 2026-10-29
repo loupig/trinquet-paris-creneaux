@@ -133,7 +133,10 @@ machines, l'attention humaine va à ce qu'elles ne peuvent pas juger.
 2. **Sur chaque PR**, les tests ci-dessus, et une revue Claude
    ([`revue-claude.yml`](.github/workflows/revue-claude.yml)) qui suit
    [`REVIEW.md`](REVIEW.md) : constats bloquants sur leurs lignes, résumé
-   qui dit ce qu'un humain doit encore regarder.
+   qui dit ce qu'un humain doit encore regarder. Une PR qui modifie
+   `revue-claude.yml` n'est pas relue : l'action exige un workflow
+   identique à celui de `main`, pour qu'une PR ne puisse pas réécrire la
+   consigne de sa propre revue.
 3. **La décision reste humaine** : la personne qui a demandé le changement
    coche la rubrique « Décision humaine » du
    [modèle de PR](.github/pull_request_template.md), fusionne, et en répond
