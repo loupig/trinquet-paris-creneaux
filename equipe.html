@@ -1645,7 +1645,7 @@
   }
 
   function icsTexte(s) {
-    return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+    return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n?|\n/g, "\\n");
   }
 
   // Une ligne iCalendar ne dépasse pas 75 octets : la suite passe à la ligne,

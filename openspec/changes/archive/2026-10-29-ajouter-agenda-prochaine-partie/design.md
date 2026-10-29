@@ -23,7 +23,7 @@
 ## Decisions
 
 **1. Un fichier iCalendar téléchargé, via un `Blob` et un lien `download`.**
-Au toucher, on construit le texte, on en fait un `Blob` de type `text/calendar;charset=utf-8`, on crée une adresse `blob:` et on la fait télécharger par un lien `<a download="…">` temporaire. L'adresse est libérée juste après. Nom du fichier : `partie-AAAA-MM-JJ.ics`.
+Au toucher, on construit le texte, on en fait un `Blob` de type `text/calendar;charset=utf-8`, on crée une adresse `blob:` et on la fait télécharger par un lien `<a download="…">` temporaire. L'adresse est libérée une minute plus tard : Safari lit le fichier après le clic. Nom du fichier : `partie-AAAA-MM-JJ.ics`.
 Alternative écartée : un lien `data:text/calendar,…` posé d'avance dans la page. Il marche aussi, mais il faut alors construire le fichier pour chaque affichage, et Safari gère moins bien les gros liens `data:`.
 
 **2. Heure de Paris avec `TZID=Europe/Paris` et un bloc `VTIMEZONE`.**

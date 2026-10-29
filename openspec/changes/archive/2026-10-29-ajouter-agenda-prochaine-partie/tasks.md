@@ -1,6 +1,6 @@
 # Tasks
 
-Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données fictives de `tests/donnees.mjs`), et captures sur écran de Pixel 7, en thème clair et sombre.
+Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données fictives de `tests/donnees.mjs`), et captures sur écran de Pixel 7.
 
 ## 1. Fichier agenda
 
@@ -17,6 +17,6 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 ## 3. Finitions
 
 - [x] 3.1 Mettre `Version 2026.10.29` dans le pied de page de `equipe.html`.
-- [x] 3.2 Captures de la carte « Prochaine partie » sur Pixel 7, thème clair et sombre : trois boutons lisibles, sans défilement horizontal.
+- [x] 3.2 Captures de la carte « Prochaine partie » sur Pixel 7 : trois boutons lisibles, sans défilement horizontal. Mes équipes n'a pas de thème sombre (seul le compteur en a un) : pas de capture en sombre.
 - [x] 3.3 `/code-review` sur le diff et corriger les constats.
-- [ ] 3.4 Ouvrir la PR sur le modèle du dépôt, en laissant à la personne qui décide la vérification sur un vrai iPhone (Safari et mode installé) et sur Android, puis la rubrique « Décision humaine ».
+- [x] 3.4 Ouvrir la PR sur le modèle du dépôt, en laissant à la personne qui décide la vérification sur un vrai iPhone (Safari et mode installé) et sur Android, puis la rubrique « Décision humaine ».
