@@ -1,6 +1,7 @@
 // Tests « fumée » : chaque page s'ouvre sur des données fictives, sans erreur
 // JavaScript ni bandeau d'échec, et affiche l'essentiel. Plus un scénario
 // complet pour la prévision des quarts et le simulateur du Classement.
+import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import { tables, oidAVenir } from "./donnees.mjs";
 
@@ -667,6 +668,68 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     await expect(page.locator(".partage-ok")).toHaveText("Texte copié, à coller");
     const copie = await page.evaluate(() => navigator.clipboard.readText());
     expect(copie).toContain("Programme complet");
+  });
+});
+
+test.describe("Mes équipes : la prochaine partie dans l'agenda", () => {
+  // Prochaine partie de Charlie 1 dans les données fictives : il reçoit
+  // Foxtrot 1 dans quatre jours, à 19h30, au Trinquet Paris.
+  function jourIcs(decalageJours) {
+    const d = new Date();
+    d.setDate(d.getDate() + decalageJours);
+    return d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+  }
+
+  async function telechargerAgenda(page) {
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
+    await attendreChargement(page);
+    const requetes = [];
+    page.on("request", (r) => { if (/^https?:/.test(r.url())) requetes.push(r.url()); });
+    const [fichier] = await Promise.all([
+      page.waitForEvent("download"),
+      page.locator(".prochaine").getByRole("button", { name: "Ajouter à mon agenda" }).click()
+    ]);
+    expect(fichier.suggestedFilename()).toMatch(/^partie-\d{4}-\d{2}-\d{2}\.ics$/);
+    const texte = await readFile(await fichier.path(), "utf-8");
+    expect(requetes, "appels réseau au toucher").toEqual([]);
+    return texte;
+  }
+
+  test("un événement à l'heure de Paris, avec lieu et rappel la veille", async ({ page }) => {
+    const ics = await telechargerAgenda(page);
+    expect(ics).toMatch(/^BEGIN:VCALENDAR\r\n/);
+    expect(ics).toContain("BEGIN:VTIMEZONE\r\nTZID:Europe/Paris\r\n");
+    expect(ics).toContain("SUMMARY:Charlie 1 – Foxtrot 1 · Série 1\r\n");
+    expect(ics).toContain("DTSTART;TZID=Europe/Paris:" + jourIcs(4) + "T193000\r\n");
+    expect(ics).toContain("DTEND;TZID=Europe/Paris:" + jourIcs(4) + "T210000\r\n");
+    expect(ics).toContain("LOCATION:PARIS (Trinquet Paris - 75016)\r\n");
+    expect(ics).toMatch(/\r\nUID:partie-\d+@lidfpb\r\n/);
+    expect(ics).toContain("TRIGGER:-P1D\r\n");
+    // Lignes de 75 octets au plus, une fois les replis défaits l'adresse de
+    // la page de l'équipe est entière dans la description.
+    for (const ligne of ics.split("\r\n")) expect(Buffer.byteLength(ligne)).toBeLessThanOrEqual(75);
+    const deplie = ics.replace(/\r\n /g, "");
+    expect(deplie).toContain("DESCRIPTION:Série 1 · Poule 1\\nhttp://127.0.0.1:8123/equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE) + "\r\n");
+    // Aucune donnée personnelle : ni joueur ni responsable.
+    expect(ics).not.toMatch(/Joueur\d|Bixente|Responsable|0600000/);
+  });
+
+  test("une partie reportée tombe au jour du report", async ({ page }) => {
+    const reportee = structuredClone(tables.rencontres);
+    const ligne = reportee.find((r) => r["Catégorie"] === "1" && r.club_rec === "3750003" && r.club_vis === "3750006");
+    ligne.date_rep = jourIcs(6).slice(6, 8) + jourIcs(6).slice(4, 6) + jourIcs(6).slice(0, 4);
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? reportee : tables[table] || [], lastSync: new Date().toISOString() })
+      });
+    });
+    const ics = await telechargerAgenda(page);
+    expect(ics).toContain("SUMMARY:Charlie 1 – Foxtrot 1 · Série 1\r\n");
+    expect(ics).toContain("DTSTART;TZID=Europe/Paris:" + jourIcs(6) + "T193000\r\n");
   });
 });
 
