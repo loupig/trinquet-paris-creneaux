@@ -384,7 +384,7 @@
     border-radius: 20px;
     text-decoration: none;
   }
-  button.report-btn { font-family: inherit; cursor: pointer; }
+  button.report-btn { font-family: inherit; line-height: inherit; -webkit-appearance: none; appearance: none; cursor: pointer; }
   .report-btn svg { display: block; }
   .report-btn:active { opacity: 0.75; }
 
@@ -1650,10 +1650,11 @@
 
   // Une ligne iCalendar ne dépasse pas 75 octets : la suite passe à la ligne,
   // précédée d'une espace. On coupe entre deux caractères, jamais dans un accent.
+  var ENCODEUR_UTF8 = new TextEncoder();
   function icsPlier(ligne) {
-    var enc = new TextEncoder(), morceaux = [], courant = "", octets = 0;
+    var morceaux = [], courant = "", octets = 0;
     Array.from(ligne).forEach(function (ch) {
-      var n = enc.encode(ch).length;
+      var n = ch.charCodeAt(0) < 128 ? 1 : ENCODEUR_UTF8.encode(ch).length;
       if (octets + n > 75) {
         morceaux.push(courant);
         courant = " ";
@@ -1666,21 +1667,45 @@
     return morceaux.join("\r\n");
   }
 
+  // « Charlie 1 », comme le compteur nomme les équipes, plutôt que
+  // « Charlie (éq. 1) » : les deux équipes du titre se lisent pareil.
+  function nomEquipe(team) {
+    return team.clubNom + (team.numero ? " " + team.numero : "");
+  }
+
   function nomEquipeAdverse(m) {
     var nom = etat.clubMap[m.clubAdv] || ("Club " + m.clubAdv);
     return clubFictif(m.clubAdv) || !m.numAdv ? nom : nom + " " + m.numAdv;
   }
 
+  function serieEtPhase(team, m) {
+    return team.serieLabel + (m.meta ? " · " + m.meta : "");
+  }
+
+  // Identifiant de la partie dans la ligue ; sans lui, les deux équipes et la
+  // phase, jamais la date, pour qu'une partie reportée garde le même.
+  function uidPartie(team, m) {
+    if (m.oid) return "partie-" + m.oid + "@lidfpb";
+    var nous = team.clubCode + "-" + team.numero, eux = m.clubAdv + "-" + m.numAdv;
+    return ["partie", team.spec, team.cat, m.chezSoi ? nous : eux, m.chezSoi ? eux : nous, m.meta]
+      .join("-").replace(/[^A-Za-z0-9-]/g, "") + "@lidfpb";
+  }
+
   function icsPartie(team, m, maintenant, adressePage) {
-    var nous = team.clubNom + (team.numero ? " " + team.numero : "");
+    var nous = nomEquipe(team);
     var eux = nomEquipeAdverse(m);
     var titre = (m.chezSoi ? nous : eux) + " – " + (m.chezSoi ? eux : nous) + " · " + team.serieLabel;
-    var description = team.serieLabel + (m.meta ? " · " + m.meta : "") + "\n" + adressePage;
+    var description = serieEtPhase(team, m) + "\n" + adressePage;
+    var horodatage = maintenant.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
     var lignes = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LIDFPB//Trinquet Paris//FR",
       "CALSCALE:GREGORIAN", "METHOD:PUBLISH"].concat(VTIMEZONE_PARIS, [
       "BEGIN:VEVENT",
-      "UID:partie-" + (m.oid || heureMurale(m.date, m.hour, m.minute)) + "@lidfpb",
-      "DTSTAMP:" + maintenant.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""),
+      "UID:" + uidPartie(team, m),
+      "DTSTAMP:" + horodatage,
+      // Un nouvel ajout (après un report) doit l'emporter sur le précédent :
+      // la révision croît avec le temps, en minutes.
+      "SEQUENCE:" + Math.floor(maintenant.getTime() / 60000),
+      "LAST-MODIFIED:" + horodatage,
       "DTSTART;TZID=Europe/Paris:" + heureMurale(m.date, m.hour, m.minute),
       "DTEND;TZID=Europe/Paris:" + heureMurale(m.date, m.hour, m.minute, AGENDA_DUREE_MIN),
       "SUMMARY:" + icsTexte(titre)
@@ -1722,12 +1747,12 @@
     if (meta) corps.appendChild(el("div", { class: "match-meta", text: meta }));
     var boutons = el("div", { class: "prochaine-actions" });
     // Le compteur, avec les deux équipes déjà nommées, recevante d'abord.
-    var nous = team.clubNom + (team.numero ? " " + team.numero : "");
+    var nous = nomEquipe(team);
     var compteur = el("a", {
       class: "report-btn",
       href: "compteur.html?e1=" + encodeURIComponent(m.chezSoi ? nous : m.adversaire) +
         "&e2=" + encodeURIComponent(m.chezSoi ? m.adversaire : nous) +
-        "&cible=40&info=" + encodeURIComponent(team.serieLabel + (m.meta ? " · " + m.meta : ""))
+        "&cible=40&info=" + encodeURIComponent(serieEtPhase(team, m))
     });
     compteur.innerHTML = ICON_SVG_COMPTEUR;
     compteur.appendChild(el("span", { text: "Compter cette partie" }));

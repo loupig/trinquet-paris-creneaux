@@ -704,14 +704,39 @@ test.describe("Mes équipes : la prochaine partie dans l'agenda", () => {
     expect(ics).toContain("DTEND;TZID=Europe/Paris:" + jourIcs(4) + "T210000\r\n");
     expect(ics).toContain("LOCATION:PARIS (Trinquet Paris - 75016)\r\n");
     expect(ics).toMatch(/\r\nUID:partie-\d+@lidfpb\r\n/);
+    expect(ics).toMatch(/\r\nSEQUENCE:\d+\r\n/);
     expect(ics).toContain("TRIGGER:-P1D\r\n");
     // Lignes de 75 octets au plus, une fois les replis défaits l'adresse de
     // la page de l'équipe est entière dans la description.
     for (const ligne of ics.split("\r\n")) expect(Buffer.byteLength(ligne)).toBeLessThanOrEqual(75);
     const deplie = ics.replace(/\r\n /g, "");
     expect(deplie).toContain("DESCRIPTION:Série 1 · Poule 1\\nhttp://127.0.0.1:8123/equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE) + "\r\n");
-    // Aucune donnée personnelle : ni joueur ni responsable.
-    expect(ics).not.toMatch(/Joueur\d|Bixente|Responsable|0600000/);
+    // Aucune donnée personnelle : ni joueur ni responsable des données fictives.
+    for (const l of tables.licencies) {
+      expect(deplie).not.toContain(l.nom);
+      expect(deplie).not.toMatch(new RegExp("\\b" + l.prenom + "\\b"));
+    }
+    for (const e of tables.engagements) {
+      expect(deplie).not.toContain(e["Responsable"]);
+      expect(deplie.replace(/\D/g, "")).not.toContain(e["Tél1. Resp."].slice(1));
+    }
+  });
+
+  test("sans partie à venir, pas de bouton d'agenda", async ({ page }) => {
+    const jouees = tables.rencontres.filter((r) => r.club_rec !== "3750003" && r.club_vis !== "3750003" || r.score_cr !== "");
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? jouees : tables[table] || [], lastSync: new Date().toISOString() })
+      });
+    });
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
+    await attendreChargement(page);
+    await expect(page.getByText("plus de partie programmée")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ajouter à mon agenda" })).toHaveCount(0);
   });
 
   test("une partie reportée tombe au jour du report", async ({ page }) => {
