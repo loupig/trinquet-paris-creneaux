@@ -53,10 +53,9 @@ jobs:
 
             Avant d'écrire, lis les commentaires déjà postés
             (`gh pr view --comments`) : ne répète aucun constat. S'il y a
-            déjà deux résumés de revue, ne relis que les commits ajoutés
-            depuis le dernier. S'il y en a déjà trois, ne cherche plus de
-            nouveaux constats mineurs : dis si l'approche mérite d'être
-            reprise plutôt que corrigée encore.
+            déjà trois résumés de revue, ne cherche plus de nouveaux
+            constats mineurs : dis si l'approche mérite d'être reprise
+            plutôt que corrigée encore.
 
             Chaque constat bloquant va en commentaire sur sa ligne
             (mcp__github_inline_comment__create_inline_comment), avec le

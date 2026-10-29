@@ -29,8 +29,7 @@ bord du trinquet. Par ordre de gravité :
 - Un bug antérieur à la PR est marqué comme tel, pas imputé à l'auteur.
 - Signaler la classe de bug (« les trois pages qui portent `PTS_VICTOIRE` »),
   pas une seule ligne, pour tout corriger en une fois.
-- Ne pas répéter un constat déjà posté. Après le deuxième passage, ne relire
-  que le nouveau diff.
+- Ne pas répéter un constat déjà posté.
 - Le résumé commence par le nombre de constats bloquants, et dit
   clairement « rien à corriger » quand c'est le cas.
 

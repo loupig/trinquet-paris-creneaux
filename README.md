@@ -133,7 +133,10 @@ machines, l'attention humaine va à ce qu'elles ne peuvent pas juger.
 2. **Sur chaque PR**, les tests ci-dessus, et une revue Claude
    ([`revue-claude.yml`](.github/workflows/revue-claude.yml)) qui suit
    [`REVIEW.md`](REVIEW.md) : constats bloquants sur leurs lignes, résumé
-   qui dit ce qu'un humain doit encore regarder.
+   qui dit ce qu'un humain doit encore regarder. Une PR qui modifie
+   `revue-claude.yml` n'est pas relue : l'action exige un workflow
+   identique à celui de `main`, pour qu'une PR ne puisse pas réécrire la
+   consigne de sa propre revue.
 3. **La décision reste humaine** : la personne qui a demandé le changement
    coche la rubrique « Décision humaine » du
    [modèle de PR](.github/pull_request_template.md), fusionne, et en répond
@@ -186,6 +189,8 @@ Clés `localStorage` :
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
+| `lidfpb_theme_v1` | Pages chargeant `fetes.js` (choix fait sur l'accueil) | Habillage de fête choisi : Halloween, Toussaint ou aucun |
+| `lidfpb_fete_phrase_<fête>` | Pages chargeant `fetes.js` | Rang de la prochaine phrase de la fête, pour ne pas répéter la même. Sans suffixe `_v1`, antérieure à la règle |
 
 ## Temps de chargement
 
