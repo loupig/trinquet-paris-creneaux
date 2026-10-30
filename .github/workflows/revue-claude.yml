@@ -32,7 +32,7 @@ jobs:
       - name: Revue sautée, faute de secret
         if: env.CLE_CLAUDE != 'true'
         run: echo "::notice::Ni CLAUDE_CODE_OAUTH_TOKEN ni ANTHROPIC_API_KEY dans les secrets du dépôt, pas de revue Claude."
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.CLE_CLAUDE == 'true'
         with:
           fetch-depth: 1
