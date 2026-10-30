@@ -73,3 +73,10 @@ Un scénario passe la page du clair au sombre avec `emulateMedia` sans la rechar
 ## Migration Plan
 
 Aucune migration : site statique, déploiement par push sur `main`. Retour arrière par `git revert`. Aucune clé `localStorage` n'est créée.
+
+## Écarts constatés à la mise en œuvre
+
+- **Variables de rôle** : `--surface-2` et `--surface-3` (squelettes de chargement), `--verre` et `--verre-bord` (le fond et le bord du verre n'ont pas la même valeur en sombre), `--ombre-rgb` (pour garder l'opacité de chaque ombre), `--sur-accent` (texte posé sur une couleur pleine : blanc en clair, quasi noir en sombre, car ces couleurs s'éclaircissent), `--vert-wa` (bouton WhatsApp, foncé en sombre pour un contraste de 4,5:1). Le Classement et Découvrir ont leurs propres variables pour leurs couleurs propres (médailles, blocs foncés `--fort-*`, voile du menu, titre en dégradé).
+- **Compteur** : la palette claire s'écrit pour `:root, .fs:not(.sombre)`, et `.fs.sombre` reprend la palette sombre. Ainsi le plein écran suit son bouton quel que soit le réglage du téléphone.
+- **Test d'audit** : Chromium rend un `color-mix()` en `color(srgb …)`, que l'audit lit aussi. Découvrir est parcourue avant l'audit, car ses sections n'apparaissent qu'au défilement.
+- **Hors d'atteinte** : l'écran de lancement de l'application installée sur Android prend la couleur `background_color` du manifeste, qui ne peut pas dépendre du thème. Il reste clair un instant.

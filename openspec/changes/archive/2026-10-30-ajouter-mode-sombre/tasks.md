@@ -34,7 +34,7 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 - [x] 5.2 README : décrire le thème sombre (dans « Choix assumés » : suit le téléphone, sans bouton) et la règle « couleur nouvelle = variable avec sa valeur sombre ». Ajouter cette règle aux conventions de CLAUDE.md. Vérifier : relecture, et aucune contradiction avec la spec `apparence`.
 - [x] 5.3 `npm test` complet et sortie montrée. Captures sombres des 9 pages sur Pixel 7, y compris l'état « échec du chargement » de l'accueil.
 - [x] 5.4 `/code-review` sur le diff et corriger les constats.
-- [ ] 5.5 Archiver le changement (`/opsx:archive`) dans la même PR, comme pour l'agenda : spec `apparence` créée, spec `compteur` à jour. Vérifier : `openspec validate --specs --strict` passe.
+- [x] 5.5 Archiver le changement (`/opsx:archive`) dans la même PR, comme pour l'agenda : spec `apparence` créée, spec `compteur` à jour. Vérifier : `openspec validate --specs --strict` passe.
 - [ ] 5.6 Ouvrir la PR sur le modèle du dépôt. Laisser à la personne qui décide la vérification sur un vrai iPhone (Safari et installé : barre d'état) et sur Android, puis la rubrique « Décision humaine ».
 
 ## Workflow follow-up
