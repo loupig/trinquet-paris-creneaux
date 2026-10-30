@@ -33,7 +33,7 @@ fusionne jamais.
   `QUALIFIES_PAR_POULE`…) restent identiques dans les pages qui les portent.
 - Page modifiée : mettre à jour `Version AAAA.MM.JJ` dans son pied de page
   (`.2`, `.3`… pour une deuxième mise en ligne le même jour).
-- `fetes.js` modifié : changer son `?v=` dans chaque page qui le charge.
+- Script partagé (`.js` à la racine) modifié : changer son `?v=` dans chaque page qui le charge.
 - Comportement modifié : mettre la spec à jour dans le même changement
   (OpenSpec, `/opsx:propose` pour un changement qui mérite d'être cadré).
 - Clé `localStorage` nouvelle ou changée : préfixe `lidfpb_`, suffixe de

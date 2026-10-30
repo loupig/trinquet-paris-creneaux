@@ -18,7 +18,7 @@ bord du trinquet. Par ordre de gravité :
    dans la page, adresse, date de naissance, ou donnée réelle dans les tests
    ou une capture. Le dépôt est public.
 4. **Un oubli de mise en ligne** : version du pied de page non changée,
-   `?v=` de `fetes.js` non changé, spec ou README contredit par le code.
+   `?v=` d'un script partagé non changé, spec ou README contredit par le code.
 
 ## Comment rapporter
 

@@ -21,7 +21,7 @@ for (const fichier of readdirSync(".").filter((f) => f.endsWith(".html")).sort()
   });
   console.log(`${erreurs ? "…" : "✓"} ${fichier} : ${scripts.length} script(s)`);
 }
-// Les scripts partagés entre pages, comme fetes.js.
+// Les scripts partagés entre pages (.js à la racine), s'il y en a.
 for (const fichier of readdirSync(".").filter((f) => f.endsWith(".js")).sort()) {
   try {
     new Script(readFileSync(fichier, "utf8"), { filename: fichier });
