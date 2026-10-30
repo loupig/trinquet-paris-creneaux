@@ -12,10 +12,10 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 ## 2. Pages de l'application
 
 - [x] 2.1 `equipe.html` (Mes équipes), même méthode qu'en 1.3. Vérifier : test sombre de la page vert, capture claire identique, capture sombre relue (carte « Prochaine partie », boutons, partage WhatsApp).
-- [ ] 2.2 `programme.html` (Parties). Vérifier : test sombre vert (dont étiquettes Série 1 et Série 2 distinctes et lisibles), capture claire identique, liste des filtres en sombre.
-- [ ] 2.3 `classement.html`. Vérifier : test sombre vert, capture claire identique, capture sombre du tableau, des quarts et du simulateur.
-- [ ] 2.4 `creneaux.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
-- [ ] 2.5 `report.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
+- [x] 2.2 `programme.html` (Parties). Vérifier : test sombre vert (dont étiquettes Série 1 et Série 2 distinctes et lisibles), capture claire identique, liste des filtres en sombre.
+- [x] 2.3 `classement.html`. Vérifier : test sombre vert, capture claire identique, capture sombre du tableau, des quarts et du simulateur.
+- [x] 2.4 `creneaux.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
+- [x] 2.5 `report.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
 - [ ] 2.6 Test « palette identique » : les variables sombres ont les mêmes valeurs dans les sept pages qui les portent. Vérifier : il passe, puis échoue si l'on change une valeur dans une seule page.
 
 ## 3. Compteur

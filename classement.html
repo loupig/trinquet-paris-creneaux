@@ -6,7 +6,8 @@
 <title>Classement des poules — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -37,6 +38,73 @@
     --win-text: #1e7a43;
     --loss-text: #b3261e;
     --accent: #2f5ce0;
+    --surface-2: #f6f6f8;
+    --surface-3: #ececef;
+    --verre: rgba(255, 255, 255, 0.55);
+    --verre-bord: rgba(255, 255, 255, 0.55);
+    --ombre-rgb: 26, 26, 46;
+    --vert: #009B48;
+    --win-bg: #e3f4ea;
+    --win-border: #b9e2c8;
+    --or-text: #8a6d0b;
+    --or-bg: #fbf0cd;
+    --argent-text: #5f636b;
+    --argent-bg: #eceef1;
+    --bronze-text: #8a5524;
+    --bronze-bg: #f6e6d8;
+    --fort-bg: #1a1a2e;
+    --fort-text: #fff;
+    --sim-bg: #fbfcff;
+    --fort-bord: #1a1a2e;
+    --sur-accent: #fff;
+  }
+  /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
+     valeurs dans chaque page qui porte ces variables. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #121318;
+      --card-bg: #1c1d24;
+      --text: #e8e9ee;
+      --muted: #a0a3b0;
+      --border: #2e303a;
+      --serie1-bg: #10302c;
+      --serie1-text: #5eead4;
+      --serie1-border: #1f4a44;
+      --serie2-bg: #33240f;
+      --serie2-text: #fbbf6a;
+      --serie2-border: #57401c;
+      --accent-bg: #1c2440;
+      --accent-border: #34407a;
+      --warn-bg: #2e2610;
+      --warn-text: #f3d27a;
+      --warn-border: #5a4a1a;
+      --error-bg: #3a1517;
+      --error-text: #ff9a94;
+      --error-border: #6a2a2a;
+      --win-text: #4ade80;
+      --loss-text: #ff8a80;
+      --accent: #8ba6ff;
+      --surface-2: #24252e;
+      --surface-3: #2c2d37;
+      --verre: rgba(36, 37, 46, 0.6);
+      --verre-bord: rgba(255, 255, 255, 0.08);
+      --ombre-rgb: 0, 0, 0;
+      --vert: #2fd17a;
+      --win-bg: #12301f;
+      --win-border: #1f5235;
+      --or-text: #f3d27a;
+      --or-bg: #3a2f0d;
+      --argent-text: #d4d7de;
+      --argent-bg: #2c2e36;
+      --bronze-text: #f0b27a;
+      --bronze-bg: #3a2618;
+      --fort-bg: #2c2d37;
+      --fort-text: #e8e9ee;
+      --sim-bg: #1a1f30;
+      --fort-bord: #6b6f80;
+      --sur-accent: #121318;
+    }
   }
 
   * { box-sizing: border-box; }
@@ -109,7 +177,7 @@
     padding: 9px 14px;
     border-radius: 20px;
     text-decoration: none;
-    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.22);
+    box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
   .ligue-btn:active { opacity: 0.85; }
   .header-actions { display: flex; align-items: center; gap: 8px; }
@@ -126,11 +194,11 @@
   .pill-btn span { line-height: 1; }
   .icon-btn, .pill-btn {
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--verre-bord);
+    background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.16);
+    box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.16);
     color: var(--accent);
     text-decoration: none;
     cursor: pointer;
@@ -145,7 +213,7 @@
     padding: 0;
   }
   .icon-btn:active { opacity: 0.75; }
-  .icon-btn.calc { color: #009B48; }
+  .icon-btn.calc { color: var(--vert); }
   .icon-btn.calc.on { background: #009B48; border-color: #009B48; color: #fff; }
 
   /* --- Barre d'onglets flottante, verre dépoli facon iOS --- */
@@ -160,11 +228,11 @@
     gap: 2px;
     padding: 6px;
     border-radius: 26px;
-    background: rgba(255, 255, 255, 0.55);
+    background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: 0 6px 24px rgba(26, 26, 46, 0.16);
+    border: 1px solid var(--verre-bord);
+    box-shadow: 0 6px 24px rgba(var(--ombre-rgb), 0.16);
     z-index: 60;
   }
   .tab-bar a {
@@ -261,7 +329,7 @@
     font-weight: 600;
     color: var(--text);
     width: 100%;
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 9px 10px;
@@ -271,7 +339,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--muted);
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 6px 12px;
@@ -339,9 +407,9 @@
   /* Podium : la couleur porte le rang, pas une icône. Les trois teintes sont
      assombries par rapport à l'or, l'argent et le bronze usuels, qui passent
      mal en petit sur fond blanc. */
-  .rank-row.or .rank-pos { color: #8a6d0b; background: #fbf0cd; }
-  .rank-row.argent .rank-pos { color: #5f636b; background: #eceef1; }
-  .rank-row.bronze .rank-pos { color: #8a5524; background: #f6e6d8; }
+  .rank-row.or .rank-pos { color: var(--or-text); background: var(--or-bg); }
+  .rank-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
+  .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
   .rank-main { flex: 1 1 auto; min-width: 0; }
   .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
   .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
@@ -382,11 +450,11 @@
     color: var(--warn-text);
     background: var(--warn-bg);
   }
-  .poule-head .statut.final { color: var(--win-text); background: #e3f4ea; }
+  .poule-head .statut.final { color: var(--win-text); background: var(--win-bg); }
   /* Les quarts ne sont pas un classement de plus : en-tête plein et affiche
      face à face, pour qu'on les trouve sans lire les poules. */
-  .finales-card { border: 2px solid var(--text); }
-  .finales-card .poule-head { background: var(--text); color: #fff; border-bottom: none; }
+  .finales-card { border: 2px solid var(--fort-bord); }
+  .finales-card .poule-head { background: var(--fort-bg); color: var(--fort-text); border-bottom: none; }
   .finales-card .poule-head .poule-sub { color: rgba(255, 255, 255, 0.7); }
   /* Tableau final : les quarts à gauche, chacun ses deux équipes l'une sur
      l'autre, et à droite l'arbre qui les mène aux demies puis à la finale.
@@ -405,7 +473,7 @@
     border-top: 1px solid var(--border);
   }
   .quart-row:first-of-type { border-top: none; }
-  .quart-row.moitie { border-top: 2px solid var(--text); }
+  .quart-row.moitie { border-top: 2px solid var(--fort-bord); }
   .quart-num { font-size: 10px; font-weight: 900; color: var(--accent); }
   .quart-side {
     display: flex;
@@ -464,12 +532,12 @@
     white-space: nowrap;
   }
   .arbre-etape.mien { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
-  .arbre-etape.finale { background: var(--text); border-color: var(--text); color: #fff; }
+  .arbre-etape.finale { background: var(--fort-bg); border-color: var(--fort-bg); color: var(--fort-text); }
   .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
 
   /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
      résultat. En tête, ce que la simulation change pour mes équipes. */
-  .sim-card { border: 1.5px dashed var(--accent-border); background: #fbfcff; }
+  .sim-card { border: 1.5px dashed var(--accent-border); background: var(--sim-bg); }
   .sim-toggle {
     display: flex;
     align-items: center;
@@ -491,22 +559,22 @@
     flex: none;
     font-size: 11px;
     font-weight: 800;
-    color: #fff;
+    color: var(--sur-accent);
     background: var(--accent);
     border-radius: 20px;
     padding: 2px 8px;
     font-variant-numeric: tabular-nums;
   }
-  .sim-compteur.zero { color: var(--accent); background: #fff; border: 1px solid var(--accent-border); }
+  .sim-compteur.zero { color: var(--accent); background: var(--card-bg); border: 1px solid var(--accent-border); }
   .sim-toggle svg { flex: none; transition: transform 0.18s ease; }
   .sim-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
 
-  .sim-impact { padding: 10px 14px; border-top: 1px solid var(--accent-border); background: #fff; }
+  .sim-impact { padding: 10px 14px; border-top: 1px solid var(--accent-border); background: var(--card-bg); }
   .sim-impact-ligne { font-size: 12px; line-height: 1.4; }
   .sim-impact-ligne + .sim-impact-ligne { margin-top: 6px; }
   .sim-impact-ligne b { font-weight: 800; }
   .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
-  .sim-impact-ligne .verdict.ok { color: var(--win-text); background: #e3f4ea; }
+  .sim-impact-ligne .verdict.ok { color: var(--win-text); background: var(--win-bg); }
   .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
   .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
   .sim-impact-ligne .montrer { margin-top: 6px; }
@@ -517,7 +585,7 @@
   .sim-match {
     margin: 8px 0;
     padding: 8px 10px 10px;
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 10px;
   }
@@ -564,7 +632,7 @@
     padding: 6px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: #fff;
+    background: var(--card-bg);
     font: inherit;
     font-size: 13px;
     font-weight: 600;
@@ -574,7 +642,7 @@
   }
   .sim-pick .nom { flex: 1 1 auto; min-width: 0; }
   .sim-pick .marque { flex: none; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; }
-  .sim-pick.gagne { color: var(--win-text); border-color: #b9e2c8; background: #e3f4ea; font-weight: 800; }
+  .sim-pick.gagne { color: var(--win-text); border-color: var(--win-border); background: var(--win-bg); font-weight: 800; }
   .sim-pick.perd { color: var(--muted); background: var(--bg); }
   .sim-pick.suivie .nom { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
   .sim-score {
@@ -584,7 +652,7 @@
     padding: 6px 4px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: #fff;
+    background: var(--card-bg);
     font: inherit;
     font-size: 16px;
     font-weight: 800;
@@ -599,7 +667,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--loss-text);
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--error-border);
     border-radius: 20px;
     padding: 6px 12px;
@@ -611,9 +679,9 @@
     font: inherit;
     font-size: 12px;
     font-weight: 700;
-    color: #fff;
-    background: var(--text);
-    border: 1px solid var(--text);
+    color: var(--fort-text);
+    background: var(--fort-bg);
+    border: 1px solid var(--fort-bg);
     border-radius: 20px;
     padding: 6px 12px;
     cursor: pointer;
@@ -641,7 +709,7 @@
   .skeleton-bar {
     height: 12px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #ececef 25%, #f6f6f8 37%, #ececef 63%);
+    background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 37%, var(--surface-3) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease-in-out infinite;
   }
@@ -669,14 +737,14 @@
     border-radius: 50%;
     border: none;
     background: var(--accent);
-    color: #fff;
+    color: var(--sur-accent);
     font-size: 18px;
     line-height: 1;
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
-  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 13px; font-weight: 700; background: var(--text); }
+  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 13px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
   .fab-btn[hidden] { display: none; }
 
 

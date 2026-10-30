@@ -804,7 +804,13 @@ test.describe("Mes équipes : prévenir l'équipe de ses parties à jouer", () =
 // lisibles (4,5:1, 3:1 pour les grands titres), aucun bloc resté blanc.
 async function auditSombre(page, exceptionsBlanc = []) {
   return page.evaluate((exceptions) => {
+    // Chromium rend rgb()/rgba(), et color(srgb …) en 0..1 pour un color-mix().
     function rgba(c) {
+      const srgb = c.match(/color\(srgb ([^)]+)\)/);
+      if (srgb) {
+        const v = srgb[1].split(/[\s/]+/).filter(Boolean).map(Number);
+        return { r: v[0] * 255, g: v[1] * 255, b: v[2] * 255, a: v.length > 3 ? v[3] : 1 };
+      }
       const m = c.match(/rgba?\(([^)]+)\)/);
       if (!m) return null;
       const v = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
@@ -898,4 +904,16 @@ test.describe("Thème sombre", () => {
       expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
     });
   }
+
+  test("Classement en sombre : simulateur ouvert, résultat choisi, bandeau de simulation", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const sim = page.locator(".sim-card").first();
+    await sim.locator(".sim-toggle").click();
+    await sim.locator(".sim-match").first().locator(".sim-pick").first().click();
+    await expect(page.locator("#sim-slot")).toContainText("Simulation en cours");
+    const audit = await auditSombre(page);
+    expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
+    expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
+  });
 });
