@@ -6,7 +6,8 @@
 <title>Mes équipes — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -37,6 +38,51 @@
     --win-text: #1e7a43;
     --loss-text: #b3261e;
     --accent: #2f5ce0;
+    --surface-2: #f6f6f8;
+    --surface-3: #ececef;
+    --verre: rgba(255, 255, 255, 0.55);
+    --verre-bord: rgba(255, 255, 255, 0.55);
+    --ombre-rgb: 26, 26, 46;
+    --vert: #009B48;
+    --sur-accent: #fff;
+    --vert-wa: #1f9d55;
+  }
+  /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
+     valeurs dans chaque page qui porte ces variables. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #121318;
+      --card-bg: #1c1d24;
+      --text: #e8e9ee;
+      --muted: #a0a3b0;
+      --border: #2e303a;
+      --serie1-bg: #10302c;
+      --serie1-text: #5eead4;
+      --serie1-border: #1f4a44;
+      --serie2-bg: #33240f;
+      --serie2-text: #fbbf6a;
+      --serie2-border: #57401c;
+      --accent-bg: #1c2440;
+      --accent-border: #34407a;
+      --warn-bg: #2e2610;
+      --warn-text: #f3d27a;
+      --warn-border: #5a4a1a;
+      --error-bg: #3a1517;
+      --error-text: #ff9a94;
+      --error-border: #6a2a2a;
+      --win-text: #4ade80;
+      --loss-text: #ff8a80;
+      --accent: #8ba6ff;
+      --surface-2: #24252e;
+      --surface-3: #2c2d37;
+      --verre: rgba(36, 37, 46, 0.6);
+      --verre-bord: rgba(255, 255, 255, 0.08);
+      --ombre-rgb: 0, 0, 0;
+      --vert: #2fd17a;
+      --sur-accent: #121318;
+      --vert-wa: #157a40;
+    }
   }
 
   * { box-sizing: border-box; }
@@ -109,7 +155,7 @@
     padding: 9px 14px;
     border-radius: 20px;
     text-decoration: none;
-    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.22);
+    box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
   .ligue-btn:active { opacity: 0.85; }
   .header-actions { display: flex; align-items: center; gap: 8px; }
@@ -126,11 +172,11 @@
   .pill-btn span { line-height: 1; }
   .icon-btn, .pill-btn {
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--verre-bord);
+    background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.16);
+    box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.16);
     color: var(--accent);
     text-decoration: none;
     cursor: pointer;
@@ -145,7 +191,7 @@
     padding: 0;
   }
   .icon-btn:active { opacity: 0.75; }
-  .icon-btn.calc { color: #009B48; }
+  .icon-btn.calc { color: var(--vert); }
   .icon-btn.calc.on { background: #009B48; border-color: #009B48; color: #fff; }
 
   /* --- Barre d'onglets flottante, verre dépoli facon iOS --- */
@@ -160,11 +206,11 @@
     gap: 2px;
     padding: 6px;
     border-radius: 26px;
-    background: rgba(255, 255, 255, 0.55);
+    background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: 0 6px 24px rgba(26, 26, 46, 0.16);
+    border: 1px solid var(--verre-bord);
+    box-shadow: 0 6px 24px rgba(var(--ombre-rgb), 0.16);
     z-index: 60;
   }
   .tab-bar a {
@@ -225,14 +271,14 @@
     font-size: 12px;
     font-weight: 700;
     color: var(--accent);
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--accent-border);
     border-radius: 20px;
     padding: 5px 12px;
     cursor: pointer;
     white-space: nowrap;
   }
-  .suivre-btn[aria-pressed="true"] { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .suivre-btn[aria-pressed="true"] { color: var(--sur-accent); background: var(--accent); border-color: var(--accent); }
   .suivre-btn:active { opacity: 0.75; }
   .suivre-aide { padding: 0 14px 10px; margin: 0; font-size: 11px; color: var(--muted); line-height: 1.45; }
   /* Les équipes suivies, pour passer de l'une à l'autre d'un geste. */
@@ -295,7 +341,7 @@
     width: 18px;
     height: 18px;
     color: var(--accent);
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--accent-border);
     border-radius: 5px;
     text-decoration: none;
@@ -336,7 +382,7 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 9px 10px;
@@ -402,7 +448,7 @@
     border-radius: 50%;
     font-size: 10px;
     font-weight: 800;
-    color: #fff;
+    color: var(--sur-accent);
   }
   .forme-res.v { background: var(--win-text); }
   .forme-res.d { background: var(--loss-text); }
@@ -460,7 +506,7 @@
     text-decoration: none;
     cursor: pointer;
   }
-  .prevenir-btn.wa { color: #fff; background: #1f9d55; border-color: #1f9d55; }
+  .prevenir-btn.wa { color: #fff; background: var(--vert-wa); border-color: var(--vert-wa); }
   .prevenir-btn svg { display: block; }
   .prevenir-btn:active { opacity: 0.75; }
   .prevenir-ok { font-size: 11px; font-weight: 600; color: var(--muted); }
@@ -481,7 +527,7 @@
   .skeleton-bar {
     height: 12px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #ececef 25%, #f6f6f8 37%, #ececef 63%);
+    background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 37%, var(--surface-3) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease-in-out infinite;
   }
@@ -509,7 +555,7 @@
     border-radius: 50%;
     border: none;
     background: var(--accent);
-    color: #fff;
+    color: var(--sur-accent);
     font-size: 18px;
     line-height: 1;
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);

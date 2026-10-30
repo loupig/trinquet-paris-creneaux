@@ -11,7 +11,7 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 
 ## 2. Pages de l'application
 
-- [ ] 2.1 `equipe.html` (Mes équipes), même méthode qu'en 1.3. Vérifier : test sombre de la page vert, capture claire identique, capture sombre relue (carte « Prochaine partie », boutons, partage WhatsApp).
+- [x] 2.1 `equipe.html` (Mes équipes), même méthode qu'en 1.3. Vérifier : test sombre de la page vert, capture claire identique, capture sombre relue (carte « Prochaine partie », boutons, partage WhatsApp).
 - [ ] 2.2 `programme.html` (Parties). Vérifier : test sombre vert (dont étiquettes Série 1 et Série 2 distinctes et lisibles), capture claire identique, liste des filtres en sombre.
 - [ ] 2.3 `classement.html`. Vérifier : test sombre vert, capture claire identique, capture sombre du tableau, des quarts et du simulateur.
 - [ ] 2.4 `creneaux.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
