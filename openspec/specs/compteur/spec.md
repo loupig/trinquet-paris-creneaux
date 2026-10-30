@@ -18,7 +18,7 @@ La page SHALL laisser nommer librement les deux équipes, en 24 caractères au p
 - **THEN** le bouton de score affiche « Équipe 2 »
 
 ### Requirement: Couleurs d'équipe
-Chaque équipe SHALL prendre le rouge ou le vert de l'ikurriña, ou, en dernier choix, une couleur libre prise au sélecteur du téléphone. Seules ces trois pastilles sont proposées ; une partie enregistrée avec le blanc ou le noir, proposés auparavant, les garde, sous la pastille de couleur libre. Par défaut, la première équipe est rouge et la seconde verte. Choisir le rouge ou le vert de l'autre équipe MUST échanger les couleurs des deux équipes, et une couleur libre identique à celle de l'autre équipe fait changer l'autre, pour que deux équipes n'aient jamais la même couleur. Une couleur libre trop proche de celle de l'autre équipe n'est pas interdite, mais un avertissement le signale. Pour le texte, les bordures et les courbes, le blanc s'affiche en gris et le vert en vert foncé, et une couleur libre trop claire est foncée jusqu'à rester lisible sur fond blanc (éclaircie sur le fond noir du thème sombre).
+Chaque équipe SHALL prendre le rouge ou le vert de l'ikurriña, ou, en dernier choix, une couleur libre prise au sélecteur du téléphone. Seules ces trois pastilles sont proposées ; une partie enregistrée avec le blanc ou le noir, proposés auparavant, les garde, sous la pastille de couleur libre. Par défaut, la première équipe est rouge et la seconde verte. Choisir le rouge ou le vert de l'autre équipe MUST échanger les couleurs des deux équipes, et une couleur libre identique à celle de l'autre équipe fait changer l'autre, pour que deux équipes n'aient jamais la même couleur. Une couleur libre trop proche de celle de l'autre équipe n'est pas interdite, mais un avertissement le signale. Pour le texte, les bordures et les courbes, le blanc s'affiche en gris et le vert en vert foncé, et une couleur libre trop claire est foncée jusqu'à rester lisible sur fond blanc. Sur fond sombre, celui du plein écran sombre comme celui de la page quand le téléphone est réglé en sombre, ces couleurs MUST être éclaircies pour rester lisibles, et le noir devient gris clair.
 
 #### Scenario: Choisir la couleur de l'adversaire
 - **WHEN** l'équipe 1 est rouge, l'équipe 2 verte, et le visiteur choisit le vert pour l'équipe 1
@@ -35,6 +35,10 @@ Chaque équipe SHALL prendre le rouge ou le vert de l'ikurriña, ou, en dernier 
 #### Scenario: Couleurs voisines
 - **WHEN** les deux équipes ont deux violets très proches
 - **THEN** un avertissement signale que le score et le graphe seront difficiles à distinguer
+
+#### Scenario: Page du compteur en sombre
+- **WHEN** le téléphone est réglé en sombre et le compteur est ouvert hors plein écran, avec une équipe en vert
+- **THEN** le nom, le score et la courbe de cette équipe sont tracés dans un vert clair lisible sur le fond sombre de la page
 
 ### Requirement: Partie ouverte depuis Parties ou Mes équipes
 Ouverte par « Compter cette partie », la page SHALL reprendre les deux équipes, le score à atteindre et la partie (« Série 1 · Poule 2 ») transmis par le lien, sans interroger l'API de la ligue. « Club (éq. 2) » devient « Club 2 », et un nom est coupé à 24 caractères. La partie s'affiche au-dessus des réglages, et elle ouvre le message partagé. Le lien MUST ne servir qu'une fois : il est retiré de l'adresse, et un rechargement ne repose pas la question. Si une autre partie a déjà des points, elle MUST NOT être effacée sans le demander : un encart dans la page propose de compter la nouvelle partie, en effaçant le score en cours, ou de garder la partie en cours. Si c'est la même partie, elle reprend là où elle en était. « Nouvelle partie » oublie la partie de championnat.

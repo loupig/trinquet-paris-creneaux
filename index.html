@@ -6,7 +6,8 @@
 <title>Trinquet Paris & championnats — LIDFPB</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -35,6 +36,45 @@
     --error-text: #8a1c16;
     --error-border: #f5c2c0;
     --accent: #2f5ce0;
+    --surface-2: #f6f6f8;
+    --surface-3: #ececef;
+    --verre: rgba(255, 255, 255, 0.55);
+    --verre-bord: rgba(255, 255, 255, 0.55);
+    --ombre-rgb: 26, 26, 46;
+    --vert: #009B48;
+  }
+  /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
+     valeurs dans chaque page qui porte ces variables. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #121318;
+      --card-bg: #1c1d24;
+      --text: #e8e9ee;
+      --muted: #a0a3b0;
+      --border: #2e303a;
+      --serie1-bg: #10302c;
+      --serie1-text: #5eead4;
+      --serie1-border: #1f4a44;
+      --serie2-bg: #33240f;
+      --serie2-text: #fbbf6a;
+      --serie2-border: #57401c;
+      --accent-bg: #1c2440;
+      --accent-border: #34407a;
+      --warn-bg: #2e2610;
+      --warn-text: #f3d27a;
+      --warn-border: #5a4a1a;
+      --error-bg: #3a1517;
+      --error-text: #ff9a94;
+      --error-border: #6a2a2a;
+      --accent: #8ba6ff;
+      --surface-2: #24252e;
+      --surface-3: #2c2d37;
+      --verre: rgba(36, 37, 46, 0.6);
+      --verre-bord: rgba(255, 255, 255, 0.08);
+      --ombre-rgb: 0, 0, 0;
+      --vert: #2fd17a;
+    }
   }
 
   * { box-sizing: border-box; }
@@ -97,7 +137,7 @@
     padding: 9px 14px;
     border-radius: 20px;
     text-decoration: none;
-    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.22);
+    box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
   .ligue-btn:active { opacity: 0.85; }
   .header-actions { display: flex; align-items: center; gap: 8px; }
@@ -114,11 +154,11 @@
   .pill-btn span { line-height: 1; }
   .icon-btn, .pill-btn {
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--verre-bord);
+    background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.16);
+    box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.16);
     color: var(--accent);
     text-decoration: none;
     cursor: pointer;
@@ -133,7 +173,7 @@
     padding: 0;
   }
   .icon-btn:active { opacity: 0.75; }
-  .icon-btn.calc { color: #009B48; }
+  .icon-btn.calc { color: var(--vert); }
   .icon-btn.calc.on { background: #009B48; border-color: #009B48; color: #fff; }
 
   /* --- Barre d'onglets flottante, verre dépoli facon iOS --- */
@@ -148,11 +188,11 @@
     gap: 2px;
     padding: 6px;
     border-radius: 26px;
-    background: rgba(255, 255, 255, 0.55);
+    background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: 0 6px 24px rgba(26, 26, 46, 0.16);
+    border: 1px solid var(--verre-bord);
+    box-shadow: 0 6px 24px rgba(var(--ombre-rgb), 0.16);
     z-index: 60;
   }
   .tab-bar a {
@@ -400,7 +440,7 @@
   .skeleton-bar {
     height: 12px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #ececef 25%, #f6f6f8 37%, #ececef 63%);
+    background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 37%, var(--surface-3) 63%);
     background-size: 400% 100%;
     animation: skeleton-shimmer 1.4s ease-in-out infinite;
   }
@@ -438,7 +478,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.30</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.30.2</p>
   </footer>
 </main>
 

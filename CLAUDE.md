@@ -34,6 +34,8 @@ fusionne jamais.
 - Page modifiée : mettre à jour `Version AAAA.MM.JJ` dans son pied de page
   (`.2`, `.3`… pour une deuxième mise en ligne le même jour).
 - Script partagé (`.js` à la racine) modifié : changer son `?v=` dans chaque page qui le charge.
+- Couleur nouvelle : une variable du `:root`, avec sa valeur sombre dans le
+  bloc `prefers-color-scheme: dark` de la page (spec `apparence`).
 - Comportement modifié : mettre la spec à jour dans le même changement
   (OpenSpec, `/opsx:propose` pour un changement qui mérite d'être cadré).
 - Clé `localStorage` nouvelle ou changée : préfixe `lidfpb_`, suffixe de

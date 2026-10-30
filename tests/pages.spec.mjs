@@ -798,3 +798,214 @@ test.describe("Mes équipes : prévenir l'équipe de ses parties à jouer", () =
   });
 });
 
+
+// Thème sombre : chaque page suit le réglage du téléphone (spec `apparence`).
+// Les contrôles portent sur ce que voit le visiteur : fond sombre, textes
+// lisibles (4,5:1, 3:1 pour les grands titres), aucun bloc resté blanc.
+async function auditSombre(page, exceptionsBlanc = []) {
+  return page.evaluate((exceptions) => {
+    // Chromium rend rgb()/rgba(), et color(srgb …) en 0..1 pour un color-mix().
+    function rgba(c) {
+      const srgb = c.match(/color\(srgb ([^)]+)\)/);
+      if (srgb) {
+        const v = srgb[1].split(/[\s/]+/).filter(Boolean).map(Number);
+        return { r: v[0] * 255, g: v[1] * 255, b: v[2] * 255, a: v.length > 3 ? v[3] : 1 };
+      }
+      const m = c.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const v = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+      return { r: v[0], g: v[1], b: v[2], a: v.length > 3 ? v[3] : 1 };
+    }
+    function luminance(c) {
+      const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    }
+    function contraste(a, b) {
+      const la = luminance(a), lb = luminance(b);
+      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+    // Fond réellement derrière un élément : le premier ancêtre au fond opaque
+    // (ou presque), faute de mieux le fond de la page.
+    function fondDe(el) {
+      for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+        const c = rgba(getComputedStyle(e).backgroundColor);
+        if (c && c.a >= 0.5) return c;
+      }
+      return rgba(getComputedStyle(document.documentElement).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
+    }
+    function visible(el) {
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return false;
+      for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+        const s = getComputedStyle(e);
+        if (s.display === "none" || s.visibility === "hidden" || Number(s.opacity) === 0) return false;
+      }
+      return true;
+    }
+    function nom(el) {
+      return el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") +
+        (el.classList.length ? "." + [...el.classList].join(".") : "") +
+        " « " + (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 30) + " »";
+    }
+    const fond = luminance(fondDe(document.body));
+    const contrastesFaibles = [];
+    const fondsBlancs = [];
+    for (const el of document.body.querySelectorAll("*")) {
+      if (!visible(el) || el.closest("svg")) continue;
+      const s = getComputedStyle(el);
+      const bg = rgba(s.backgroundColor);
+      if (bg && bg.a >= 0.5 && luminance(bg) > 0.75 && !exceptions.some((sel) => el.matches(sel))) fondsBlancs.push(nom(el));
+      const texte = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!texte || el.matches(":disabled, [aria-disabled=true]") || el.closest(":disabled")) continue;
+      const fg = rgba(s.color);
+      // Texte transparent : c'est un dégradé découpé dans le texte, à juger sur capture.
+      if (!fg || fg.a === 0) continue;
+      const taille = parseFloat(s.fontSize), gras = Number(s.fontWeight) >= 700;
+      const seuil = taille >= 24 || (gras && taille >= 18.66) ? 3 : 4.5;
+      const c = contraste(fg, fondDe(el));
+      if (c < seuil) contrastesFaibles.push(nom(el) + " : " + c.toFixed(2));
+    }
+    return { fond, contrastesFaibles, fondsBlancs };
+  }, exceptionsBlanc);
+}
+
+test.describe("Thème sombre", () => {
+  test.use({ colorScheme: "dark" });
+
+  // Comme les autres constantes dupliquées : une variable sombre porte la même
+  // valeur partout où elle est écrite, dans un même groupe de pages.
+  async function variablesSombres(fichiers) {
+    const valeurs = {};
+    const noter = (bloc, ou) => {
+      for (const [, nom, valeur] of bloc.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
+        if (nom.startsWith("--fs-")) continue;
+        ((valeurs[nom] ||= {})[valeur] ||= []).push(ou);
+      }
+    };
+    for (const f of fichiers) {
+      const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
+      const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/);
+      expect(bloc, `${f}.html : bloc sombre`).not.toBeNull();
+      noter(bloc[1], f);
+      // Le plein écran sombre du compteur reprend la palette sombre.
+      const fs = html.match(/\n  \.fs\.sombre \{([^}]*)\}/);
+      if (fs) noter(fs[1], f + " (plein écran sombre)");
+    }
+    return Object.entries(valeurs).filter(([, v]) => Object.keys(v).length > 1);
+  }
+
+  test("même palette sombre dans les sept pages de l'application, et entre Découvrir et la 404", async () => {
+    expect(await variablesSombres(["index", "equipe", "programme", "classement", "creneaux", "report", "compteur"]),
+      "variables sombres aux valeurs différentes selon la page").toEqual([]);
+    expect(await variablesSombres(["decouvrir", "404"]),
+      "variables sombres aux valeurs différentes entre Découvrir et la 404").toEqual([]);
+  });
+
+  test("le réglage du téléphone change, la page suit sans être rechargée", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const couleurBarre = () => page.evaluate(() =>
+      [...document.querySelectorAll('meta[name="theme-color"]')].find((m) => matchMedia(m.media).matches).content);
+    expect((await auditSombre(page)).fond).toBeGreaterThan(0.8);
+    expect(await couleurBarre()).toBe("#ffffff");
+    await page.evaluate(() => { window.__pasRecharge = true; });
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect((await auditSombre(page)).fond).toBeLessThan(0.1);
+    expect(await couleurBarre()).toBe("#1c1d24");
+    expect(await page.evaluate(() => window.__pasRecharge)).toBe(true);
+  });
+
+  const PAGES_SOMBRES = [
+    ...PAGES.map((p) => ({ ...p, api: true })),
+    { nom: "Compteur", url: "compteur.html", contenu: "#setup", blanc: [".swatch-blanc"] },
+    // Les deux traits du bouton menu sont dessinés dans la couleur du texte.
+    // Ses sections n'apparaissent qu'au défilement : on la parcourt avant l'audit.
+    { nom: "Découvrir", url: "decouvrir.html", contenu: "main", blanc: [".menu-btn span"], defiler: true },
+    { nom: "Page 404", url: "404.html", contenu: "h1", enLigne: true }
+  ];
+
+  for (const p of PAGES_SOMBRES) {
+    test(`${p.nom} en sombre : fond sombre, textes lisibles, aucun bloc blanc`, async ({ page }) => {
+      // La 404 vise les fichiers par leur chemin en ligne, sous /trinquet-paris-creneaux/.
+      if (p.enLigne) await page.route("**/trinquet-paris-creneaux/**", (route) =>
+        route.continue({ url: route.request().url().replace("/trinquet-paris-creneaux/", "/") }));
+      await page.goto(p.url);
+      if (p.api) await attendreChargement(page);
+      await expect(page.locator(p.contenu).first()).toBeVisible();
+      if (p.defiler) {
+        const hauteur = await page.evaluate(() => document.body.scrollHeight);
+        for (let y = 0; y < hauteur; y += 400) await page.mouse.wheel(0, 400);
+        await page.waitForTimeout(1200);
+      }
+      const audit = await auditSombre(page, p.blanc);
+      expect(audit.fond, "luminance du fond de la page").toBeLessThan(0.1);
+      expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
+      expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
+    });
+  }
+
+  test("Compteur en sombre : couleurs d'équipe éclaircies sur la page, et qui suivent le téléphone", async ({ page }) => {
+    await page.goto("compteur.html");
+    // Équipe 2 en vert par défaut : vert clair sur la page sombre.
+    const equipe2 = page.locator("main #scoreboard .score-team").nth(1);
+    await expect(equipe2).toHaveCSS("color", "rgb(47, 209, 122)");
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect(equipe2).toHaveCSS("color", "rgb(0, 113, 58)");
+  });
+
+  test("Compteur, téléphone en sombre : le plein écran laissé en clair reste clair", async ({ page }) => {
+    await page.goto("compteur.html");
+    const couleurBarre = () => page.evaluate(() =>
+      [...document.querySelectorAll('meta[name="theme-color"]')].find((m) => matchMedia(m.media).matches).content);
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    const fs = page.locator("#fs");
+    await expect(fs).toHaveClass(/sombre/);
+    expect(await couleurBarre()).toBe("#000000");
+    await fs.getByRole("button", { name: "Passer en thème clair" }).click();
+    await expect(fs).not.toHaveClass(/sombre/);
+    expect(await couleurBarre()).toBe("#f4f5f7");
+    // Boutons et scores du plein écran clair : sur fond clair, couleurs claires.
+    await expect(fs).toHaveCSS("background-color", "rgb(244, 245, 247)");
+    await expect(fs.locator(".score-btn").first()).toHaveCSS("background-color", "rgba(206, 17, 38, 0.08)");
+    await expect(fs.locator(".score-team").nth(1)).toHaveCSS("color", "rgb(0, 113, 58)");
+    await fs.getByRole("button", { name: "Quitter" }).click();
+    expect(await couleurBarre()).toBe("#1c1d24");
+  });
+
+  test("Compteur, téléphone en clair : le plein écran mis en sombre prend la palette sombre", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("compteur.html");
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    const fs = page.locator("#fs");
+    await fs.getByRole("button", { name: "Passer en thème sombre" }).click();
+    await expect(fs).toHaveClass(/sombre/);
+    const palette = await fs.evaluate((e) => ["--card-bg", "--accent", "--warn-bg", "--danger"]
+      .map((v) => getComputedStyle(e).getPropertyValue(v).trim()));
+    expect(palette).toEqual(["#1c1d24", "#8ba6ff", "#2e2610", "#ff8a80"]);
+    // La page derrière reste claire.
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(244, 245, 247)");
+  });
+
+  test("Découvrir en sombre : menu plein écran ouvert", async ({ page }) => {
+    await page.goto("decouvrir.html");
+    await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    await expect(page.locator("#menu")).toBeVisible();
+    await page.waitForTimeout(600);
+    const audit = await auditSombre(page, [".menu-btn span"]);
+    expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
+    expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
+  });
+
+  test("Classement en sombre : simulateur ouvert, résultat choisi, bandeau de simulation", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const sim = page.locator(".sim-card").first();
+    await sim.locator(".sim-toggle").click();
+    await sim.locator(".sim-match").first().locator(".sim-pick").first().click();
+    await expect(page.locator("#sim-slot")).toContainText("Simulation en cours");
+    const audit = await auditSombre(page);
+    expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
+    expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
+  });
+});
