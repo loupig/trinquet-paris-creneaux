@@ -117,7 +117,7 @@ lance donc sur chaque PR, et à chaque push sur `main` :
   en bout (ordre des cartes, quarts croisés, simulation)
   ([`tests/pages.spec.mjs`](tests/pages.spec.mjs)).
 
-En local (Node 20 et Python 3) :
+En local (Node 24 et Python 3) :
 
 ```
 npm install
