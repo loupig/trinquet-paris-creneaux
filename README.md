@@ -91,7 +91,7 @@ GitHub Pages redéploie automatiquement (~30s à 2min) à chaque push sur
 `main`. Penser à mettre à jour le numéro de version dans le pied de page
 (`Version AAAA.MM.JJ`, suffixée `.2`, `.3`… pour une deuxième mise en ligne
 le même jour) de chaque page modifiée : pas de build ici pour le faire
-automatiquement. Quand un script partagé change (`fetes.js`), changer aussi
+automatiquement. Quand un script partagé (`.js` à la racine) change, changer aussi
 son `?v=` dans chaque page qui le charge : GitHub Pages laisse les
 navigateurs garder les fichiers une dizaine de minutes, et une page à jour
 tournerait sinon avec l'ancien script.
@@ -189,8 +189,6 @@ Clés `localStorage` :
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
-| `lidfpb_theme_v1` | Pages chargeant `fetes.js` (choix fait sur l'accueil) | Habillage de fête choisi : Halloween, Toussaint ou aucun |
-| `lidfpb_fete_phrase_<fête>` | Pages chargeant `fetes.js` | Rang de la prochaine phrase de la fête, pour ne pas répéter la même. Sans suffixe `_v1`, antérieure à la règle |
 
 ## Temps de chargement
 
@@ -243,12 +241,6 @@ voudrait construire autre chose avec les mêmes données.
 - **Pas de fenêtre surgissante** : un popup d'accueil et un popup d'aide ont
   été retirés, leur bouton de fermeture restant bloqué chez au moins un
   utilisateur, cause jamais identifiée.
-- **Habillages de fête** (`fetes.js`) : Halloween (citrouille et blagues de
-  trinquet) et Toussaint (blanc et or, saints de France et du Pays basque),
-  seulement du 24 octobre au 1er novembre. Par défaut Halloween, puis la
-  Toussaint dès le 30 octobre ; l'accueil permet de choisir l'un, l'autre ou
-  aucun, choix gardé sur l'appareil. Hors période, rien ne s'affiche, quel
-  que soit le choix, sans rien à retirer. Absents du compteur, outil de match.
 - **Pas de service worker** : jamais de fonctionnement hors connexion, pour ne
   pas laisser un joueur bloqué sur une ancienne version mise en cache.
 - **Palette du compteur** : le rouge et le vert de l'ikurriña, plus une
