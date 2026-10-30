@@ -155,7 +155,10 @@ Réglages GitHub, hors du dépôt :
 
 - **Secret** `CLAUDE_CODE_OAUTH_TOKEN` (jeton d'un abonnement Claude, donné
   par `claude setup-token`) ou `ANTHROPIC_API_KEY`, dans Settings → Secrets
-  and variables → Actions. Sans lui, la revue Claude est sautée.
+  and variables → Actions. Sans lui, la revue Claude est sautée. Seul un
+  compte administrateur du dépôt voit l'onglet Settings : depuis un autre
+  compte GitHub, la page des secrets répond 404. Un seul des deux secrets,
+  pour savoir ce qui est facturé.
 - **Règle sur `main`** (Settings → Rules → Rulesets) : passage par une PR,
   check `tests` obligatoire, conversations résolues avant fusion, pas de
   force push. Pas d'approbation obligatoire : les PR sont ouvertes au nom
