@@ -798,3 +798,104 @@ test.describe("Mes équipes : prévenir l'équipe de ses parties à jouer", () =
   });
 });
 
+
+// Thème sombre : chaque page suit le réglage du téléphone (spec `apparence`).
+// Les contrôles portent sur ce que voit le visiteur : fond sombre, textes
+// lisibles (4,5:1, 3:1 pour les grands titres), aucun bloc resté blanc.
+async function auditSombre(page, exceptionsBlanc = []) {
+  return page.evaluate((exceptions) => {
+    function rgba(c) {
+      const m = c.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const v = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+      return { r: v[0], g: v[1], b: v[2], a: v.length > 3 ? v[3] : 1 };
+    }
+    function luminance(c) {
+      const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    }
+    function contraste(a, b) {
+      const la = luminance(a), lb = luminance(b);
+      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+    // Fond réellement derrière un élément : le premier ancêtre au fond opaque
+    // (ou presque), faute de mieux le fond de la page.
+    function fondDe(el) {
+      for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+        const c = rgba(getComputedStyle(e).backgroundColor);
+        if (c && c.a >= 0.5) return c;
+      }
+      return rgba(getComputedStyle(document.documentElement).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
+    }
+    function visible(el) {
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return false;
+      for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+        const s = getComputedStyle(e);
+        if (s.display === "none" || s.visibility === "hidden" || Number(s.opacity) === 0) return false;
+      }
+      return true;
+    }
+    function nom(el) {
+      return el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") +
+        (el.classList.length ? "." + [...el.classList].join(".") : "") +
+        " « " + (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 30) + " »";
+    }
+    const fond = luminance(fondDe(document.body));
+    const contrastesFaibles = [];
+    const fondsBlancs = [];
+    for (const el of document.body.querySelectorAll("*")) {
+      if (!visible(el) || el.closest("svg")) continue;
+      const s = getComputedStyle(el);
+      const bg = rgba(s.backgroundColor);
+      if (bg && bg.a >= 0.5 && luminance(bg) > 0.75 && !exceptions.some((sel) => el.matches(sel))) fondsBlancs.push(nom(el));
+      const texte = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!texte || el.matches(":disabled, [aria-disabled=true]") || el.closest(":disabled")) continue;
+      const fg = rgba(s.color);
+      if (!fg) continue;
+      const taille = parseFloat(s.fontSize), gras = Number(s.fontWeight) >= 700;
+      const seuil = taille >= 24 || (gras && taille >= 18.66) ? 3 : 4.5;
+      const c = contraste(fg, fondDe(el));
+      if (c < seuil) contrastesFaibles.push(nom(el) + " : " + c.toFixed(2));
+    }
+    return { fond, contrastesFaibles, fondsBlancs };
+  }, exceptionsBlanc);
+}
+
+test.describe("Thème sombre", () => {
+  test.use({ colorScheme: "dark" });
+
+  test("le réglage du téléphone change, la page suit sans être rechargée", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const couleurBarre = () => page.evaluate(() =>
+      [...document.querySelectorAll('meta[name="theme-color"]')].find((m) => matchMedia(m.media).matches).content);
+    expect((await auditSombre(page)).fond).toBeGreaterThan(0.8);
+    expect(await couleurBarre()).toBe("#ffffff");
+    await page.evaluate(() => { window.__pasRecharge = true; });
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect((await auditSombre(page)).fond).toBeLessThan(0.1);
+    expect(await couleurBarre()).toBe("#1c1d24");
+    expect(await page.evaluate(() => window.__pasRecharge)).toBe(true);
+  });
+
+  const PAGES_SOMBRES = [
+    ...PAGES.map((p) => ({ ...p, api: true })),
+    { nom: "Compteur", url: "compteur.html", contenu: "#setup", blanc: [".swatch-blanc"] },
+    { nom: "Découvrir", url: "decouvrir.html", contenu: "main" },
+    { nom: "Page 404", url: "404.html", contenu: "body" }
+  ];
+
+  for (const p of PAGES_SOMBRES) {
+    test(`${p.nom} en sombre : fond sombre, textes lisibles, aucun bloc blanc`, async ({ page }) => {
+      await page.goto(p.url);
+      if (p.api) await attendreChargement(page);
+      await expect(page.locator(p.contenu).first()).toBeVisible();
+      const audit = await auditSombre(page, p.blanc);
+      expect(audit.fond, "luminance du fond de la page").toBeLessThan(0.1);
+      expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
+      expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
+    });
+  }
+});

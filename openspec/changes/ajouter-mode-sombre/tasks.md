@@ -4,10 +4,10 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 
 ## 1. Accueil, et outils de test du sombre
 
-- [ ] 1.1 Prendre les captures de référence en clair des 9 pages sur Pixel 7, dans le scratchpad, pour comparer après chaque page. Vérifier : 9 captures présentes.
-- [ ] 1.2 Dans `tests/pages.spec.mjs`, écrire les outils du `describe` « Thème sombre » en `colorScheme: "dark"` : luminance du fond du `body`, contraste texte/fond calculé sur les styles des cartes, titres et onglets, liste des éléments visibles à fond blanc (avec exceptions nommées). Vérifier : sur l'accueil non modifié, le test échoue sur le fond clair.
-- [ ] 1.3 `index.html` : ajouter au `:root` les variables de rôle (`--surface-2`, `--verre`, `--ombre`, `--sur-accent`, `--vert`, `--rouge`) avec les valeurs claires actuelles, y reporter les couleurs en dur, ajouter le bloc `@media (prefers-color-scheme: dark)` avec la palette du design, et les deux `<meta name="theme-color">` avec `media`. Vérifier : le test sombre de l'accueil passe, et la capture en clair est identique à la référence.
-- [ ] 1.4 Scénario « le réglage change, page ouverte » sur l'accueil (`emulateMedia` du clair vers le sombre, sans recharger). Vérifier : le fond devient sombre et la balise `theme-color` sombre s'applique.
+- [x] 1.1 Prendre les captures de référence en clair des 9 pages sur Pixel 7, dans le scratchpad, pour comparer après chaque page. Vérifier : 9 captures présentes.
+- [x] 1.2 Dans `tests/pages.spec.mjs`, écrire les outils du `describe` « Thème sombre » en `colorScheme: "dark"` : luminance du fond du `body`, contraste texte/fond calculé sur les styles des cartes, titres et onglets, liste des éléments visibles à fond blanc (avec exceptions nommées). Vérifier : sur l'accueil non modifié, le test échoue sur le fond clair.
+- [x] 1.3 `index.html` : ajouter au `:root` les variables de rôle (`--surface-2`, `--verre`, `--ombre`, `--sur-accent`, `--vert`, `--rouge`) avec les valeurs claires actuelles, y reporter les couleurs en dur, ajouter le bloc `@media (prefers-color-scheme: dark)` avec la palette du design, et les deux `<meta name="theme-color">` avec `media`. Vérifier : le test sombre de l'accueil passe, et la capture en clair est identique à la référence.
+- [x] 1.4 Scénario « le réglage change, page ouverte » sur l'accueil (`emulateMedia` du clair vers le sombre, sans recharger). Vérifier : le fond devient sombre et la balise `theme-color` sombre s'applique.
 
 ## 2. Pages de l'application
 
