@@ -25,8 +25,8 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 
 ## 4. Découvrir et 404
 
-- [ ] 4.1 `decouvrir.html` : palette propre à la page (`--surface`…), variables de rôle et bloc sombre, `theme-color` double. Vérifier : test sombre vert, menu plein écran en sombre, capture claire identique.
-- [ ] 4.2 `404.html` : bloc sombre sur sa palette réduite, `theme-color` double. Vérifier : test sombre vert, capture.
+- [x] 4.1 `decouvrir.html` : palette propre à la page (`--surface`…), variables de rôle et bloc sombre, `theme-color` double. Vérifier : test sombre vert, menu plein écran en sombre, capture claire identique.
+- [x] 4.2 `404.html` : bloc sombre sur sa palette réduite, `theme-color` double. Vérifier : test sombre vert, capture.
 
 ## 5. Finitions
 

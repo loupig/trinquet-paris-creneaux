@@ -858,7 +858,8 @@ async function auditSombre(page, exceptionsBlanc = []) {
       const texte = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
       if (!texte || el.matches(":disabled, [aria-disabled=true]") || el.closest(":disabled")) continue;
       const fg = rgba(s.color);
-      if (!fg) continue;
+      // Texte transparent : c'est un dégradé découpé dans le texte, à juger sur capture.
+      if (!fg || fg.a === 0) continue;
       const taille = parseFloat(s.fontSize), gras = Number(s.fontWeight) >= 700;
       const seuil = taille >= 24 || (gras && taille >= 18.66) ? 3 : 4.5;
       const c = contraste(fg, fondDe(el));
@@ -905,15 +906,25 @@ test.describe("Thème sombre", () => {
   const PAGES_SOMBRES = [
     ...PAGES.map((p) => ({ ...p, api: true })),
     { nom: "Compteur", url: "compteur.html", contenu: "#setup", blanc: [".swatch-blanc"] },
-    { nom: "Découvrir", url: "decouvrir.html", contenu: "main" },
-    { nom: "Page 404", url: "404.html", contenu: "body" }
+    // Les deux traits du bouton menu sont dessinés dans la couleur du texte.
+    // Ses sections n'apparaissent qu'au défilement : on la parcourt avant l'audit.
+    { nom: "Découvrir", url: "decouvrir.html", contenu: "main", blanc: [".menu-btn span"], defiler: true },
+    { nom: "Page 404", url: "404.html", contenu: "h1", enLigne: true }
   ];
 
   for (const p of PAGES_SOMBRES) {
     test(`${p.nom} en sombre : fond sombre, textes lisibles, aucun bloc blanc`, async ({ page }) => {
+      // La 404 vise les fichiers par leur chemin en ligne, sous /trinquet-paris-creneaux/.
+      if (p.enLigne) await page.route("**/trinquet-paris-creneaux/**", (route) =>
+        route.continue({ url: route.request().url().replace("/trinquet-paris-creneaux/", "/") }));
       await page.goto(p.url);
       if (p.api) await attendreChargement(page);
       await expect(page.locator(p.contenu).first()).toBeVisible();
+      if (p.defiler) {
+        const hauteur = await page.evaluate(() => document.body.scrollHeight);
+        for (let y = 0; y < hauteur; y += 400) await page.mouse.wheel(0, 400);
+        await page.waitForTimeout(1200);
+      }
       const audit = await auditSombre(page, p.blanc);
       expect(audit.fond, "luminance du fond de la page").toBeLessThan(0.1);
       expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
@@ -947,6 +958,16 @@ test.describe("Thème sombre", () => {
     await expect(fs.locator(".score-team").nth(1)).toHaveCSS("color", "rgb(0, 113, 58)");
     await fs.getByRole("button", { name: "Quitter" }).click();
     expect(await couleurBarre()).toBe("#1c1d24");
+  });
+
+  test("Découvrir en sombre : menu plein écran ouvert", async ({ page }) => {
+    await page.goto("decouvrir.html");
+    await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    await expect(page.locator("#menu")).toBeVisible();
+    await page.waitForTimeout(600);
+    const audit = await auditSombre(page, [".menu-btn span"]);
+    expect(audit.contrastesFaibles, "textes sous le contraste minimal").toEqual([]);
+    expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
   });
 
   test("Classement en sombre : simulateur ouvert, résultat choisi, bandeau de simulation", async ({ page }) => {
