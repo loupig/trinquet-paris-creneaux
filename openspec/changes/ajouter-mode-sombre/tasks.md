@@ -16,12 +16,12 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 - [x] 2.3 `classement.html`. Vérifier : test sombre vert, capture claire identique, capture sombre du tableau, des quarts et du simulateur.
 - [x] 2.4 `creneaux.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
 - [x] 2.5 `report.html`. Vérifier : test sombre vert, capture claire identique, capture sombre.
-- [ ] 2.6 Test « palette identique » : les variables sombres ont les mêmes valeurs dans les sept pages qui les portent. Vérifier : il passe, puis échoue si l'on change une valeur dans une seule page.
+- [x] 2.6 Test « palette identique » : les variables sombres ont les mêmes valeurs dans les sept pages qui les portent. Vérifier : il passe, puis échoue si l'on change une valeur dans une seule page.
 
 ## 3. Compteur
 
-- [ ] 3.1 `compteur.html` : variables et bloc sombre comme en 1.3, pour la page hors plein écran. Le plein écran garde ses règles `.fs.sombre`. Vérifier : test sombre de la page vert, plein écran clair et sombre inchangés (tests existants verts).
-- [ ] 3.2 `sombreActif()` devient `pleinEcran ? sombre() : systemeSombre()`, avec un écouteur `change` sur `prefers-color-scheme` qui relance `renderAll()`. `theme-color` réécrite sur la balise du thème du téléphone en plein écran, remise en sortant. Vérifier : nouveau scénario « page du compteur en sombre », où une équipe verte a son nom et son score dans le vert clair, et qui passe.
+- [x] 3.1 `compteur.html` : variables et bloc sombre comme en 1.3, pour la page hors plein écran. Le plein écran garde ses règles `.fs.sombre`. Vérifier : test sombre de la page vert, plein écran clair et sombre inchangés (tests existants verts).
+- [x] 3.2 `sombreActif()` devient `pleinEcran ? sombre() : systemeSombre()`, avec un écouteur `change` sur `prefers-color-scheme` qui relance `renderAll()`. `theme-color` réécrite sur la balise du thème du téléphone en plein écran, remise en sortant. Vérifier : nouveau scénario « page du compteur en sombre », où une équipe verte a son nom et son score dans le vert clair, et qui passe.
 
 ## 4. Découvrir et 404
 

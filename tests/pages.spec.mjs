@@ -871,6 +871,22 @@ async function auditSombre(page, exceptionsBlanc = []) {
 test.describe("Thème sombre", () => {
   test.use({ colorScheme: "dark" });
 
+  test("même palette sombre dans les sept pages de l'application", async () => {
+    // Comme les autres constantes dupliquées : une variable sombre porte la
+    // même valeur dans chaque page qui l'a.
+    const valeurs = {};
+    for (const f of ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur"]) {
+      const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
+      const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/);
+      expect(bloc, `${f}.html : bloc sombre`).not.toBeNull();
+      for (const [, nom, valeur] of bloc[1].matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
+        (valeurs[nom] ||= {})[valeur] = [...((valeurs[nom] || {})[valeur] || []), f];
+      }
+    }
+    const divergentes = Object.entries(valeurs).filter(([, v]) => Object.keys(v).length > 1);
+    expect(divergentes, "variables sombres aux valeurs différentes selon la page").toEqual([]);
+  });
+
   test("le réglage du téléphone change, la page suit sans être rechargée", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("index.html");
@@ -904,6 +920,34 @@ test.describe("Thème sombre", () => {
       expect(audit.fondsBlancs, "blocs restés blancs").toEqual([]);
     });
   }
+
+  test("Compteur en sombre : couleurs d'équipe éclaircies sur la page, et qui suivent le téléphone", async ({ page }) => {
+    await page.goto("compteur.html");
+    // Équipe 2 en vert par défaut : vert clair sur la page sombre.
+    const equipe2 = page.locator("main #scoreboard .score-team").nth(1);
+    await expect(equipe2).toHaveCSS("color", "rgb(47, 209, 122)");
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect(equipe2).toHaveCSS("color", "rgb(0, 113, 58)");
+  });
+
+  test("Compteur, téléphone en sombre : le plein écran laissé en clair reste clair", async ({ page }) => {
+    await page.goto("compteur.html");
+    const couleurBarre = () => page.evaluate(() =>
+      [...document.querySelectorAll('meta[name="theme-color"]')].find((m) => matchMedia(m.media).matches).content);
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    const fs = page.locator("#fs");
+    await expect(fs).toHaveClass(/sombre/);
+    expect(await couleurBarre()).toBe("#000000");
+    await fs.getByRole("button", { name: "Passer en thème clair" }).click();
+    await expect(fs).not.toHaveClass(/sombre/);
+    expect(await couleurBarre()).toBe("#f4f5f7");
+    // Boutons et scores du plein écran clair : sur fond clair, couleurs claires.
+    await expect(fs).toHaveCSS("background-color", "rgb(244, 245, 247)");
+    await expect(fs.locator(".score-btn").first()).toHaveCSS("background-color", "rgba(206, 17, 38, 0.08)");
+    await expect(fs.locator(".score-team").nth(1)).toHaveCSS("color", "rgb(0, 113, 58)");
+    await fs.getByRole("button", { name: "Quitter" }).click();
+    expect(await couleurBarre()).toBe("#1c1d24");
+  });
 
   test("Classement en sombre : simulateur ouvert, résultat choisi, bandeau de simulation", async ({ page }) => {
     await page.goto("classement.html");
