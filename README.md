@@ -96,6 +96,12 @@ son `?v=` dans chaque page qui le charge : GitHub Pages laisse les
 navigateurs garder les fichiers une dizaine de minutes, et une page à jour
 tournerait sinon avec l'ancien script.
 
+Une couleur nouvelle passe par une variable du `:root` de la page, avec sa
+valeur sombre dans le bloc `@media (prefers-color-scheme: dark)` qui le
+suit. Une variable sombre garde la même valeur dans chaque page qui la
+porte : le test « même palette sombre » le vérifie pour les sept pages de
+l'application.
+
 ## Tests
 
 Pas de build ici : sans contrôle, une erreur dans une page partirait en
@@ -241,6 +247,10 @@ voudrait construire autre chose avec les mêmes données.
 - **Pas de fenêtre surgissante** : un popup d'accueil et un popup d'aide ont
   été retirés, leur bouton de fermeture restant bloqué chez au moins un
   utilisateur, cause jamais identifiée.
+- **Thème sombre sans bouton** : chaque page suit le réglage clair ou sombre
+  du téléphone, sans bouton ni choix gardé sur l'appareil. Un bouton viendra
+  si des joueurs le demandent. Seul le plein écran du compteur garde son
+  bouton Clair/Sombre, pour un tableau de score lisible à distance.
 - **Pas de service worker** : jamais de fonctionnement hors connexion, pour ne
   pas laisser un joueur bloqué sur une ancienne version mise en cache.
 - **Palette du compteur** : le rouge et le vert de l'ikurriña, plus une
