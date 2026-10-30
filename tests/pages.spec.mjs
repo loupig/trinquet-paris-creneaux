@@ -872,20 +872,33 @@ async function auditSombre(page, exceptionsBlanc = []) {
 test.describe("Thème sombre", () => {
   test.use({ colorScheme: "dark" });
 
-  test("même palette sombre dans les sept pages de l'application", async () => {
-    // Comme les autres constantes dupliquées : une variable sombre porte la
-    // même valeur dans chaque page qui l'a.
+  // Comme les autres constantes dupliquées : une variable sombre porte la même
+  // valeur partout où elle est écrite, dans un même groupe de pages.
+  async function variablesSombres(fichiers) {
     const valeurs = {};
-    for (const f of ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur"]) {
+    const noter = (bloc, ou) => {
+      for (const [, nom, valeur] of bloc.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
+        if (nom.startsWith("--fs-")) continue;
+        ((valeurs[nom] ||= {})[valeur] ||= []).push(ou);
+      }
+    };
+    for (const f of fichiers) {
       const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
       const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/);
       expect(bloc, `${f}.html : bloc sombre`).not.toBeNull();
-      for (const [, nom, valeur] of bloc[1].matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
-        (valeurs[nom] ||= {})[valeur] = [...((valeurs[nom] || {})[valeur] || []), f];
-      }
+      noter(bloc[1], f);
+      // Le plein écran sombre du compteur reprend la palette sombre.
+      const fs = html.match(/\n  \.fs\.sombre \{([^}]*)\}/);
+      if (fs) noter(fs[1], f + " (plein écran sombre)");
     }
-    const divergentes = Object.entries(valeurs).filter(([, v]) => Object.keys(v).length > 1);
-    expect(divergentes, "variables sombres aux valeurs différentes selon la page").toEqual([]);
+    return Object.entries(valeurs).filter(([, v]) => Object.keys(v).length > 1);
+  }
+
+  test("même palette sombre dans les sept pages de l'application, et entre Découvrir et la 404", async () => {
+    expect(await variablesSombres(["index", "equipe", "programme", "classement", "creneaux", "report", "compteur"]),
+      "variables sombres aux valeurs différentes selon la page").toEqual([]);
+    expect(await variablesSombres(["decouvrir", "404"]),
+      "variables sombres aux valeurs différentes entre Découvrir et la 404").toEqual([]);
   });
 
   test("le réglage du téléphone change, la page suit sans être rechargée", async ({ page }) => {
@@ -958,6 +971,20 @@ test.describe("Thème sombre", () => {
     await expect(fs.locator(".score-team").nth(1)).toHaveCSS("color", "rgb(0, 113, 58)");
     await fs.getByRole("button", { name: "Quitter" }).click();
     expect(await couleurBarre()).toBe("#1c1d24");
+  });
+
+  test("Compteur, téléphone en clair : le plein écran mis en sombre prend la palette sombre", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("compteur.html");
+    await page.getByRole("button", { name: "Plein écran" }).click();
+    const fs = page.locator("#fs");
+    await fs.getByRole("button", { name: "Passer en thème sombre" }).click();
+    await expect(fs).toHaveClass(/sombre/);
+    const palette = await fs.evaluate((e) => ["--card-bg", "--accent", "--warn-bg", "--danger"]
+      .map((v) => getComputedStyle(e).getPropertyValue(v).trim()));
+    expect(palette).toEqual(["#1c1d24", "#8ba6ff", "#2e2610", "#ff8a80"]);
+    // La page derrière reste claire.
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(244, 245, 247)");
   });
 
   test("Découvrir en sombre : menu plein écran ouvert", async ({ page }) => {

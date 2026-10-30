@@ -14,7 +14,10 @@
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-  :root {
+  /* Le plein écran laissé en clair par son bouton garde ces couleurs, même
+     sur un téléphone en sombre. */
+  :root,
+  .fs:not(.sombre) {
     color-scheme: light;
     --bg: #f4f5f7;
     --card-bg: #ffffff;
@@ -58,29 +61,6 @@
       --ombre-rgb: 0, 0, 0;
       --vert: #2fd17a;
       --sur-accent: #121318;
-    }
-    /* Plein écran laissé en clair par son bouton : il garde les couleurs
-       claires, même sur un téléphone en sombre. */
-    .fs:not(.sombre) {
-      color-scheme: light;
-      --bg: #f4f5f7;
-      --card-bg: #ffffff;
-      --text: #1a1a2e;
-      --muted: #767986;
-      --border: #e6e7eb;
-      --accent-bg: #eef1fb;
-      --accent-border: #cdd6f7;
-      --accent: #2f5ce0;
-      --warn-bg: #fff3cd;
-      --warn-text: #7a5b00;
-      --warn-border: #f0dd9a;
-      --danger: #b3261e;
-      --avertissement: #8a5a00;
-      --verre: rgba(255, 255, 255, 0.55);
-      --verre-bord: rgba(255, 255, 255, 0.55);
-      --ombre-rgb: 26, 26, 46;
-      --vert: #009B48;
-      --sur-accent: #fff;
     }
   }
 
@@ -585,6 +565,26 @@
     --fs-text: #f4f5f7;
     --fs-muted: #9b9b9b;
     --fs-border: #313131;
+    /* Palette sombre de la page, mêmes valeurs : le plein écran sombre l'est
+       aussi sur un téléphone réglé en clair. */
+    --bg: #121318;
+    --card-bg: #1c1d24;
+    --text: #e8e9ee;
+    --muted: #a0a3b0;
+    --border: #2e303a;
+    --accent-bg: #1c2440;
+    --accent-border: #34407a;
+    --accent: #8ba6ff;
+    --warn-bg: #2e2610;
+    --warn-text: #f3d27a;
+    --warn-border: #5a4a1a;
+    --danger: #ff8a80;
+    --avertissement: #f3d27a;
+    --verre: rgba(36, 37, 46, 0.6);
+    --verre-bord: rgba(255, 255, 255, 0.08);
+    --ombre-rgb: 0, 0, 0;
+    --vert: #2fd17a;
+    --sur-accent: #121318;
   }
   .fs-bar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
   .fs-bar button {
@@ -637,7 +637,6 @@
   .fs .fin .fin-score { color: var(--fs-text); }
   .fs .fin .fin-details { color: var(--fs-muted); }
   .fs .fin .action-btn.danger { background: var(--fs-surface); border-color: var(--fs-border); }
-  .fs.sombre .fin .action-btn.danger { color: #ff8a80; }
   /* En paysage, l'encart de fin se glisse à côté des scores. */
   @media (orientation: landscape) {
     .fs-slot { flex-direction: row; }
@@ -1511,7 +1510,7 @@
       indicesEgalite.filter(function (_, k) { return k % pas === 0; }).forEach(function (i) {
         s.appendChild(svg("polygon", {
           points: etoile(px(i), py(serieA[i]), 4.5),
-          fill: "var(--text)", stroke: "#fff", "stroke-width": "1.4", "stroke-linejoin": "round"
+          fill: "var(--text)", stroke: "var(--card-bg)", "stroke-width": "1.4", "stroke-linejoin": "round"
         }));
       });
     } else {
