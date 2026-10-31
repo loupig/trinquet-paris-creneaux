@@ -110,6 +110,40 @@ for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
   });
 }
 
+// Spec apparence : Manrope, des tailles prises dans l'échelle commune, aucun
+// texte affiché sous 12 px, et les champs à 16 px pour que l'iPhone ne zoome
+// pas dessus.
+for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
+  test(`${p.nom} : tailles de l'échelle, rien sous 12 px, champs à 16 px`, async ({ page }) => {
+    await page.goto(p.url);
+    if (p.contenu) await attendreChargement(page);
+    await page.evaluate(() => document.fonts.ready);
+    const t = await page.evaluate(() => {
+      const visible = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== "hidden";
+      const tailles = new Set();
+      const marche = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      while (marche.nextNode()) {
+        const e = marche.currentNode.parentElement;
+        if (!marche.currentNode.textContent.trim() || !e || !visible(e)) continue;
+        tailles.add(parseFloat(getComputedStyle(e).fontSize));
+      }
+      const champs = [...document.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=color]), select, textarea")]
+        .filter(visible).map((e) => (e.id || e.name || e.tagName) + " : " + getComputedStyle(e).fontSize)
+        .filter((s) => parseFloat(s.split(" : ")[1]) < 16);
+      return {
+        tailles: [...tailles].sort((a, b) => a - b),
+        manrope: document.fonts.check("14px Manrope"),
+        champs
+      };
+    });
+    expect(t.manrope).toBe(true);
+    // Les scores du compteur ont leurs propres tailles, au-delà de 24 px.
+    const horsEchelle = t.tailles.filter((x) => ![12, 14, 16, 18, 20, 24].includes(x) && x < 48);
+    expect(horsEchelle, "tailles hors échelle ou sous 12 px").toEqual([]);
+    expect(t.champs, "champs sous 16 px").toEqual([]);
+  });
+}
+
 // Moins d'animations demandé : les couleurs changent encore, rien ne bouge.
 test("Moins d'animations : ni chevron qui tourne, ni bouton qui s'enfonce", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
