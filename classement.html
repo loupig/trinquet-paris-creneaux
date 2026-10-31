@@ -13,7 +13,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   :root {
     color-scheme: light;
     --bg: #f4f5f7;
@@ -118,7 +129,9 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -135,13 +148,13 @@
   header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
   }
   header .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -172,7 +185,7 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
     border-radius: 20px;
@@ -188,7 +201,7 @@
     height: 36px;
     padding: 0 14px 0 11px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -236,7 +249,9 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -248,9 +263,10 @@
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
@@ -264,7 +280,7 @@
   .banner {
     border-radius: 10px;
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 14px;
     border: 1px solid;
@@ -280,7 +296,7 @@
     padding: 12px 14px;
     margin-bottom: 10px;
   }
-  .recap-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .recap-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
 
   /* Le bloc Filtres se replie : on ne le règle qu'une fois, alors qu'il pousse
      la liste hors de l'écran à chaque chargement. Ouvert par défaut, l'état
@@ -295,7 +311,7 @@
     border: 0;
     background: none;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text);
     text-align: left;
@@ -311,10 +327,8 @@
   .filters-body[hidden] { display: none; }
 
   .filter-subtitle {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
     color: var(--muted);
     margin: 12px 0 6px;
   }
@@ -325,7 +339,7 @@
      pouce, et un club à la fois est le besoin réel. */
   .filter-select {
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     width: 100%;
@@ -336,7 +350,7 @@
   }
   .filter-chip {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--muted);
     background: var(--card-bg);
@@ -350,7 +364,7 @@
   .filter-chip.serie-2.active { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
 
   .badge {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
     border-radius: 20px;
@@ -374,10 +388,10 @@
     padding: 10px 14px;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
   }
-  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 11px; }
+  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 12px; }
 
   /* --- Une ligne de classement ---
      Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
@@ -399,8 +413,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -411,16 +425,16 @@
   .rank-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
   .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
   .rank-main { flex: 1 1 auto; min-width: 0; }
-  .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
-  .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .rank-detail { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
   .rank-values { flex: 0 0 auto; text-align: right; }
   .rank-score {
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
   }
-  .rank-score.vide { font-size: 13px; color: var(--muted); }
+  .rank-score.vide { font-size: 14px; color: var(--muted); }
 
   /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
      pour une séparation de carte. */
@@ -432,18 +446,16 @@
     border-top: 2px solid var(--accent-border);
   }
   .cut-line span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
   }
   .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
 
   /* --- Phases finales : prévision des quarts et simulation --- */
   .poule-head .statut {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
     border-radius: 20px;
@@ -462,7 +474,7 @@
      long fait varier. */
   /* position: relative : les quarts y mesurent leur hauteur (offsetTop),
      dans le même repère que l'arbre. */
-  .tableau { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 100px; }
+  .tableau { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 104px; }
   .tableau-quarts { min-width: 0; }
   .quart-row {
     display: grid;
@@ -474,7 +486,7 @@
   }
   .quart-row:first-of-type { border-top: none; }
   .quart-row.moitie { border-top: 2px solid var(--fort-bord); }
-  .quart-num { font-size: 10px; font-weight: 900; color: var(--accent); }
+  .quart-num { font-size: 12px; font-weight: 700; color: var(--accent); }
   .quart-side {
     display: flex;
     align-items: baseline;
@@ -482,8 +494,8 @@
     padding: 2px 6px;
     border-radius: 7px;
     border: 1px solid transparent;
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
@@ -492,19 +504,19 @@
   .quart-nom { flex: 1; min-width: 0; }
   .quart-proba {
     margin-left: 6px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .quart-proba.favori { font-weight: 900; color: var(--text); }
+  .quart-proba.favori { font-weight: 700; color: var(--text); }
   .quart-side.suivie .quart-proba { color: var(--accent); }
   .quart-seed {
     display: inline-block;
     min-width: 36px;
     margin-right: 5px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     text-align: center;
     color: var(--muted);
@@ -521,8 +533,8 @@
   .arbre-etape {
     position: absolute;
     transform: translateY(-50%);
-    font-size: 10px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
     line-height: 1;
     padding: 4px 6px;
     border-radius: 20px;
@@ -533,7 +545,7 @@
   }
   .arbre-etape.mien { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
   .arbre-etape.finale { background: var(--fort-bg); border-color: var(--fort-bg); color: var(--fort-text); }
-  .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
+  .finales-note { font-size: 12px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
 
   /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
      résultat. En tête, ce que la simulation change pour mes équipes. */
@@ -547,18 +559,18 @@
     border: 0;
     background: var(--accent-bg);
     font: inherit;
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--accent);
     text-align: left;
     cursor: pointer;
   }
   .sim-toggle .sim-titre { flex: 1 1 auto; min-width: 0; }
-  .sim-toggle .sim-titre small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+  .sim-toggle .sim-titre small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 1px; }
   .sim-compteur {
     flex: none;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
     color: var(--sur-accent);
     background: var(--accent);
     border-radius: 20px;
@@ -570,16 +582,16 @@
   .sim-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
 
   .sim-impact { padding: 10px 14px; border-top: 1px solid var(--accent-border); background: var(--card-bg); }
-  .sim-impact-ligne { font-size: 12px; line-height: 1.4; }
+  .sim-impact-ligne { font-size: 14px; line-height: 1.4; }
   .sim-impact-ligne + .sim-impact-ligne { margin-top: 6px; }
-  .sim-impact-ligne b { font-weight: 800; }
-  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
+  .sim-impact-ligne b { font-weight: 700; }
+  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
   .sim-impact-ligne .verdict.ok { color: var(--win-text); background: var(--win-bg); }
   .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
   .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
   .sim-impact-ligne .montrer { margin-top: 6px; }
-  .sim-impact-ligne .chemin { margin-top: 4px; font-size: 12px; line-height: 1.45; }
-  .sim-impact.astuce { font-size: 11px; color: var(--muted); line-height: 1.45; }
+  .sim-impact-ligne .chemin { margin-top: 4px; font-size: 14px; line-height: 1.45; }
+  .sim-impact.astuce { font-size: 12px; color: var(--muted); line-height: 1.45; }
 
   .sim-liste { padding: 4px 10px 2px; }
   .sim-match {
@@ -591,13 +603,13 @@
   }
   .sim-match.simulee { border-color: var(--accent-border); box-shadow: inset 3px 0 0 var(--accent); }
   .sim-match-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-height: 20px; }
-  .sim-poule { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-  .sim-mienne { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 20px; padding: 1px 7px; }
-  .sim-prono { font-size: 10px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-poule { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .sim-mienne { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-prono { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 20px; padding: 1px 7px; }
   .sim-prono[hidden] { display: none; }
   .sim-stats {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent);
     background: var(--accent-bg);
@@ -606,11 +618,11 @@
     padding: 6px 12px;
     cursor: pointer;
   }
-  .sim-stats-msg { margin: 0 14px 8px; font-size: 12px; line-height: 1.45; }
+  .sim-stats-msg { margin: 0 14px 8px; font-size: 14px; line-height: 1.45; }
   .sim-annuler {
     margin-left: auto;
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--muted);
     background: none;
@@ -634,15 +646,15 @@
     border-radius: 8px;
     background: var(--card-bg);
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     text-align: left;
     cursor: pointer;
   }
   .sim-pick .nom { flex: 1 1 auto; min-width: 0; }
-  .sim-pick .marque { flex: none; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; }
-  .sim-pick.gagne { color: var(--win-text); border-color: var(--win-border); background: var(--win-bg); font-weight: 800; }
+  .sim-pick .marque { flex: none; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; }
+  .sim-pick.gagne { color: var(--win-text); border-color: var(--win-border); background: var(--win-bg); font-weight: 700; }
   .sim-pick.perd { color: var(--muted); background: var(--bg); }
   .sim-pick.suivie .nom { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
   .sim-score {
@@ -655,7 +667,7 @@
     background: var(--card-bg);
     font: inherit;
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 700;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
@@ -664,7 +676,7 @@
   .sim-actions:first-child { padding: 10px 14px 4px; }
   .sim-reset {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--loss-text);
     background: var(--card-bg);
@@ -677,7 +689,7 @@
   .banner.sim .sim-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
   .voir-quarts {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--fort-text);
     background: var(--fort-bg);
@@ -688,13 +700,13 @@
   }
 
   .legende {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.45;
     margin: 10px 0 0;
   }
 
-  .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
+  .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
 
   .skeleton-card {
     background: var(--card-bg);
@@ -744,12 +756,12 @@
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
-  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 13px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
+  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 14px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
   .fab-btn[hidden] { display: none; }
 
 
   footer { text-align: center; padding: 20px 4px 10px; }
-  footer p { margin: 0 0 6px; font-size: 11px; color: var(--muted); }
+  footer p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
 </style>
 </head>
@@ -795,7 +807,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.30.2</p>
+    <p>Version 2026.10.31</p>
   </footer>
 </main>
 

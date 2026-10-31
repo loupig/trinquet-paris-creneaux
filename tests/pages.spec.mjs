@@ -59,6 +59,26 @@ test("Compteur s'affiche sans erreur", async ({ page }) => {
   await expect(page.locator("#setup")).toBeVisible();
 });
 
+// Spec navigation : à 390 px, chaque libellé de la barre d'onglets tient sur
+// une ligne et dans son onglet, sans défilement horizontal.
+test.describe("Barre d'onglets à 390 px", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+  for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
+    test(`${p.nom} : cinq libellés sur une ligne`, async ({ page }) => {
+      await page.goto(p.url);
+      await page.evaluate(() => document.fonts.ready);
+      const lignes = await page.locator(".tab-bar a span").evaluateAll((spans) => spans.map((s) => {
+        const r = document.createRange();
+        r.selectNodeContents(s);
+        const tient = r.getBoundingClientRect().width <= s.parentElement.clientWidth;
+        return s.textContent + " : " + r.getClientRects().length + (tient ? "" : " (déborde)");
+      }));
+      expect(lignes).toEqual(["Accueil : 1", "Mes équipes : 1", "Parties : 1", "Classement : 1", "Créneaux : 1"]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    });
+  }
+});
+
 test.describe("Compteur : mode match, fin de partie et partage", () => {
   test("réglages repliés au premier point, victoire au score visé, partage, annulation", async ({ page }) => {
     await page.addInitScript(() => {

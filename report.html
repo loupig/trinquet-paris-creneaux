@@ -13,7 +13,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   :root {
     color-scheme: light;
     --bg: #f4f5f7;
@@ -84,7 +95,9 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -101,13 +114,13 @@
   header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
   }
   header .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -137,7 +150,7 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
     border-radius: 20px;
@@ -153,7 +166,7 @@
     height: 36px;
     padding: 0 14px 0 11px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -201,7 +214,9 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -213,9 +228,10 @@
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
@@ -229,7 +245,7 @@
   .banner {
     border-radius: 10px;
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 14px;
     border: 1px solid;
@@ -261,23 +277,23 @@
     box-shadow: 0 2px 10px rgba(47, 92, 224, 0.12);
   }
   .recap-title {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text);
     margin-bottom: 8px;
   }
-  .recap-card.featured .recap-title { font-size: 14px; }
-  .recap-empty { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0 0 6px; }
+  .recap-card.featured .recap-title { font-size: 16px; }
+  .recap-empty { font-size: 14px; color: var(--muted); line-height: 1.45; margin: 0 0 6px; }
   .recap-empty:last-child { margin-bottom: 0; }
-  .recap-line { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .recap-line { font-size: 14px; color: var(--text); line-height: 1.5; }
   .recap-line strong { font-weight: 700; }
 
-  .propose-intro { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0 0 8px; }
+  .propose-intro { font-size: 14px; color: var(--muted); line-height: 1.45; margin: 0 0 8px; }
   .propose-team {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.4;
     padding: 4px 0;
   }
@@ -312,19 +328,17 @@
     padding-bottom: 4px;
   }
   .grid-head-day {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
   }
   .grid-head-date {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   .grid-head-warn {
     margin-top: 2px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--warn-text);
     cursor: pointer;
@@ -335,14 +349,14 @@
     justify-content: flex-end;
     padding-right: 4px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .slot-cell {
     border-radius: 8px;
     padding: 8px 4px;
     text-align: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     border: 1px solid;
   }
@@ -362,7 +376,7 @@
   .slot-cell.open { outline: 2px solid var(--accent); outline-offset: 1px; }
   .slot-cell-meta {
     margin-top: 2px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 600;
     opacity: 0.8;
   }
@@ -372,7 +386,7 @@
     background: var(--bg);
     border-radius: 8px;
     padding: 10px 12px;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--text);
   }
   .slot-detail .match-line { font-weight: 600; margin-bottom: 4px; }
@@ -381,7 +395,7 @@
   .empty-state {
     text-align: center;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 14px;
     padding: 40px 20px;
   }
 
@@ -420,7 +434,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     padding: 4px 4px 14px;
   }
@@ -469,7 +483,7 @@
   }
   footer p {
     margin: 0 0 6px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   footer a { color: var(--muted); }
@@ -515,7 +529,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.30.2</p>
+    <p>Version 2026.10.31</p>
   </footer>
 </main>
 

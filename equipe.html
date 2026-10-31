@@ -13,7 +13,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   :root {
     color-scheme: light;
     --bg: #f4f5f7;
@@ -96,7 +107,9 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -113,13 +126,13 @@
   header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
   }
   header .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -150,7 +163,7 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
     border-radius: 20px;
@@ -166,7 +179,7 @@
     height: 36px;
     padding: 0 14px 0 11px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -214,7 +227,9 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -226,9 +241,10 @@
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
@@ -242,7 +258,7 @@
   .banner {
     border-radius: 10px;
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 14px;
     border: 1px solid;
@@ -261,14 +277,14 @@
     gap: 6px;
     padding: 10px 14px 8px;
   }
-  .team-name { font-size: 13px; font-weight: 700; }
+  .team-name { font-size: 14px; font-weight: 700; }
   /* Suivre l'équipe affichée : le seul endroit du site où l'on choisit ses
      équipes, à côté de l'équipe elle-même, pour que le geste se comprenne. */
   .suivre-btn {
     margin-left: auto;
     align-self: center;
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent);
     background: var(--card-bg);
@@ -280,14 +296,14 @@
   }
   .suivre-btn[aria-pressed="true"] { color: var(--sur-accent); background: var(--accent); border-color: var(--accent); }
   .suivre-btn:active { opacity: 0.75; }
-  .suivre-aide { padding: 0 14px 10px; margin: 0; font-size: 11px; color: var(--muted); line-height: 1.45; }
+  .suivre-aide { padding: 0 14px 10px; margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
   /* Les équipes suivies, pour passer de l'une à l'autre d'un geste. */
   .mes-chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -4px 12px; padding: 0 4px 2px; scrollbar-width: none; }
   .mes-chips::-webkit-scrollbar { display: none; }
   .mes-chip {
     flex: 0 0 auto;
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     background: var(--card-bg);
@@ -299,7 +315,7 @@
   }
   .mes-chip[aria-current="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
   .badge {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
     border-radius: 20px;
@@ -307,21 +323,21 @@
   }
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
   .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
-  .team-poule { font-size: 11px; color: var(--muted); }
+  .team-poule { font-size: 12px; color: var(--muted); }
   .team-record {
     padding: 0 14px 8px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   .team-record b { color: var(--text); font-weight: 700; }
   .team-roster {
     padding: 0 14px 9px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.45;
     color: var(--text);
   }
-  .team-roster b { font-weight: 700; color: var(--muted); font-size: 11px; }
-  .team-roster.absente { font-size: 11px; color: var(--muted); font-style: italic; }
+  .team-roster b { font-weight: 700; color: var(--muted); font-size: 12px; }
+  .team-roster.absente { font-size: 12px; color: var(--muted); font-style: italic; }
 
   /* --- Une partie --- */
   .match-row {
@@ -351,25 +367,25 @@
 
   .match-when {
     flex: 0 0 74px;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.3;
     color: var(--muted);
   }
   .match-when b { display: block; color: var(--text); font-weight: 700; }
   .match-main { flex: 1 1 auto; min-width: 0; }
-  .match-opp { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .match-opp { font-size: 14px; font-weight: 600; line-height: 1.3; }
   .lien-equipe { color: var(--accent); text-decoration: none; }
-  .match-meta { font-size: 10px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
+  .match-meta { font-size: 12px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
   .match-score {
     flex: 0 0 auto;
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
   .match-score.win { color: var(--win-text); }
   .match-score.loss { color: var(--loss-text); }
-  .match-score.todo { font-size: 10px; font-weight: 600; color: var(--muted); }
-  .match-score.retard { font-size: 10px; font-weight: 700; color: var(--loss-text); text-align: right; line-height: 1.2; }
+  .match-score.todo { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .match-score.retard { font-size: 12px; font-weight: 700; color: var(--loss-text); text-align: right; line-height: 1.2; }
 
   /* Le choix de l'équipe vit dans le header : il hérite de son position:sticky
      et reste accessible pendant tout le défilement. Une liste déroulante native plutôt que des pastilles : une
@@ -379,7 +395,7 @@
     width: 100%;
     margin: 10px 0 0;
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     background: var(--card-bg);
@@ -398,22 +414,22 @@
   }
   .section-head {
     padding: 10px 14px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
   }
-  .section-head span { font-weight: 600; color: var(--muted); font-size: 11px; }
-  .section-note { padding: 10px 14px; font-size: 12px; color: var(--muted); }
+  .section-head span { font-weight: 600; color: var(--muted); font-size: 12px; }
+  .section-note { padding: 10px 14px; font-size: 14px; color: var(--muted); }
   .section-head + .match-row { border-top: none; }
 
-  .team-rang { padding: 0 14px 10px; font-size: 12px; color: var(--muted); }
+  .team-rang { padding: 0 14px 10px; font-size: 14px; color: var(--muted); }
   .team-rang b { color: var(--text); font-weight: 700; }
 
   /* --- Prochaine partie : la seule mise en avant de la page --- */
   .prochaine { padding: 10px 14px 12px; }
-  .prochaine-quand { font-size: 15px; font-weight: 800; }
-  .prochaine-adv { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .prochaine-quand { font-size: 16px; font-weight: 700; }
+  .prochaine-adv { font-size: 14px; font-weight: 600; margin-top: 2px; }
   .prochaine-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .prochaine-actions .report-btn { margin-top: 0; }
   .report-btn {
@@ -422,7 +438,7 @@
     gap: 6px;
     margin-top: 10px;
     padding: 7px 12px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent);
     background: var(--accent-bg);
@@ -435,9 +451,9 @@
   .report-btn:active { opacity: 0.75; }
 
   /* --- Bilan et forme --- */
-  .bilan { padding: 10px 14px 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .bilan { padding: 10px 14px 8px; font-size: 14px; color: var(--muted); line-height: 1.5; }
   .bilan b { color: var(--text); font-weight: 700; }
-  .forme { display: flex; align-items: center; gap: 4px; padding: 0 14px 12px; font-size: 11px; color: var(--muted); }
+  .forme { display: flex; align-items: center; gap: 4px; padding: 0 14px 12px; font-size: 12px; color: var(--muted); }
   .forme-label { font-weight: 700; margin-right: 4px; }
   .forme-res {
     display: inline-flex;
@@ -446,21 +462,21 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    font-size: 10px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
     color: var(--sur-accent);
   }
   .forme-res.v { background: var(--win-text); }
   .forme-res.d { background: var(--loss-text); }
   .forme-res.n { background: var(--muted); }
-  .objectif { padding: 0 14px 12px; font-size: 12px; line-height: 1.45; }
+  .objectif { padding: 0 14px 12px; font-size: 14px; line-height: 1.45; }
   /* --- Fiche de l'adversaire : à qui on va se frotter --- */
   .fiche-adv {
     margin: 0 14px 10px;
     padding: 7px 10px;
     background: var(--bg);
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.45;
   }
@@ -468,7 +484,7 @@
   .fiche-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
   .fiche-ligne + .fiche-ligne { margin-top: 4px; }
   .fiche-adv b { color: var(--text); font-weight: 700; margin-right: 2px; }
-  .fiche-adv .forme-res { width: 16px; height: 16px; font-size: 9px; }
+  .fiche-adv .forme-res { width: 16px; height: 16px; font-size: 12px; }
   .contact-btn {
     display: inline-flex;
     align-items: center;
@@ -487,8 +503,8 @@
   .contact-btn:active { opacity: 0.7; }
   /* --- Prévenir l'équipe : message des parties qui lui restent --- */
   .prevenir { padding: 10px 14px 12px; border-top: 1px solid var(--border); background: var(--bg); }
-  .prevenir-titre { font-size: 12px; font-weight: 700; }
-  .prevenir-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 2px 0 8px; }
+  .prevenir-titre { font-size: 14px; font-weight: 700; }
+  .prevenir-note { font-size: 12px; color: var(--muted); line-height: 1.4; margin: 2px 0 8px; }
   .prevenir-note b { color: var(--loss-text); }
   .prevenir-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .prevenir-btn {
@@ -497,7 +513,7 @@
     gap: 6px;
     padding: 7px 12px;
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent);
     background: var(--card-bg);
@@ -509,10 +525,10 @@
   .prevenir-btn.wa { color: #fff; background: var(--vert-wa); border-color: var(--vert-wa); }
   .prevenir-btn svg { display: block; }
   .prevenir-btn:active { opacity: 0.75; }
-  .prevenir-ok { font-size: 11px; font-weight: 600; color: var(--muted); }
-  .objectif .forme-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .prevenir-ok { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .objectif .forme-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 
-  .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
+  .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
 
   .skeleton-card {
     background: var(--card-bg);
@@ -565,7 +581,7 @@
 
 
   footer { text-align: center; padding: 20px 4px 10px; }
-  footer p { margin: 0 0 6px; font-size: 11px; color: var(--muted); }
+  footer p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
 </style>
 </head>
@@ -592,7 +608,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.30.2</p>
+    <p>Version 2026.10.31</p>
   </footer>
 </main>
 
