@@ -115,16 +115,17 @@
   }
   @media (prefers-reduced-motion: reduce) {
     button:not(:disabled):active { transform: none; }
+    /* Plus de mouvement : les couleurs changent encore, rien ne bouge. */
+    a, button, summary, select, input, textarea, label { transition-property: color, background-color, border-color, opacity; }
+    svg { transition: none !important; }
   }
 
   /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
-     bouton sans changer son dessin, comme les pastilles du compteur. */
-  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
-  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
-  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip { position: relative; }
-  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
-  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
-  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip)::after {
+     bouton sans changer son dessin, comme les pastilles du compteur. Pas
+     dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
+     sur le voisin. */
+  .ligue-btn, .pill-btn, .icon-btn, .report-btn { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .report-btn)::after {
     content: "";
     position: absolute;
     top: min(0px, (100% - 44px) / 2);
@@ -147,6 +148,10 @@
     text-decoration: none;
   }
   .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+  /* Le contenu suit directement l'en-tête : y aller ne fait pas défiler la
+     page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
+     bien au contenu. */
+  #contenu { scroll-margin-top: 100vh; }
 
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
@@ -302,6 +307,12 @@
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
+  /* Sous 360 px, la barre rogne ses marges pour que les libellés à 12 px
+     tiennent ; rayon des onglets : 24 - 4 = 20 px. */
+  @media (max-width: 359px) {
+    .tab-bar { left: 6px; right: 6px; padding: 4px; gap: 0; }
+    .tab-bar a { padding-left: 0; padding-right: 0; border-radius: 20px; }
+  }
 
   main {
     max-width: 640px;

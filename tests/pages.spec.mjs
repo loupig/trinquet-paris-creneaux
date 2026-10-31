@@ -60,9 +60,10 @@ test("Compteur s'affiche sans erreur", async ({ page }) => {
 });
 
 // Spec navigation : à 390 px, chaque libellé de la barre d'onglets tient sur
-// une ligne et dans son onglet, sans défilement horizontal.
-test.describe("Barre d'onglets à 390 px", () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+// une ligne et dans son onglet, sans défilement horizontal. Et encore sur les
+// plus petits écrans, 320 px.
+for (const largeur of [320, 390]) test.describe(`Barre d'onglets à ${largeur} px`, () => {
+  test.use({ viewport: { width: largeur, height: 844 } });
   for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
     test(`${p.nom} : cinq libellés sur une ligne`, async ({ page }) => {
       await page.goto(p.url);
@@ -80,10 +81,13 @@ test.describe("Barre d'onglets à 390 px", () => {
 });
 
 // Au clavier, le premier arrêt est le lien d'évitement, visible et entouré
-// d'un contour ; il mène au contenu.
+// d'un contour ; il mène au contenu, dont le haut reste visible sous
+// l'en-tête, et le Tab suivant y reste.
 for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
   test(`${p.nom} : focus visible au clavier, lien d'évitement`, async ({ page }) => {
     await page.goto(p.url);
+    // Données chargées : la page est assez longue pour défiler.
+    if (p.contenu) await attendreChargement(page);
     await page.keyboard.press("Tab");
     const lien = page.getByRole("link", { name: "Aller au contenu" });
     await expect(lien).toBeFocused();
@@ -95,8 +99,29 @@ for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
     expect(contour).toBe("solid 2px");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/#contenu$/);
+    // Le défilement vers l'ancre se fait à l'image suivante.
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    expect(await page.evaluate(() => {
+      const m = document.getElementById("contenu"), b = m.getBoundingClientRect();
+      return m.contains(document.elementFromPoint(b.left + 4, b.top + 4));
+    }), "haut du contenu visible, pas sous l'en-tête").toBe(true);
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => !!document.activeElement.closest("#contenu"))).toBe(true);
   });
 }
+
+// Moins d'animations demandé : les couleurs changent encore, rien ne bouge.
+test("Moins d'animations : ni chevron qui tourne, ni bouton qui s'enfonce", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("classement.html");
+  await attendreChargement(page);
+  const styles = await page.evaluate(() => ({
+    chevron: getComputedStyle(document.querySelector(".filters-toggle svg")).transitionDuration,
+    bouton: getComputedStyle(document.querySelector(".filters-toggle")).transitionProperty
+  }));
+  expect(styles.chevron).toBe("0s");
+  expect(styles.bouton).not.toContain("transform");
+});
 
 test.describe("Compteur : mode match, fin de partie et partage", () => {
   test("réglages repliés au premier point, victoire au score visé, partage, annulation", async ({ page }) => {
