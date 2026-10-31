@@ -579,12 +579,12 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".sim-card").first().locator(".sim-impact .chemin")).toHaveText(texte);
   });
 
-  test("« Montre-moi ce scénario » remplit la poule d'un scénario qui qualifie", async ({ page }) => {
+  test("« Afficher ce scénario » remplit la poule d'un scénario qui qualifie", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
 
     // Charlie (4e, poule 1) : 7 parties restent dans sa poule.
-    await page.getByRole("button", { name: /Montre-moi ce scénario/ }).click();
+    await page.getByRole("button", { name: /Afficher ce scénario/ }).click();
     const sim = page.locator(".sim-card").first();
     await expect(sim.locator(".sim-toggle")).toHaveAttribute("aria-expanded", "true");
     await expect(sim.locator(".sim-compteur")).toHaveText(/^7\//);

@@ -77,8 +77,8 @@ En bas de chaque série, la page SHALL proposer un simulateur, encadré en point
 - **THEN** le haut du simulateur, sous son rang, dit ce qu'il lui faut pour finir dans les 4 premiers de sa poule, en passant en revue toutes les issues des parties restantes de la poule en victoires et défaites, d'après les seuls résultats réels (les simulations n'y changent rien) : « qualifiée quoi qu'il arrive », « qualifiée à coup sûr en gagnant N parties », « quasi fait » quand le pire cas se joue au goal average, « ça passe, mais pas sans aide » avec les résultats des autres sans lesquels ça ne passe pas (trois au plus), ou « plus de quart possible »
 - **AND** une égalité de moyenne n'est jamais tranchée au hasard : le texte dit qu'elle se jouera au goal average ; au-delà de 16 parties restantes, il dit qu'il est trop tôt pour tracer le chemin
 
-#### Scenario: Montre-moi ce scénario
-- **WHEN** le chemin vers les quarts d'une équipe suivie n'est ni « qualifiée quoi qu'il arrive » ni sans issue qualifiante, et que le visiteur touche « 🗺️ Montre-moi ce scénario »
+#### Scenario: Afficher ce scénario
+- **WHEN** le chemin vers les quarts d'une équipe suivie n'est ni « qualifiée quoi qu'il arrive » ni sans issue qualifiante, et que le visiteur touche « 🗺️ Afficher ce scénario »
 - **THEN** les parties restantes de sa poule sont simulées selon l'issue qui la qualifie à coup sûr en contredisant le moins le prono du comptoir ; les parties où elle le suit en gardent le score et l'étiquette « 🍻 Comptoir », les autres sont simulées 40–30
 - **AND** le simulateur s'ouvre, le classement et les quarts sont recalculés, et un message dit combien de surprises ce scénario demande ; le visiteur peut ensuite le retoucher ou l'effacer
 

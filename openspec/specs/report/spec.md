@@ -57,7 +57,7 @@ La page SHALL présenter, en tableau par week-end, les créneaux de la grille de
 - **THEN** la page indique qu'aucun créneau n'est disponible, sans tableau
 
 ### Requirement: Jours où une équipe joue déjà
-Un créneau libre un jour où l'une des deux équipes a déjà une autre partie, quels que soient le lieu et l'heure, SHALL être signalé en couleur d'avertissement avec la mention « une équipe joue déjà ce jour-là », sans être retiré : il reste affiché comme libre. Toucher ce créneau ou le badge de la colonne déplie la liste des parties de ce jour concernées (équipes, heure, lieu).
+Un créneau libre un jour où l'une des deux équipes a déjà une autre partie, quels que soient le lieu et l'heure, SHALL être signalé en couleur d'avertissement avec la mention « une équipe joue déjà ce jour », sans être retiré : il reste affiché comme libre. Toucher ce créneau ou le badge de la colonne déplie la liste des parties de ce jour concernées (équipes, heure, lieu).
 
 #### Scenario: Équipe déjà engagée le même dimanche
 - **WHEN** l'équipe qui reçoit joue dans un autre trinquet le dimanche 18 à 20h

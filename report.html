@@ -570,15 +570,15 @@
 
   <div class="recap-card">
     <div class="recap-title">Avant d'acter le report</div>
-    <p class="recap-empty">Une date repérée ici n'est pas une date actée. Mettez-vous d'accord avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
+    <p class="recap-empty">Une date repérée ici n'est pas une date actée. Convenez de la date avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
     <p class="recap-empty">Seuls les créneaux encore disponibles sont affichés, sur la grille de championnat du Trinquet Paris (vendredi 21h et 22h, dimanche de 14h à 17h et de 20h à 22h). Pour voir qui occupe les autres créneaux, passez par les <a href="creneaux.html">créneaux libres au Trinquet Paris</a>. Un report sur un créneau hors grille se négocie hors de cet outil, avec le trinquet et la ligue.</p>
   </div>
 
   <div class="legend">
     <span><i class="free"></i>Libre</span>
-    <span><i class="warn"></i>Libre, mais une équipe joue déjà ce jour-là</span>
+    <span><i class="warn"></i>Libre, mais une équipe joue déjà ce jour</span>
     <span><i class="current"></i>Créneau actuel</span>
-    <span>Les créneaux barrés sont indisponibles (déjà pris, ou hors grille ce jour-là).</span>
+    <span>Les créneaux barrés sont indisponibles (déjà pris, ou hors grille ce jour).</span>
   </div>
 
   <div id="banner-slot"></div>
@@ -1191,7 +1191,7 @@
     if (target.date && target.hour !== null) {
       var hours = GRID[target.date.getDay()];
       if (!hours || hours.indexOf(target.hour) === -1) {
-        card.appendChild(el("p", { class: "recap-empty", text: "Ce créneau ne fait pas partie de la grille de championnat : il n'apparaît pas dans le tableau ci-dessous." }));
+        card.appendChild(el("p", { class: "recap-empty", text: "Ce créneau ne fait pas partie de la grille de championnat : il n'apparaît pas dans le tableau plus bas." }));
       }
     }
   }
@@ -1209,7 +1209,7 @@
     }
     if (state === "warn") {
       cell.appendChild(el("div", { text: "Libre" }));
-      cell.appendChild(el("div", { class: "slot-cell-meta", text: "⚠ une équipe joue déjà ce jour-là" }));
+      cell.appendChild(el("div", { class: "slot-cell-meta", text: "⚠ une équipe joue déjà ce jour" }));
       return cell;
     }
     cell.appendChild(el("div", { text: "Libre" }));
@@ -1302,12 +1302,12 @@
     var lien = reportUrl(target.oid);
     if (lien) blocs.push("Liste complète et à jour : " + lien);
 
-    blocs.push("Qu'est-ce qui vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue.");
+    blocs.push("Quelle date vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue.");
 
     var contexte = [target.serieLabel, target.meta].filter(function (part) { return !!part; }).join(" - ");
     if (contexte) blocs.push("_" + contexte + "_");
 
-    blocs.push("Merci !");
+    blocs.push("Merci.");
     return blocs.join("\n\n");
   }
 
@@ -1365,7 +1365,7 @@
     });
 
     if (!auMoinsUnContact) {
-      card.appendChild(el("p", { class: "recap-empty", text: "Les dates restent visibles dans le tableau ci-dessous, à transmettre par vos propres moyens." }));
+      card.appendChild(el("p", { class: "recap-empty", text: "Les dates restent visibles dans le tableau plus bas, à transmettre par vos propres moyens." }));
     }
     card.hidden = false;
   }
@@ -1537,7 +1537,7 @@
 
       if (!row) {
         renderBanner(bannerSlot, "error", "Partie introuvable",
-          "Aucune rencontre ne correspond à cet identifiant. Elle a peut-être été retirée du calendrier.", true);
+          "Aucune rencontre ne correspond à cet identifiant. La ligue l'a sans doute retirée du calendrier.", true);
         return;
       }
 
@@ -1562,7 +1562,7 @@
 
       if (target.date && target.date < today) {
         renderBanner(bannerSlot, "warn", "Date déjà passée",
-          "Cette partie était prévue le " + formatDate(target.date) + " et n'a pas de score. Les dates proposées ci-dessous partent d'aujourd'hui.");
+          "Cette partie était prévue le " + formatDate(target.date) + " et n'a pas de score. Les dates proposées plus bas partent d'aujourd'hui.");
       }
 
       var fin = computeHorizon(data.rencontres, target, today);

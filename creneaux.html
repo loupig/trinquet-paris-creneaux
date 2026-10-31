@@ -1361,7 +1361,7 @@
         var btn = e.currentTarget;
         var restore = btn.textContent;
         var onDone = function (ok) {
-          btn.textContent = ok ? "Copié !" : "Échec de la copie";
+          btn.textContent = ok ? "Texte copié" : "Échec de la copie";
           setTimeout(function () { btn.textContent = restore; }, 1500);
         };
         if (navigator.clipboard && navigator.clipboard.writeText) {

@@ -1500,7 +1500,7 @@
 
     var msg;
     if (!libres.length) {
-      msg = "Toutes les parties sont déjà simulées. Annulez-en une pour demander l'avis du comptoir.";
+      msg = "Toutes les parties sont déjà simulées. Annulez une simulation pour demander l'avis du comptoir.";
     } else if (!faits) {
       msg = "Le comptoir reste sans voix : pas encore assez de résultats pour départager qui que ce soit.";
     } else {
@@ -1676,7 +1676,7 @@
     pronoMessage[cle] = "🗺️ Le scénario qui qualifie " + t.label + " le plus probable" +
       (d ? " selon le comptoir, avec " + d + " surprise" + (d > 1 ? "s" : "") + " à créer (les parties sans étiquette 🍻)."
          : " ? Celui du comptoir, qui y croit déjà 🍻") +
-      " Retouchez-le à volonté.";
+      " Vous pouvez le retoucher à volonté.";
     simOuvert[cle] = true;
     derniereSerieSimulee = cle;
     lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
@@ -1923,7 +1923,7 @@
         el("b", { text: "Chemin vers les quarts : " }), document.createTextNode(chemin.texte)
       ]));
       if (chemin.scenario) {
-        var montrer = el("button", { type: "button", class: "sim-stats montrer", text: "🗺️ Montre-moi ce scénario" });
+        var montrer = el("button", { type: "button", class: "sim-stats montrer", text: "🗺️ Afficher ce scénario" });
         montrer.addEventListener("click", function () { montrerScenario(t, chemin); });
         ligne.appendChild(montrer);
       }
@@ -2148,7 +2148,7 @@
     b.appendChild(el("strong", { text: "Simulation en cours" }));
     b.appendChild(document.createTextNode(
       n + " résultat" + (n > 1 ? "s simulés sont inclus" : " simulé est inclus") +
-      " dans le classement et les quarts ci-dessous. Ils disparaissent au rechargement."));
+      " dans le classement et les quarts plus bas. Ils disparaissent au rechargement."));
     var voir = el("button", { type: "button", class: "voir-quarts", text: "Voir les quarts" });
     voir.addEventListener("click", voirQuarts);
     var reset = el("button", { type: "button", class: "sim-reset", text: "Effacer la simulation" });

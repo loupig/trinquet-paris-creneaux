@@ -1619,7 +1619,7 @@
       sp.appendChild(document.createTextNode(
         state.mode === "scores" ? (nom + " : " + (i === 0 ? a : b))
         : state.mode === "echanges" ? (nom + " : " + (i === 0 ? a : b) + " point" + ((i === 0 ? a : b) > 1 ? "s" : ""))
-        : (nom + " mène " + (i === 0 ? "au-dessus" : "en dessous"))));
+        : ((i === 0 ? "En haut : " : "En bas : ") + nom + " mène")));
       legende.appendChild(sp);
     });
     if (state.mode === "echanges") {
@@ -1630,7 +1630,7 @@
       var horsEchelle = dConnues.filter(function (v) { return v > plafond; }).length;
       var texte = "Échange médian : " + formatDuree(centile(0.5)) +
                   ". Le plus long : " + formatDuree(plusLong) + ", au " + (iLong + 1) + "e point.";
-      if (horsEchelle) texte += " " + horsEchelle + " au-dessus de l'échelle (pauses entre les jeux).";
+      if (horsEchelle) texte += " " + horsEchelle + (horsEchelle > 1 ? " dépassent" : " dépasse") + " l'échelle (pauses entre les jeux).";
       legende.appendChild(el("span", { text: texte }));
       return;
     }
