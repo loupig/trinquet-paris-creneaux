@@ -54,6 +54,7 @@
     --ombre-rgb: 26, 26, 46;
     --titre-de: #000000;
     --titre-a: #666666;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --vert: #009B48;
   }
   /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
@@ -93,6 +94,22 @@
   }
 
   * { box-sizing: border-box; }
+
+  /* États communs : focus visible au clavier, appui marqué, survol sur
+     ordinateur. Courbe de Découvrir : 300 ms pour les couleurs, 500 ms pour
+     le mouvement. */
+  a, button, summary, select, input, textarea, label {
+    transition: color 300ms var(--ease), background-color 300ms var(--ease),
+      border-color 300ms var(--ease), opacity 300ms var(--ease), transform 500ms var(--ease);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:not(:disabled):active { transform: scale(0.98); }
+  @media (hover: hover) {
+    a:hover, button:not(:disabled):hover, summary:hover { opacity: 0.8; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active { transform: none; }
+  }
 
   body {
     margin: 0;

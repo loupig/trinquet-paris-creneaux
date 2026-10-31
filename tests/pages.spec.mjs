@@ -79,6 +79,19 @@ test.describe("Barre d'onglets à 390 px", () => {
   }
 });
 
+// Au clavier, l'élément qui a le focus est entouré d'un contour visible.
+for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
+  test(`${p.nom} : focus visible au clavier`, async ({ page }) => {
+    await page.goto(p.url);
+    await page.keyboard.press("Tab");
+    const contour = await page.evaluate(() => {
+      const s = getComputedStyle(document.activeElement);
+      return document.activeElement !== document.body && s.outlineStyle + " " + s.outlineWidth;
+    });
+    expect(contour).toBe("solid 2px");
+  });
+}
+
 test.describe("Compteur : mode match, fin de partie et partage", () => {
   test("réglages repliés au premier point, victoire au score visé, partage, annulation", async ({ page }) => {
     await page.addInitScript(() => {
