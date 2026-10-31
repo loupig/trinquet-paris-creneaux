@@ -98,6 +98,37 @@
     button:not(:disabled):active { transform: none; }
   }
 
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. */
+  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
+  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
+  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
+  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
+  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+
   body {
     margin: 0;
     background: var(--bg);
@@ -162,7 +193,7 @@
     font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -174,7 +205,7 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
+    border-radius: 9999px;
     font-size: 12px;
     font-weight: 700;
   }
@@ -214,7 +245,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -232,7 +263,7 @@
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
@@ -307,7 +338,9 @@
     flex: 1 1 auto;
     min-width: 0;
     font: inherit;
-    font-size: 14px;
+    /* 16 px : sous cette taille, iOS zoome sur le champ touché. */
+    font-size: 16px;
+    min-height: 44px;
     font-weight: 600;
     color: var(--text);
     border: 1px solid var(--border);
@@ -378,7 +411,7 @@
     flex: 1 1 0;
     min-width: 0;
     border: 2px solid;
-    border-radius: 14px;
+    border-radius: 16px;
     background: var(--card-bg);
     padding: 14px 8px 16px;
     text-align: center;
@@ -424,7 +457,7 @@
     display: inline-block;
     margin-top: 2px;
     padding: 3px 9px;
-    border-radius: 20px;
+    border-radius: 9999px;
     font-size: 12px;
     font-weight: 700;
     color: #fff;
@@ -444,7 +477,7 @@
     align-items: center;
     gap: 5px;
     padding: 5px 11px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid var(--border);
     background: var(--card-bg);
     color: var(--text);
@@ -468,7 +501,7 @@
     color: var(--accent);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 11px 10px;
     cursor: pointer;
   }
@@ -482,7 +515,7 @@
   /* --- Fin de partie --- */
   .fin {
     border: 2px solid;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 16px 14px;
     margin-bottom: 10px;
     text-align: center;
@@ -520,7 +553,7 @@
     color: var(--muted);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 5px 11px;
     cursor: pointer;
   }
@@ -548,7 +581,7 @@
     color: var(--muted);
   }
   .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .chart-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .chart-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
   .fab-row {
     position: fixed;
@@ -633,7 +666,7 @@
     gap: 6px;
     height: 40px;
     padding: 0 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid var(--fs-border);
     background: var(--fs-surface);
     color: var(--fs-text);
@@ -696,6 +729,7 @@
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
@@ -709,7 +743,7 @@
   <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, sauf le score si tu choisis de le partager.</p>
 </header>
 
-<main>
+<main id="contenu">
   <div class="arrivee" id="arrivee" hidden></div>
   <p class="contexte" id="contexte" hidden></p>
   <details class="card setup-box" id="setupBox">

@@ -79,16 +79,22 @@ test.describe("Barre d'onglets à 390 px", () => {
   }
 });
 
-// Au clavier, l'élément qui a le focus est entouré d'un contour visible.
+// Au clavier, le premier arrêt est le lien d'évitement, visible et entouré
+// d'un contour ; il mène au contenu.
 for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
-  test(`${p.nom} : focus visible au clavier`, async ({ page }) => {
+  test(`${p.nom} : focus visible au clavier, lien d'évitement`, async ({ page }) => {
     await page.goto(p.url);
     await page.keyboard.press("Tab");
-    const contour = await page.evaluate(() => {
-      const s = getComputedStyle(document.activeElement);
-      return document.activeElement !== document.body && s.outlineStyle + " " + s.outlineWidth;
+    const lien = page.getByRole("link", { name: "Aller au contenu" });
+    await expect(lien).toBeFocused();
+    await expect(lien).toBeInViewport();
+    const contour = await lien.evaluate((e) => {
+      const s = getComputedStyle(e);
+      return s.outlineStyle + " " + s.outlineWidth;
     });
     expect(contour).toBe("solid 2px");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#contenu$/);
   });
 }
 

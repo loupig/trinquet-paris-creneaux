@@ -141,6 +141,37 @@
     button:not(:disabled):active { transform: none; }
   }
 
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. */
+  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
+  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
+  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
+  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
+  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -214,7 +245,7 @@
     font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -226,7 +257,7 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
+    border-radius: 9999px;
     font-size: 12px;
     font-weight: 700;
   }
@@ -266,7 +297,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -284,7 +315,7 @@
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
@@ -304,7 +335,7 @@
   }
 
   .banner {
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 12px 14px;
     font-size: 14px;
     line-height: 1.4;
@@ -381,7 +412,7 @@
     color: var(--muted);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -393,7 +424,7 @@
     font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid;
   }
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
@@ -484,7 +515,7 @@
     font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: 9999px;
     color: var(--warn-text);
     background: var(--warn-bg);
   }
@@ -518,7 +549,7 @@
     align-items: baseline;
     min-width: 0;
     padding: 2px 6px;
-    border-radius: 7px;
+    border-radius: 8px;
     border: 1px solid transparent;
     font-size: 14px;
     font-weight: 700;
@@ -547,7 +578,7 @@
     text-align: center;
     color: var(--muted);
     background: var(--bg);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 0 5px;
     vertical-align: 1px;
     white-space: nowrap;
@@ -563,7 +594,7 @@
     font-weight: 700;
     line-height: 1;
     padding: 4px 6px;
-    border-radius: 20px;
+    border-radius: 9999px;
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
@@ -599,7 +630,7 @@
     font-weight: 700;
     color: var(--sur-accent);
     background: var(--accent);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 2px 8px;
     font-variant-numeric: tabular-nums;
   }
@@ -611,7 +642,7 @@
   .sim-impact-ligne { font-size: 14px; line-height: 1.4; }
   .sim-impact-ligne + .sim-impact-ligne { margin-top: 6px; }
   .sim-impact-ligne b { font-weight: 700; }
-  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
+  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 700; border-radius: 9999px; padding: 1px 8px; }
   .sim-impact-ligne .verdict.ok { color: var(--win-text); background: var(--win-bg); }
   .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
   .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
@@ -625,13 +656,13 @@
     padding: 8px 10px 10px;
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
   }
   .sim-match.simulee { border-color: var(--accent-border); box-shadow: inset 3px 0 0 var(--accent); }
   .sim-match-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-height: 20px; }
   .sim-poule { font-size: 12px; font-weight: 700; color: var(--muted); }
-  .sim-mienne { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 20px; padding: 1px 7px; }
-  .sim-prono { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-mienne { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 9999px; padding: 1px 7px; }
+  .sim-prono { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 9999px; padding: 1px 7px; }
   .sim-prono[hidden] { display: none; }
   .sim-stats {
     font: inherit;
@@ -640,7 +671,7 @@
     color: var(--accent);
     background: var(--accent-bg);
     border: 1px solid var(--accent-border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -707,7 +738,7 @@
     color: var(--loss-text);
     background: var(--card-bg);
     border: 1px solid var(--error-border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -720,7 +751,7 @@
     color: var(--fort-text);
     background: var(--fort-bg);
     border: 1px solid var(--fort-bg);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -782,7 +813,7 @@
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
-  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 14px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
+  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 9999px; font-size: 14px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
   .fab-btn[hidden] { display: none; }
 
 
@@ -792,6 +823,7 @@
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
@@ -806,7 +838,7 @@
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
-<main>
+<main id="contenu">
   <div class="recap-card">
     <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
     <div class="filters-body" id="filtersBody">

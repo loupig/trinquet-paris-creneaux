@@ -107,6 +107,37 @@
     button:not(:disabled):active { transform: none; }
   }
 
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. */
+  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
+  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
+  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .suivre-btn,
+  .report-btn, .contact-btn, .replan-btn, .prevenir-btn, .filters-toggle,
+  .filter-chip, .filter-checkbox, .sim-stats, .wa-icon, .chip)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -179,7 +210,7 @@
     font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -191,7 +222,7 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
+    border-radius: 9999px;
     font-size: 12px;
     font-weight: 700;
   }
@@ -231,7 +262,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -249,7 +280,7 @@
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
@@ -269,7 +300,7 @@
   }
 
   .banner {
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 12px 14px;
     font-size: 14px;
     line-height: 1.4;
@@ -468,7 +499,7 @@
   .legend i {
     display: inline-block;
     width: 9px; height: 9px;
-    border-radius: 3px;
+    border-radius: 2px;
   }
   .legend i.free { background: var(--free-text); }
   .legend i.warn { background: var(--warn-text); }
@@ -516,6 +547,7 @@
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
@@ -531,7 +563,7 @@
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
-<main>
+<main id="contenu">
   <div class="recap-card featured" id="targetCard" hidden></div>
 
   <div class="recap-card" id="proposeCard" hidden></div>
