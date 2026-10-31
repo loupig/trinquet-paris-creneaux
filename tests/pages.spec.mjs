@@ -114,6 +114,10 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await page.locator("#chartBox > summary").click();
     await expect(page.locator("#chart")).toBeHidden();
     await expect(page.locator("#chartResume")).not.toBeEmpty();
+    // L'événement toggle, qui enregistre le repli, arrive un peu après le clic :
+    // recharger avant lui perdrait le repli.
+    await expect.poll(() => page.evaluate(() =>
+      JSON.parse(localStorage.getItem("lidfpb_compteur_v1")).graphe)).toBe(false);
 
     // Rechargement : score, score visé et graphe replié retrouvés.
     await page.reload();
