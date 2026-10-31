@@ -7,13 +7,24 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   /* Le plein écran laissé en clair par son bouton garde ces couleurs, même
      sur un téléphone en sombre. */
   :root,
@@ -35,6 +46,9 @@
     --verre: rgba(255, 255, 255, 0.55);
     --verre-bord: rgba(255, 255, 255, 0.55);
     --ombre-rgb: 26, 26, 46;
+    --titre-de: #000000;
+    --titre-a: #666666;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --vert: #009B48;
     --sur-accent: #fff;
   }
@@ -43,11 +57,11 @@
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --bg: #121318;
-      --card-bg: #1c1d24;
-      --text: #e8e9ee;
-      --muted: #a0a3b0;
-      --border: #2e303a;
+      --bg: #181818;
+      --card-bg: #1f1f1f;
+      --text: #ebebeb;
+      --muted: #a3a3a3;
+      --border: #313131;
       --accent-bg: #1c2440;
       --accent-border: #34407a;
       --accent: #8ba6ff;
@@ -56,21 +70,77 @@
       --warn-border: #5a4a1a;
       --danger: #ff8a80;
       --avertissement: #f3d27a;
-      --verre: rgba(36, 37, 46, 0.6);
+      --verre: rgba(39, 39, 39, 0.6);
       --verre-bord: rgba(255, 255, 255, 0.08);
       --ombre-rgb: 0, 0, 0;
+      --titre-de: #ffffff;
+      --titre-a: #9b9b9b;
       --vert: #2fd17a;
-      --sur-accent: #121318;
+      --sur-accent: #181818;
     }
   }
 
   * { box-sizing: border-box; }
 
+  /* États communs : focus visible au clavier, appui marqué, survol sur
+     ordinateur. Courbe de Découvrir : 300 ms pour les couleurs, 500 ms pour
+     le mouvement. */
+  a, button, summary, select, input, textarea, label {
+    transition: color 300ms var(--ease), background-color 300ms var(--ease),
+      border-color 300ms var(--ease), opacity 300ms var(--ease), transform 500ms var(--ease);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:not(:disabled):active { transform: scale(0.98); }
+  @media (hover: hover) {
+    a:hover, button:not(:disabled):hover, summary:hover { opacity: 0.8; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active { transform: none; }
+    /* Plus de mouvement : les couleurs changent encore, rien ne bouge. */
+    a, button, summary, select, input, textarea, label { transition-property: color, background-color, border-color, opacity; }
+    svg { transition: none !important; }
+  }
+
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. Pas
+     dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
+     sur le voisin. */
+  .ligue-btn, .icon-btn, .partager { position: relative; }
+  :is(.ligue-btn, .icon-btn, .partager)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+  /* Le contenu suit directement l'en-tête : y aller ne fait pas défiler la
+     page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
+     bien au contenu. */
+  #contenu { scroll-margin-top: 100vh; }
+
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
@@ -85,13 +155,18 @@
   header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--text);
+    /* Dégradé de gauche à droite découpé dans le texte, comme le titre de
+       Découvrir. */
+    background: linear-gradient(90deg, var(--titre-de), var(--titre-a));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -120,10 +195,10 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -135,8 +210,8 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
-    font-size: 11px;
+    border-radius: 9999px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -175,7 +250,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -184,24 +259,33 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
+  /* Sous 360 px, la barre rogne ses marges pour que les libellés à 12 px
+     tiennent ; rayon des onglets : 24 - 4 = 20 px. */
+  @media (max-width: 359px) {
+    .tab-bar { left: 6px; right: 6px; padding: 4px; gap: 0; }
+    .tab-bar a { padding-left: 0; padding-right: 0; border-radius: 20px; }
+  }
 
   main {
     max-width: 640px;
@@ -217,11 +301,11 @@
     margin-bottom: 10px;
   }
   .card-title {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     margin-bottom: 10px;
   }
-  .card-note { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
+  .card-note { font-size: 12px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
 
   /* --- Réglages : ouverts avant le premier point, repliés ensuite pour
      laisser l'écran aux boutons de score. Dépliés dans la page, jamais en
@@ -240,21 +324,21 @@
   .setup-resume {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .setup-box[open] .setup-resume { visibility: hidden; }
-  .setup-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
+  .setup-box > summary svg { flex: none; color: var(--muted); transition: transform 500ms var(--ease); }
   .setup-box[open] > summary svg { transform: rotate(180deg); }
   .setup-corps { padding: 0 14px 14px; }
   /* Loin des boutons de score et d'« Annuler » : effacer une partie ne doit
      jamais partir d'un toucher de trop. */
   .setup-corps .action-btn.danger { display: block; width: 100%; margin-top: 14px; }
   .action-btn.danger[hidden] { display: none; }
-  .cible-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; font-size: 12px; font-weight: 600; }
+  .cible-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; font-size: 14px; font-weight: 600; }
   .cible-row > span { margin-right: 4px; }
   .chip[disabled] { opacity: 0.4; cursor: default; }
 
@@ -265,7 +349,9 @@
     flex: 1 1 auto;
     min-width: 0;
     font: inherit;
-    font-size: 13px;
+    /* 16 px : sous cette taille, iOS zoome sur le champ touché. */
+    font-size: 16px;
+    min-height: 44px;
     font-weight: 600;
     color: var(--text);
     border: 1px solid var(--border);
@@ -279,7 +365,7 @@
     height: 30px;
     border-radius: 8px;
     border: 2px solid transparent;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
+    box-shadow: inset 0 0 0 1px rgba(var(--ombre-rgb), 0.12);
     padding: 0;
     cursor: pointer;
   }
@@ -309,7 +395,7 @@
     cursor: pointer;
   }
   .swatch-libre:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .couleurs-proches { margin: 10px 0 0; font-size: 12px; color: var(--avertissement); }
+  .couleurs-proches { margin: 10px 0 0; font-size: 14px; color: var(--avertissement); }
 
   /* Partie proposée depuis Parties ou Mon équipe alors qu'une autre est en
      cours : le choix se fait dans la page, sans fenêtre. */
@@ -319,7 +405,7 @@
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 10px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
   }
   .arrivee[hidden] { display: none; }
@@ -327,7 +413,7 @@
   .arrivee .boutons { display: flex; flex-wrap: wrap; gap: 8px; }
   .arrivee button { flex: 1 1 auto; }
   .arrivee .action-btn.principal { background: var(--accent); color: var(--sur-accent); border-color: var(--accent); }
-  .contexte { margin: 0 0 10px; font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+  .contexte { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--muted); text-align: center; }
   .contexte[hidden] { display: none; }
 
   /* --- Tableau de score --- */
@@ -336,7 +422,7 @@
     flex: 1 1 0;
     min-width: 0;
     border: 2px solid;
-    border-radius: 14px;
+    border-radius: 16px;
     background: var(--card-bg);
     padding: 14px 8px 16px;
     text-align: center;
@@ -358,43 +444,41 @@
   .score-btn[disabled] { cursor: default; }
   .score-btn[disabled]:active { transform: none; }
   .score-btn.perdant { opacity: 0.55; }
-  .score-btn.flash { animation: flash 0.35s ease-out; }
+  .score-btn.flash { animation: flash 350ms var(--ease); }
   @keyframes flash { from { box-shadow: 0 0 0 6px rgba(var(--ombre-rgb), 0.18); } to { box-shadow: 0 0 0 0 rgba(var(--ombre-rgb), 0); } }
   @media (prefers-reduced-motion: reduce) { .score-btn.flash { animation: none; } }
   .score-team {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
   }
   .score-value {
-    font-size: 54px;
-    font-weight: 800;
+    font-size: 60px;
+    font-weight: 700;
     line-height: 1;
     margin: 6px 0 4px;
     font-variant-numeric: tabular-nums;
   }
-  .score-add { font-size: 12px; font-weight: 700; min-height: 15px; }
+  .score-add { font-size: 14px; font-weight: 700; min-height: 15px; }
   /* Le score en basque, comme le chante le kantari. */
-  .score-eus { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; margin: -2px 0 6px; opacity: 0.8; }
-  .scoreboard.en-jeu .score-eus { font-size: 15px; }
+  .score-eus { font-size: 14px; font-weight: 700; letter-spacing: 0.02em; margin: -2px 0 6px; opacity: 0.8; }
+  .scoreboard.en-jeu .score-eus { font-size: 16px; }
   .badge {
     display: inline-block;
     margin-top: 2px;
     padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
     color: #fff;
   }
-  .score-serve { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 4px; min-height: 12px; }
+  .score-serve { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; min-height: 12px; }
 
   .chrono {
     margin: 0;
     text-align: center;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -404,12 +488,12 @@
     align-items: center;
     gap: 5px;
     padding: 5px 11px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid var(--border);
     background: var(--card-bg);
     color: var(--text);
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
   }
@@ -423,12 +507,12 @@
   .action-btn {
     flex: 1 1 0;
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--accent);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 11px 10px;
     cursor: pointer;
   }
@@ -437,20 +521,20 @@
   .action-btn.danger { color: var(--danger); }
   .action-btn.partager { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 8px; }
   .action-btn.partager[hidden] { display: none; }
-  .partage-info { margin: 6px 0 0; min-height: 15px; text-align: center; font-size: 12px; color: var(--muted); }
+  .partage-info { margin: 6px 0 0; min-height: 15px; text-align: center; font-size: 14px; color: var(--muted); }
 
   /* --- Fin de partie --- */
   .fin {
     border: 2px solid;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 16px 14px;
     margin-bottom: 10px;
     text-align: center;
     background: var(--card-bg);
   }
-  .fin h2 { margin: 0; font-size: 20px; font-weight: 800; }
-  .fin .fin-score { margin: 4px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
-  .fin .fin-details { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .fin h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .fin .fin-score { margin: 4px 0 0; font-size: 16px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .fin .fin-details { margin: 6px 0 0; font-size: 14px; color: var(--muted); line-height: 1.45; }
   .fin .action-btn.partager { margin-top: 12px; color: #fff; border: 0; }
   .fin .action-btn.partager:active { opacity: 0.85; }
   .fin .action-btn.danger { width: 100%; margin-top: 8px; }
@@ -467,7 +551,7 @@
   }
   .chart-box > summary::-webkit-details-marker { display: none; }
   .chart-box > summary .card-title { margin: 0; flex: 0 0 auto; }
-  .chart-box > summary svg { flex: none; color: var(--muted); transition: transform 0.25s ease; }
+  .chart-box > summary svg { flex: none; color: var(--muted); transition: transform 500ms var(--ease); }
   .chart-box[open] > summary svg { transform: rotate(180deg); }
   .chart-box[open] .setup-resume { visibility: hidden; }
   .chart-corps { padding: 0 14px 14px; }
@@ -475,12 +559,12 @@
   .chip-group { display: flex; gap: 6px; }
   .chip {
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--muted);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 5px 11px;
     cursor: pointer;
   }
@@ -490,13 +574,13 @@
     border-color: var(--accent-border);
   }
   .chart { width: 100%; height: auto; display: block; }
-  .chart text { font-size: 9px; fill: var(--muted); }
+  .chart text { font-size: 12px; fill: var(--muted); }
   .chart .axis { stroke: var(--border); stroke-width: 1; }
   .chart .zero { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
   .chart-empty {
     text-align: center;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 14px;
     padding: 28px 10px;
   }
   .chart-legend {
@@ -504,11 +588,11 @@
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 8px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .chart-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .chart-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
   .fab-row {
     position: fixed;
@@ -532,7 +616,7 @@
     font-size: 18px;
     line-height: 1;
     text-decoration: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 10px rgba(var(--ombre-rgb), 0.25);
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
@@ -567,11 +651,11 @@
     --fs-border: #313131;
     /* Palette sombre de la page, mêmes valeurs : le plein écran sombre l'est
        aussi sur un téléphone réglé en clair. */
-    --bg: #121318;
-    --card-bg: #1c1d24;
-    --text: #e8e9ee;
-    --muted: #a0a3b0;
-    --border: #2e303a;
+    --bg: #181818;
+    --card-bg: #1f1f1f;
+    --text: #ebebeb;
+    --muted: #a3a3a3;
+    --border: #313131;
     --accent-bg: #1c2440;
     --accent-border: #34407a;
     --accent: #8ba6ff;
@@ -580,11 +664,11 @@
     --warn-border: #5a4a1a;
     --danger: #ff8a80;
     --avertissement: #f3d27a;
-    --verre: rgba(36, 37, 46, 0.6);
+    --verre: rgba(39, 39, 39, 0.6);
     --verre-bord: rgba(255, 255, 255, 0.08);
     --ombre-rgb: 0, 0, 0;
     --vert: #2fd17a;
-    --sur-accent: #121318;
+    --sur-accent: #181818;
   }
   .fs-bar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
   .fs-bar button {
@@ -593,28 +677,28 @@
     gap: 6px;
     height: 40px;
     padding: 0 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid var(--fs-border);
     background: var(--fs-surface);
     color: var(--fs-text);
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
   }
   .fs-bar button:active { opacity: 0.75; }
   .fs-bar button.icone { width: 40px; padding: 0; justify-content: center; flex: 0 0 auto; }
   .fs-bar button.icone.on { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
-  .fs-bar button.icone small { font-size: 9px; font-weight: 800; margin-left: -3px; }
+  .fs-bar button.icone small { font-size: 12px; font-weight: 700; margin-left: -3px; }
   .fs-bar button[disabled] { opacity: 0.4; cursor: default; }
   /* Au centre de la barre : le temps de jeu qui s'écoule, et sous lui le
      score visé. */
   .fs-centre { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
-  .fs-temps { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  .fs-temps { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
   .fs-temps[hidden] { display: none; }
   .fs-temps.arret { color: var(--fs-muted); }
-  .fs-resume { max-width: 100%; text-align: center; font-size: 13px; font-weight: 600; color: var(--fs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fs-temps:not([hidden]) + .fs-resume { font-size: 11px; }
+  .fs-resume { max-width: 100%; text-align: center; font-size: 14px; font-weight: 600; color: var(--fs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-temps:not([hidden]) + .fs-resume { font-size: 12px; }
   .fs-slot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
   .fs .scoreboard { flex: 1 1 auto; min-height: 0; margin: 0; }
   .fs .scoreboard .score-btn,
@@ -631,8 +715,8 @@
   .fs .score-value, .fs .scoreboard.en-jeu .score-value { font-size: min(34vw, 30vh); }
   .fs .score-eus, .fs .scoreboard.en-jeu .score-eus { font-size: 18px; }
   .fs .score-add { font-size: 16px; }
-  .fs .badge { font-size: 14px; padding: 4px 12px; }
-  .fs .score-serve { font-size: 12px; color: var(--fs-muted); }
+  .fs .badge { font-size: 16px; padding: 4px 12px; }
+  .fs .score-serve { font-size: 14px; color: var(--fs-muted); }
   .fs .fin { flex: 0 0 auto; margin: 0; background-color: var(--fs-surface); }
   .fs .fin .fin-score { color: var(--fs-text); }
   .fs .fin .fin-details { color: var(--fs-muted); }
@@ -649,18 +733,19 @@
   }
   footer p {
     margin: 0 0 6px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   footer a { color: var(--muted); }
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
   <div class="header-actions">
-    <a class="icon-btn calc on" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.2h0M12 15.2h0M15.5 15.2h0M8.5 18.4h0M12 18.4h0M15.5 18.4h0"/></svg></a>
+    <a class="icon-btn calc on" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M80,120h96a8,8,0,0,0,8-8V64a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8v48A8,8,0,0,0,80,120Zm8-48h80v32H88ZM200,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm0,192H56V40H200ZM100,148a12,12,0,1,1-12-12A12,12,0,0,1,100,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,148Zm-80,40a12,12,0,1,1-12-12A12,12,0,0,1,100,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,188Z"/></svg></a>
   </div>
 </div>
 <header>
@@ -669,14 +754,14 @@
   <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, sauf le score si tu choisis de le partager.</p>
 </header>
 
-<main>
+<main id="contenu">
   <div class="arrivee" id="arrivee" hidden></div>
   <p class="contexte" id="contexte" hidden></p>
   <details class="card setup-box" id="setupBox">
     <summary>
       <span class="card-title">Les deux équipes</span>
       <span class="setup-resume" id="setupResume"></span>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>
     </summary>
     <div class="setup-corps">
       <div id="setup"></div>
@@ -697,16 +782,16 @@
 
   <div class="actions">
     <button type="button" class="action-btn" id="undoBtn">Annuler le dernier point</button>
-    <button type="button" class="action-btn fs-btn" id="fsBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Plein écran</span></button>
+    <button type="button" class="action-btn fs-btn" id="fsBtn"><svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,48V88a8,8,0,0,1-16,0V56H168a8,8,0,0,1,0-16h40A8,8,0,0,1,216,48ZM88,200H56V168a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H88a8,8,0,0,0,0-16Zm120-40a8,8,0,0,0-8,8v32H168a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V168A8,8,0,0,0,208,160ZM88,40H48a8,8,0,0,0-8,8V88a8,8,0,0,0,16,0V56H88a8,8,0,0,0,0-16Z"/></svg><span>Plein écran</span></button>
   </div>
-  <button type="button" class="action-btn partager" id="shareBtn" hidden><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Partager le score</span></button>
+  <button type="button" class="action-btn partager" id="shareBtn" hidden><svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg><span>Partager le score</span></button>
   <p class="partage-info" id="partageInfo" aria-live="polite"></p>
 
   <details class="card chart-box" id="chartBox" open>
     <summary>
       <span class="card-title">Déroulé de la partie</span>
       <span class="setup-resume" id="chartResume"></span>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>
     </summary>
     <div class="chart-corps">
       <div class="chart-head">
@@ -724,28 +809,28 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.30</p>
+    <p>Version 2026.10.31</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
-  <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
-  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mes équipes</span></a>
-  <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
-  <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
-  <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
+  <a href="index.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg><span>Accueil</span></a>
+  <a href="equipe.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg><span>Mes équipes</span></a>
+  <a href="programme.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"/></svg><span>Parties</span></a>
+  <a href="classement.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M112.41,102.53a8,8,0,0,1,5.06-10.12l12-4A8,8,0,0,1,140,96v40a8,8,0,0,1-16,0V107.1l-1.47.49A8,8,0,0,1,112.41,102.53ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16h8V104A16,16,0,0,1,40,88H80V56A16,16,0,0,1,96,40h64a16,16,0,0,1,16,16v72h40a16,16,0,0,1,16,16v56h8A8,8,0,0,1,248,208Zm-72-64v56h40V144ZM96,200h64V56H96Zm-56,0H80V104H40Z"/></svg><span>Classement</span></a>
+  <a href="creneaux.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></svg><span>Créneaux</span></a>
 </nav>
 
 
 <div class="fs" id="fs" hidden aria-label="Compteur en plein écran">
   <div class="fs-bar">
-    <button type="button" id="fsQuit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Quitter</span></button>
+    <button type="button" id="fsQuit"><svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg><span>Quitter</span></button>
     <div class="fs-centre">
       <span class="fs-temps" id="fsTemps" hidden></span>
       <span class="fs-resume" id="fsResume"></span>
     </div>
     <button type="button" class="icone" id="fsPause"></button>
-    <button type="button" class="icone" id="fsUndo" aria-label="Annuler le dernier point" title="Annuler le dernier point"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+    <button type="button" class="icone" id="fsUndo" aria-label="Annuler le dernier point" title="Annuler le dernier point"><svg viewBox="0 0 256 256" fill="currentColor" width="17" height="17" aria-hidden="true"><path d="M232,144a64.07,64.07,0,0,1-64,64H80a8,8,0,0,1,0-16h88a48,48,0,0,0,0-96H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,45.66L51.31,80H168A64.07,64.07,0,0,1,232,144Z"/></svg></button>
     <button type="button" class="icone" id="fsVoix" hidden></button>
     <button type="button" class="icone" id="fsTheme"></button>
   </div>
@@ -1388,7 +1473,7 @@
   //    resserré ; bande large, ça s'est décroché.
   //  - "ecart" : la différence seule, autour de zéro. Chaque passage par zéro
   //    est un changement de leader.
-  var CH = { w: 320, h: 150, gauche: 24, droite: 8, haut: 10, bas: 20 };
+  var CH = { w: 320, h: 150, gauche: 36, droite: 8, haut: 10, bas: 20 };
   var MAX_ETOILES = 12;
 
   function renderChart() {
@@ -1545,7 +1630,7 @@
       sp.appendChild(document.createTextNode(
         state.mode === "scores" ? (nom + " : " + (i === 0 ? a : b))
         : state.mode === "echanges" ? (nom + " : " + (i === 0 ? a : b) + " point" + ((i === 0 ? a : b) > 1 ? "s" : ""))
-        : (nom + " mène " + (i === 0 ? "au-dessus" : "en dessous"))));
+        : ((i === 0 ? "En haut : " : "En bas : ") + nom + " mène")));
       legende.appendChild(sp);
     });
     if (state.mode === "echanges") {
@@ -1556,7 +1641,7 @@
       var horsEchelle = dConnues.filter(function (v) { return v > plafond; }).length;
       var texte = "Échange médian : " + formatDuree(centile(0.5)) +
                   ". Le plus long : " + formatDuree(plusLong) + ", au " + (iLong + 1) + "e point.";
-      if (horsEchelle) texte += " " + horsEchelle + " au-dessus de l'échelle (pauses entre les jeux).";
+      if (horsEchelle) texte += " " + horsEchelle + (horsEchelle > 1 ? " dépassent" : " dépasse") + " l'échelle (pauses entre les jeux).";
       legende.appendChild(el("span", { text: texte }));
       return;
     }
@@ -1674,8 +1759,8 @@
   // La pause ne touche pas aux points : elle est retirée des durées de jeu
   // et d'échange, pour que le graphe des échanges et la durée de la partie
   // ne comptent pas le temps passé à boire un coup.
-  var ICONE_PAUSE = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
-  var ICONE_REPRISE = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>';
+  var ICONE_PAUSE = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></svg>';
+  var ICONE_REPRISE = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>';
 
   function finirPause() {
     if (!state.pause) return;
@@ -1768,8 +1853,8 @@
     f.hidden = false;
     f.classList.toggle("on", !!state.voix);
     f.innerHTML = state.voix
-      ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg><small>' + state.voix.toUpperCase() + "</small>"
-      : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="m17 9 4 6M21 9l-4 6"/></svg>';
+      ? '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55Zm54-106.08a40,40,0,0,1,0,52.88,8,8,0,0,1-12-10.58,24,24,0,0,0,0-31.72,8,8,0,0,1,12-10.58ZM248,128a79.9,79.9,0,0,1-20.37,53.34,8,8,0,0,1-11.92-10.67,64,64,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67A79.83,79.83,0,0,1,248,128Z"/></svg><small>' + state.voix.toUpperCase() + "</small>"
+      : '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55Zm101.66-61.3a8,8,0,0,1-11.32,11.32L216,139.31l-18.34,18.35a8,8,0,0,1-11.32-11.32L204.69,128l-18.35-18.34a8,8,0,0,1,11.32-11.32L216,116.69l18.34-18.35a8,8,0,0,1,11.32,11.32L227.31,128Z"/></svg>';
     var suivante = VOIX[(VOIX.findIndex(function (v) { return v[0] === state.voix; }) + 1) % VOIX.length];
     f.setAttribute("aria-label", "Annonce du score : " + (suivante[0] ? suivante[1] : "couper"));
     f.title = f.getAttribute("aria-label");
@@ -1825,8 +1910,8 @@
     fs.classList.toggle("sombre", sombre());
     var t = document.getElementById("fsTheme");
     t.innerHTML = sombre()
-      ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>'
-      : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+      ? '<svg viewBox="0 0 256 256" fill="currentColor" width="17" height="17" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg>'
+      : '<svg viewBox="0 0 256 256" fill="currentColor" width="17" height="17" aria-hidden="true"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg>';
     t.setAttribute("aria-label", sombre() ? "Passer en thème clair" : "Passer en thème sombre");
     t.title = t.getAttribute("aria-label");
     document.getElementById("fsUndo").disabled = state.points.length === 0;

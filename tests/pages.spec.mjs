@@ -59,6 +59,104 @@ test("Compteur s'affiche sans erreur", async ({ page }) => {
   await expect(page.locator("#setup")).toBeVisible();
 });
 
+// Spec navigation : à 390 px, chaque libellé de la barre d'onglets tient sur
+// une ligne et dans son onglet, sans défilement horizontal. Et encore sur les
+// plus petits écrans, 320 px.
+for (const largeur of [320, 390]) test.describe(`Barre d'onglets à ${largeur} px`, () => {
+  test.use({ viewport: { width: largeur, height: 844 } });
+  for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
+    test(`${p.nom} : cinq libellés sur une ligne`, async ({ page }) => {
+      await page.goto(p.url);
+      await page.evaluate(() => document.fonts.ready);
+      const lignes = await page.locator(".tab-bar a span").evaluateAll((spans) => spans.map((s) => {
+        const r = document.createRange();
+        r.selectNodeContents(s);
+        const tient = r.getBoundingClientRect().width <= s.parentElement.clientWidth;
+        return s.textContent + " : " + r.getClientRects().length + (tient ? "" : " (déborde)");
+      }));
+      expect(lignes).toEqual(["Accueil : 1", "Mes équipes : 1", "Parties : 1", "Classement : 1", "Créneaux : 1"]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    });
+  }
+});
+
+// Au clavier, le premier arrêt est le lien d'évitement, visible et entouré
+// d'un contour ; il mène au contenu, dont le haut reste visible sous
+// l'en-tête, et le Tab suivant y reste.
+for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
+  test(`${p.nom} : focus visible au clavier, lien d'évitement`, async ({ page }) => {
+    await page.goto(p.url);
+    // Données chargées : la page est assez longue pour défiler.
+    if (p.contenu) await attendreChargement(page);
+    await page.keyboard.press("Tab");
+    const lien = page.getByRole("link", { name: "Aller au contenu" });
+    await expect(lien).toBeFocused();
+    await expect(lien).toBeInViewport();
+    const contour = await lien.evaluate((e) => {
+      const s = getComputedStyle(e);
+      return s.outlineStyle + " " + s.outlineWidth;
+    });
+    expect(contour).toBe("solid 2px");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#contenu$/);
+    // Le défilement vers l'ancre se fait à l'image suivante.
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    expect(await page.evaluate(() => {
+      const m = document.getElementById("contenu"), b = m.getBoundingClientRect();
+      return m.contains(document.elementFromPoint(b.left + 4, b.top + 4));
+    }), "haut du contenu visible, pas sous l'en-tête").toBe(true);
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => !!document.activeElement.closest("#contenu"))).toBe(true);
+  });
+}
+
+// Spec apparence : Manrope, des tailles prises dans l'échelle commune, aucun
+// texte affiché sous 12 px, et les champs à 16 px pour que l'iPhone ne zoome
+// pas dessus.
+for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
+  test(`${p.nom} : tailles de l'échelle, rien sous 12 px, champs à 16 px`, async ({ page }) => {
+    await page.goto(p.url);
+    if (p.contenu) await attendreChargement(page);
+    await page.evaluate(() => document.fonts.ready);
+    const t = await page.evaluate(() => {
+      const visible = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== "hidden";
+      const tailles = new Set();
+      const marche = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      while (marche.nextNode()) {
+        const e = marche.currentNode.parentElement;
+        if (!marche.currentNode.textContent.trim() || !e || !visible(e)) continue;
+        tailles.add(parseFloat(getComputedStyle(e).fontSize));
+      }
+      const champs = [...document.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=color]), select, textarea")]
+        .filter(visible).map((e) => (e.id || e.name || e.tagName) + " : " + getComputedStyle(e).fontSize)
+        .filter((s) => parseFloat(s.split(" : ")[1]) < 16);
+      return {
+        tailles: [...tailles].sort((a, b) => a - b),
+        manrope: document.fonts.check("14px Manrope"),
+        champs
+      };
+    });
+    expect(t.manrope).toBe(true);
+    // Les scores du compteur ont leurs propres tailles, au-delà de 24 px.
+    const horsEchelle = t.tailles.filter((x) => ![12, 14, 16, 18, 20, 24].includes(x) && x < 48);
+    expect(horsEchelle, "tailles hors échelle ou sous 12 px").toEqual([]);
+    expect(t.champs, "champs sous 16 px").toEqual([]);
+  });
+}
+
+// Moins d'animations demandé : les couleurs changent encore, rien ne bouge.
+test("Moins d'animations : ni chevron qui tourne, ni bouton qui s'enfonce", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("classement.html");
+  await attendreChargement(page);
+  const styles = await page.evaluate(() => ({
+    chevron: getComputedStyle(document.querySelector(".filters-toggle svg")).transitionDuration,
+    bouton: getComputedStyle(document.querySelector(".filters-toggle")).transitionProperty
+  }));
+  expect(styles.chevron).toBe("0s");
+  expect(styles.bouton).not.toContain("transform");
+});
+
 test.describe("Compteur : mode match, fin de partie et partage", () => {
   test("réglages repliés au premier point, victoire au score visé, partage, annulation", async ({ page }) => {
     await page.addInitScript(() => {
@@ -114,6 +212,10 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await page.locator("#chartBox > summary").click();
     await expect(page.locator("#chart")).toBeHidden();
     await expect(page.locator("#chartResume")).not.toBeEmpty();
+    // L'événement toggle, qui enregistre le repli, arrive un peu après le clic :
+    // recharger avant lui perdrait le repli.
+    await expect.poll(() => page.evaluate(() =>
+      JSON.parse(localStorage.getItem("lidfpb_compteur_v1")).graphe)).toBe(false);
 
     // Rechargement : score, score visé et graphe replié retrouvés.
     await page.reload();
@@ -536,12 +638,12 @@ test.describe("Classement : quarts et simulation", () => {
     await expect(page.locator(".sim-card").first().locator(".sim-impact .chemin")).toHaveText(texte);
   });
 
-  test("« Montre-moi ce scénario » remplit la poule d'un scénario qui qualifie", async ({ page }) => {
+  test("« Afficher ce scénario » remplit la poule d'un scénario qui qualifie", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
 
     // Charlie (4e, poule 1) : 7 parties restent dans sa poule.
-    await page.getByRole("button", { name: /Montre-moi ce scénario/ }).click();
+    await page.getByRole("button", { name: /Afficher ce scénario/ }).click();
     const sim = page.locator(".sim-card").first();
     await expect(sim.locator(".sim-toggle")).toHaveAttribute("aria-expanded", "true");
     await expect(sim.locator(".sim-compteur")).toHaveText(/^7\//);
@@ -912,7 +1014,7 @@ test.describe("Thème sombre", () => {
     await page.evaluate(() => { window.__pasRecharge = true; });
     await page.emulateMedia({ colorScheme: "dark" });
     expect((await auditSombre(page)).fond).toBeLessThan(0.1);
-    expect(await couleurBarre()).toBe("#1c1d24");
+    expect(await couleurBarre()).toBe("#1f1f1f");
     expect(await page.evaluate(() => window.__pasRecharge)).toBe(true);
   });
 
@@ -970,7 +1072,7 @@ test.describe("Thème sombre", () => {
     await expect(fs.locator(".score-btn").first()).toHaveCSS("background-color", "rgba(206, 17, 38, 0.08)");
     await expect(fs.locator(".score-team").nth(1)).toHaveCSS("color", "rgb(0, 113, 58)");
     await fs.getByRole("button", { name: "Quitter" }).click();
-    expect(await couleurBarre()).toBe("#1c1d24");
+    expect(await couleurBarre()).toBe("#1f1f1f");
   });
 
   test("Compteur, téléphone en clair : le plein écran mis en sombre prend la palette sombre", async ({ page }) => {
@@ -982,7 +1084,7 @@ test.describe("Thème sombre", () => {
     await expect(fs).toHaveClass(/sombre/);
     const palette = await fs.evaluate((e) => ["--card-bg", "--accent", "--warn-bg", "--danger"]
       .map((v) => getComputedStyle(e).getPropertyValue(v).trim()));
-    expect(palette).toEqual(["#1c1d24", "#8ba6ff", "#2e2610", "#ff8a80"]);
+    expect(palette).toEqual(["#1f1f1f", "#8ba6ff", "#2e2610", "#ff8a80"]);
     // La page derrière reste claire.
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(244, 245, 247)");
   });

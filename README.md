@@ -44,8 +44,7 @@ Le comportement de chaque page est décrit par sa spec, dans
 - [`decouvrir.html`](decouvrir.html) — la page de présentation, à partager à
   un joueur qui ne connaît pas le site : une seule action, ouvrir l'accueil.
   Hors barre d'onglets, sans appel à l'API. Spec
-  [`decouvrir`](openspec/specs/decouvrir/spec.md). Sa police, Manrope, est
-  servie depuis [`fonts/`](fonts/) (licence OFL), et son image de partage
+  [`decouvrir`](openspec/specs/decouvrir/spec.md). Son image de partage
   est [`icons/og-decouvrir.png`](icons/og-decouvrir.png), une capture du
   haut de la page à refaire si l'accroche change.
 - [`404.html`](404.html) — la page « introuvable » que GitHub Pages sert
@@ -53,6 +52,12 @@ Le comportement de chaque page est décrit par sa spec, dans
   n'importe quel dossier.
 - [`equipes.html`](equipes.html) — simple redirection vers `equipe.html`,
   gardée pour les anciens favoris.
+
+Toutes les pages partagent la police Manrope, servie depuis
+[`fonts/`](fonts/) (licence OFL), et des icônes
+[Phosphor](https://phosphoricons.com) dont les tracés sont recopiés dans
+chaque page (licence MIT, [`icons/phosphor-LICENSE.txt`](icons/phosphor-LICENSE.txt)).
+Aucune requête ne part vers un tiers pour l'une ou l'autre.
 
 Chargement des données, cache partagé, bandeaux d'échec et données
 personnelles affichées : spec [`donnees-api`](openspec/specs/donnees-api/spec.md).

@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="/trinquet-paris-creneaux/icons/icon-192.png">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f5f7">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121318">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#181818">
 <style>
   /* Servie par GitHub Pages pour toute adresse inconnue, quel que soit le
      dossier demandé : d'où les chemins absolus. */
@@ -21,12 +21,13 @@
   :root { color-scheme: light; --bg: #f4f5f7; --surface: #ffffff; --text: #1a1a2e; --muted: #5d606d; --border: #e6e7eb; --rouge: #ce1126; --rouge-texte: #ce1126; --survol: #eceef2; --titre-de: #000000; --titre-a: #666666; --ease: cubic-bezier(0.22, 1, 0.36, 1); }
   /* Thème sombre : suit le réglage du téléphone (spec apparence), mêmes valeurs que Découvrir. */
   @media (prefers-color-scheme: dark) {
-    :root { color-scheme: dark; --bg: #121318; --surface: #1c1d24; --text: #e8e9ee; --muted: #a0a3b0; --border: #2e303a; --rouge-texte: #ff6b78; --survol: #2c2d37; --titre-de: #ffffff; --titre-a: #a0a3b0; }
+    :root { color-scheme: dark; --bg: #181818; --surface: #1f1f1f; --text: #ebebeb; --muted: #a3a3a3; --border: #313131; --rouge-texte: #ff6b78; --survol: #313131; --titre-de: #ffffff; --titre-a: #9b9b9b; }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
     display: grid;
     place-items: center;
     padding: 24px 16px;
@@ -80,12 +81,12 @@
   <svg class="flag" viewBox="0 0 60 40" aria-hidden="true"><rect width="60" height="40" fill="#CE1126"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="11"/><path d="M0 0L60 40M60 0L0 40" stroke="#009B48" stroke-width="6"/><rect y="15" width="60" height="10" fill="#fff"/><rect x="25" width="10" height="40" fill="#fff"/></svg>
   <p class="code">Erreur 404</p>
   <h1>Cette pelote est sortie du trinquet</h1>
-  <p>La page demandée n'existe pas, ou plus : le lien a peut-être été coupé en route. L'accueil, lui, a toujours vos équipes et les parties d'ici dimanche.</p>
+  <p>La page demandée n'existe pas, ou plus : le lien a sans doute été coupé en route. L'accueil, lui, a toujours vos équipes et les parties d'ici dimanche.</p>
   <div class="actions">
     <a class="btn primary" href="/trinquet-paris-creneaux/index.html">Revenir à l'accueil</a>
     <a class="btn ghost" href="/trinquet-paris-creneaux/decouvrir.html">Découvrir le site</a>
   </div>
-  <p class="small">Un lien cassé sur le site ? <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signalez-le</a>, avec l'adresse qui ne marche pas.</p>
+  <p class="small">Un lien cassé sur le site ? <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signalez le problème</a>, avec l'adresse qui ne marche pas.</p>
 </main>
 </body>
 </html>

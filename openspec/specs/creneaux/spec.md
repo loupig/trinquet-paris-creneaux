@@ -65,7 +65,7 @@ Toucher une case libre SHALL déplier un message prérempli de la forme « Le cr
 
 #### Scenario: Copie du texte
 - **WHEN** le visiteur touche « Copier le texte »
-- **THEN** le message est copié et le bouton affiche brièvement « Copié ! », ou « Échec de la copie » si le navigateur refuse
+- **THEN** le message est copié et le bouton affiche brièvement « Texte copié », ou « Échec de la copie » si le navigateur refuse
 
 ### Requirement: Filtres des créneaux
 La page SHALL proposer, dans un bloc repliable, un filtre par jour (Vendredi, Dimanche), un filtre par heure, et la case « Seulement les jours avec un créneau libre », cochée par défaut, qui masque les week-ends sans aucune case libre parmi les cases visibles. Seules les heures possibles pour les jours cochés sont proposées. Quand rien ne correspond, la page affiche « Aucune date ne correspond aux filtres. ». Les filtres et l'état du bloc MUST être retrouvés d'une visite à l'autre sur le même navigateur, sans être envoyés nulle part.

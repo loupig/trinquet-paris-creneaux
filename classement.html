@@ -7,13 +7,24 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   :root {
     color-scheme: light;
     --bg: #f4f5f7;
@@ -43,6 +54,9 @@
     --verre: rgba(255, 255, 255, 0.55);
     --verre-bord: rgba(255, 255, 255, 0.55);
     --ombre-rgb: 26, 26, 46;
+    --titre-de: #000000;
+    --titre-a: #666666;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --vert: #009B48;
     --win-bg: #e3f4ea;
     --win-border: #b9e2c8;
@@ -63,11 +77,11 @@
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --bg: #121318;
-      --card-bg: #1c1d24;
-      --text: #e8e9ee;
-      --muted: #a0a3b0;
-      --border: #2e303a;
+      --bg: #181818;
+      --card-bg: #1f1f1f;
+      --text: #ebebeb;
+      --muted: #a3a3a3;
+      --border: #313131;
       --serie1-bg: #10302c;
       --serie1-text: #5eead4;
       --serie1-border: #1f4a44;
@@ -85,29 +99,83 @@
       --win-text: #4ade80;
       --loss-text: #ff8a80;
       --accent: #8ba6ff;
-      --surface-2: #24252e;
-      --surface-3: #2c2d37;
-      --verre: rgba(36, 37, 46, 0.6);
+      --surface-2: #272727;
+      --surface-3: #313131;
+      --verre: rgba(39, 39, 39, 0.6);
       --verre-bord: rgba(255, 255, 255, 0.08);
       --ombre-rgb: 0, 0, 0;
+      --titre-de: #ffffff;
+      --titre-a: #9b9b9b;
       --vert: #2fd17a;
       --win-bg: #12301f;
       --win-border: #1f5235;
       --or-text: #f3d27a;
       --or-bg: #3a2f0d;
-      --argent-text: #d4d7de;
+      --argent-text: #d6d6d6;
       --argent-bg: #2c2e36;
       --bronze-text: #f0b27a;
       --bronze-bg: #3a2618;
-      --fort-bg: #2c2d37;
-      --fort-text: #e8e9ee;
+      --fort-bg: #313131;
+      --fort-text: #ebebeb;
       --sim-bg: #1a1f30;
-      --fort-bord: #6b6f80;
-      --sur-accent: #121318;
+      --fort-bord: #6e6e6e;
+      --sur-accent: #181818;
     }
   }
 
   * { box-sizing: border-box; }
+
+  /* États communs : focus visible au clavier, appui marqué, survol sur
+     ordinateur. Courbe de Découvrir : 300 ms pour les couleurs, 500 ms pour
+     le mouvement. */
+  a, button, summary, select, input, textarea, label {
+    transition: color 300ms var(--ease), background-color 300ms var(--ease),
+      border-color 300ms var(--ease), opacity 300ms var(--ease), transform 500ms var(--ease);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:not(:disabled):active { transform: scale(0.98); }
+  @media (hover: hover) {
+    a:hover, button:not(:disabled):hover, summary:hover { opacity: 0.8; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active { transform: none; }
+    /* Plus de mouvement : les couleurs changent encore, rien ne bouge. */
+    a, button, summary, select, input, textarea, label { transition-property: color, background-color, border-color, opacity; }
+    svg { transition: none !important; }
+  }
+
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. Pas
+     dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
+     sur le voisin. */
+  .ligue-btn, .pill-btn, .icon-btn, .sim-stats { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .sim-stats)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+  /* Le contenu suit directement l'en-tête : y aller ne fait pas défiler la
+     page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
+     bien au contenu. */
+  #contenu { scroll-margin-top: 100vh; }
 
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
@@ -118,7 +186,9 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -135,13 +205,18 @@
   header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--text);
+    /* Dégradé de gauche à droite découpé dans le texte, comme le titre de
+       Découvrir. */
+    background: linear-gradient(90deg, var(--titre-de), var(--titre-a));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   header .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -172,10 +247,10 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -187,8 +262,8 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
-    font-size: 11px;
+    border-radius: 9999px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -227,7 +302,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -236,24 +311,33 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
+  /* Sous 360 px, la barre rogne ses marges pour que les libellés à 12 px
+     tiennent ; rayon des onglets : 24 - 4 = 20 px. */
+  @media (max-width: 359px) {
+    .tab-bar { left: 6px; right: 6px; padding: 4px; gap: 0; }
+    .tab-bar a { padding-left: 0; padding-right: 0; border-radius: 20px; }
+  }
 
   main {
     max-width: 640px;
@@ -262,9 +346,9 @@
   }
 
   .banner {
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 14px;
     border: 1px solid;
@@ -280,7 +364,7 @@
     padding: 12px 14px;
     margin-bottom: 10px;
   }
-  .recap-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .recap-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
 
   /* Le bloc Filtres se replie : on ne le règle qu'une fois, alors qu'il pousse
      la liste hors de l'écran à chaque chargement. Ouvert par défaut, l'état
@@ -295,7 +379,7 @@
     border: 0;
     background: none;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text);
     text-align: left;
@@ -304,17 +388,15 @@
   .filters-toggle svg {
     flex: none;
     color: var(--muted);
-    transition: transform 0.18s ease;
+    transition: transform 500ms var(--ease);
   }
   .filters-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
   .filters-body { margin-top: 8px; }
   .filters-body[hidden] { display: none; }
 
   .filter-subtitle {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
     color: var(--muted);
     margin: 12px 0 6px;
   }
@@ -325,7 +407,7 @@
      pouce, et un club à la fois est le besoin réel. */
   .filter-select {
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     width: 100%;
@@ -336,12 +418,12 @@
   }
   .filter-chip {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--muted);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -350,10 +432,10 @@
   .filter-chip.serie-2.active { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
 
   .badge {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid;
   }
   .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
@@ -374,10 +456,10 @@
     padding: 10px 14px;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
   }
-  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 11px; }
+  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 12px; }
 
   /* --- Une ligne de classement ---
      Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
@@ -399,8 +481,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -411,16 +493,16 @@
   .rank-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
   .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
   .rank-main { flex: 1 1 auto; min-width: 0; }
-  .rank-team { font-size: 12px; font-weight: 700; line-height: 1.3; }
-  .rank-detail { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .rank-detail { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
   .rank-values { flex: 0 0 auto; text-align: right; }
   .rank-score {
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
   }
-  .rank-score.vide { font-size: 13px; color: var(--muted); }
+  .rank-score.vide { font-size: 14px; color: var(--muted); }
 
   /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
      pour une séparation de carte. */
@@ -432,21 +514,19 @@
     border-top: 2px solid var(--accent-border);
   }
   .cut-line span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
   }
   .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
 
   /* --- Phases finales : prévision des quarts et simulation --- */
   .poule-head .statut {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: 9999px;
     color: var(--warn-text);
     background: var(--warn-bg);
   }
@@ -462,7 +542,7 @@
      long fait varier. */
   /* position: relative : les quarts y mesurent leur hauteur (offsetTop),
      dans le même repère que l'arbre. */
-  .tableau { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 100px; }
+  .tableau { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 104px; }
   .tableau-quarts { min-width: 0; }
   .quart-row {
     display: grid;
@@ -474,16 +554,16 @@
   }
   .quart-row:first-of-type { border-top: none; }
   .quart-row.moitie { border-top: 2px solid var(--fort-bord); }
-  .quart-num { font-size: 10px; font-weight: 900; color: var(--accent); }
+  .quart-num { font-size: 12px; font-weight: 700; color: var(--accent); }
   .quart-side {
     display: flex;
     align-items: baseline;
     min-width: 0;
     padding: 2px 6px;
-    border-radius: 7px;
+    border-radius: 8px;
     border: 1px solid transparent;
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
@@ -492,24 +572,24 @@
   .quart-nom { flex: 1; min-width: 0; }
   .quart-proba {
     margin-left: 6px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .quart-proba.favori { font-weight: 900; color: var(--text); }
+  .quart-proba.favori { font-weight: 700; color: var(--text); }
   .quart-side.suivie .quart-proba { color: var(--accent); }
   .quart-seed {
     display: inline-block;
     min-width: 36px;
     margin-right: 5px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     text-align: center;
     color: var(--muted);
     background: var(--bg);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 0 5px;
     vertical-align: 1px;
     white-space: nowrap;
@@ -521,11 +601,11 @@
   .arbre-etape {
     position: absolute;
     transform: translateY(-50%);
-    font-size: 10px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
     line-height: 1;
     padding: 4px 6px;
-    border-radius: 20px;
+    border-radius: 9999px;
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
@@ -533,7 +613,7 @@
   }
   .arbre-etape.mien { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
   .arbre-etape.finale { background: var(--fort-bg); border-color: var(--fort-bg); color: var(--fort-text); }
-  .finales-note { font-size: 11px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
+  .finales-note { font-size: 12px; color: var(--muted); line-height: 1.45; padding: 6px 14px 8px; border-top: 1px solid var(--border); margin: 0; }
 
   /* Simulateur : cadre en pointillés, c'est un brouillon et pas un
      résultat. En tête, ce que la simulation change pour mes équipes. */
@@ -547,39 +627,39 @@
     border: 0;
     background: var(--accent-bg);
     font: inherit;
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--accent);
     text-align: left;
     cursor: pointer;
   }
   .sim-toggle .sim-titre { flex: 1 1 auto; min-width: 0; }
-  .sim-toggle .sim-titre small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+  .sim-toggle .sim-titre small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 1px; }
   .sim-compteur {
     flex: none;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
     color: var(--sur-accent);
     background: var(--accent);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 2px 8px;
     font-variant-numeric: tabular-nums;
   }
   .sim-compteur.zero { color: var(--accent); background: var(--card-bg); border: 1px solid var(--accent-border); }
-  .sim-toggle svg { flex: none; transition: transform 0.18s ease; }
+  .sim-toggle svg { flex: none; transition: transform 500ms var(--ease); }
   .sim-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
 
   .sim-impact { padding: 10px 14px; border-top: 1px solid var(--accent-border); background: var(--card-bg); }
-  .sim-impact-ligne { font-size: 12px; line-height: 1.4; }
+  .sim-impact-ligne { font-size: 14px; line-height: 1.4; }
   .sim-impact-ligne + .sim-impact-ligne { margin-top: 6px; }
-  .sim-impact-ligne b { font-weight: 800; }
-  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
+  .sim-impact-ligne b { font-weight: 700; }
+  .sim-impact-ligne .verdict { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 700; border-radius: 9999px; padding: 1px 8px; }
   .sim-impact-ligne .verdict.ok { color: var(--win-text); background: var(--win-bg); }
   .sim-impact-ligne .verdict.ko { color: var(--loss-text); background: var(--error-bg); }
   .sim-impact-ligne .verdict.attente { color: var(--muted); background: var(--bg); }
   .sim-impact-ligne .montrer { margin-top: 6px; }
-  .sim-impact-ligne .chemin { margin-top: 4px; font-size: 12px; line-height: 1.45; }
-  .sim-impact.astuce { font-size: 11px; color: var(--muted); line-height: 1.45; }
+  .sim-impact-ligne .chemin { margin-top: 4px; font-size: 14px; line-height: 1.45; }
+  .sim-impact.astuce { font-size: 12px; color: var(--muted); line-height: 1.45; }
 
   .sim-liste { padding: 4px 10px 2px; }
   .sim-match {
@@ -587,30 +667,30 @@
     padding: 8px 10px 10px;
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
   }
   .sim-match.simulee { border-color: var(--accent-border); box-shadow: inset 3px 0 0 var(--accent); }
   .sim-match-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-height: 20px; }
-  .sim-poule { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-  .sim-mienne { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 20px; padding: 1px 7px; }
-  .sim-prono { font-size: 10px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 20px; padding: 1px 7px; }
+  .sim-poule { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .sim-mienne { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 9999px; padding: 1px 7px; }
+  .sim-prono { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 9999px; padding: 1px 7px; }
   .sim-prono[hidden] { display: none; }
   .sim-stats {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent);
     background: var(--accent-bg);
     border: 1px solid var(--accent-border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
-  .sim-stats-msg { margin: 0 14px 8px; font-size: 12px; line-height: 1.45; }
+  .sim-stats-msg { margin: 0 14px 8px; font-size: 14px; line-height: 1.45; }
   .sim-annuler {
     margin-left: auto;
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--muted);
     background: none;
@@ -634,15 +714,15 @@
     border-radius: 8px;
     background: var(--card-bg);
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     text-align: left;
     cursor: pointer;
   }
   .sim-pick .nom { flex: 1 1 auto; min-width: 0; }
-  .sim-pick .marque { flex: none; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; }
-  .sim-pick.gagne { color: var(--win-text); border-color: var(--win-border); background: var(--win-bg); font-weight: 800; }
+  .sim-pick .marque { flex: none; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; }
+  .sim-pick.gagne { color: var(--win-text); border-color: var(--win-border); background: var(--win-bg); font-weight: 700; }
   .sim-pick.perd { color: var(--muted); background: var(--bg); }
   .sim-pick.suivie .nom { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
   .sim-score {
@@ -655,7 +735,7 @@
     background: var(--card-bg);
     font: inherit;
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 700;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
@@ -664,12 +744,12 @@
   .sim-actions:first-child { padding: 10px 14px 4px; }
   .sim-reset {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--loss-text);
     background: var(--card-bg);
     border: 1px solid var(--error-border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -677,24 +757,24 @@
   .banner.sim .sim-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
   .voir-quarts {
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--fort-text);
     background: var(--fort-bg);
     border: 1px solid var(--fort-bg);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
 
   .legende {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.45;
     margin: 10px 0 0;
   }
 
-  .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
+  .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
 
   .skeleton-card {
     background: var(--card-bg);
@@ -740,26 +820,27 @@
     color: var(--sur-accent);
     font-size: 18px;
     line-height: 1;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 10px rgba(var(--ombre-rgb), 0.25);
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
-  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 22px; font-size: 13px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
+  .fab-btn.pill { width: auto; padding: 0 16px; border-radius: 9999px; font-size: 14px; font-weight: 700; color: var(--fort-text); background: var(--fort-bg); }
   .fab-btn[hidden] { display: none; }
 
 
   footer { text-align: center; padding: 20px 4px 10px; }
-  footer p { margin: 0 0 6px; font-size: 11px; color: var(--muted); }
+  footer p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
   <div class="header-actions">
-    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 12a8.2 8.2 0 1 1-2.4-5.8"/><path d="M20.2 3.6v4.8h-4.8"/></svg><span>Rafraîchir</span></button>
-    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.2h0M12 15.2h0M15.5 15.2h0M8.5 18.4h0M12 18.4h0M15.5 18.4h0"/></svg></a>
+    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"/></svg><span>Rafraîchir</span></button>
+    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M80,120h96a8,8,0,0,0,8-8V64a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8v48A8,8,0,0,0,80,120Zm8-48h80v32H88ZM200,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm0,192H56V40H200ZM100,148a12,12,0,1,1-12-12A12,12,0,0,1,100,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,148Zm-80,40a12,12,0,1,1-12-12A12,12,0,0,1,100,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,188Z"/></svg></a>
   </div>
 </div>
 <header>
@@ -768,9 +849,9 @@
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
-<main>
+<main id="contenu">
   <div class="recap-card">
-    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
     <div class="filters-body" id="filtersBody">
     <div class="filter-subtitle">Spécialité</div>
     <div class="filter-group" id="filterSpecs"></div>
@@ -795,16 +876,16 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.30.2</p>
+    <p>Version 2026.10.31</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
-  <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
-  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mes équipes</span></a>
-  <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
-  <a href="classement.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><rect x="3.6" y="19.4" width="16.8" height="2" rx="1"/><rect x="4.3" y="11.8" width="5" height="6.2" rx="1.4"/><rect x="9.5" y="7.2" width="5" height="10.8" rx="1.4"/><rect x="14.7" y="9.8" width="5" height="8.2" rx="1.4"/></svg><span>Classement</span></a>
-  <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
+  <a href="index.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg><span>Accueil</span></a>
+  <a href="equipe.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg><span>Mes équipes</span></a>
+  <a href="programme.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"/></svg><span>Parties</span></a>
+  <a href="classement.html" class="active" aria-current="page"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M240,200h-8V144a16,16,0,0,0-16-16H176V56a16,16,0,0,0-16-16H96A16,16,0,0,0,80,56V88H40a16,16,0,0,0-16,16v96H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM80,200H40V104H80Zm60-64a8,8,0,0,1-16,0V107.1l-1.47.49a8,8,0,0,1-5.06-15.18l12-4A8,8,0,0,1,140,96Zm76,64H176V144h40Z"/></svg><span>Classement</span></a>
+  <a href="creneaux.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></svg><span>Créneaux</span></a>
 </nav>
 
 
@@ -1430,7 +1511,7 @@
 
     var msg;
     if (!libres.length) {
-      msg = "Toutes les parties sont déjà simulées. Annulez-en une pour demander l'avis du comptoir.";
+      msg = "Toutes les parties sont déjà simulées. Annulez une simulation pour demander l'avis du comptoir.";
     } else if (!faits) {
       msg = "Le comptoir reste sans voix : pas encore assez de résultats pour départager qui que ce soit.";
     } else {
@@ -1606,7 +1687,7 @@
     pronoMessage[cle] = "🗺️ Le scénario qui qualifie " + t.label + " le plus probable" +
       (d ? " selon le comptoir, avec " + d + " surprise" + (d > 1 ? "s" : "") + " à créer (les parties sans étiquette 🍻)."
          : " ? Celui du comptoir, qui y croit déjà 🍻") +
-      " Retouchez-le à volonté.";
+      " Vous pouvez le retoucher à volonté.";
     simOuvert[cle] = true;
     derniereSerieSimulee = cle;
     lastTeams = buildStandings(avecSimulation(lastData.rencontres), lastData.clubMap);
@@ -1853,7 +1934,7 @@
         el("b", { text: "Chemin vers les quarts : " }), document.createTextNode(chemin.texte)
       ]));
       if (chemin.scenario) {
-        var montrer = el("button", { type: "button", class: "sim-stats montrer", text: "🗺️ Montre-moi ce scénario" });
+        var montrer = el("button", { type: "button", class: "sim-stats montrer", text: "🗺️ Afficher ce scénario" });
         montrer.addEventListener("click", function () { montrerScenario(t, chemin); });
         ligne.appendChild(montrer);
       }
@@ -1892,7 +1973,7 @@
     toggle.appendChild(titre);
     zone.compteur = el("span", { class: "sim-compteur", title: "Parties simulées" });
     toggle.appendChild(zone.compteur);
-    toggle.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
+    toggle.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>');
     carte.appendChild(toggle);
 
     // Visible même replié : on voit d'emblée où en est son équipe.
@@ -2078,7 +2159,7 @@
     b.appendChild(el("strong", { text: "Simulation en cours" }));
     b.appendChild(document.createTextNode(
       n + " résultat" + (n > 1 ? "s simulés sont inclus" : " simulé est inclus") +
-      " dans le classement et les quarts ci-dessous. Ils disparaissent au rechargement."));
+      " dans le classement et les quarts plus bas. Ils disparaissent au rechargement."));
     var voir = el("button", { type: "button", class: "voir-quarts", text: "Voir les quarts" });
     voir.addEventListener("click", voirQuarts);
     var reset = el("button", { type: "button", class: "sim-reset", text: "Effacer la simulation" });

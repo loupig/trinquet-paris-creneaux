@@ -7,13 +7,24 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   :root {
     color-scheme: light;
     --bg: #f4f5f7;
@@ -41,6 +52,9 @@
     --verre: rgba(255, 255, 255, 0.55);
     --verre-bord: rgba(255, 255, 255, 0.55);
     --ombre-rgb: 26, 26, 46;
+    --titre-de: #000000;
+    --titre-a: #666666;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --vert: #009B48;
   }
   /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
@@ -48,11 +62,11 @@
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --bg: #121318;
-      --card-bg: #1c1d24;
-      --text: #e8e9ee;
-      --muted: #a0a3b0;
-      --border: #2e303a;
+      --bg: #181818;
+      --card-bg: #1f1f1f;
+      --text: #ebebeb;
+      --muted: #a3a3a3;
+      --border: #313131;
       --serie1-bg: #10302c;
       --serie1-text: #5eead4;
       --serie1-border: #1f4a44;
@@ -68,22 +82,78 @@
       --error-text: #ff9a94;
       --error-border: #6a2a2a;
       --accent: #8ba6ff;
-      --surface-2: #24252e;
-      --surface-3: #2c2d37;
-      --verre: rgba(36, 37, 46, 0.6);
+      --surface-2: #272727;
+      --surface-3: #313131;
+      --verre: rgba(39, 39, 39, 0.6);
       --verre-bord: rgba(255, 255, 255, 0.08);
       --ombre-rgb: 0, 0, 0;
+      --titre-de: #ffffff;
+      --titre-a: #9b9b9b;
       --vert: #2fd17a;
     }
   }
 
   * { box-sizing: border-box; }
 
+  /* États communs : focus visible au clavier, appui marqué, survol sur
+     ordinateur. Courbe de Découvrir : 300 ms pour les couleurs, 500 ms pour
+     le mouvement. */
+  a, button, summary, select, input, textarea, label {
+    transition: color 300ms var(--ease), background-color 300ms var(--ease),
+      border-color 300ms var(--ease), opacity 300ms var(--ease), transform 500ms var(--ease);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:not(:disabled):active { transform: scale(0.98); }
+  @media (hover: hover) {
+    a:hover, button:not(:disabled):hover, summary:hover { opacity: 0.8; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active { transform: none; }
+    /* Plus de mouvement : les couleurs changent encore, rien ne bouge. */
+    a, button, summary, select, input, textarea, label { transition-property: color, background-color, border-color, opacity; }
+    svg { transition: none !important; }
+  }
+
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. Pas
+     dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
+     sur le voisin. */
+  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+  /* Le contenu suit directement l'en-tête : y aller ne fait pas défiler la
+     page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
+     bien au contenu. */
+  #contenu { scroll-margin-top: 100vh; }
+
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -95,13 +165,18 @@
   }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--text);
+    /* Dégradé de gauche à droite découpé dans le texte, comme le titre de
+       Découvrir. */
+    background: linear-gradient(90deg, var(--titre-de), var(--titre-a));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   header .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -132,10 +207,10 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -147,8 +222,8 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
-    font-size: 11px;
+    border-radius: 9999px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -187,7 +262,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -196,24 +271,33 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
+  /* Sous 360 px, la barre rogne ses marges pour que les libellés à 12 px
+     tiennent ; rayon des onglets : 24 - 4 = 20 px. */
+  @media (max-width: 359px) {
+    .tab-bar { left: 6px; right: 6px; padding: 4px; gap: 0; }
+    .tab-bar a { padding-left: 0; padding-right: 0; border-radius: 20px; }
+  }
 
   main {
     max-width: 640px;
@@ -222,9 +306,9 @@
   }
 
   .banner {
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 14px;
     border: 1px solid;
@@ -254,22 +338,22 @@
     border-bottom: 1px solid var(--border);
     background: var(--bg);
   }
-  .tile-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
-  .tile-go { font-size: 11px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+  .tile-title { font-size: 14px; font-weight: 700; }
+  .tile-go { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
   .tile-body { padding: 10px 14px; }
-  .tile-note { font-size: 11px; color: var(--muted); line-height: 1.45; margin: 0; }
+  .tile-note { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0; }
 
   /* --- Chiffre mis en avant --- */
   .headline { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .headline-value { font-size: 22px; font-weight: 800; line-height: 1.1; }
-  .headline-unit { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .headline-value { font-size: 24px; font-weight: 700; line-height: 1.1; }
+  .headline-unit { font-size: 14px; font-weight: 600; color: var(--muted); }
 
   /* --- Ligne d'une partie ---
      Tronquée : la tuile entière ouvre le programme, qui donne poule, lieu et
      noms complets. Sur l'accueil l'utile est "quand, qui, quelle série". */
   .next-when {
     flex: 0 0 auto;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text);
     white-space: nowrap;
@@ -277,7 +361,7 @@
   .next-teams {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1.3;
     white-space: nowrap;
@@ -285,10 +369,10 @@
     text-overflow: ellipsis;
   }
   .badge {
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     padding: 1px 6px;
-    border-radius: 20px;
+    border-radius: 9999px;
     border: 1px solid;
     white-space: nowrap;
   }
@@ -304,8 +388,8 @@
   .mes-row:active { opacity: 0.6; }
   .mes-row + .mes-row { border-top: 1px solid var(--border); }
   .mes-line { display: flex; gap: 8px; align-items: center; }
-  .mes-nom { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 700; }
-  .mes-info { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .mes-nom { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; }
+  .mes-info { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
   .mes-info strong { color: var(--text); font-weight: 700; }
 
   /* Repère des parties de mes équipes dans "D'ici dimanche" : un trait en
@@ -322,17 +406,17 @@
   .affiche-why { display: flex; gap: 8px; align-items: center; margin-top: 3px; min-width: 0; }
   .affiche-tag {
     flex: 0 0 auto;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--accent);
     background: var(--accent-bg);
     border: 1px solid var(--accent-border);
     padding: 1px 7px;
-    border-radius: 20px;
+    border-radius: 9999px;
     white-space: nowrap;
   }
   .affiche-lieu {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
     white-space: nowrap;
     overflow: hidden;
@@ -355,18 +439,18 @@
     border-top: none;
     border-radius: 0 0 12px 12px;
   }
-  .partage-ok { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .partage-ok { font-size: 12px; font-weight: 600; color: var(--muted); }
   .partager {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent);
     background: var(--accent-bg);
     border: 1px solid var(--accent-border);
-    border-radius: 20px;
+    border-radius: 9999px;
     padding: 6px 12px;
     cursor: pointer;
   }
@@ -386,10 +470,8 @@
   .progress i.serie-2 { background: var(--serie2-text); }
   .split { margin-top: 10px; }
   .split-spec {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
     color: var(--muted);
     margin-bottom: 8px;
   }
@@ -399,7 +481,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     padding-left: 10px;
     border-left: 2px solid var(--border);
@@ -417,7 +499,7 @@
     margin: 8px 0 0 12px;
     padding: 6px 9px;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--accent);
     background: var(--accent-bg);
@@ -452,17 +534,18 @@
 
 
   footer { text-align: center; padding: 12px 4px 6px; }
-  footer p { margin: 0 0 4px; font-size: 11px; color: var(--muted); }
+  footer p { margin: 0 0 4px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
   <div class="header-actions">
-    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 12a8.2 8.2 0 1 1-2.4-5.8"/><path d="M20.2 3.6v4.8h-4.8"/></svg><span>Rafraîchir</span></button>
-    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.2h0M12 15.2h0M15.5 15.2h0M8.5 18.4h0M12 18.4h0M15.5 18.4h0"/></svg></a>
+    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"/></svg><span>Rafraîchir</span></button>
+    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M80,120h96a8,8,0,0,0,8-8V64a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8v48A8,8,0,0,0,80,120Zm8-48h80v32H88ZM200,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm0,192H56V40H200ZM100,148a12,12,0,1,1-12-12A12,12,0,0,1,100,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,148Zm-80,40a12,12,0,1,1-12-12A12,12,0,0,1,100,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,188Z"/></svg></a>
   </div>
 </div>
 <header>
@@ -472,22 +555,22 @@
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
-<main>
+<main id="contenu">
   <div id="banner-slot"></div>
   <div id="tiles"></div>
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.30.2</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.31</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
-  <a href="index.html" class="active" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d="M11.35 3.3a1 1 0 0 1 1.3 0l8.52 7.47a1 1 0 0 1-.66 1.75H19.4v6.28a2 2 0 0 1-2 2h-2.9V16a1 1 0 0 0-1-1h-3.2a1 1 0 0 0-1 1v4.8H6.4a2 2 0 0 1-2-2v-6.28H3.29a1 1 0 0 1-.66-1.75L11.35 3.3z"/></svg><span>Accueil</span></a>
-  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mes équipes</span></a>
-  <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
-  <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
-  <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
+  <a href="index.html" class="active" aria-current="page"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"/></svg><span>Accueil</span></a>
+  <a href="equipe.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg><span>Mes équipes</span></a>
+  <a href="programme.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"/></svg><span>Parties</span></a>
+  <a href="classement.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M112.41,102.53a8,8,0,0,1,5.06-10.12l12-4A8,8,0,0,1,140,96v40a8,8,0,0,1-16,0V107.1l-1.47.49A8,8,0,0,1,112.41,102.53ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16h8V104A16,16,0,0,1,40,88H80V56A16,16,0,0,1,96,40h64a16,16,0,0,1,16,16v72h40a16,16,0,0,1,16,16v56h8A8,8,0,0,1,248,208Zm-72-64v56h40V144ZM96,200h64V56H96Zm-56,0H80V104H40Z"/></svg><span>Classement</span></a>
+  <a href="creneaux.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></svg><span>Créneaux</span></a>
 </nav>
 
 
@@ -1108,7 +1191,7 @@
     }).filter(function (partie) { return !!partie; });
     if (!parties.length || derniere < today) return null;
     var info = el("div", { class: "finales-info" });
-    info.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.01"/></svg>';
+    info.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="13" height="13" aria-hidden="true"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg>';
     info.appendChild(el("span", { text: "Phases finales : " + parties.join(" · ") }));
     return info;
   }
@@ -1245,7 +1328,7 @@
     var pied = el("div", { class: "tile-pied" });
     var info = el("span", { class: "partage-ok", "aria-live": "polite" });
     var bouton = el("button", { type: "button", class: "partager" });
-    bouton.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+    bouton.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
     bouton.appendChild(el("span", { text: "Partager ces parties" }));
     bouton.addEventListener("click", function () {
       var texte = textePartage(titre, parties);

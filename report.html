@@ -7,13 +7,24 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LIDFPB">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Manrope hébergée avec le site, comme Découvrir : aucune requête vers un
+     tiers. Licence OFL dans fonts/OFL.txt. */
+  @font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("fonts/manrope.woff2") format("woff2");
+  }
+
   :root {
     color-scheme: light;
     --bg: #f4f5f7;
@@ -38,6 +49,9 @@
     --verre: rgba(255, 255, 255, 0.55);
     --verre-bord: rgba(255, 255, 255, 0.55);
     --ombre-rgb: 26, 26, 46;
+    --titre-de: #000000;
+    --titre-a: #666666;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --vert: #009B48;
     --sur-accent: #fff;
   }
@@ -46,11 +60,11 @@
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --bg: #121318;
-      --card-bg: #1c1d24;
-      --text: #e8e9ee;
-      --muted: #a0a3b0;
-      --border: #2e303a;
+      --bg: #181818;
+      --card-bg: #1f1f1f;
+      --text: #ebebeb;
+      --muted: #a3a3a3;
+      --border: #313131;
       --free-bg: #12301f;
       --free-text: #4ade80;
       --free-border: #1f5235;
@@ -63,17 +77,71 @@
       --error-text: #ff9a94;
       --error-border: #6a2a2a;
       --accent: #8ba6ff;
-      --surface-2: #24252e;
-      --surface-3: #2c2d37;
-      --verre: rgba(36, 37, 46, 0.6);
+      --surface-2: #272727;
+      --surface-3: #313131;
+      --verre: rgba(39, 39, 39, 0.6);
       --verre-bord: rgba(255, 255, 255, 0.08);
       --ombre-rgb: 0, 0, 0;
+      --titre-de: #ffffff;
+      --titre-a: #9b9b9b;
       --vert: #2fd17a;
-      --sur-accent: #121318;
+      --sur-accent: #181818;
     }
   }
 
   * { box-sizing: border-box; }
+
+  /* États communs : focus visible au clavier, appui marqué, survol sur
+     ordinateur. Courbe de Découvrir : 300 ms pour les couleurs, 500 ms pour
+     le mouvement. */
+  a, button, summary, select, input, textarea, label {
+    transition: color 300ms var(--ease), background-color 300ms var(--ease),
+      border-color 300ms var(--ease), opacity 300ms var(--ease), transform 500ms var(--ease);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:not(:disabled):active { transform: scale(0.98); }
+  @media (hover: hover) {
+    a:hover, button:not(:disabled):hover, summary:hover { opacity: 0.8; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active { transform: none; }
+    /* Plus de mouvement : les couleurs changent encore, rien ne bouge. */
+    a, button, summary, select, input, textarea, label { transition-property: color, background-color, border-color, opacity; }
+    svg { transition: none !important; }
+  }
+
+  /* Cibles tactiles d'au moins 44 x 44 px : la zone sensible déborde du
+     bouton sans changer son dessin, comme les pastilles du compteur. Pas
+     dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
+     sur le voisin. */
+  .ligue-btn, .pill-btn, .icon-btn { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn)::after {
+    content: "";
+    position: absolute;
+    top: min(0px, (100% - 44px) / 2);
+    bottom: min(0px, (100% - 44px) / 2);
+    left: min(0px, (100% - 44px) / 2);
+    right: min(0px, (100% - 44px) / 2);
+  }
+
+  /* Lien d'évitement : premier arrêt au clavier, visible au focus seulement. */
+  .aller-contenu {
+    position: absolute;
+    left: 16px;
+    top: -64px;
+    z-index: 80;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--card-bg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .aller-contenu:focus { top: calc(16px + env(safe-area-inset-top, 0px)); }
+  /* Le contenu suit directement l'en-tête : y aller ne fait pas défiler la
+     page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
+     bien au contenu. */
+  #contenu { scroll-margin-top: 100vh; }
 
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
@@ -84,7 +152,9 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -101,13 +171,18 @@
   header h1 a.home-link:active { opacity: 0.6; }
   header h1 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--text);
+    /* Dégradé de gauche à droite découpé dans le texte, comme le titre de
+       Découvrir. */
+    background: linear-gradient(90deg, var(--titre-de), var(--titre-a));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   header .header-sync {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     line-height: 1.3;
   }
@@ -137,10 +212,10 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     padding: 9px 14px;
-    border-radius: 20px;
+    border-radius: 9999px;
     text-decoration: none;
     box-shadow: 0 4px 16px rgba(var(--ombre-rgb), 0.22);
   }
@@ -152,8 +227,8 @@
     gap: 6px;
     height: 36px;
     padding: 0 14px 0 11px;
-    border-radius: 20px;
-    font-size: 11px;
+    border-radius: 9999px;
+    font-size: 12px;
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
@@ -192,7 +267,7 @@
     display: flex;
     gap: 2px;
     padding: 6px;
-    border-radius: 26px;
+    border-radius: 24px;
     background: var(--verre);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -201,24 +276,33 @@
     z-index: 60;
   }
   .tab-bar a {
-    flex: 1 1 0;
+    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+       une ligne dès 360 px. */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     padding: 6px 2px 5px;
-    border-radius: 20px;
+    border-radius: 18px;
     color: var(--muted);
     text-decoration: none;
   }
   .tab-bar a span {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: -0.1px;
+    white-space: nowrap;
   }
   .tab-bar a.active { color: var(--accent); background: var(--accent-bg); }
   .tab-bar a:active { opacity: 0.7; }
+  /* Sous 360 px, la barre rogne ses marges pour que les libellés à 12 px
+     tiennent ; rayon des onglets : 24 - 4 = 20 px. */
+  @media (max-width: 359px) {
+    .tab-bar { left: 6px; right: 6px; padding: 4px; gap: 0; }
+    .tab-bar a { padding-left: 0; padding-right: 0; border-radius: 20px; }
+  }
 
   main {
     max-width: 640px;
@@ -227,9 +311,9 @@
   }
 
   .banner {
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 14px;
     border: 1px solid;
@@ -261,23 +345,23 @@
     box-shadow: 0 2px 10px rgba(47, 92, 224, 0.12);
   }
   .recap-title {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text);
     margin-bottom: 8px;
   }
-  .recap-card.featured .recap-title { font-size: 14px; }
-  .recap-empty { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0 0 6px; }
+  .recap-card.featured .recap-title { font-size: 16px; }
+  .recap-empty { font-size: 14px; color: var(--muted); line-height: 1.45; margin: 0 0 6px; }
   .recap-empty:last-child { margin-bottom: 0; }
-  .recap-line { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .recap-line { font-size: 14px; color: var(--text); line-height: 1.5; }
   .recap-line strong { font-weight: 700; }
 
-  .propose-intro { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0 0 8px; }
+  .propose-intro { font-size: 14px; color: var(--muted); line-height: 1.45; margin: 0 0 8px; }
   .propose-team {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.4;
     padding: 4px 0;
   }
@@ -312,19 +396,17 @@
     padding-bottom: 4px;
   }
   .grid-head-day {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
   }
   .grid-head-date {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   .grid-head-warn {
     margin-top: 2px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--warn-text);
     cursor: pointer;
@@ -335,14 +417,14 @@
     justify-content: flex-end;
     padding-right: 4px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .slot-cell {
     border-radius: 8px;
     padding: 8px 4px;
     text-align: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     border: 1px solid;
   }
@@ -362,7 +444,7 @@
   .slot-cell.open { outline: 2px solid var(--accent); outline-offset: 1px; }
   .slot-cell-meta {
     margin-top: 2px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 600;
     opacity: 0.8;
   }
@@ -372,7 +454,7 @@
     background: var(--bg);
     border-radius: 8px;
     padding: 10px 12px;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--text);
   }
   .slot-detail .match-line { font-weight: 600; margin-bottom: 4px; }
@@ -381,7 +463,7 @@
   .empty-state {
     text-align: center;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 14px;
     padding: 40px 20px;
   }
 
@@ -420,7 +502,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     padding: 4px 4px 14px;
   }
@@ -428,7 +510,7 @@
   .legend i {
     display: inline-block;
     width: 9px; height: 9px;
-    border-radius: 3px;
+    border-radius: 2px;
   }
   .legend i.free { background: var(--free-text); }
   .legend i.warn { background: var(--warn-text); }
@@ -456,7 +538,7 @@
     font-size: 18px;
     line-height: 1;
     text-decoration: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 10px rgba(var(--ombre-rgb), 0.25);
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
@@ -469,19 +551,20 @@
   }
   footer p {
     margin: 0 0 6px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
   }
   footer a { color: var(--muted); }
 </style>
 </head>
 <body>
+<a class="aller-contenu" href="#contenu">Aller au contenu</a>
 
 <div class="header-bar">
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
   <div class="header-actions">
-    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 12a8.2 8.2 0 1 1-2.4-5.8"/><path d="M20.2 3.6v4.8h-4.8"/></svg><span>Rafraîchir</span></button>
-    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3" rx="1"/><path d="M8.5 12h0M12 12h0M15.5 12h0M8.5 15.2h0M12 15.2h0M15.5 15.2h0M8.5 18.4h0M12 18.4h0M15.5 18.4h0"/></svg></a>
+    <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"/></svg><span>Rafraîchir</span></button>
+    <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M80,120h96a8,8,0,0,0,8-8V64a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8v48A8,8,0,0,0,80,120Zm8-48h80v32H88ZM200,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm0,192H56V40H200ZM100,148a12,12,0,1,1-12-12A12,12,0,0,1,100,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,148Zm-80,40a12,12,0,1,1-12-12A12,12,0,0,1,100,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,188Z"/></svg></a>
   </div>
 </div>
 <header>
@@ -491,22 +574,22 @@
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
 </header>
 
-<main>
+<main id="contenu">
   <div class="recap-card featured" id="targetCard" hidden></div>
 
   <div class="recap-card" id="proposeCard" hidden></div>
 
   <div class="recap-card">
     <div class="recap-title">Avant d'acter le report</div>
-    <p class="recap-empty">Une date repérée ici n'est pas une date actée. Mettez-vous d'accord avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
+    <p class="recap-empty">Une date repérée ici n'est pas une date actée. Convenez de la date avec l'adversaire, puis prévenez le responsable de championnat de la ligue, qui doit valider le nouveau créneau. Ce site n'enregistre rien et ne prévient personne.</p>
     <p class="recap-empty">Seuls les créneaux encore disponibles sont affichés, sur la grille de championnat du Trinquet Paris (vendredi 21h et 22h, dimanche de 14h à 17h et de 20h à 22h). Pour voir qui occupe les autres créneaux, passez par les <a href="creneaux.html">créneaux libres au Trinquet Paris</a>. Un report sur un créneau hors grille se négocie hors de cet outil, avec le trinquet et la ligue.</p>
   </div>
 
   <div class="legend">
     <span><i class="free"></i>Libre</span>
-    <span><i class="warn"></i>Libre, mais une équipe joue déjà ce jour-là</span>
+    <span><i class="warn"></i>Libre, mais une équipe joue déjà ce jour</span>
     <span><i class="current"></i>Créneau actuel</span>
-    <span>Les créneaux barrés sont indisponibles (déjà pris, ou hors grille ce jour-là).</span>
+    <span>Les créneaux barrés sont indisponibles (déjà pris, ou hors grille ce jour).</span>
   </div>
 
   <div id="banner-slot"></div>
@@ -515,16 +598,16 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.10.30.2</p>
+    <p>Version 2026.10.31</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
-  <a href="index.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11 12 4.2 20.4 11"/><path d="M5.8 9.6V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.6"/></svg><span>Accueil</span></a>
-  <a href="equipe.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.4 19.8c0-3.4 2.5-6 5.6-6s5.6 2.6 5.6 6"/><path d="M15.6 5.1a3 3 0 0 1 0 5.8"/><path d="M17.4 14.2c2 .7 3.3 2.8 3.3 5.6"/></svg><span>Mes équipes</span></a>
-  <a href="programme.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M5 7h0M5 12h0M5 17h0"/></svg><span>Parties</span></a>
-  <a href="classement.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.5h16"/><rect x="4.5" y="12" width="4.6" height="5.8" rx="1.2"/><rect x="9.7" y="7.4" width="4.6" height="10.4" rx="1.2"/><rect x="14.9" y="10" width="4.6" height="7.8" rx="1.2"/></svg><span>Classement</span></a>
-  <a href="creneaux.html"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 9.8h17M8 3.4v3.4M16 3.4v3.4"/></svg><span>Créneaux</span></a>
+  <a href="index.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg><span>Accueil</span></a>
+  <a href="equipe.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg><span>Mes équipes</span></a>
+  <a href="programme.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"/></svg><span>Parties</span></a>
+  <a href="classement.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M112.41,102.53a8,8,0,0,1,5.06-10.12l12-4A8,8,0,0,1,140,96v40a8,8,0,0,1-16,0V107.1l-1.47.49A8,8,0,0,1,112.41,102.53ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16h8V104A16,16,0,0,1,40,88H80V56A16,16,0,0,1,96,40h64a16,16,0,0,1,16,16v72h40a16,16,0,0,1,16,16v56h8A8,8,0,0,1,248,208Zm-72-64v56h40V144ZM96,200h64V56H96Zm-56,0H80V104H40Z"/></svg><span>Classement</span></a>
+  <a href="creneaux.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></svg><span>Créneaux</span></a>
 </nav>
 
 
@@ -1119,7 +1202,7 @@
     if (target.date && target.hour !== null) {
       var hours = GRID[target.date.getDay()];
       if (!hours || hours.indexOf(target.hour) === -1) {
-        card.appendChild(el("p", { class: "recap-empty", text: "Ce créneau ne fait pas partie de la grille de championnat : il n'apparaît pas dans le tableau ci-dessous." }));
+        card.appendChild(el("p", { class: "recap-empty", text: "Ce créneau ne fait pas partie de la grille de championnat : il n'apparaît pas dans le tableau plus bas." }));
       }
     }
   }
@@ -1137,7 +1220,7 @@
     }
     if (state === "warn") {
       cell.appendChild(el("div", { text: "Libre" }));
-      cell.appendChild(el("div", { class: "slot-cell-meta", text: "⚠ une équipe joue déjà ce jour-là" }));
+      cell.appendChild(el("div", { class: "slot-cell-meta", text: "⚠ une équipe joue déjà ce jour" }));
       return cell;
     }
     cell.appendChild(el("div", { text: "Libre" }));
@@ -1230,20 +1313,20 @@
     var lien = reportUrl(target.oid);
     if (lien) blocs.push("Liste complète et à jour : " + lien);
 
-    blocs.push("Qu'est-ce qui vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue.");
+    blocs.push("Quelle date vous arrangerait ? Une fois d'accord, il faudra faire valider la date par la ligue.");
 
     var contexte = [target.serieLabel, target.meta].filter(function (part) { return !!part; }).join(" - ");
     if (contexte) blocs.push("_" + contexte + "_");
 
-    blocs.push("Merci !");
+    blocs.push("Merci.");
     return blocs.join("\n\n");
   }
 
   // Pictogrammes SVG inline (pas de dépendance externe), identiques à
   // programme.html pour que les 3 canaux se reconnaissent d'une page à l'autre.
-  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/><path d="M12.05 2C6.53 2 2.05 6.48 2.05 12c0 1.77.46 3.5 1.35 5.02L2 22l5.11-1.34a9.95 9.95 0 0 0 4.94 1.31c5.52 0 10-4.48 10-10S17.57 2 12.05 2zm0 18.16a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.09.81.82-3.01-.19-.3a8.13 8.13 0 0 1-1.25-4.34c0-4.5 3.66-8.16 8.16-8.16 2.18 0 4.23.85 5.77 2.39a8.1 8.1 0 0 1 2.39 5.77c0 4.5-3.66 8.16-8.16 8.16z"/></svg>';
-  var ICON_SVG_SMS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>';
-  var ICON_SVG_TEL = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M187.58,144.84l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88,40,40,0,0,0,40-40A8,8,0,0,0,187.58,144.84ZM152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155l14.61-9.74,23,11.48A24,24,0,0,1,152,176ZM128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"/></svg>';
+  var ICON_SVG_SMS = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M216,48H40A16,16,0,0,0,24,64V224a15.85,15.85,0,0,0,9.24,14.5A16.13,16.13,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l.09-.07L83,208H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,224h0ZM216,192H80a8,8,0,0,0-5.23,1.95L40,224V64H216ZM88,112a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H96A8,8,0,0,1,88,112Zm0,32a8,8,0,0,1,8-8h64a8,8,0,1,1,0,16H96A8,8,0,0,1,88,144Z"/></svg>';
+  var ICON_SVG_TEL = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>';
 
   function buildIconLink(iconClass, svg, href, title, openInNewTab) {
     var a = el("a", { class: "wa-icon " + iconClass, href: href, title: title, "aria-label": title });
@@ -1293,7 +1376,7 @@
     });
 
     if (!auMoinsUnContact) {
-      card.appendChild(el("p", { class: "recap-empty", text: "Les dates restent visibles dans le tableau ci-dessous, à transmettre par vos propres moyens." }));
+      card.appendChild(el("p", { class: "recap-empty", text: "Les dates restent visibles dans le tableau plus bas, à transmettre par vos propres moyens." }));
     }
     card.hidden = false;
   }
@@ -1465,7 +1548,7 @@
 
       if (!row) {
         renderBanner(bannerSlot, "error", "Partie introuvable",
-          "Aucune rencontre ne correspond à cet identifiant. Elle a peut-être été retirée du calendrier.", true);
+          "Aucune rencontre ne correspond à cet identifiant. La ligue l'a sans doute retirée du calendrier.", true);
         return;
       }
 
@@ -1490,7 +1573,7 @@
 
       if (target.date && target.date < today) {
         renderBanner(bannerSlot, "warn", "Date déjà passée",
-          "Cette partie était prévue le " + formatDate(target.date) + " et n'a pas de score. Les dates proposées ci-dessous partent d'aujourd'hui.");
+          "Cette partie était prévue le " + formatDate(target.date) + " et n'a pas de score. Les dates proposées plus bas partent d'aujourd'hui.");
       }
 
       var fin = computeHorizon(data.rencontres, target, today);
