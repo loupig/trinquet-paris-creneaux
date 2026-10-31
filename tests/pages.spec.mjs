@@ -936,7 +936,7 @@ test.describe("Thème sombre", () => {
     await page.evaluate(() => { window.__pasRecharge = true; });
     await page.emulateMedia({ colorScheme: "dark" });
     expect((await auditSombre(page)).fond).toBeLessThan(0.1);
-    expect(await couleurBarre()).toBe("#1c1d24");
+    expect(await couleurBarre()).toBe("#1f1f1f");
     expect(await page.evaluate(() => window.__pasRecharge)).toBe(true);
   });
 
@@ -994,7 +994,7 @@ test.describe("Thème sombre", () => {
     await expect(fs.locator(".score-btn").first()).toHaveCSS("background-color", "rgba(206, 17, 38, 0.08)");
     await expect(fs.locator(".score-team").nth(1)).toHaveCSS("color", "rgb(0, 113, 58)");
     await fs.getByRole("button", { name: "Quitter" }).click();
-    expect(await couleurBarre()).toBe("#1c1d24");
+    expect(await couleurBarre()).toBe("#1f1f1f");
   });
 
   test("Compteur, téléphone en clair : le plein écran mis en sombre prend la palette sombre", async ({ page }) => {
@@ -1006,7 +1006,7 @@ test.describe("Thème sombre", () => {
     await expect(fs).toHaveClass(/sombre/);
     const palette = await fs.evaluate((e) => ["--card-bg", "--accent", "--warn-bg", "--danger"]
       .map((v) => getComputedStyle(e).getPropertyValue(v).trim()));
-    expect(palette).toEqual(["#1c1d24", "#8ba6ff", "#2e2610", "#ff8a80"]);
+    expect(palette).toEqual(["#1f1f1f", "#8ba6ff", "#2e2610", "#ff8a80"]);
     // La page derrière reste claire.
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(244, 245, 247)");
   });

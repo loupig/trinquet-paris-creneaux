@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCA0MCI+CiAgPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjQ0UxMTI2Ii8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjYwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjExIi8+CiAgPGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iNjAiIHkyPSI0MCIgc3Ryb2tlPSIjMDA5QjQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8bGluZSB4MT0iNjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjQwIiBzdHJva2U9IiMwMDlCNDgiIHN0cm9rZS13aWR0aD0iNiIvPgogIDxyZWN0IHg9IjAiIHk9IjE1IiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNmZmZmZmYiLz4KICA8cmVjdCB4PSIyNSIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d24">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,6 +49,8 @@
     --verre: rgba(255, 255, 255, 0.55);
     --verre-bord: rgba(255, 255, 255, 0.55);
     --ombre-rgb: 26, 26, 46;
+    --titre-de: #000000;
+    --titre-a: #666666;
     --vert: #009B48;
     --sur-accent: #fff;
   }
@@ -57,11 +59,11 @@
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --bg: #121318;
-      --card-bg: #1c1d24;
-      --text: #e8e9ee;
-      --muted: #a0a3b0;
-      --border: #2e303a;
+      --bg: #181818;
+      --card-bg: #1f1f1f;
+      --text: #ebebeb;
+      --muted: #a3a3a3;
+      --border: #313131;
       --free-bg: #12301f;
       --free-text: #4ade80;
       --free-border: #1f5235;
@@ -74,13 +76,15 @@
       --error-text: #ff9a94;
       --error-border: #6a2a2a;
       --accent: #8ba6ff;
-      --surface-2: #24252e;
-      --surface-3: #2c2d37;
-      --verre: rgba(36, 37, 46, 0.6);
+      --surface-2: #272727;
+      --surface-3: #313131;
+      --verre: rgba(39, 39, 39, 0.6);
       --verre-bord: rgba(255, 255, 255, 0.08);
       --ombre-rgb: 0, 0, 0;
+      --titre-de: #ffffff;
+      --titre-a: #9b9b9b;
       --vert: #2fd17a;
-      --sur-accent: #121318;
+      --sur-accent: #181818;
     }
   }
 
@@ -116,7 +120,12 @@
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    color: var(--text);
+    /* Dégradé de gauche à droite découpé dans le texte, comme le titre de
+       Découvrir. */
+    background: linear-gradient(90deg, var(--titre-de), var(--titre-a));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   header .header-sync {
     margin: 4px 0 0;
@@ -470,7 +479,7 @@
     font-size: 18px;
     line-height: 1;
     text-decoration: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 10px rgba(var(--ombre-rgb), 0.25);
     cursor: pointer;
   }
   .fab-btn:active { opacity: 0.85; }
