@@ -184,8 +184,9 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     for (let i = 0; i < 27; i++) await bera.click();
     for (let i = 0; i < 25; i++) await ahetze.click();
     await bera.click();                                   // 29-25
-    // À un point du but : « Nobia », et le score chanté en basque.
-    await expect(bera).toContainText("Nobia");
+    // À un point du but : « Azkena », et le score chanté en basque.
+    await expect(bera).toContainText("Azkena");
+    await expect(bera).not.toContainText("Nobia");
     await expect(bera.locator(".score-eus")).toHaveText("hogeita bederatzi");
     await expect(ahetze.locator(".score-eus")).toHaveText("hogeita bost");
 
@@ -347,49 +348,6 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await page.clock.runFor(5000);
     await expect(temps).toHaveText("2:08");
     await expect(temps).toHaveClass(/arret/);
-  });
-
-  test("le kantari annonce le score, en basque ou en français", async ({ page }) => {
-    await page.addInitScript(() => {
-      window.__dit = [];
-      Object.defineProperty(window, "speechSynthesis", { value: {
-        speak: (u) => window.__dit.push({ texte: u.text, langue: u.lang }),
-        cancel: () => {},
-        getVoices: () => [{ lang: "es-ES", name: "Espagnol" }, { lang: "fr-FR", name: "Français" }],
-        addEventListener: () => {}
-      } });
-    });
-    await page.goto("compteur.html");
-    await page.locator(".team-name").nth(0).fill("Bera");
-    await page.locator("#voix").getByRole("button", { name: "Euskara" }).click();
-    const bera = page.locator(".score-btn").nth(0);
-    await bera.click();
-    let dit = await page.evaluate(() => window.__dit.at(-1));
-    // Sans voix basque, une voix espagnole lit les nombres en basque.
-    expect(dit).toEqual({ texte: "bat, zero.", langue: "es-ES" });
-
-    await page.locator("#setupBox > summary").click();
-    await page.locator("#voix").getByRole("button", { name: "Français" }).click();
-    await bera.click();
-    dit = await page.evaluate(() => window.__dit.at(-1));
-    expect(dit).toEqual({ texte: "2, 0.", langue: "fr-FR" });
-
-    await page.getByRole("button", { name: "Annuler le dernier point" }).click();
-    dit = await page.evaluate(() => window.__dit.at(-1));
-    expect(dit.texte).toBe("Point annulé. 1, 0.");
-
-    // Le score de l'équipe qui mène est annoncé en premier.
-    const ahetze = page.locator(".score-btn").nth(1);
-    await ahetze.click();
-    await ahetze.click();
-    dit = await page.evaluate(() => window.__dit.at(-1));
-    expect(dit.texte).toBe("2, 1.");
-
-    // Couper l'annonce : plus rien n'est dit.
-    await page.locator("#voix").getByRole("button", { name: "Non" }).click();
-    const avant = await page.evaluate(() => window.__dit.length);
-    await bera.click();
-    expect(await page.evaluate(() => window.__dit.length)).toBe(avant);
   });
 
   test("confettis au point gagnant, pas au rechargement ni si moins d'animations", async ({ page }) => {

@@ -701,7 +701,6 @@
   .fs-bar button:active { opacity: 0.75; }
   .fs-bar button.icone { width: 40px; padding: 0; justify-content: center; flex: 0 0 auto; }
   .fs-bar button.icone.on { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
-  .fs-bar button.icone small { font-size: 12px; font-weight: 700; margin-left: -3px; }
   .fs-bar button[disabled] { opacity: 0.4; cursor: default; }
   /* Au centre de la barre : le temps de jeu qui s'écoule, et sous lui le
      score visé. */
@@ -778,7 +777,6 @@
     <div class="setup-corps">
       <div id="setup"></div>
       <div class="cible-row" id="cibles"><span>Partie en</span></div>
-      <div class="cible-row" id="voix" hidden><span>Annonce du score</span></div>
       <button type="button" class="action-btn danger" id="resetBtn" hidden>Nouvelle partie</button>
     </div>
   </details>
@@ -821,7 +819,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.03</p>
+    <p>Version 2026.11.03.2</p>
   </footer>
 </main>
 
@@ -843,7 +841,6 @@
     </div>
     <button type="button" class="icone" id="fsPause"></button>
     <button type="button" class="icone" id="fsUndo" aria-label="Annuler le dernier point" title="Annuler le dernier point"><svg viewBox="0 0 256 256" fill="currentColor" width="17" height="17" aria-hidden="true"><path d="M232,144a64.07,64.07,0,0,1-64,64H80a8,8,0,0,1,0-16h88a48,48,0,0,0,0-96H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,45.66L51.31,80H168A64.07,64.07,0,0,1,232,144Z"/></svg></button>
-    <button type="button" class="icone" id="fsVoix" hidden></button>
     <button type="button" class="icone" id="fsTheme"></button>
   </div>
   <div class="fs-slot" id="fsSlot"></div>
@@ -953,8 +950,6 @@
     graphe: true,
     // Thème du plein écran : null suit le réglage du téléphone.
     sombre: null,
-    // Annonce du score à voix haute : "" (aucune), "eu" ou "fr".
-    voix: "",
     // Pause en cours (instant de début) et pauses terminées [début, fin] :
     // retirées des durées de jeu et d'échange.
     pause: null,
@@ -1006,7 +1001,6 @@
       if (CIBLES.indexOf(saved.cible) !== -1) state.cible = saved.cible;
       if (saved.graphe === false) state.graphe = false;
       if (saved.sombre === true || saved.sombre === false) state.sombre = saved.sombre;
-      if (saved.voix === "eu" || saved.voix === "fr") state.voix = saved.voix;
       if (typeof saved.pause === "number") state.pause = saved.pause;
       if (typeof saved.info === "string") state.info = saved.info.slice(0, 80);
       if (Array.isArray(saved.pauses)) {
@@ -1271,8 +1265,8 @@
       // Sous le score : ce qu'il reste à faire, puis la balle de partie.
       var sous = el("div", { class: "score-add", style: "color:" + couleur });
       if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), text: "Victoire" }));
-      // À un point du but : « Nobia », la balle de partie en basque.
-      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), lang: "eu", title: "Balle de partie", text: "Nobia" }));
+      // À un point du but : « Azkena », la balle de partie en basque.
+      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), lang: "eu", title: "Balle de partie", text: "Azkena" }));
       else if (gagnant === null && state.cible) sous.textContent = "encore " + (state.cible - s[i]);
       else if (gagnant === null) sous.textContent = "+1";
       b.appendChild(sous);
@@ -1286,7 +1280,6 @@
         state.points.push({ t: i, at: Date.now() });
         save();
         var fini = vainqueur() !== null;
-        annoncer(fini ? "fin" : "point");
         // Un toucher sans regarder l'écran : la vibration confirme (Android).
         try { if (navigator.vibrate) navigator.vibrate(fini ? [80, 60, 80, 60, 200] : 15); } catch (e) { /* refusé */ }
         if (premier) document.getElementById("setupBox").open = false;
@@ -1802,90 +1795,6 @@
   document.getElementById("pauseBtn").addEventListener("click", basculerPause);
   document.getElementById("fsPause").addEventListener("click", basculerPause);
 
-  // ---------------------------------------------------------------
-  // Le kantari : annonce du score à voix haute
-  // ---------------------------------------------------------------
-  // Par la synthèse vocale du téléphone, sans rien envoyer. Les voix basques
-  // sont rares : à défaut, une voix espagnole, dont la prononciation est la
-  // plus proche du basque, lit les nombres en basque.
-  var parole = ("speechSynthesis" in window) && typeof window.SpeechSynthesisUtterance === "function";
-  var VOIX = [["", "Non"], ["eu", "Euskara"], ["fr", "Français"]];
-
-  function voixPour(langue) {
-    var voix = window.speechSynthesis.getVoices() || [];
-    var prefixes = langue === "eu" ? ["eu", "es"] : ["fr"];
-    for (var k = 0; k < prefixes.length; k++) {
-      for (var j = 0; j < voix.length; j++) {
-        if ((voix[j].lang || "").toLowerCase().indexOf(prefixes[k]) === 0) return voix[j];
-      }
-    }
-    return null;
-  }
-
-  function texteAnnonce(quoi) {
-    var s = scores();
-    var gagnant = vainqueur();
-    var eu = state.voix === "eu";
-    var dire = function (n) { return eu ? euskaraz(n) : String(n); };
-    // Comme le kantari : le score de l'équipe qui mène d'abord.
-    var haut = Math.max(s[0], s[1]), bas = Math.min(s[0], s[1]);
-    var texte = dire(haut) + ", " + dire(bas) + ".";
-    if (quoi === "fin" && gagnant !== null) return texte + " " + nomEquipe(gagnant) + (eu ? " !" : " gagne la partie !");
-    if (quoi === "annule") texte = (eu ? "" : "Point annulé. ") + texte;
-    if (gagnant === null && state.cible && (s[0] === state.cible - 1 || s[1] === state.cible - 1)) texte += " Nobia !";
-    return texte;
-  }
-
-  function annoncer(quoi) {
-    if (!parole || !state.voix || !state.points.length && quoi !== "annule") return;
-    try {
-      var u = new window.SpeechSynthesisUtterance(texteAnnonce(quoi));
-      var v = voixPour(state.voix);
-      u.lang = v ? v.lang : (state.voix === "eu" ? "eu-ES" : "fr-FR");
-      try { if (v) u.voice = v; } catch (e) { /* voix refusée : la langue suffit */ }
-      u.rate = 0.95;
-      // Un point chasse l'annonce précédente : jamais de retard sur le jeu.
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* synthèse indisponible : pas bloquant */ }
-  }
-
-  function majVoix() {
-    if (!parole) return;
-    var ligne = document.getElementById("voix");
-    ligne.hidden = false;
-    ligne.querySelectorAll("button").forEach(function (b) { b.remove(); });
-    VOIX.forEach(function (v) {
-      var b = el("button", { type: "button", class: "chip" + (state.voix === v[0] ? " on" : ""), text: v[1] });
-      if (v[0] === "eu") b.setAttribute("lang", "eu");
-      b.addEventListener("click", function () { choisirVoix(v[0]); });
-      ligne.appendChild(b);
-    });
-    var f = document.getElementById("fsVoix");
-    f.hidden = false;
-    f.classList.toggle("on", !!state.voix);
-    f.innerHTML = state.voix
-      ? '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55Zm54-106.08a40,40,0,0,1,0,52.88,8,8,0,0,1-12-10.58,24,24,0,0,0,0-31.72,8,8,0,0,1,12-10.58ZM248,128a79.9,79.9,0,0,1-20.37,53.34,8,8,0,0,1-11.92-10.67,64,64,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67A79.83,79.83,0,0,1,248,128Z"/></svg><small>' + state.voix.toUpperCase() + "</small>"
-      : '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55Zm101.66-61.3a8,8,0,0,1-11.32,11.32L216,139.31l-18.34,18.35a8,8,0,0,1-11.32-11.32L204.69,128l-18.35-18.34a8,8,0,0,1,11.32-11.32L216,116.69l18.34-18.35a8,8,0,0,1,11.32,11.32L227.31,128Z"/></svg>';
-    var suivante = VOIX[(VOIX.findIndex(function (v) { return v[0] === state.voix; }) + 1) % VOIX.length];
-    f.setAttribute("aria-label", "Annonce du score : " + (suivante[0] ? suivante[1] : "couper"));
-    f.title = f.getAttribute("aria-label");
-  }
-  function choisirVoix(v) {
-    state.voix = v;
-    save();
-    majVoix();
-    // Le premier choix sert d'essai, et débloque la parole sur iPhone.
-    if (v && state.points.length) annoncer("point");
-  }
-  document.getElementById("fsVoix").addEventListener("click", function () {
-    var i = VOIX.findIndex(function (v) { return v[0] === state.voix; });
-    choisirVoix(VOIX[(i + 1) % VOIX.length][0]);
-  });
-  if (parole && window.speechSynthesis.addEventListener) {
-    window.speechSynthesis.addEventListener("voiceschanged", function () { /* liste prête pour voixPour */ });
-  }
-
   function majResumeGraphe() {
     var n = state.points.length;
     var f = faits();
@@ -2004,7 +1913,6 @@
     renderChart();
     majResumeGraphe();
     majPause();
-    majVoix();
     var ctx = document.getElementById("contexte");
     ctx.hidden = !state.info;
     ctx.textContent = state.info;
@@ -2020,7 +1928,6 @@
     if (!state.points.length) { state.pause = null; state.pauses = []; }
     save();
     document.getElementById("partageInfo").textContent = "";
-    annoncer("annule");
     renderAll();
   });
 
