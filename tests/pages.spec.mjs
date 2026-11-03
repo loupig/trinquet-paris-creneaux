@@ -476,6 +476,20 @@ test.describe("Compter une partie depuis Parties ou Mes équipes", () => {
   });
 });
 
+test("Accueil : la toute première visite passe par la présentation, une seule fois", async ({ page }) => {
+  // Appareil vierge : on efface ce que pose le beforeEach, au premier
+  // document de l'onglet seulement, pour que la marque posée ensuite tienne.
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("vierge")) { localStorage.clear(); sessionStorage.setItem("vierge", "1"); }
+  });
+  await page.goto("index.html");
+  await expect(page).toHaveURL(/decouvrir\.html$/);
+  await page.locator("a.btn-primary").first().click();
+  await expect(page).toHaveURL(/index\.html$/);
+  await attendreChargement(page);
+  await expect(page.locator("#tiles")).not.toBeEmpty();
+});
+
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
   await page.goto("index.html");
   await page.getByRole("link", { name: "Présenter le site à un joueur" }).click();
