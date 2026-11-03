@@ -504,6 +504,26 @@ test("Accueil : arrivé par un lien vers la présentation, on n'y est pas renvoy
   await attendreChargement(page);
 });
 
+test("Tout lien partagé montre l'aperçu de Découvrir et ouvre sa propre page", async () => {
+  const balises = (html) => {
+    const lire = (attr, nom) => (html.match(new RegExp(`<meta ${attr}="${nom}" content="([^"]*)"`)) || [])[1];
+    return {
+      description: lire("name", "description"),
+      titre: lire("property", "og:title"),
+      texte: lire("property", "og:description"),
+      image: lire("property", "og:image"),
+      carte: lire("name", "twitter:card")
+    };
+  };
+  const reference = balises(await readFile("decouvrir.html", "utf8"));
+  expect(reference.image).toMatch(/og-decouvrir\.png$/);
+  for (const p of ["index", "equipe", "equipes", "programme", "classement", "creneaux", "report", "compteur"]) {
+    const html = await readFile(p + ".html", "utf8");
+    expect(balises(html), p).toEqual(reference);
+    expect(html, p + " ne doit pas renvoyer l'aperçu vers Découvrir").not.toContain('property="og:url"');
+  }
+});
+
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
   await page.goto("index.html");
   await page.getByRole("link", { name: "Présenter le site à un joueur" }).click();

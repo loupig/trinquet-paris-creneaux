@@ -23,6 +23,13 @@ La page SHALL rester courte et présenter, dans cet ordre : l'accroche avec l'ap
 ### Requirement: Hors navigation de l'application
 La page SHALL rester hors de la barre d'onglets : elle porte sa propre barre du haut, qui marque la section en cours de lecture, et n'appelle pas l'API de la ligue. Elle charge sa police depuis le site, sans requête vers un tiers. Elle est indexable par les moteurs de recherche, avec titre, description, image de partage (`icons/og-decouvrir.png`, 1200 × 630) et questions fréquentes balisées.
 
+### Requirement: Même aperçu pour tout lien partagé
+Chaque page du site, sauf la page 404, SHALL porter la même description, le même titre de partage et la même image de partage que la page Découvrir. Un lien envoyé vers n'importe quelle page (accueil, Mes équipes, Parties, Classement, Créneaux, Report, Compteur, ancienne adresse `equipes.html`) s'affiche ainsi avec la même carte que `decouvrir.html` dans une messagerie. Ces pages MUST NOT porter `og:url` : le lien partagé ouvre toujours la page envoyée, pas la présentation.
+
+#### Scenario: Partager le classement
+- **WHEN** un capitaine colle le lien de la page Classement dans le groupe WhatsApp du club
+- **THEN** l'aperçu montre le titre et l'image de la page Découvrir, et toucher le lien ouvre le Classement
+
 ### Requirement: Menu plein écran
 Sur un écran étroit, un bouton de la barre du haut SHALL ouvrir un menu plein écran vers les sections de la page, par exception à la règle « Pas de fenêtre surgissante » de la spec `navigation`. Le bouton qui l'ouvre MUST rester visible au-dessus du menu et le refermer ; toucher un lien ou la touche Échap le referment aussi.
 
