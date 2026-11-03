@@ -477,17 +477,31 @@ test.describe("Compter une partie depuis Parties ou Mes équipes", () => {
 });
 
 test("Accueil : la toute première visite passe par la présentation, une seule fois", async ({ page }) => {
-  // Appareil vierge : on efface ce que pose le beforeEach, au premier
-  // document de l'onglet seulement, pour que la marque posée ensuite tienne.
+  // Appareil vierge : le beforeEach réinscrit l'équipe suivie à chaque
+  // document, on la retire donc à chaque fois. Le reste n'est effacé qu'au
+  // premier document, pour que seules les marques posées par les pages tiennent.
   await page.addInitScript(() => {
     if (!sessionStorage.getItem("vierge")) { localStorage.clear(); sessionStorage.setItem("vierge", "1"); }
+    localStorage.removeItem("lidfpb_mes_equipes_v1");
   });
   await page.goto("index.html");
   await expect(page).toHaveURL(/decouvrir\.html$/);
+  expect(await page.evaluate(() => localStorage.getItem("lidfpb_decouvert_v1"))).toBe("1");
   await page.locator("a.btn-primary").first().click();
   await expect(page).toHaveURL(/index\.html$/);
   await attendreChargement(page);
   await expect(page.locator("#tiles")).not.toBeEmpty();
+});
+
+test("Accueil : arrivé par un lien vers la présentation, on n'y est pas renvoyé", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("vierge")) { localStorage.clear(); sessionStorage.setItem("vierge", "1"); }
+    localStorage.removeItem("lidfpb_mes_equipes_v1");
+  });
+  await page.goto("decouvrir.html");
+  await page.goto("index.html");
+  await expect(page).toHaveURL(/index\.html$/);
+  await attendreChargement(page);
 });
 
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
