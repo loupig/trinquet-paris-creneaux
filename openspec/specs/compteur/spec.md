@@ -66,15 +66,15 @@ Les noms, les couleurs et le score à atteindre SHALL être ouverts tant qu'aucu
 - **THEN** les réglages se replient et les boutons de score s'agrandissent
 
 ### Requirement: Marquer un point
-Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Nobia », la balle de partie en basque. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
+Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Azkena » (« dernier » en basque), la balle de partie. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
 
 #### Scenario: Point marqué
 - **WHEN** le visiteur touche le bouton de l'équipe 2 à 1-1, dans une partie en 40
 - **THEN** le score passe à 1-2, « bi », « encore 38 » et « dernier point » apparaissent sous l'équipe 2
 
-#### Scenario: Nobia
+#### Scenario: Azkena
 - **WHEN** l'équipe 1 atteint 39 dans une partie en 40
-- **THEN** son bouton affiche « hogeita hemeretzi » et « Nobia »
+- **THEN** son bouton affiche « hogeita hemeretzi » et « Azkena »
 
 ### Requirement: Fin de partie
 La première équipe à atteindre le score visé SHALL gagner la partie. Les boutons de score deviennent inactifs, l'équipe gagnante affiche « Victoire », et un encart annonce le vainqueur, le score, la durée de jeu, le nombre d'égalités et de changements de leader, avec les boutons « Partager le résultat » et « Nouvelle partie ». Annuler le point gagnant MUST relancer la partie là où elle en était. Au point gagnant, une gerbe de confettis aux couleurs de l'équipe gagnante et de l'ikurriña part de son bouton, puis s'efface d'elle-même en quelques secondes, sans gêner les touchers ; elle ne revient pas au rechargement d'une partie finie, et n'a pas lieu quand le téléphone demande moins d'animations.
@@ -170,21 +170,6 @@ Pendant une partie en cours, un bouton « Pause » SHALL arrêter le décompte d
 #### Scenario: Reprise par un point
 - **WHEN** la partie est en pause et le visiteur marque un point
 - **THEN** la pause prend fin et le point est compté
-
-### Requirement: Annonce du score à voix haute
-La page SHALL proposer d'annoncer le score à voix haute après chaque point, comme le kantari, en basque ou en français, par la synthèse vocale du téléphone ; par défaut, rien n'est annoncé. Comme le kantari, le score de l'équipe qui mène est annoncé en premier. En basque, les nombres sont dits en basque (« hogeita bat, hamazazpi ») et, faute de voix basque sur le téléphone, une voix espagnole les lit. L'annonce ajoute « Nobia » à un point du but, le nom du vainqueur à la fin, et redit le score après une annulation. Une annonce en cours est coupée par la suivante. Le choix se fait dans les réglages et en plein écran, et il est gardé. Rien n'est envoyé : la voix est produite par le téléphone.
-
-#### Scenario: Score annoncé en basque
-- **WHEN** l'annonce est en basque et l'équipe 1 marque le premier point
-- **THEN** le téléphone dit « bat, zero »
-
-#### Scenario: L'équipe qui mène d'abord
-- **WHEN** l'annonce est en français et l'équipe 2 mène 21 à 17
-- **THEN** le téléphone dit « 21, 17 »
-
-#### Scenario: Annonce coupée
-- **WHEN** le visiteur choisit « Non »
-- **THEN** plus aucun score n'est annoncé
 
 ### Requirement: Graphe repliable
 Le déroulé de la partie SHALL pouvoir se replier, sous une ligne qui garde l'essentiel (« 8 égalités · écart max 6 »), et se déplier dans la page. Replié ou ouvert, il le reste d'une visite à l'autre.
