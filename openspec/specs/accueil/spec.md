@@ -41,3 +41,14 @@ Le pied de page de l'accueil SHALL porter un lien « Présenter le site à un jo
 #### Scenario: Faire connaître le site
 - **WHEN** un visiteur touche « Présenter le site à un joueur » en bas de l'accueil
 - **THEN** la page Découvrir s'ouvre
+
+### Requirement: Première visite par la présentation
+À l'ouverture de l'accueil, un appareil qui n'a encore aucune clé `lidfpb_` dans son stockage SHALL être renvoyé vers la page Découvrir (spec `decouvrir`), une seule fois : la clé `lidfpb_decouvert_v1` est posée avant le renvoi, et aussi par Découvrir elle-même. Un visiteur qui a déjà utilisé le site (équipe suivie, filtres, cache) n'est pas renvoyé. Si le stockage est indisponible, l'accueil s'affiche sans renvoi. Les autres pages, ouvertes par un lien direct, ne renvoient jamais.
+
+#### Scenario: Toute première ouverture
+- **WHEN** un visiteur ouvre l'accueil pour la première fois sur son appareil
+- **THEN** il arrive sur la page Découvrir, et « Suivre mon équipe » le ramène à l'accueil, qui s'affiche
+
+#### Scenario: Visiteur habitué
+- **WHEN** un visiteur qui suit déjà une équipe ouvre l'accueil
+- **THEN** l'accueil s'affiche directement

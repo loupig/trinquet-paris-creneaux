@@ -616,7 +616,11 @@
     .btn:hover, .btn:active, .benefit:hover, .btn-primary:hover svg.i { transform: none; }
   }
 </style>
-<script>document.documentElement.classList.add("js");</script>
+<script>
+  document.documentElement.classList.add("js");
+  // Vue une fois, la présentation ne s'impose plus à l'ouverture de l'accueil.
+  try { localStorage.setItem("lidfpb_decouvert_v1", "1"); } catch (e) {}
+</script>
 </head>
 <body>
 
@@ -834,7 +838,7 @@
       <a href="https://github.com/loupig/trinquet-paris-creneaux#rgpd-et-données-joueurs" target="_blank" rel="noopener">Données personnelles</a>
       <a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a>
     </nav>
-    <p style="margin:0"><a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.10.31</p>
+    <p style="margin:0"><a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.03</p>
   </div>
 </footer>
 

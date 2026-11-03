@@ -203,6 +203,7 @@ Clés `localStorage` :
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
+| `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
 
 ## Temps de chargement
 
