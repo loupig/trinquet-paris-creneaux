@@ -66,7 +66,7 @@ Les noms, les couleurs et le score à atteindre SHALL être ouverts tant qu'aucu
 - **THEN** les réglages se replient et les boutons de score s'agrandissent
 
 ### Requirement: Marquer un point
-Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Azkena » (« dernier » en basque), la balle de partie. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
+Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Azkena » (« dernier » en basque), la dernière pelote. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
 
 #### Scenario: Point marqué
 - **WHEN** le visiteur touche le bouton de l'équipe 2 à 1-1, dans une partie en 40
@@ -211,7 +211,7 @@ Sous le graphe, en modes Scores et Écart, la page SHALL donner le plus gros éc
 - **THEN** le résumé indique « Jamais plus d'un point d'écart. »
 
 ### Requirement: Partie conservée sur l'appareil
-La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe, graphe replié ou non, thème du plein écran, annonce du score et pauses. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
+La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, la partie en cours : noms, couleurs, score à atteindre, points avec leur horodatage, mode du graphe, graphe replié ou non, thème du plein écran et pauses. Une partie enregistrée avant le score à atteindre se relit en 40. Une seule partie est conservée, sans historique. Une partie enregistrée avant l'horodatage des points se relit sans durées plutôt que d'être perdue. Si l'enregistrement est illisible, la page repart d'une partie vide, sans message.
 
 #### Scenario: Rechargement en pleine partie
 - **WHEN** le visiteur recharge la page à 25-21
