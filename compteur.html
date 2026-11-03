@@ -819,7 +819,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.03.2</p>
+    <p>Version 2026.11.03.3</p>
   </footer>
 </main>
 
@@ -1262,11 +1262,11 @@
       b.appendChild(el("div", { class: "score-value", style: "color:" + couleur, text: String(s[i]) }));
       b.appendChild(el("div", { class: "score-eus", style: "color:" + couleur, lang: "eu", text: euskaraz(s[i]) }));
 
-      // Sous le score : ce qu'il reste à faire, puis la balle de partie.
+      // Sous le score : ce qu'il reste à faire, puis la dernière pelote.
       var sous = el("div", { class: "score-add", style: "color:" + couleur });
       if (gagnant === i) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), text: "Victoire" }));
-      // À un point du but : « Azkena », la balle de partie en basque.
-      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), lang: "eu", title: "Balle de partie", text: "Azkena" }));
+      // À un point du but : « Azkena », la dernière pelote en basque.
+      else if (gagnant === null && state.cible && s[i] === state.cible - 1) sous.appendChild(el("span", { class: "badge", style: "background:" + couleur + ";color:" + surCouleur(), lang: "eu", title: "Dernière pelote", text: "Azkena" }));
       else if (gagnant === null && state.cible) sous.textContent = "encore " + (state.cible - s[i]);
       else if (gagnant === null) sous.textContent = "+1";
       b.appendChild(sous);

@@ -66,7 +66,7 @@ Les noms, les couleurs et le score à atteindre SHALL être ouverts tant qu'aucu
 - **THEN** les réglages se replient et les boutons de score s'agrandissent
 
 ### Requirement: Marquer un point
-Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Azkena » (« dernier » en basque), la balle de partie. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
+Chaque équipe SHALL avoir un grand bouton qui lui ajoute un point, et qui montre son nom, son score, ce score écrit en basque, comme le chante le kantari (37 : « hogeita hamazazpi »), et les points qui lui manquent (« encore 6 »). À un point du score visé, l'équipe affiche « Azkena » (« dernier » en basque), la dernière pelote. La mention « dernier point » apparaît sous l'équipe qui a marqué le dernier point. Chaque point est horodaté, et le téléphone vibre brièvement quand il le permet.
 
 #### Scenario: Point marqué
 - **WHEN** le visiteur touche le bouton de l'équipe 2 à 1-1, dans une partie en 40
