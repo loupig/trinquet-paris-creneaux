@@ -21,9 +21,9 @@ bas, des boutons flottants en haut, là où se posent les pouces (spec
 Le comportement de chaque page est décrit par sa spec, dans
 [`openspec/specs/`](openspec/specs/). Le README ne le répète pas.
 
-- [`index.html`](index.html) — l'accueil : mes équipes suivies, les
-  résultats du week-end écoulé (du lundi au jeudi), les parties d'ici
-  dimanche et l'avancement de la saison. Specs
+- [`index.html`](index.html) — l'accueil : mes équipes suivies, la semaine
+  en deux onglets (résultats depuis vendredi, parties d'ici dimanche) et
+  l'avancement de la saison. Specs
   [`accueil`](openspec/specs/accueil/spec.md),
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md),
   [`derniers-resultats`](openspec/specs/derniers-resultats/spec.md) et

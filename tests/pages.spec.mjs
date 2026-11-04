@@ -887,6 +887,13 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
   });
 });
 
+// Du lundi au jeudi, le bloc de la semaine s'ouvre sur les résultats : les
+// parties d'ici dimanche sont derrière leur onglet.
+async function ouvrirDIciDimanche(page) {
+  const onglet = page.getByRole("tab", { name: /D'ici dimanche|Prochaines parties/ });
+  if (await onglet.count()) await onglet.click();
+}
+
 test.describe("Accueil : partage des parties d'ici dimanche", () => {
   test("la feuille de partage reçoit le texte des parties", async ({ page }) => {
     await page.addInitScript(() => {
@@ -894,6 +901,7 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     });
     await page.goto("index.html");
     await attendreChargement(page);
+    await ouvrirDIciDimanche(page);
 
     await page.getByRole("button", { name: "Partager ces parties" }).click();
     const texte = await page.evaluate(() => window.__partage && window.__partage.text);
@@ -908,6 +916,7 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     await page.addInitScript(() => { delete Navigator.prototype.share; });
     await page.goto("index.html");
     await attendreChargement(page);
+    await ouvrirDIciDimanche(page);
 
     await page.getByRole("button", { name: "Partager ces parties" }).click();
     await expect(page.locator(".partage-ok")).toHaveText("Texte copié, à coller");
@@ -916,7 +925,7 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
   });
 });
 
-test.describe("Accueil : derniers résultats du lundi au jeudi", () => {
+test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () => {
   // Calendrier propre à ces tests, autour du lundi 2 novembre 2026 : les
   // données communes sont datées par rapport au jour où les tests tournent.
   function partie(oid, date, rec, vis, scoreRec, scoreVis) {
@@ -949,18 +958,21 @@ test.describe("Accueil : derniers résultats du lundi au jeudi", () => {
     });
   });
 
-  test("le lundi, le week-end écoulé : scores, perdant en retrait, score attendu, mon équipe", async ({ page }) => {
+  test("le lundi, le bloc s'ouvre sur les résultats : scores, perdant en retrait, score attendu, mon équipe", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
     await page.goto("index.html");
     await attendreChargement(page);
 
-    const titres = await page.locator("#tiles .tile-title").allTextContents();
-    expect(titres).toEqual(["Mes équipes", "Derniers résultats", "D'ici dimanche 8 nov.", "Championnats"]);
+    const onglets = page.getByRole("tab");
+    await expect(onglets).toHaveText(["Résultats", "D'ici dimanche 8 nov."]);
+    await expect(page.getByRole("tab", { name: "Résultats" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".pied-lien")).toHaveText("Classement →");
+    await expect(page.locator(".pied-lien")).toHaveAttribute("href", "classement.html");
+    await expect(page.getByRole("button", { name: "Partager ces parties" })).toBeHidden();
 
-    const bloc = page.locator(".tile.resultats");
-    await expect(bloc).toHaveAttribute("href", "classement.html");
-    const lignes = bloc.locator(".resultat");
+    const lignes = page.locator("#vue-resultats .resultat");
     await expect(lignes).toHaveCount(2);
+    await expect(page.locator("#vue-ici")).toBeHidden();
 
     await expect(lignes.nth(0)).toContainText("ven. 30 oct.");
     await expect(lignes.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
@@ -971,18 +983,48 @@ test.describe("Accueil : derniers résultats du lundi au jeudi", () => {
     await expect(lignes.nth(1).locator(".score")).toHaveText("vs");
     await expect(lignes.nth(1)).toContainText("Score pas encore publié par la ligue");
     await expect(lignes.nth(1)).toHaveClass(/mine/);   // Charlie 1 est suivie
-
-    // La partie du jour, sans score, reste à venir.
-    await expect(page.locator(".tile:not(.resultats) .affiche").first()).toContainText("Bravo 1 vs Delta 1");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
-  test("le vendredi, pas de bloc : « D'ici dimanche » prend le relais", async ({ page }) => {
+  test("l'onglet « D'ici dimanche » : la partie du jour, le lieu de chaque partie, le partage", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    await page.getByRole("tab", { name: "D'ici dimanche 8 nov." }).click();
+    await expect(page.getByRole("tab", { name: "D'ici dimanche 8 nov." })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#vue-resultats")).toBeHidden();
+    await expect(page.getByRole("link", { name: "Tout le programme →" })).toHaveAttribute("href", "programme.html");
+    await expect(page.getByRole("button", { name: "Partager ces parties" })).toBeVisible();
+
+    const parties = page.locator("#vue-ici .affiche");
+    await expect(parties).toHaveCount(2);
+    await expect(parties.nth(0)).toContainText("Bravo 1 vs Delta 1");   // la partie du jour reste à venir
+    // Chaque partie dit où elle se joue, à voir ou non.
+    await expect(parties.locator(".affiche-lieu")).toHaveText(["Trinquet Paris", "Trinquet Paris"]);
+    await expect(parties.nth(0).locator(".affiche-tag")).toHaveCount(0);
+  });
+
+  test("le vendredi, le bloc s'ouvre sur « D'ici dimanche », les résultats restent à un toucher", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-11-06T10:00:00+01:00"));
     await page.goto("index.html");
     await attendreChargement(page);
-    await expect(page.locator(".tile.resultats")).toHaveCount(0);
-    await expect(page.locator("#tiles .tile-title")).toHaveText(["Mes équipes", "D'ici dimanche 8 nov.", "Championnats"]);
+    await expect(page.getByRole("tab", { name: "D'ici dimanche 8 nov." })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#vue-ici")).toBeVisible();
+
+    // Depuis le vendredi d'avant : le 30, le dimanche sans score, le lundi sans score.
+    await page.getByRole("tab", { name: "Résultats" }).click();
+    await expect(page.locator("#vue-resultats .resultat")).toHaveCount(3);
+    await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
+  });
+
+  test("sans résultat depuis vendredi, pas d'onglets", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-23T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.getByRole("tab")).toHaveCount(0);
+    await expect(page.locator("#tiles .tile-title")).toHaveText(["Mes équipes", "Prochaines parties", "Championnats"]);
+    await expect(page.locator("#vue-ici")).toContainText("Plus aucune rencontre à venir");
   });
 });
 

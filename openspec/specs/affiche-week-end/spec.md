@@ -111,7 +111,7 @@ Chaque partie retenue SHALL porter une seule étiquette, celle du critère le pl
 - **THEN** la partie apparaît une seule fois, avec l'étiquette « 1/2 finale »
 
 ### Requirement: Contenu d'une affiche
-Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série. Une partie à voir SHALL avoir en plus une seconde ligne avec l'étiquette qui explique sa sélection et le lieu. Une partie ordinaire n'a pas de seconde ligne.
+Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série, et sur une seconde ligne le lieu, sous le nom court de la salle (« Trinquet Paris »). Une partie à voir porte en plus, en tête de cette seconde ligne, l'étiquette qui explique sa sélection.
 
 #### Scenario: Lecture d'une affiche
 - **WHEN** un visiteur ouvre l'accueil et qu'une partie de la fenêtre répond à un critère
@@ -119,13 +119,13 @@ Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heur
 
 #### Scenario: Lecture d'une partie ordinaire
 - **WHEN** une partie de la fenêtre ne répond à aucun critère
-- **THEN** elle tient sur une seule ligne, sans étiquette ni lieu
+- **THEN** sa seconde ligne donne le lieu, sans étiquette
 
 ### Requirement: Accès au programme
-La tuile SHALL mener au programme complet, comme les autres tuiles de l'accueil mènent à leur page.
+La vue « D'ici dimanche » SHALL mener au programme complet par le lien « Tout le programme → » du pied du bloc. Le bloc n'est pas un lien entier : ses onglets sont des boutons (spec `derniers-resultats`).
 
-#### Scenario: Clic sur la tuile
-- **WHEN** le visiteur touche la tuile
+#### Scenario: Aller au programme
+- **WHEN** le visiteur touche « Tout le programme → » sous les parties d'ici dimanche
 - **THEN** la page Programme s'ouvre
 
 ### Requirement: Toutes les parties de la fenêtre
@@ -140,11 +140,11 @@ Le bloc SHALL lister toutes les parties à venir de la fenêtre, qu'elles soient
 - **THEN** le bloc liste toutes les parties de la fenêtre, sans aucune étiquette
 
 ### Requirement: Bloc toujours présent
-Le bloc « D'ici dimanche » SHALL toujours figurer sur l'accueil. Son titre SHALL porter la date du dimanche qui clôt la fenêtre, par exemple « D'ici dimanche 4 oct. ». Quand plus aucune partie n'est à venir, il affiche le message « Plus aucune rencontre à venir dans le calendrier publié par la ligue. ».
+Le bloc « D'ici dimanche » SHALL toujours figurer sur l'accueil, en onglet du bloc de la semaine ou seul quand il n'y a pas de résultat à montrer. Son libellé, onglet ou titre, SHALL porter la date du dimanche qui clôt la fenêtre, par exemple « D'ici dimanche 4 oct. ». Quand plus aucune partie n'est à venir, il affiche le message « Plus aucune rencontre à venir dans le calendrier publié par la ligue. ».
 
 #### Scenario: Titre daté
 - **WHEN** on est lundi 28 septembre et que le premier week-end joué se termine le dimanche 4 octobre
-- **THEN** le titre du bloc est « D'ici dimanche 4 oct. »
+- **THEN** le libellé du bloc est « D'ici dimanche 4 oct. »
 
 #### Scenario: Fin de saison
 - **WHEN** plus aucune partie n'est à venir dans le calendrier
@@ -166,7 +166,7 @@ Dans le bloc « D'ici dimanche », une partie jouée par l'une des équipes suiv
 - **THEN** aucune ligne ne porte de repère, et le bloc est identique à aujourd'hui
 
 ### Requirement: Partage des parties
-Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager ces parties ». Le bouton produit un texte prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes, l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet. Sur un appareil qui a une feuille de partage (téléphone), le texte lui est confié ; sinon il est copié dans le presse-papiers et le bloc l'indique. Rien n'est envoyé par le site lui-même.
+Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager ces parties », visible quand la vue « D'ici dimanche » est ouverte. Le bouton produit un texte prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes, l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet. Sur un appareil qui a une feuille de partage (téléphone), le texte lui est confié ; sinon il est copié dans le presse-papiers et le bloc l'indique. Rien n'est envoyé par le site lui-même.
 
 #### Scenario: Partage depuis un téléphone
 - **WHEN** le visiteur touche « Partager ces parties » sur son téléphone

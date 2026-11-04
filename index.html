@@ -424,8 +424,8 @@
   .affiche.mine { box-shadow: inset 3px 0 0 var(--accent); padding-left: 8px; margin-left: -8px; }
 
   /* --- D'ici dimanche ---
-     Une ligne par partie. Une partie à voir en prend une seconde, qui dit
-     pourquoi et où : c'est cette ligne qui porte l'accent. Le lieu n'y tiendrait
+     Deux lignes par partie : quand et qui, puis où. Une partie à voir porte
+     sur la seconde son étiquette, qui fait l'accent. Le lieu ne tiendrait
      pas sur la première ligne à 390 px. */
   .affiche { padding: 5px 0; }
   .affiche + .affiche { border-top: 1px solid var(--border); }
@@ -456,9 +456,27 @@
   .resultat .score { font-weight: 800; font-variant-numeric: tabular-nums; margin: 0 5px; }
   .resultat .perdant { color: var(--muted); }
 
-  /* Pied du bloc « D'ici dimanche » : le bouton Partager ne peut pas vivre
-     dans la tuile, qui est tout entière un lien vers le programme. Il s'y
-     accroche par en dessous. */
+  /* Bloc de la semaine : deux onglets en tête, « Résultats » et « D'ici
+     dimanche ». Le bloc n'est pas un lien, il ne s'allume pas au toucher. */
+  .tile.semaine:active { border-color: var(--border); }
+  .tile.semaine .tile-head { padding: 6px 10px; align-items: center; }
+  .vues { display: flex; flex-wrap: wrap; gap: 6px; }
+  .vue-btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .vue-btn[aria-selected="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+
+  /* Pied du bloc de la semaine : le lien vers la page qui prolonge la vue
+     ouverte, et le bouton Partager des parties d'ici dimanche. Il s'accroche
+     sous la tuile. */
   .tile.avec-pied { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
   .tile-pied {
     display: flex;
@@ -472,6 +490,9 @@
     border-top: none;
     border-radius: 0 0 12px 12px;
   }
+  .pied-lien { margin-right: auto; text-decoration: none; }
+  .partage-zone { display: flex; align-items: center; gap: 10px; }
+  .partage-zone[hidden] { display: none; }
   .partage-ok { font-size: 12px; font-weight: 600; color: var(--muted); }
   .partager {
     display: inline-flex;
@@ -1119,14 +1140,20 @@
   // Derniers résultats
   // ---------------------------------------------------------------
   // Le lundi, la première question d'un joueur porte sur le week-end écoulé.
-  // Du lundi au jeudi, les parties depuis le vendredi de ce week-end ; du
-  // vendredi au dimanche, « D'ici dimanche » prend le relais : null.
+  // Les résultats partent du dernier vendredi passé, aujourd'hui exclu : du
+  // lundi au jeudi, celui du week-end écoulé ; le vendredi, celui d'il y a une
+  // semaine ; le samedi et le dimanche, la veille ou l'avant-veille.
   function vendrediEcoule(today) {
-    var jour = today.getDay();
-    if (jour < 1 || jour > 4) return null;
     var ven = new Date(today);
-    ven.setDate(ven.getDate() - (jour + 2));
+    ven.setDate(ven.getDate() - ((today.getDay() + 2) % 7 || 7));
     return ven;
+  }
+
+  // Du lundi au jeudi, le bloc s'ouvre sur les résultats ; du vendredi au
+  // dimanche, sur les parties à venir.
+  function vueParDefaut(today) {
+    var jour = today.getDay();
+    return jour >= 1 && jour <= 4 ? "resultats" : "ici";
   }
 
   // Les parties jouées depuis ce vendredi, aujourd'hui compris, et celles des
@@ -1134,7 +1161,6 @@
   // encore à venir, elle reste dans « D'ici dimanche ». Ordre chronologique.
   function derniersResultats(rencontres, clubMap, today) {
     var depuis = vendrediEcoule(today);
-    if (!depuis) return [];
     return rencontres.map(function (row) {
       var d = effectiveDate(row);
       var joue = hasScore(row);
@@ -1377,9 +1403,8 @@
   // Une ligne par partie, comme « D'ici dimanche », le score entre les deux
   // équipes et le perdant en retrait. Une partie passée sans score le dit sur
   // une seconde ligne : le joueur qui la cherche sait qu'elle n'est pas perdue.
-  function buildResultats(resultats, mes) {
-    var tile = buildTile("classement.html", "Derniers résultats", "Classement →");
-    tile.classList.add("resultats");
+  function buildListeResultats(resultats, mes) {
+    var corps = el("div", { class: "tile-body resultats" });
     resultats.forEach(function (m) {
       var mienne = mes.some(function (cle) { return joueDans(m, cle); });
       var item = el("div", { class: "affiche resultat" + (mienne ? " mine" : "") });
@@ -1399,9 +1424,107 @@
         attente.appendChild(el("span", { class: "affiche-lieu", text: "Score pas encore publié par la ligue" }));
         item.appendChild(attente);
       }
-      tile.body.appendChild(item);
+      corps.appendChild(item);
     });
-    return tile;
+    return corps;
+  }
+
+  // Toutes les parties jusqu'au prochain dimanche joué, chacune avec son lieu
+  // sur une seconde ligne, qui porte aussi l'étiquette d'une partie à voir :
+  // c'est l'accent de l'étiquette qui la fait ressortir, sans la sortir de
+  // l'ordre chronologique. Le lieu ne tiendrait pas sur la première ligne.
+  function buildListeIci(ici, mes) {
+    var corps = el("div", { class: "tile-body ici" });
+    if (ici.parties.length === 0) {
+      corps.appendChild(el("p", { class: "tile-note", text: "Plus aucune rencontre à venir dans le calendrier publié par la ligue." }));
+    }
+    ici.parties.forEach(function (a) {
+      var m = a.partie;
+      var mienne = mes.some(function (cle) { return joueDans(m, cle); });
+      var item = el("div", { class: "affiche" + (mienne ? " mine" : "") });
+      var ligne1 = el("div", { class: "affiche-line" });
+      ligne1.appendChild(el("div", {
+        class: "next-when",
+        text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
+      }));
+      ligne1.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
+      ligne1.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
+      item.appendChild(ligne1);
+      if (a.etiquette || m.lieu) {
+        var ligne2 = el("div", { class: "affiche-why" });
+        if (a.etiquette) ligne2.appendChild(el("span", { class: "affiche-tag", text: a.etiquette }));
+        if (m.lieu) ligne2.appendChild(el("span", { class: "affiche-lieu", text: lieuCourt(m.lieu), title: m.lieu }));
+        item.appendChild(ligne2);
+      }
+      corps.appendChild(item);
+    });
+    return corps;
+  }
+
+  // Un seul bloc pour la semaine, à deux vues : les résultats depuis vendredi
+  // et les parties d'ici dimanche. Le bloc n'est plus un lien entier, ses
+  // onglets étant des boutons : le lien vers la page qui prolonge la vue
+  // (Classement ou programme) passe dans le pied, avec le partage. Sans
+  // résultat à montrer, pas d'onglets, seulement le titre des parties.
+  function buildSemaine(resultats, ici, titre, mes, today) {
+    var vues = {
+      resultats: resultats.length ? {
+        label: "Résultats", corps: buildListeResultats(resultats, mes),
+        href: "classement.html", lien: "Classement →"
+      } : null,
+      ici: {
+        label: titre, corps: buildListeIci(ici, mes),
+        href: "programme.html", lien: "Tout le programme →"
+      }
+    };
+    var ordre = ["resultats", "ici"].filter(function (k) { return vues[k]; });
+
+    var bloc = el("div", { class: "tile semaine avec-pied" });
+    var head = el("div", { class: "tile-head" });
+    bloc.appendChild(head);
+    if (ordre.length === 1) {
+      head.appendChild(el("div", { class: "tile-title", text: titre }));
+    } else {
+      var onglets = el("div", { class: "vues", role: "tablist", "aria-label": "Parties de la semaine" });
+      ordre.forEach(function (k) {
+        var b = el("button", { type: "button", class: "vue-btn", role: "tab", id: "onglet-" + k, "aria-controls": "vue-" + k, text: vues[k].label });
+        b.addEventListener("click", function () { montrer(k); });
+        vues[k].onglet = b;
+        onglets.appendChild(b);
+      });
+      head.appendChild(onglets);
+    }
+    ordre.forEach(function (k) {
+      var corps = vues[k].corps;
+      corps.id = "vue-" + k;
+      if (ordre.length > 1) {
+        corps.setAttribute("role", "tabpanel");
+        corps.setAttribute("aria-labelledby", "onglet-" + k);
+      }
+      bloc.appendChild(corps);
+    });
+
+    var pied = el("div", { class: "tile-pied" });
+    var lien = el("a", { class: "tile-go pied-lien" });
+    pied.appendChild(lien);
+    var partage = ici.parties.length ? buildPartage(titre, ici.parties) : null;
+    if (partage) pied.appendChild(partage);
+
+    function montrer(vue) {
+      ordre.forEach(function (k) {
+        vues[k].corps.hidden = k !== vue;
+        if (vues[k].onglet) vues[k].onglet.setAttribute("aria-selected", String(k === vue));
+      });
+      lien.href = vues[vue].href;
+      lien.textContent = vues[vue].lien;
+      if (partage) partage.hidden = vue !== "ici";
+    }
+    montrer(vues[vueParDefaut(today)] ? vueParDefaut(today) : "ici");
+
+    var frag = document.createDocumentFragment();
+    frag.appendChild(bloc);
+    frag.appendChild(pied);
+    return frag;
   }
 
   // ---------------------------------------------------------------
@@ -1446,7 +1569,7 @@
   // Sur téléphone, la feuille de partage du système (WhatsApp, SMS…) ; sans
   // elle, ordinateur surtout, le texte est copié pour être collé.
   function buildPartage(titre, parties) {
-    var pied = el("div", { class: "tile-pied" });
+    var zone = el("div", { class: "partage-zone" });
     var info = el("span", { class: "partage-ok", "aria-live": "polite" });
     var bouton = el("button", { type: "button", class: "partager" });
     bouton.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
@@ -1464,9 +1587,9 @@
       copier(texte).then(function () { info.textContent = "Texte copié, à coller"; },
                          function () { info.textContent = "Copie impossible sur ce navigateur"; });
     });
-    pied.appendChild(info);
-    pied.appendChild(bouton);
-    return pied;
+    zone.appendChild(info);
+    zone.appendChild(bouton);
+    return zone;
   }
 
   function renderTiles(data, today) {
@@ -1491,49 +1614,13 @@
     // --- Mes équipes ---
     colMes.appendChild(buildMesEquipes(mes, aVenir, standings, clubMap));
 
-    // --- Derniers résultats ---
-    // Au-dessus de « D'ici dimanche », dans sa colonne : sur grand écran, les
-    // trois colonnes restent trois. Pas de bloc sans partie à montrer.
+    // --- La semaine : résultats et parties d'ici dimanche ---
     var resultats = derniersResultats(data.rencontres, clubMap, today);
-    if (resultats.length) colIci.appendChild(buildResultats(resultats, mes));
-
-    // --- D'ici dimanche ---
-    // Toutes les parties jusqu'au prochain dimanche joué. Une partie à voir
-    // prend une seconde ligne, étiquette et lieu : c'est ce qui la fait
-    // ressortir, sans la sortir de l'ordre chronologique.
     var ici = affiches(aVenir, standings, clubMap);
     var titre = ici.dimanche
       ? "D'ici dimanche " + ici.dimanche.getDate() + " " + MONTH_ABBR[ici.dimanche.getMonth()]
       : "Prochaines parties";
-    var t1 = buildTile("programme.html", titre, "Tout le programme →");
-    if (ici.parties.length === 0) {
-      t1.body.appendChild(el("p", { class: "tile-note", text: "Plus aucune rencontre à venir dans le calendrier publié par la ligue." }));
-    }
-    ici.parties.forEach(function (a) {
-      var m = a.partie;
-      var mienne = mes.some(function (cle) { return joueDans(m, cle); });
-      var item = el("div", { class: "affiche" + (mienne ? " mine" : "") });
-      var ligne1 = el("div", { class: "affiche-line" });
-      ligne1.appendChild(el("div", {
-        class: "next-when",
-        text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
-      }));
-      ligne1.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
-      ligne1.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
-      item.appendChild(ligne1);
-      if (a.etiquette) {
-        var ligne2 = el("div", { class: "affiche-why" });
-        ligne2.appendChild(el("span", { class: "affiche-tag", text: a.etiquette }));
-        ligne2.appendChild(el("span", { class: "affiche-lieu", text: lieuCourt(m.lieu), title: m.lieu }));
-        item.appendChild(ligne2);
-      }
-      t1.body.appendChild(item);
-    });
-    colIci.appendChild(t1);
-    if (ici.parties.length) {
-      t1.classList.add("avec-pied");
-      colIci.appendChild(buildPartage(titre, ici.parties));
-    }
+    colIci.appendChild(buildSemaine(resultats, ici, titre, mes, today));
 
     // --- Avancement de la saison ---
     var total = data.rencontres.length;

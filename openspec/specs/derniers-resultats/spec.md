@@ -2,23 +2,27 @@
 
 ## Purpose
 
-Répondre sur l'accueil, du lundi au jeudi, à la première question d'un joueur après un week-end de championnat : qu'ont donné les parties ? Sans passer par Parties ni filtrer.
+Répondre sur l'accueil à la première question d'un joueur après un week-end de championnat : qu'ont donné les parties ? Sans passer par Parties ni filtrer. Les résultats forment l'une des deux vues du bloc de la semaine, l'autre étant « D'ici dimanche » (spec `affiche-week-end`).
 
 ## Requirements
 
-### Requirement: Jours d'affichage
-Le bloc « Derniers résultats » SHALL n'apparaître sur l'accueil que du lundi au jeudi. Du vendredi au dimanche, le bloc « D'ici dimanche » (spec `affiche-week-end`) suffit.
+### Requirement: Deux vues dans un même bloc
+Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats » puis « D'ici dimanche » (avec la date du dimanche), qui affichent chacun leur liste à la place de l'autre. Du lundi au jeudi, le bloc s'ouvre sur « Résultats » ; du vendredi au dimanche, sur « D'ici dimanche ». Le choix n'est pas gardé sur l'appareil : chaque ouverture de l'accueil repart de la vue du jour. Le pied du bloc porte le lien vers la page qui prolonge la vue ouverte : « Classement → » pour les résultats, « Tout le programme → » pour les parties à venir. Quand aucun résultat n'est à montrer, il n'y a pas d'onglets : le bloc ne montre que « D'ici dimanche », sous son titre.
 
 #### Scenario: Lundi
 - **WHEN** un visiteur ouvre l'accueil un lundi et que des parties ont été jouées le week-end écoulé
-- **THEN** il voit le bloc « Derniers résultats »
+- **THEN** le bloc s'ouvre sur l'onglet « Résultats », et l'onglet « D'ici dimanche » montre les parties à venir
 
 #### Scenario: Vendredi
 - **WHEN** un visiteur ouvre l'accueil un vendredi
-- **THEN** le bloc « Derniers résultats » n'apparaît pas
+- **THEN** le bloc s'ouvre sur « D'ici dimanche », et l'onglet « Résultats » montre les parties depuis le vendredi précédent
+
+#### Scenario: Aucun résultat
+- **WHEN** aucune partie n'est retenue pour les résultats
+- **THEN** le bloc n'a pas d'onglets et ne montre que les parties d'ici dimanche
 
 ### Requirement: Parties retenues
-Le bloc SHALL lister, tous lieux et toutes séries confondus, les parties dont la date effective (la date de report si elle existe, sinon la date d'origine) va du vendredi du week-end écoulé jusqu'à aujourd'hui inclus : celles qui ont un score, et celles des jours passés qui n'en ont pas encore. Une partie du jour sans score n'y figure pas : elle est encore à venir et reste dans « D'ici dimanche ». Les parties sont rangées dans l'ordre chronologique. Quand aucune partie n'est retenue, le bloc n'apparaît pas.
+Les résultats SHALL lister, tous lieux et toutes séries confondus, les parties dont la date effective (la date de report si elle existe, sinon la date d'origine) va du dernier vendredi passé, aujourd'hui exclu, jusqu'à aujourd'hui inclus : celles qui ont un score, et celles des jours passés qui n'en ont pas encore. Du lundi au jeudi, ce vendredi est celui du week-end écoulé ; le vendredi, celui de la semaine d'avant ; le samedi et le dimanche, celui du week-end en cours. Une partie du jour sans score n'y figure pas : elle est encore à venir et reste dans « D'ici dimanche ». Les parties sont rangées dans l'ordre chronologique.
 
 #### Scenario: Week-end écoulé
 - **WHEN** on est mardi et que des parties ont été jouées vendredi, samedi et dimanche
@@ -35,10 +39,6 @@ Le bloc SHALL lister, tous lieux et toutes séries confondus, les parties dont l
 #### Scenario: Partie reportée
 - **WHEN** une partie prévue samedi a été reportée à une date ultérieure
 - **THEN** elle ne figure pas dans le bloc
-
-#### Scenario: Aucune partie le week-end écoulé
-- **WHEN** aucune partie n'a eu lieu depuis vendredi
-- **THEN** le bloc n'apparaît pas
 
 ### Requirement: Ligne d'un résultat
 Chaque partie SHALL tenir sur une ligne : le jour, les deux équipes sous leur nom court avec le score entre elles (celui de l'équipe qui reçoit en premier), et la série. Le nom de l'équipe perdante est en retrait. Une partie passée sans score affiche « vs » à la place du score et, sur une seconde ligne, « Score pas encore publié par la ligue ».
@@ -59,8 +59,8 @@ Une partie jouée par l'une des équipes suivies SHALL porter le même repère e
 - **THEN** sa ligne porte le repère de marge
 
 ### Requirement: Accès au classement
-Le bloc SHALL mener au Classement : après les résultats, le joueur veut voir ce qu'ils changent.
+La vue « Résultats » SHALL mener au Classement par le lien de son pied : après les résultats, le joueur veut voir ce qu'ils changent. Le bouton de partage des parties d'ici dimanche n'y apparaît pas.
 
-#### Scenario: Toucher le bloc
-- **WHEN** le visiteur touche le bloc « Derniers résultats »
+#### Scenario: Après les résultats
+- **WHEN** le visiteur touche « Classement → » sous les résultats
 - **THEN** la page Classement s'ouvre
