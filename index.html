@@ -1639,7 +1639,7 @@
   // dépendance ni requête. Elle reprend les couleurs de la page, claires ou
   // sombres selon le téléphone, et la police Manrope du site.
   var IMG_LARGEUR = 1080, IMG_MARGE = 56, IMG_COL_HEURE = 124;
-  var IMG_ENTETE = 196, IMG_JOUR = 74, IMG_LIGNE = 82, IMG_SOUS = 46, IMG_PIED = 128;
+  var IMG_ENTETE = 196, IMG_JOUR = 74, IMG_LIGNE = 82, IMG_SOUS = 46, IMG_PIED = 40;
 
   function couleursPage() {
     var st = getComputedStyle(document.documentElement), c = {};
@@ -1748,11 +1748,6 @@
       });
     });
 
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = c.muted; ctx.font = police(26, 600);
-    ctx.fillText("Calendrier, résultats et classement :", M, y + 58);
-    ctx.fillStyle = c.accent; ctx.font = police(30, 700);
-    ctx.fillText(new URL(".", window.location.href).href.replace(/^https?:\/\//, "").replace(/\/$/, ""), M, y + 100);
     return toile;
   }
 
