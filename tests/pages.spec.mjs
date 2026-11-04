@@ -117,6 +117,19 @@ test.describe("Grand écran : blocs côte à côte", () => {
   });
 });
 
+// Même largeur de page et même alignement d'en-tête d'un onglet à l'autre :
+// les trois premières règles du bloc grand écran sont identiques partout.
+test("même mise en page grand écran dans les cinq onglets", async () => {
+  const blocs = await Promise.all(["index", "equipe", "programme", "classement", "creneaux"].map(async (n) => {
+    const html = await readFile(new URL(`../${n}.html`, import.meta.url), "utf8");
+    const debut = html.indexOf("@media (min-width: 1000px) {");
+    expect(debut, n).toBeGreaterThan(-1);
+    return html.slice(debut).split("\n").filter((l) => /^\s*(main|header|\.header-bar) \{/.test(l)).slice(0, 3).join("\n");
+  }));
+  expect(blocs[0].split("\n")).toHaveLength(3);
+  blocs.forEach((b) => expect(b).toBe(blocs[0]));
+});
+
 test("Téléphone : les blocs de l'accueil restent empilés", async ({ page }) => {
   await page.goto("index.html");
   await attendreChargement(page);
