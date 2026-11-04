@@ -620,6 +620,16 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
     await expect(recap).toHaveText("Série 1 · aucun lieu · Poules · +1");
   });
 
+  test("le script du pli et du résumé est le même dans les trois pages", async () => {
+    const scripts = await Promise.all(["programme", "classement", "creneaux"].map(async (n) => {
+      const html = await readFile(new URL(`../${n}.html`, import.meta.url), "utf8");
+      const debut = html.indexOf('var CLE_PLI = "lidfpb_filters_open_v1";');
+      expect(debut, n).toBeGreaterThan(-1);
+      return html.slice(debut, html.indexOf("</script>", debut));
+    }));
+    scripts.forEach((s) => expect(s).toBe(scripts[0]));
+  });
+
   test("Créneaux : une heure retirée se lit « sans 17h », la case décochée se dit", async ({ page }) => {
     await page.goto("creneaux.html");
     await attendreChargement(page);
