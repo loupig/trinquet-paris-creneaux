@@ -20,6 +20,21 @@ La page SHALL proposer deux découpages exclusifs : « Par poule », par défaut
 - **WHEN** le visiteur choisit « Général »
 - **THEN** chaque série de chaque spécialité n'a plus qu'une carte, « Classement général », qui réunit les équipes de toutes ses poules
 
+### Requirement: Poule d'origine des équipes
+En découpage « Général », chaque ligne d'équipe SHALL indiquer la poule d'où vient l'équipe : une pastille « P1 », « P2 »… devant son nom, et un liseré à gauche de la ligne, dans une teinte propre à chaque poule de la carte. Les teintes se distinguent de celles des séries et restent lisibles en sombre. Au-delà de quatre poules, les teintes reviennent, le numéro restant écrit. En découpage « Par poule », les lignes n'ont ni pastille ni liseré. Au tableau des phases finales, quel que soit le découpage, l'étiquette de chaque équipe (« 1er P1 », « 4e P2 »…) prend la teinte de sa poule, la même qu'au classement général.
+
+#### Scenario: Deux poules confondues
+- **WHEN** le visiteur choisit « Général » pour une série à deux poules
+- **THEN** chaque équipe porte « P1 » ou « P2 » devant son nom, et les équipes de la poule 1 ont une autre teinte que celles de la poule 2
+
+#### Scenario: Par poule
+- **WHEN** le visiteur revient à « Par poule »
+- **THEN** les lignes ne portent plus de pastille de poule
+
+#### Scenario: Tableau des quarts
+- **WHEN** un visiteur regarde le tableau des phases finales d'une série
+- **THEN** les étiquettes « … P1 » ont toutes la même teinte, distincte de celle des étiquettes « … P2 », et ce sont les teintes des poules du classement général
+
 ### Requirement: Ligne d'une équipe
 Chaque équipe SHALL tenir sur une ligne qui donne : son rang (« – » si elle n'a pas joué), les trois premiers rangs étant colorés or, argent et bronze, son nom, sous la forme « Club (éq. N) » quand l'équipe a un numéro, un détail (parties jouées, gagnées, perdues, nuls s'il y en a, points, points marqués et encaissés, goal average total et moyen), et à droite, en gros, sa moyenne de points par partie à deux décimales. Une équipe sans partie jouée a pour détail « aucune partie jouée » et « – » pour moyenne.
 
@@ -43,7 +58,7 @@ En découpage par poule, une carte de plus de quatre équipes SHALL porter, sous
 - **THEN** aucun trait n'apparaît
 
 ### Requirement: Filtres du classement
-La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un filtre par série (Série 1, Série 2), tous actifs par défaut. Ces filtres masquent des cartes entières et ne changent jamais le rang d'une équipe. Le choix de spécialité, de série et de découpage MUST être retrouvé d'une visite à l'autre sur le même navigateur, sans être envoyé nulle part. Quand aucune carte ne reste, la page affiche « Aucune équipe ne correspond aux filtres. ».
+La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un filtre par série (Série 1, Série 2), tous actifs par défaut. Replié, le bloc résume les filtres choisis (spec `programme`, « Résumé des filtres repliés »), le découpage « Général » y compris. Ces filtres masquent des cartes entières et ne changent jamais le rang d'une équipe. Le choix de spécialité, de série et de découpage MUST être retrouvé d'une visite à l'autre sur le même navigateur, sans être envoyé nulle part. Quand aucune carte ne reste, la page affiche « Aucune équipe ne correspond aux filtres. ».
 
 #### Scenario: Une seule série
 - **WHEN** le visiteur désactive « Série 1 »

@@ -596,6 +596,76 @@ test("Ancienne adresse equipes.html redirige vers Mes équipes", async ({ page }
   await expect(page).toHaveURL(/equipe\.html/);
 });
 
+// Spec programme, « Résumé des filtres repliés » : commun à Parties,
+// Classement et Créneaux.
+test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
+  test("Parties : rien de filtré, puis des filtres, trois cités au plus", async ({ page }) => {
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const recap = page.locator(".filters-recap");
+    await expect(recap).toBeHidden();   // déplié : pas de résumé
+    await page.locator("#filtersToggle").click();
+    await expect(recap).toHaveText("Tout est affiché");
+
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterSeries .filter-chip[data-serie='2']").click();
+    await page.locator("#chipHidePast").click();
+    await page.locator("#filtersToggle").click();
+    await expect(recap).toHaveText("Série 1 · Parties à venir");
+
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterPhases .filter-chip", { hasText: "1/4 de finale" }).click();
+    await page.locator("#filterLieux .filter-chip").first().click();
+    await page.locator("#filtersToggle").click();
+    await expect(recap).toHaveText("Série 1 · aucun lieu · Poules · +1");
+  });
+
+  test("Créneaux : une heure retirée se lit « sans 17h », la case décochée se dit", async ({ page }) => {
+    await page.goto("creneaux.html");
+    await attendreChargement(page);
+    await page.locator("#filterHours .filter-chip[data-hour='17']").click();
+    await page.locator("#filterOnlyFree").uncheck();
+    await page.locator("#filtersToggle").click();
+    await expect(page.locator(".filters-recap")).toHaveText("sans 17h · Jours complets compris");
+  });
+
+  test("Classement : le découpage général figure, pas le découpage par défaut", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.locator("#filtersToggle").click();
+    await expect(page.locator(".filters-recap")).toHaveText("Tout est affiché");
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterDecoupage .filter-chip[data-mode='general']").click();
+    await page.locator("#filtersToggle").click();
+    await expect(page.locator(".filters-recap")).toHaveText("Classement général");
+  });
+});
+
+// Spec classement, « Poule d'origine en classement général ».
+test("Classement : chaque équipe montre sa poule, d'une teinte par poule, jusqu'au tableau des quarts", async ({ page }) => {
+  await page.goto("classement.html");
+  await attendreChargement(page);
+  await expect(page.locator(".poule-tag")).toHaveCount(0);
+  await page.locator("#filterDecoupage .filter-chip[data-mode='general']").click();
+  const carte = page.locator(".zone-classement").first().locator(".poule-card").first();
+  const lignes = carte.locator(".rank-row");
+  const n = await lignes.count();
+  await expect(carte.locator(".poule-tag")).toHaveCount(n);
+  const tags = await carte.locator(".poule-tag").allTextContents();
+  expect(new Set(tags)).toEqual(new Set(["P1", "P2"]));
+  const teinte = (cls) => carte.locator(".rank-row." + cls).first().evaluate((e) => getComputedStyle(e).boxShadow);
+  expect(await teinte("teinte-1")).not.toBe(await teinte("teinte-2"));
+  // Le tableau des quarts reprend les mêmes teintes sur ses étiquettes.
+  const couleur = (loc) => loc.first().evaluate((e) => getComputedStyle(e).color);
+  const finales = page.locator(".zone-classement").first().locator(".finales-card");
+  const p1 = await couleur(finales.locator(".quart-seed", { hasText: "P1" }));
+  expect(p1).toBe(await couleur(carte.locator(".rank-row.teinte-1 .poule-tag")));
+  expect(p1).not.toBe(await couleur(finales.locator(".quart-seed", { hasText: "P2" })));
+  await page.locator("#filterDecoupage .filter-chip[data-mode='poule']").click();
+  await expect(page.locator(".poule-tag")).toHaveCount(0);
+  await expect(page.locator(".finales-card .quart-seed.teinte-1").first()).toBeVisible();
+});
+
 test.describe("Classement : quarts et simulation", () => {
   test("ordre poules, quarts, simulateur, et quarts croisés", async ({ page }) => {
     await page.goto("classement.html");
