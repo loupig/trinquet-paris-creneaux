@@ -1117,9 +1117,13 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await page.goto("index.html");
     await attendreChargement(page);
 
+    // Chaque toucher efface le message, la copie le remet ensuite : on attend
+    // qu'il revienne avant de le lire. Tant que l'image n'est pas prête, il dit
+    // « Texte copié, à coller » et l'on touche de nouveau.
     const info = page.locator(".partage-ok");
     await expect.poll(async () => {
       await page.getByRole("button", { name: "Partager", exact: true }).click();
+      await expect(info).not.toHaveText("");
       return info.textContent();
     }).toBe("Texte copié, image téléchargée");
     await expect.poll(() => telechargements).toContain("lidfpb-resultats-du-week-end.png");
