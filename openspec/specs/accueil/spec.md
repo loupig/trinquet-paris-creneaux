@@ -7,11 +7,15 @@ Fixer ce que montre la page d'accueil : les blocs présents, leur ordre, et ce q
 ## Requirements
 
 ### Requirement: Composition de l'accueil
-L'accueil SHALL présenter, dans cet ordre, le bloc « Mes équipes », le bloc « D'ici dimanche » puis le bloc « Championnats » (avancement de la saison), et aucun autre bloc de contenu.
+L'accueil SHALL présenter, dans cet ordre, le bloc « Mes équipes », le bloc « Derniers résultats » quand il a des parties à montrer (spec `derniers-resultats`, du lundi au jeudi), le bloc « D'ici dimanche » puis le bloc « Championnats » (avancement de la saison), et aucun autre bloc de contenu. Sur grand écran, « Derniers résultats » se range au-dessus de « D'ici dimanche », dans la même colonne.
 
-#### Scenario: Ouverture de l'accueil
-- **WHEN** un visiteur ouvre l'accueil et que les données sont chargées
+#### Scenario: Ouverture de l'accueil un samedi
+- **WHEN** un visiteur ouvre l'accueil un samedi et que les données sont chargées
 - **THEN** il voit « Mes équipes », « D'ici dimanche » puis « Championnats », et rien d'autre entre l'en-tête et le pied de page
+
+#### Scenario: Ouverture de l'accueil un lundi
+- **WHEN** un visiteur ouvre l'accueil un lundi après un week-end joué
+- **THEN** il voit « Mes équipes », « Derniers résultats », « D'ici dimanche » puis « Championnats »
 
 ### Requirement: Avancement des championnats
 Le bloc « Championnats » SHALL donner le nombre de parties jouées sur le total, toutes phases confondues, puis, par spécialité et par série, deux lignes avec leur barre : « Poules » et « Phases finales », chacune avec ses parties jouées sur son total. Une ligne sans aucune partie dans les données n'apparaît pas. Sous chaque série, un encart rappelle les dates des 1/4, 1/2 et finale de cette série, lues dans ses parties, sans les créneaux ; il reste affiché jusqu'au jour de la dernière de ces dates inclus.

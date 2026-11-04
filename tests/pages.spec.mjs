@@ -916,6 +916,76 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
   });
 });
 
+test.describe("Accueil : derniers résultats du lundi au jeudi", () => {
+  // Calendrier propre à ces tests, autour du lundi 2 novembre 2026 : les
+  // données communes sont datées par rapport au jour où les tests tournent.
+  function partie(oid, date, rec, vis, scoreRec, scoreVis) {
+    return {
+      oid: String(oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "1", "Poule": "1",
+      club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
+      lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: date, heure_renc: "1930", report: "", date_rep: "",
+      score_cr: scoreRec, score_cv: scoreVis
+    };
+  }
+  const ALPHA = "3750001", BRAVO = "3750002", CHARLIE = "3750003", DELTA = "3750004";
+  const calendrier = [
+    partie(901, "29102026", ALPHA, DELTA, "40", "30"),     // jeudi d'avant : hors fenêtre
+    partie(902, "30102026", ALPHA, BRAVO, "40", "25"),     // vendredi : retenue
+    partie(903, "01112026", CHARLIE, DELTA, "", ""),       // dimanche, sans score : en attente
+    partie(904, "02112026", BRAVO, DELTA, "", ""),         // aujourd'hui, à venir
+    partie(905, "07112026", ALPHA, CHARLIE, "", "")        // samedi suivant
+  ];
+  // Un report : prévue samedi 31, jouée plus tard, elle n'est pas un résultat.
+  calendrier.push(Object.assign(partie(906, "31102026", BRAVO, CHARLIE, "", ""), { date_rep: "14112026" }));
+
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      const data = table === "rencontres" ? calendrier : (tables[table] || []);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: "2026-11-02T08:00:00Z" })
+      });
+    });
+  });
+
+  test("le lundi, le week-end écoulé : scores, perdant en retrait, score attendu, mon équipe", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    const titres = await page.locator("#tiles .tile-title").allTextContents();
+    expect(titres).toEqual(["Mes équipes", "Derniers résultats", "D'ici dimanche 8 nov.", "Championnats"]);
+
+    const bloc = page.locator(".tile.resultats");
+    await expect(bloc).toHaveAttribute("href", "classement.html");
+    const lignes = bloc.locator(".resultat");
+    await expect(lignes).toHaveCount(2);
+
+    await expect(lignes.nth(0)).toContainText("ven. 30 oct.");
+    await expect(lignes.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
+    await expect(lignes.nth(0).locator(".perdant")).toHaveText("Bravo 1");
+    await expect(lignes.nth(0)).not.toHaveClass(/mine/);
+
+    await expect(lignes.nth(1)).toContainText("dim. 1 nov.");
+    await expect(lignes.nth(1).locator(".score")).toHaveText("vs");
+    await expect(lignes.nth(1)).toContainText("Score pas encore publié par la ligue");
+    await expect(lignes.nth(1)).toHaveClass(/mine/);   // Charlie 1 est suivie
+
+    // La partie du jour, sans score, reste à venir.
+    await expect(page.locator(".tile:not(.resultats) .affiche").first()).toContainText("Bravo 1 vs Delta 1");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("le vendredi, pas de bloc : « D'ici dimanche » prend le relais", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-06T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator(".tile.resultats")).toHaveCount(0);
+    await expect(page.locator("#tiles .tile-title")).toHaveText(["Mes équipes", "D'ici dimanche 8 nov.", "Championnats"]);
+  });
+});
+
 test.describe("Mes équipes : la prochaine partie dans l'agenda", () => {
   // Prochaine partie de Charlie 1 dans les données fictives : il reçoit
   // Foxtrot 1 dans quatre jours, à 19h30, au Trinquet Paris.

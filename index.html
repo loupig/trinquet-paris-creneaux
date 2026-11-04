@@ -450,6 +450,12 @@
     text-overflow: ellipsis;
   }
 
+  /* --- Derniers résultats ---
+     Même ligne que « D'ici dimanche », le score à la place du « vs ». Le
+     perdant passe en retrait : on lit le vainqueur sans comparer les chiffres. */
+  .resultat .score { font-weight: 800; font-variant-numeric: tabular-nums; margin: 0 5px; }
+  .resultat .perdant { color: var(--muted); }
+
   /* Pied du bloc « D'ici dimanche » : le bouton Partager ne peut pas vivre
      dans la tuile, qui est tout entière un lien vers le programme. Il s'y
      accroche par en dessous. */
@@ -601,7 +607,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.04</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.04.2</p>
   </footer>
 </main>
 
@@ -1110,6 +1116,51 @@
   }
 
   // ---------------------------------------------------------------
+  // Derniers résultats
+  // ---------------------------------------------------------------
+  // Le lundi, la première question d'un joueur porte sur le week-end écoulé.
+  // Du lundi au jeudi, les parties depuis le vendredi de ce week-end ; du
+  // vendredi au dimanche, « D'ici dimanche » prend le relais : null.
+  function vendrediEcoule(today) {
+    var jour = today.getDay();
+    if (jour < 1 || jour > 4) return null;
+    var ven = new Date(today);
+    ven.setDate(ven.getDate() - (jour + 2));
+    return ven;
+  }
+
+  // Les parties jouées depuis ce vendredi, aujourd'hui compris, et celles des
+  // jours passés restées sans score : une partie du jour sans score est
+  // encore à venir, elle reste dans « D'ici dimanche ». Ordre chronologique.
+  function derniersResultats(rencontres, clubMap, today) {
+    var depuis = vendrediEcoule(today);
+    if (!depuis) return [];
+    return rencontres.map(function (row) {
+      var d = effectiveDate(row);
+      var joue = hasScore(row);
+      if (!d || d < depuis || d > today || (!joue && d >= today)) return null;
+      var t = parseHeureRenc(row.heure_renc) || { hour: 0, minute: 0 };
+      var cat = String(row["Catégorie"] || "").trim();
+      return {
+        date: d, hour: t.hour, minute: t.minute, cat: cat,
+        serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
+        rec: clubCourt(clubMap, row.club_rec, row.equip_rec),
+        vis: clubCourt(clubMap, row.club_vis, row.equip_vis),
+        teamsLong: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
+        scoreRec: joue ? parseInt(row.score_cr, 10) : null,
+        scoreVis: joue ? parseInt(row.score_cv, 10) : null,
+        // Champs bruts, pour repérer les parties des équipes suivies.
+        spec: String(row["Spécialité"] || "").trim(),
+        clubRec: String(row.club_rec || "").trim(), equipRec: String(row.equip_rec || "").trim(),
+        clubVis: String(row.club_vis || "").trim(), equipVis: String(row.equip_vis || "").trim()
+      };
+    }).filter(Boolean).sort(function (a, b) {
+      var dd = a.date.getTime() - b.date.getTime();
+      return dd !== 0 ? dd : (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute);
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Mes équipes
   // ---------------------------------------------------------------
   // Les équipes que le visiteur suit, mémorisées dans son navigateur et nulle
@@ -1323,6 +1374,36 @@
     return bloc;
   }
 
+  // Une ligne par partie, comme « D'ici dimanche », le score entre les deux
+  // équipes et le perdant en retrait. Une partie passée sans score le dit sur
+  // une seconde ligne : le joueur qui la cherche sait qu'elle n'est pas perdue.
+  function buildResultats(resultats, mes) {
+    var tile = buildTile("classement.html", "Derniers résultats", "Classement →");
+    tile.classList.add("resultats");
+    resultats.forEach(function (m) {
+      var mienne = mes.some(function (cle) { return joueDans(m, cle); });
+      var item = el("div", { class: "affiche resultat" + (mienne ? " mine" : "") });
+      var ligne = el("div", { class: "affiche-line" });
+      ligne.appendChild(el("div", { class: "next-when", text: formatShortDate(m.date) }));
+      var equipes = el("div", { class: "next-teams", title: m.teamsLong });
+      var joue = m.scoreRec !== null && !Number.isNaN(m.scoreRec) && m.scoreVis !== null && !Number.isNaN(m.scoreVis);
+      var perdRec = joue && m.scoreRec < m.scoreVis, perdVis = joue && m.scoreVis < m.scoreRec;
+      equipes.appendChild(el("span", { class: perdRec ? "perdant" : "", text: m.rec }));
+      equipes.appendChild(el("span", { class: "score", text: joue ? (m.scoreRec + "-" + m.scoreVis) : "vs" }));
+      equipes.appendChild(el("span", { class: perdVis ? "perdant" : "", text: m.vis }));
+      ligne.appendChild(equipes);
+      ligne.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
+      item.appendChild(ligne);
+      if (!joue) {
+        var attente = el("div", { class: "affiche-why" });
+        attente.appendChild(el("span", { class: "affiche-lieu", text: "Score pas encore publié par la ligue" }));
+        item.appendChild(attente);
+      }
+      tile.body.appendChild(item);
+    });
+    return tile;
+  }
+
   // ---------------------------------------------------------------
   // Partage des parties d'ici dimanche
   // ---------------------------------------------------------------
@@ -1409,6 +1490,12 @@
 
     // --- Mes équipes ---
     colMes.appendChild(buildMesEquipes(mes, aVenir, standings, clubMap));
+
+    // --- Derniers résultats ---
+    // Au-dessus de « D'ici dimanche », dans sa colonne : sur grand écran, les
+    // trois colonnes restent trois. Pas de bloc sans partie à montrer.
+    var resultats = derniersResultats(data.rencontres, clubMap, today);
+    if (resultats.length) colIci.appendChild(buildResultats(resultats, mes));
 
     // --- D'ici dimanche ---
     // Toutes les parties jusqu'au prochain dimanche joué. Une partie à voir
