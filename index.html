@@ -473,6 +473,10 @@
     cursor: pointer;
   }
   .vue-btn[aria-selected="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+  /* Sous 360 px, les deux onglets restent sur une ligne en passant à 12 px. */
+  @media (max-width: 359px) {
+    .vue-btn { font-size: 12px; padding: 6px 9px; }
+  }
 
   /* Pied du bloc de la semaine : le lien vers la page qui prolonge la vue
      ouverte, et le bouton Partager des parties d'ici dimanche. Il s'accroche
@@ -1172,6 +1176,8 @@
         serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
         rec: clubCourt(clubMap, row.club_rec, row.equip_rec),
         vis: clubCourt(clubMap, row.club_vis, row.equip_vis),
+        recLong: clubLabel(clubMap, row.club_rec, row.equip_rec),
+        visLong: clubLabel(clubMap, row.club_vis, row.equip_vis),
         teamsLong: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
         scoreRec: joue ? parseInt(row.score_cr, 10) : null,
         scoreVis: joue ? parseInt(row.score_cv, 10) : null,
@@ -1403,6 +1409,10 @@
   // Une ligne par partie, comme « D'ici dimanche », le score entre les deux
   // équipes et le perdant en retrait. Une partie passée sans score le dit sur
   // une seconde ligne : le joueur qui la cherche sait qu'elle n'est pas perdue.
+  function scoreConnu(m) {
+    return m.scoreRec !== null && !Number.isNaN(m.scoreRec) && m.scoreVis !== null && !Number.isNaN(m.scoreVis);
+  }
+
   function buildListeResultats(resultats, mes) {
     var corps = el("div", { class: "tile-body resultats" });
     resultats.forEach(function (m) {
@@ -1411,7 +1421,7 @@
       var ligne = el("div", { class: "affiche-line" });
       ligne.appendChild(el("div", { class: "next-when", text: formatShortDate(m.date) }));
       var equipes = el("div", { class: "next-teams", title: m.teamsLong });
-      var joue = m.scoreRec !== null && !Number.isNaN(m.scoreRec) && m.scoreVis !== null && !Number.isNaN(m.scoreVis);
+      var joue = scoreConnu(m);
       var perdRec = joue && m.scoreRec < m.scoreVis, perdVis = joue && m.scoreVis < m.scoreRec;
       equipes.appendChild(el("span", { class: perdRec ? "perdant" : "", text: m.rec }));
       equipes.appendChild(el("span", { class: "score", text: joue ? (m.scoreRec + "-" + m.scoreVis) : "vs" }));
@@ -1466,15 +1476,24 @@
   // onglets étant des boutons : le lien vers la page qui prolonge la vue
   // (Classement ou programme) passe dans le pied, avec le partage. Sans
   // résultat à montrer, pas d'onglets, seulement le titre des parties.
+  // Libellé d'onglet de « D'ici dimanche » : le jour abrégé, pour que les deux
+  // onglets tiennent sur une ligne à 390 px. Le titre entier reste celui du
+  // bloc sans onglets, du texte et de l'image partagés.
+  function ongletIci(ici, titre) {
+    return ici.dimanche ? "D'ici dim. " + ici.dimanche.getDate() + " " + MONTH_ABBR[ici.dimanche.getMonth()] : titre;
+  }
+
   function buildSemaine(resultats, ici, titre, mes, today) {
     var vues = {
       resultats: resultats.length ? {
-        label: "Résultats", corps: buildListeResultats(resultats, mes),
-        href: "classement.html", lien: "Classement →"
+        label: TITRE_RESULTATS, corps: buildListeResultats(resultats, mes),
+        href: "classement.html", lien: "Classement →",
+        partage: partageResultats(resultats)
       } : null,
       ici: {
-        label: titre, corps: buildListeIci(ici, mes),
-        href: "programme.html", lien: "Tout le programme →"
+        label: ongletIci(ici, titre), corps: buildListeIci(ici, mes),
+        href: "programme.html", lien: "Tout le programme →",
+        partage: ici.parties.length ? partageIci(titre, ici.parties) : null
       }
     };
     var ordre = ["resultats", "ici"].filter(function (k) { return vues[k]; });
@@ -1507,17 +1526,20 @@
     var pied = el("div", { class: "tile-pied" });
     var lien = el("a", { class: "tile-go pied-lien" });
     pied.appendChild(lien);
-    var partage = ici.parties.length ? buildPartage(titre, ici.parties) : null;
-    if (partage) pied.appendChild(partage);
+    var vueOuverte = null;
+    var partage = buildPartage(function () { return vues[vueOuverte].partage; });
+    pied.appendChild(partage);
+    ordre.forEach(function (k) { if (vues[k].partage) preparerImage(vues[k].partage); });
 
     function montrer(vue) {
+      vueOuverte = vue;
       ordre.forEach(function (k) {
         vues[k].corps.hidden = k !== vue;
         if (vues[k].onglet) vues[k].onglet.setAttribute("aria-selected", String(k === vue));
       });
       lien.href = vues[vue].href;
       lien.textContent = vues[vue].lien;
-      if (partage) partage.hidden = vue !== "ici";
+      partage.hidden = !vues[vue].partage;
     }
     montrer(vues[vueParDefaut(today)] ? vueParDefaut(today) : "ici");
 
@@ -1528,28 +1550,222 @@
   }
 
   // ---------------------------------------------------------------
-  // Partage des parties d'ici dimanche
+  // Partage de la vue ouverte : texte et image
   // ---------------------------------------------------------------
-  // Un texte prêt à poster plutôt qu'une image ou une page : il se lit dans
-  // la conversation WhatsApp sans rien ouvrir, avec noms complets et lieu,
-  // et le lien vers le programme pour le détail.
-  // Regroupé par jour, jours en gras au sens de WhatsApp (*…*).
-  function textePartage(titre, parties) {
-    var lignes = ["*Pala gomme pleine · " + titre + "*"];
-    var jour = null;
-    parties.forEach(function (a) {
-      var m = a.partie;
-      var j = formatShortDate(m.date);
-      if (j !== jour) {
-        jour = j;
-        lignes.push("", "*" + j.charAt(0).toUpperCase() + j.slice(1) + "*");
-      }
-      lignes.push(formatHour(m.hour, m.minute) + " · " + m.serieLabel + (m.lieu ? " · " + lieuCourt(m.lieu) : "") +
-                  " · " + m.teamsLong + (a.etiquette ? " → " + a.etiquette : ""));
+  var TITRE_RESULTATS = "Résultats du week-end";
+
+  function jourEnTete(d) {
+    var j = formatShortDate(d);
+    return j.charAt(0).toUpperCase() + j.slice(1);
+  }
+
+  // Les parties regroupées sous leur jour, dans l'ordre de la liste.
+  function parJour(parties, dateDe) {
+    var groupes = [];
+    parties.forEach(function (p) {
+      var jour = jourEnTete(dateDe(p));
+      if (!groupes.length || groupes[groupes.length - 1].jour !== jour) groupes.push({ jour: jour, lignes: [] });
+      groupes[groupes.length - 1].lignes.push(p);
     });
-    lignes.push("");
-    lignes.push("Programme complet : " + new URL("programme.html", window.location.href).href);
+    return groupes;
+  }
+
+  // Un texte prêt à poster : il se lit dans la conversation WhatsApp sans
+  // rien ouvrir, avec les noms complets, et le lien vers la page qui donne
+  // le détail. Jours en gras au sens de WhatsApp (*…*).
+  function texteParJour(titre, groupes, ligne, libelleLien, page) {
+    var lignes = ["*Pala gomme pleine · " + titre + "*"];
+    groupes.forEach(function (g) {
+      lignes.push("", "*" + g.jour + "*");
+      g.lignes.forEach(function (p) { lignes.push(ligne(p)); });
+    });
+    lignes.push("", libelleLien + " : " + new URL(page, window.location.href).href);
     return lignes.join("\n");
+  }
+
+  // De quoi partager une vue : son texte, et le dessin de son image. Une
+  // ligne d'image : l'heure s'il y en a une, les équipes en morceaux (un
+  // perdant en retrait, un score en gras), la série, puis l'étiquette et le
+  // lieu sur une seconde ligne quand il y en a.
+  function partageIci(titre, parties) {
+    var groupes = parJour(parties, function (a) { return a.partie.date; });
+    return {
+      nom: "lidfpb-dici-dimanche.png",
+      titre: titre,
+      texte: texteParJour(titre, groupes, function (a) {
+        var m = a.partie;
+        return formatHour(m.hour, m.minute) + " · " + m.serieLabel + (m.lieu ? " · " + lieuCourt(m.lieu) : "") +
+               " · " + m.teamsLong + (a.etiquette ? " → " + a.etiquette : "");
+      }, "Programme complet", "programme.html"),
+      groupes: groupes.map(function (g) {
+        return { jour: g.jour, lignes: g.lignes.map(function (a) {
+          var m = a.partie;
+          return {
+            heure: formatHour(m.hour, m.minute), morceaux: [{ texte: m.teams }],
+            cat: m.cat, serie: m.serieLabel, etiquette: a.etiquette, lieu: m.lieu ? lieuCourt(m.lieu) : ""
+          };
+        }) };
+      })
+    };
+  }
+
+  function partageResultats(resultats) {
+    var groupes = parJour(resultats, function (m) { return m.date; });
+    return {
+      nom: "lidfpb-resultats-du-week-end.png",
+      titre: TITRE_RESULTATS,
+      texte: texteParJour(TITRE_RESULTATS, groupes, function (m) {
+        return m.serieLabel + " · " + m.recLong + (scoreConnu(m) ? " " + m.scoreRec + "-" + m.scoreVis + " " : " vs ") +
+               m.visLong + (scoreConnu(m) ? "" : " (score pas encore publié)");
+      }, "Classement", "classement.html"),
+      groupes: groupes.map(function (g) {
+        return { jour: g.jour, lignes: g.lignes.map(function (m) {
+          var joue = scoreConnu(m);
+          return {
+            heure: "",
+            morceaux: [
+              { texte: m.rec, retrait: joue && m.scoreRec < m.scoreVis },
+              { texte: joue ? m.scoreRec + "-" + m.scoreVis : "vs", gras: joue },
+              { texte: m.vis, retrait: joue && m.scoreVis < m.scoreRec }
+            ],
+            cat: m.cat, serie: m.serieLabel, etiquette: null, lieu: joue ? "" : "Score pas encore publié par la ligue"
+          };
+        }) };
+      })
+    };
+  }
+
+  // L'image : un PNG de 1080 px de large, dessiné dans le navigateur, sans
+  // dépendance ni requête. Elle reprend les couleurs de la page, claires ou
+  // sombres selon le téléphone, et la police Manrope du site.
+  var IMG_LARGEUR = 1080, IMG_MARGE = 56, IMG_COL_HEURE = 124;
+  var IMG_ENTETE = 196, IMG_JOUR = 74, IMG_LIGNE = 82, IMG_SOUS = 46, IMG_PIED = 128;
+
+  function couleursPage() {
+    var st = getComputedStyle(document.documentElement), c = {};
+    ["bg", "card-bg", "text", "muted", "border", "accent", "accent-bg", "accent-border",
+     "serie1-text", "serie1-bg", "serie1-border", "serie2-text", "serie2-bg", "serie2-border"].forEach(function (k) {
+      c[k] = st.getPropertyValue("--" + k).trim();
+    });
+    return c;
+  }
+
+  function police(taille, graisse) { return graisse + " " + taille + "px Manrope, sans-serif"; }
+
+  function arrondi(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+  }
+
+  function tronquer(ctx, texte, max) {
+    if (ctx.measureText(texte).width <= max) return texte;
+    while (texte.length > 1 && ctx.measureText(texte + "…").width > max) texte = texte.slice(0, -1);
+    return texte + "…";
+  }
+
+  // Une pastille, comme les badges de la page ; rend sa largeur.
+  function pastille(ctx, x, yMilieu, texte, taille, fond, encre, bord, aDroite) {
+    ctx.font = police(taille, 700);
+    var w = ctx.measureText(texte).width + taille * 1.2, h = taille * 1.65;
+    var gauche = aDroite ? x - w : x;
+    arrondi(ctx, gauche, yMilieu - h / 2, w, h, h / 2);
+    ctx.fillStyle = fond; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = bord; ctx.stroke();
+    ctx.fillStyle = encre; ctx.textBaseline = "middle";
+    ctx.fillText(texte, gauche + taille * 0.6, yMilieu + 1);
+    return w;
+  }
+
+  function dessinerImage(partage) {
+    var c = couleursPage();
+    var hauteur = IMG_ENTETE + IMG_PIED;
+    partage.groupes.forEach(function (g) {
+      hauteur += IMG_JOUR;
+      g.lignes.forEach(function (l) { hauteur += IMG_LIGNE + (l.etiquette || l.lieu ? IMG_SOUS : 0); });
+    });
+    var toile = document.createElement("canvas");
+    toile.width = IMG_LARGEUR;
+    toile.height = hauteur;
+    var ctx = toile.getContext("2d");
+    var W = IMG_LARGEUR, M = IMG_MARGE;
+
+    ctx.fillStyle = c["card-bg"]; ctx.fillRect(0, 0, W, hauteur);
+    ctx.fillStyle = c.bg; ctx.fillRect(0, 0, W, IMG_ENTETE - 28);
+    ctx.fillStyle = c.accent; ctx.fillRect(0, 0, W, 10);
+    ctx.fillStyle = c.border; ctx.fillRect(0, IMG_ENTETE - 30, W, 2);
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = c.muted; ctx.font = police(28, 700);
+    ctx.fillText("Pala gomme pleine · Championnats d'Île-de-France", M, 74);
+    ctx.fillStyle = c.text; ctx.font = police(56, 800);
+    ctx.fillText(tronquer(ctx, partage.titre, W - 2 * M), M, 140);
+
+    var y = IMG_ENTETE;
+    partage.groupes.forEach(function (g) {
+      ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = c.text; ctx.font = police(32, 800);
+      ctx.fillText(g.jour, M, y + 48);
+      y += IMG_JOUR;
+      g.lignes.forEach(function (l) {
+        var milieu = y + IMG_LIGNE / 2;
+        var x = M;
+        ctx.textBaseline = "middle";
+        if (l.heure) {
+          ctx.fillStyle = c.text; ctx.font = police(32, 700);
+          ctx.fillText(l.heure, x, milieu);
+          x += IMG_COL_HEURE;
+        }
+        var cat = l.cat === "2" ? "serie2" : "serie1";
+        var wSerie = pastille(ctx, W - M, milieu, l.serie, 26, c[cat + "-bg"], c[cat + "-text"], c[cat + "-border"], true);
+        // Les équipes rétrécissent jusqu'à 26 px pour tenir, puis se tronquent.
+        var max = W - M - wSerie - 24 - x, taille = 36, ESPACE = 14;
+        function largeur(t) {
+          return l.morceaux.reduce(function (w, m, i) {
+            ctx.font = police(t, m.gras ? 800 : 600);
+            return w + ctx.measureText(m.texte).width + (i ? ESPACE : 0);
+          }, 0);
+        }
+        while (taille > 26 && largeur(taille) > max) taille -= 2;
+        l.morceaux.forEach(function (m, i) {
+          if (i) x += ESPACE;
+          ctx.font = police(taille, m.gras ? 800 : 600);
+          ctx.fillStyle = m.retrait ? c.muted : c.text;
+          var t = tronquer(ctx, m.texte, Math.max(0, W - M - wSerie - 24 - x));
+          ctx.fillText(t, x, milieu);
+          x += ctx.measureText(t).width;
+        });
+        y += IMG_LIGNE;
+        if (l.etiquette || l.lieu) {
+          var ys = y + IMG_SOUS / 2 - 18;
+          var xs = l.heure ? M + IMG_COL_HEURE : M;
+          if (l.etiquette) xs += pastille(ctx, xs, ys, l.etiquette, 24, c["accent-bg"], c.accent, c["accent-border"]) + 16;
+          if (l.lieu) {
+            ctx.font = police(28, 600); ctx.fillStyle = c.muted; ctx.textBaseline = "middle";
+            ctx.fillText(tronquer(ctx, l.lieu, W - M - xs), xs, ys);
+          }
+          y += IMG_SOUS;
+        }
+        ctx.fillStyle = c.border; ctx.fillRect(M, y - 1, W - 2 * M, 2);
+      });
+    });
+
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = c.muted; ctx.font = police(26, 600);
+    ctx.fillText("Calendrier, résultats et classement :", M, y + 58);
+    ctx.fillStyle = c.accent; ctx.font = police(30, 700);
+    ctx.fillText(new URL(".", window.location.href).href.replace(/^https?:\/\//, "").replace(/\/$/, ""), M, y + 100);
+    return toile;
+  }
+
+  // L'image est prête avant le toucher : la feuille de partage du téléphone
+  // doit s'ouvrir dans le geste même, sans attendre un dessin. Une image pas
+  // encore prête laisse partir le texte seul.
+  function preparerImage(partage) {
+    var pret = document.fonts && document.fonts.load ? document.fonts.load(police(56, 800)) : Promise.resolve();
+    pret.catch(function () {}).then(function () {
+      dessinerImage(partage).toBlob(function (blob) {
+        if (blob) partage.fichier = new File([blob], partage.nom, { type: "image/png" });
+      }, "image/png");
+    });
   }
 
   function copier(texte) {
@@ -1566,26 +1782,42 @@
     });
   }
 
-  // Sur téléphone, la feuille de partage du système (WhatsApp, SMS…) ; sans
-  // elle, ordinateur surtout, le texte est copié pour être collé.
-  function buildPartage(titre, parties) {
+  function telecharger(fichier) {
+    var url = URL.createObjectURL(fichier);
+    var lien = el("a", { href: url, download: fichier.name });
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  // Sur téléphone, la feuille de partage du système (WhatsApp, SMS…) reçoit
+  // l'image et le texte ; sans partage de fichier, le texte seul. Sans
+  // feuille de partage, ordinateur surtout, le texte est copié et l'image
+  // téléchargée, pour WhatsApp Web. Rien n'est envoyé par le site lui-même.
+  function buildPartage(partageOuvert) {
     var zone = el("div", { class: "partage-zone" });
     var info = el("span", { class: "partage-ok", "aria-live": "polite" });
     var bouton = el("button", { type: "button", class: "partager" });
     bouton.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
-    bouton.appendChild(el("span", { text: "Partager ces parties" }));
+    bouton.appendChild(el("span", { text: "Partager" }));
     bouton.addEventListener("click", function () {
-      var texte = textePartage(titre, parties);
+      var p = partageOuvert();
+      if (!p) return;
+      var fichiers = p.fichier ? [p.fichier] : null;
       info.textContent = "";
       if (navigator.share) {
-        navigator.share({ text: texte }).catch(function (e) {
+        var donnees = { text: p.texte };
+        if (fichiers && navigator.canShare && navigator.canShare({ files: fichiers })) donnees.files = fichiers;
+        navigator.share(donnees).catch(function (e) {
           if (e && e.name === "AbortError") return;   // partage annulé
-          copier(texte).then(function () { info.textContent = "Texte copié"; });
+          copier(p.texte).then(function () { info.textContent = "Texte copié"; });
         });
         return;
       }
-      copier(texte).then(function () { info.textContent = "Texte copié, à coller"; },
-                         function () { info.textContent = "Copie impossible sur ce navigateur"; });
+      if (fichiers) telecharger(p.fichier);
+      copier(p.texte).then(function () { info.textContent = fichiers ? "Texte copié, image téléchargée" : "Texte copié, à coller"; },
+                           function () { info.textContent = fichiers ? "Image téléchargée" : "Copie impossible sur ce navigateur"; });
     });
     zone.appendChild(info);
     zone.appendChild(bouton);

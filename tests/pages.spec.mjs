@@ -890,7 +890,7 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
 // Du lundi au jeudi, le bloc de la semaine s'ouvre sur les résultats : les
 // parties d'ici dimanche sont derrière leur onglet.
 async function ouvrirDIciDimanche(page) {
-  const onglet = page.getByRole("tab", { name: /D'ici dimanche|Prochaines parties/ });
+  const onglet = page.getByRole("tab", { name: /D'ici dim|Prochaines parties/ });
   if (await onglet.count()) await onglet.click();
 }
 
@@ -903,7 +903,7 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     await attendreChargement(page);
     await ouvrirDIciDimanche(page);
 
-    await page.getByRole("button", { name: "Partager ces parties" }).click();
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
     const texte = await page.evaluate(() => window.__partage && window.__partage.text);
     expect(texte).toMatch(/^\*Pala gomme pleine · (D'ici dimanche|Prochaines parties)/);
     expect(texte).toContain(" vs ");
@@ -918,8 +918,9 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     await attendreChargement(page);
     await ouvrirDIciDimanche(page);
 
-    await page.getByRole("button", { name: "Partager ces parties" }).click();
-    await expect(page.locator(".partage-ok")).toHaveText("Texte copié, à coller");
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
+    // L'image, prête avant le toucher, part au téléchargement pour WhatsApp Web.
+    await expect(page.locator(".partage-ok")).toHaveText(/^Texte copié/);
     const copie = await page.evaluate(() => navigator.clipboard.readText());
     expect(copie).toContain("Programme complet");
   });
@@ -964,11 +965,11 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await attendreChargement(page);
 
     const onglets = page.getByRole("tab");
-    await expect(onglets).toHaveText(["Résultats", "D'ici dimanche 8 nov."]);
-    await expect(page.getByRole("tab", { name: "Résultats" })).toHaveAttribute("aria-selected", "true");
+    await expect(onglets).toHaveText(["Résultats du week-end", "D'ici dim. 8 nov."]);
+    await expect(page.getByRole("tab", { name: "Résultats du week-end" })).toHaveAttribute("aria-selected", "true");
     await expect(page.locator(".pied-lien")).toHaveText("Classement →");
     await expect(page.locator(".pied-lien")).toHaveAttribute("href", "classement.html");
-    await expect(page.getByRole("button", { name: "Partager ces parties" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Partager", exact: true })).toBeVisible();
 
     const lignes = page.locator("#vue-resultats .resultat");
     await expect(lignes).toHaveCount(2);
@@ -991,11 +992,11 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await page.goto("index.html");
     await attendreChargement(page);
 
-    await page.getByRole("tab", { name: "D'ici dimanche 8 nov." }).click();
-    await expect(page.getByRole("tab", { name: "D'ici dimanche 8 nov." })).toHaveAttribute("aria-selected", "true");
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#vue-resultats")).toBeHidden();
     await expect(page.getByRole("link", { name: "Tout le programme →" })).toHaveAttribute("href", "programme.html");
-    await expect(page.getByRole("button", { name: "Partager ces parties" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Partager", exact: true })).toBeVisible();
 
     const parties = page.locator("#vue-ici .affiche");
     await expect(parties).toHaveCount(2);
@@ -1009,13 +1010,65 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await page.clock.setFixedTime(new Date("2026-11-06T10:00:00+01:00"));
     await page.goto("index.html");
     await attendreChargement(page);
-    await expect(page.getByRole("tab", { name: "D'ici dimanche 8 nov." })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#vue-ici")).toBeVisible();
 
     // Depuis le vendredi d'avant : le 30, le dimanche sans score, le lundi sans score.
-    await page.getByRole("tab", { name: "Résultats" }).click();
+    await page.getByRole("tab", { name: "Résultats du week-end" }).click();
     await expect(page.locator("#vue-resultats .resultat")).toHaveCount(3);
     await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
+  });
+
+  test("Partager envoie l'image PNG de la vue ouverte avec son texte", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files);
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    // L'image se dessine juste après l'affichage ; un toucher trop tôt
+    // enverrait le texte seul.
+    async function partager() {
+      await expect.poll(async () => {
+        await page.getByRole("button", { name: "Partager", exact: true }).click();
+        return page.evaluate(() => (window.__partage.files || []).length);
+      }).toBe(1);
+      return page.evaluate(async () => {
+        const f = window.__partage.files[0];
+        const img = await createImageBitmap(f);
+        return { nom: f.name, type: f.type, largeur: img.width, hauteur: img.height, texte: window.__partage.text };
+      });
+    }
+
+    const resultats = await partager();
+    expect(resultats).toMatchObject({ nom: "lidfpb-resultats-du-week-end.png", type: "image/png", largeur: 1080 });
+    expect(resultats.hauteur).toBeGreaterThan(400);
+    expect(resultats.texte).toMatch(/^\*Pala gomme pleine · Résultats du week-end\*/);
+    expect(resultats.texte).toContain("Série 1 · Alpha (éq. 1) 40-25 Bravo (éq. 1)");
+    expect(resultats.texte).toContain("(score pas encore publié)");
+    expect(resultats.texte).toMatch(/Classement : http.*\/classement\.html$/);
+
+    await page.evaluate(() => { window.__partage = {}; });
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    const ici = await partager();
+    expect(ici).toMatchObject({ nom: "lidfpb-dici-dimanche.png", type: "image/png", largeur: 1080 });
+    expect(ici.texte).toMatch(/^\*Pala gomme pleine · D'ici dimanche 8 nov\.\*/);
+    expect(ici.texte).toMatch(/Programme complet : http.*\/programme\.html$/);
+  });
+
+  test("les deux onglets tiennent sur une ligne, de 320 à 412 px", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    for (const largeur of [320, 390, 412]) {
+      await page.setViewportSize({ width: largeur, height: 800 });
+      await page.goto("index.html");
+      await attendreChargement(page);
+      const hauts = await page.getByRole("tab").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+      expect(hauts, `${largeur} px`).toHaveLength(2);
+      expect(hauts[0], `${largeur} px`).toBe(hauts[1]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${largeur} px`).toBe(true);
+    }
   });
 
   test("sans résultat depuis vendredi, pas d'onglets", async ({ page }) => {

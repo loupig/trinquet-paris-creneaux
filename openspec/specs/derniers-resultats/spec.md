@@ -7,15 +7,15 @@ Répondre sur l'accueil à la première question d'un joueur après un week-end 
 ## Requirements
 
 ### Requirement: Deux vues dans un même bloc
-Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats » puis « D'ici dimanche » (avec la date du dimanche), qui affichent chacun leur liste à la place de l'autre. Du lundi au jeudi, le bloc s'ouvre sur « Résultats » ; du vendredi au dimanche, sur « D'ici dimanche ». Le choix n'est pas gardé sur l'appareil : chaque ouverture de l'accueil repart de la vue du jour. Le pied du bloc porte le lien vers la page qui prolonge la vue ouverte : « Classement → » pour les résultats, « Tout le programme → » pour les parties à venir. Quand aucun résultat n'est à montrer, il n'y a pas d'onglets : le bloc ne montre que « D'ici dimanche », sous son titre.
+Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats du week-end » puis « D'ici dim. » suivi de la date du dimanche (par exemple « D'ici dim. 8 nov. »), qui affichent chacun leur liste à la place de l'autre. Les deux onglets tiennent sur une ligne, de 320 à 412 px de large. Du lundi au jeudi, le bloc s'ouvre sur « Résultats du week-end » ; du vendredi au dimanche, sur « D'ici dimanche ». Le choix n'est pas gardé sur l'appareil : chaque ouverture de l'accueil repart de la vue du jour. Le pied du bloc porte le lien vers la page qui prolonge la vue ouverte : « Classement → » pour les résultats, « Tout le programme → » pour les parties à venir. Quand aucun résultat n'est à montrer, il n'y a pas d'onglets : le bloc ne montre que « D'ici dimanche », sous son titre.
 
 #### Scenario: Lundi
 - **WHEN** un visiteur ouvre l'accueil un lundi et que des parties ont été jouées le week-end écoulé
-- **THEN** le bloc s'ouvre sur l'onglet « Résultats », et l'onglet « D'ici dimanche » montre les parties à venir
+- **THEN** le bloc s'ouvre sur l'onglet « Résultats du week-end », et l'onglet « D'ici dim. 8 nov. » montre les parties à venir
 
 #### Scenario: Vendredi
 - **WHEN** un visiteur ouvre l'accueil un vendredi
-- **THEN** le bloc s'ouvre sur « D'ici dimanche », et l'onglet « Résultats » montre les parties depuis le vendredi précédent
+- **THEN** le bloc s'ouvre sur « D'ici dimanche », et l'onglet « Résultats du week-end » montre les parties depuis le vendredi précédent
 
 #### Scenario: Aucun résultat
 - **WHEN** aucune partie n'est retenue pour les résultats
@@ -59,8 +59,15 @@ Une partie jouée par l'une des équipes suivies SHALL porter le même repère e
 - **THEN** sa ligne porte le repère de marge
 
 ### Requirement: Accès au classement
-La vue « Résultats » SHALL mener au Classement par le lien de son pied : après les résultats, le joueur veut voir ce qu'ils changent. Le bouton de partage des parties d'ici dimanche n'y apparaît pas.
+La vue « Résultats du week-end » SHALL mener au Classement par le lien de son pied : après les résultats, le joueur veut voir ce qu'ils changent.
 
 #### Scenario: Après les résultats
 - **WHEN** le visiteur touche « Classement → » sous les résultats
 - **THEN** la page Classement s'ouvre
+
+### Requirement: Partage des résultats
+Le pied de la vue « Résultats du week-end » SHALL porter le bouton « Partager », qui partage ces résultats comme le bloc « D'ici dimanche » partage ses parties (spec `affiche-week-end`, « Partage des parties ») : une image et un texte. L'image reprend le titre « Résultats du week-end » et les parties regroupées sous leur jour, avec le score, le perdant en retrait, la série, et la mention du score attendu. Le texte donne, sous chaque jour, la série, les noms complets et le score, ou « (score pas encore publié) », puis le lien vers le Classement.
+
+#### Scenario: Poster les résultats dans le groupe du club
+- **WHEN** le visiteur touche « Partager » sous les résultats, sur son téléphone
+- **THEN** la feuille de partage s'ouvre avec l'image des résultats et leur texte, à envoyer dans un groupe WhatsApp

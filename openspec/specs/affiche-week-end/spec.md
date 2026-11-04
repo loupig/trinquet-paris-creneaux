@@ -140,11 +140,11 @@ Le bloc SHALL lister toutes les parties à venir de la fenêtre, qu'elles soient
 - **THEN** le bloc liste toutes les parties de la fenêtre, sans aucune étiquette
 
 ### Requirement: Bloc toujours présent
-Le bloc « D'ici dimanche » SHALL toujours figurer sur l'accueil, en onglet du bloc de la semaine ou seul quand il n'y a pas de résultat à montrer. Son libellé, onglet ou titre, SHALL porter la date du dimanche qui clôt la fenêtre, par exemple « D'ici dimanche 4 oct. ». Quand plus aucune partie n'est à venir, il affiche le message « Plus aucune rencontre à venir dans le calendrier publié par la ligue. ».
+Le bloc « D'ici dimanche » SHALL toujours figurer sur l'accueil, en onglet du bloc de la semaine ou seul quand il n'y a pas de résultat à montrer. Son libellé SHALL porter la date du dimanche qui clôt la fenêtre : « D'ici dimanche 4 oct. » en titre, abrégé en « D'ici dim. 4 oct. » en onglet. Quand plus aucune partie n'est à venir, il affiche le message « Plus aucune rencontre à venir dans le calendrier publié par la ligue. ».
 
 #### Scenario: Titre daté
 - **WHEN** on est lundi 28 septembre et que le premier week-end joué se termine le dimanche 4 octobre
-- **THEN** le libellé du bloc est « D'ici dimanche 4 oct. »
+- **THEN** le titre du bloc est « D'ici dimanche 4 oct. », son onglet « D'ici dim. 4 oct. »
 
 #### Scenario: Fin de saison
 - **WHEN** plus aucune partie n'est à venir dans le calendrier
@@ -166,15 +166,19 @@ Dans le bloc « D'ici dimanche », une partie jouée par l'une des équipes suiv
 - **THEN** aucune ligne ne porte de repère, et le bloc est identique à aujourd'hui
 
 ### Requirement: Partage des parties
-Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager ces parties », visible quand la vue « D'ici dimanche » est ouverte. Le bouton produit un texte prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes, l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet. Sur un appareil qui a une feuille de partage (téléphone), le texte lui est confié ; sinon il est copié dans le presse-papiers et le bloc l'indique. Rien n'est envoyé par le site lui-même.
+Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager », qui partage une image et un texte.
+- L'image est un PNG de 1080 px de large, dessiné dans le navigateur avant le toucher, sans dépendance ni requête, aux couleurs de la page (claires ou sombres) et dans sa police : le titre du bloc (« D'ici dimanche 4 oct. »), puis les parties regroupées sous leur jour, chacune avec l'heure, les équipes sous leur nom court, la série, l'étiquette s'il y en a une et le lieu, et en bas l'adresse du site. Elle ne porte aucune donnée personnelle ni le repère des équipes suivies.
+- Le texte est prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes, l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet.
+
+Sur un appareil dont la feuille de partage accepte les fichiers (téléphone), l'image et le texte lui sont confiés ensemble ; si elle n'accepte que du texte, ou que l'image n'est pas encore prête, le texte seul. Sans feuille de partage (ordinateur), le texte est copié dans le presse-papiers et l'image téléchargée, pour WhatsApp Web, et le bloc l'indique. Rien n'est envoyé par le site lui-même.
 
 #### Scenario: Partage depuis un téléphone
-- **WHEN** le visiteur touche « Partager ces parties » sur son téléphone
-- **THEN** la feuille de partage du téléphone s'ouvre avec le texte des parties, qu'il peut envoyer dans un groupe WhatsApp
+- **WHEN** le visiteur touche « Partager » sur son téléphone
+- **THEN** la feuille de partage du téléphone s'ouvre avec l'image et le texte des parties, qu'il peut envoyer dans un groupe WhatsApp
 
 #### Scenario: Partage depuis un ordinateur
 - **WHEN** le navigateur n'a pas de feuille de partage
-- **THEN** le texte est copié et le bloc affiche « Texte copié, à coller »
+- **THEN** le texte est copié, l'image téléchargée, et le bloc affiche « Texte copié, image téléchargée »
 
 #### Scenario: Aucune partie
 - **WHEN** le bloc n'a aucune partie à venir
