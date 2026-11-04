@@ -887,6 +887,13 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
   });
 });
 
+// Du lundi au jeudi, le bloc de la semaine s'ouvre sur les résultats : les
+// parties d'ici dimanche sont derrière leur onglet.
+async function ouvrirDIciDimanche(page) {
+  const onglet = page.getByRole("tab", { name: /D'ici dim|Prochaines parties/ });
+  if (await onglet.count()) await onglet.click();
+}
+
 test.describe("Accueil : partage des parties d'ici dimanche", () => {
   test("la feuille de partage reçoit le texte des parties", async ({ page }) => {
     await page.addInitScript(() => {
@@ -894,8 +901,9 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     });
     await page.goto("index.html");
     await attendreChargement(page);
+    await ouvrirDIciDimanche(page);
 
-    await page.getByRole("button", { name: "Partager ces parties" }).click();
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
     const texte = await page.evaluate(() => window.__partage && window.__partage.text);
     expect(texte).toMatch(/^\*Pala gomme pleine · (D'ici dimanche|Prochaines parties)/);
     expect(texte).toContain(" vs ");
@@ -908,11 +916,231 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
     await page.addInitScript(() => { delete Navigator.prototype.share; });
     await page.goto("index.html");
     await attendreChargement(page);
+    await ouvrirDIciDimanche(page);
 
-    await page.getByRole("button", { name: "Partager ces parties" }).click();
-    await expect(page.locator(".partage-ok")).toHaveText("Texte copié, à coller");
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
+    // L'image, prête avant le toucher, part au téléchargement pour WhatsApp Web.
+    await expect(page.locator(".partage-ok")).toHaveText(/^Texte copié/);
     const copie = await page.evaluate(() => navigator.clipboard.readText());
     expect(copie).toContain("Programme complet");
+  });
+});
+
+test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () => {
+  // Calendrier propre à ces tests, autour du lundi 2 novembre 2026 : les
+  // données communes sont datées par rapport au jour où les tests tournent.
+  function partie(oid, date, rec, vis, scoreRec, scoreVis) {
+    return {
+      oid: String(oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "1", "Poule": "1",
+      club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
+      lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: date, heure_renc: "1930", report: "", date_rep: "",
+      score_cr: scoreRec, score_cv: scoreVis
+    };
+  }
+  const ALPHA = "3750001", BRAVO = "3750002", CHARLIE = "3750003", DELTA = "3750004";
+  const calendrier = [
+    partie(901, "29102026", ALPHA, DELTA, "40", "30"),     // jeudi d'avant : hors fenêtre
+    partie(902, "30102026", ALPHA, BRAVO, "40", "25"),     // vendredi : retenue
+    partie(903, "01112026", CHARLIE, DELTA, "", ""),       // dimanche, sans score : en attente
+    partie(904, "02112026", BRAVO, DELTA, "", ""),         // aujourd'hui, à venir
+    partie(905, "07112026", ALPHA, CHARLIE, "", "")        // samedi suivant
+  ];
+  // Un report : prévue samedi 31, jouée plus tard, elle n'est pas un résultat.
+  calendrier.push(Object.assign(partie(906, "31102026", BRAVO, CHARLIE, "", ""), { date_rep: "14112026" }));
+  // Un forfait, publié en lettres : affiché tel quel, sans perdant.
+  calendrier.push(Object.assign(partie(907, "31102026", DELTA, BRAVO, "F", "40"), { heure_renc: "1000" }));
+  // Un quart dont les adversaires restent à désigner : pas un résultat.
+  calendrier.push(Object.assign(partie(908, "31102026", "9998", "9998", "", ""), { Phase: "10", Poule: "" }));
+
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      const data = table === "rencontres" ? calendrier : (tables[table] || []);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: "2026-11-02T08:00:00Z" })
+      });
+    });
+  });
+
+  test("le lundi, le bloc s'ouvre sur les résultats : scores, perdant en retrait, score attendu, mon équipe", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    const onglets = page.getByRole("tab");
+    await expect(onglets).toHaveText(["Résultats du week-end", "D'ici dim. 8 nov."]);
+    await expect(page.getByRole("tab", { name: "Résultats du week-end" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".pied-lien")).toHaveText("Classement →");
+    await expect(page.locator(".pied-lien")).toHaveAttribute("href", "classement.html");
+    await expect(page.getByRole("button", { name: "Partager", exact: true })).toBeVisible();
+
+    const lignes = page.locator("#vue-resultats .resultat");
+    await expect(lignes).toHaveCount(3);   // ni le quart à désigner, ni la partie reportée
+    await expect(page.locator("#vue-ici")).toBeHidden();
+
+    await expect(lignes.nth(0)).toContainText("ven. 30 oct.");
+    await expect(lignes.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
+    await expect(lignes.nth(0).locator(".perdant")).toHaveText("Bravo 1");
+    await expect(lignes.nth(0)).not.toHaveClass(/mine/);
+
+    await expect(lignes.nth(1).locator(".score")).toHaveText("F-40");
+    await expect(lignes.nth(1).locator(".perdant")).toHaveCount(0);
+    await expect(lignes.nth(1)).not.toContainText("pas encore publié");
+
+    await expect(lignes.nth(2)).toContainText("dim. 1 nov.");
+    await expect(lignes.nth(2).locator(".score")).toHaveText("vs");
+    await expect(lignes.nth(2)).toContainText("Score pas encore publié par la ligue");
+    await expect(lignes.nth(2)).toHaveClass(/mine/);   // Charlie 1 est suivie
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("l'onglet « D'ici dimanche » : la partie du jour, le lieu de chaque partie, le partage", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#vue-resultats")).toBeHidden();
+    await expect(page.getByRole("link", { name: "Tout le programme →" })).toHaveAttribute("href", "programme.html");
+    await expect(page.getByRole("button", { name: "Partager", exact: true })).toBeVisible();
+
+    const parties = page.locator("#vue-ici .affiche");
+    await expect(parties).toHaveCount(2);
+    await expect(parties.nth(0)).toContainText("Bravo 1 vs Delta 1");   // la partie du jour reste à venir
+    // Chaque partie dit où elle se joue, à voir ou non.
+    await expect(parties.locator(".affiche-lieu")).toHaveText(["Trinquet Paris", "Trinquet Paris"]);
+    await expect(parties.nth(0).locator(".affiche-tag")).toHaveCount(0);
+  });
+
+  test("le vendredi, le bloc s'ouvre sur « D'ici dimanche », les résultats restent à un toucher", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-06T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#vue-ici")).toBeVisible();
+
+    // Depuis le vendredi d'avant : le 30, le forfait, le dimanche et le lundi sans score.
+    await page.getByRole("tab", { name: "Résultats du week-end" }).click();
+    await expect(page.locator("#vue-resultats .resultat")).toHaveCount(4);
+    await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
+  });
+
+  test("Partager envoie l'image PNG de la vue ouverte avec son texte", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files);
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    // L'image se dessine juste après l'affichage ; un toucher trop tôt
+    // enverrait le texte seul.
+    async function partager() {
+      await expect.poll(async () => {
+        await page.getByRole("button", { name: "Partager", exact: true }).click();
+        return page.evaluate(() => (window.__partage.files || []).length);
+      }).toBe(1);
+      return page.evaluate(async () => {
+        const f = window.__partage.files[0];
+        const img = await createImageBitmap(f);
+        return { nom: f.name, type: f.type, largeur: img.width, hauteur: img.height, texte: window.__partage.text };
+      });
+    }
+
+    const resultats = await partager();
+    expect(resultats).toMatchObject({ nom: "lidfpb-resultats-du-week-end.png", type: "image/png", largeur: 1080 });
+    expect(resultats.hauteur).toBeGreaterThan(400);
+    expect(resultats.texte).toMatch(/^\*Pala gomme pleine · Résultats du week-end\*/);
+    expect(resultats.texte).toContain("Série 1 · Alpha (éq. 1) 40-25 Bravo (éq. 1)");
+    expect(resultats.texte).toContain("(score pas encore publié)");
+    expect(resultats.texte).toMatch(/Classement : http.*\/classement\.html$/);
+
+    await page.evaluate(() => { window.__partage = {}; });
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    const ici = await partager();
+    expect(ici).toMatchObject({ nom: "lidfpb-dici-dimanche.png", type: "image/png", largeur: 1080 });
+    expect(ici.texte).toMatch(/^\*Pala gomme pleine · D'ici dimanche 8 nov\.\*/);
+    expect(ici.texte).toMatch(/Programme complet : http.*\/programme\.html$/);
+  });
+
+  test("les deux onglets tiennent sur une ligne, de 320 à 412 px", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    for (const largeur of [320, 390, 412]) {
+      await page.setViewportSize({ width: largeur, height: 800 });
+      await page.goto("index.html");
+      await attendreChargement(page);
+      const hauts = await page.getByRole("tab").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+      expect(hauts, `${largeur} px`).toHaveLength(2);
+      expect(hauts[0], `${largeur} px`).toBe(hauts[1]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${largeur} px`).toBe(true);
+    }
+  });
+
+  test("au clavier : un seul arrêt sur les onglets, les flèches passent de l'un à l'autre", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const resultats = page.getByRole("tab", { name: "Résultats du week-end" });
+    const ici = page.getByRole("tab", { name: "D'ici dim. 8 nov." });
+    await expect(resultats).toHaveAttribute("tabindex", "0");
+    await expect(ici).toHaveAttribute("tabindex", "-1");
+    await resultats.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(ici).toBeFocused();
+    await expect(ici).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#vue-ici")).toBeVisible();
+    await page.keyboard.press("Home");
+    await expect(resultats).toBeFocused();
+    await expect(resultats).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("l'onglet choisi tient quand l'accueil se redessine", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    await page.getByRole("button", { name: "Rafraîchir" }).click();
+    await attendreChargement(page);
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("sur ordinateur : texte copié, image téléchargée, message effacé au changement d'onglet", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    const telechargements = [];
+    page.on("download", (d) => telechargements.push(d.suggestedFilename()));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    // Chaque toucher efface le message, la copie le remet ensuite : on attend
+    // qu'il revienne avant de le lire. Tant que l'image n'est pas prête, il dit
+    // « Texte copié, à coller » et l'on touche de nouveau.
+    const info = page.locator(".partage-ok");
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager", exact: true }).click();
+      await expect(info).not.toHaveText("");
+      return info.textContent();
+    }).toBe("Texte copié, image téléchargée");
+    await expect.poll(() => telechargements).toContain("lidfpb-resultats-du-week-end.png");
+    // Le pied, lien, message et bouton, ne déborde pas à 320 px.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    await expect(info).toHaveText("");
+  });
+
+  test("sans résultat depuis vendredi, pas d'onglets", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-23T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.getByRole("tab")).toHaveCount(0);
+    await expect(page.locator("#tiles .tile-title")).toHaveText(["Mes équipes", "Prochaines parties", "Championnats"]);
+    await expect(page.locator("#vue-ici")).toContainText("Plus aucune rencontre à venir");
   });
 });
 
