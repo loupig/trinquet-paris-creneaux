@@ -665,6 +665,20 @@
   footer { text-align: center; padding: 20px 4px 10px; }
   footer p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
+
+  /* --- Grand écran (spec apparence) ---
+     Sous 1000 px, téléphone même à l'horizontale ou tablette en portrait :
+     une seule colonne, comme sur un téléphone. Au-delà, la page s'élargit et
+     ses blocs se rangent côte à côte. */
+  @media (min-width: 1000px) {
+    main { max-width: 1400px; padding-left: 24px; padding-right: 24px; }
+    /* L'en-tête s'aligne sur le contenu centré (1400 - 2 x 24 px). */
+    header { padding-left: max(16px, calc((100% - 1352px) / 2)); padding-right: max(16px, calc((100% - 1352px) / 2)); }
+    .header-bar { left: max(12px, calc((100% - 1352px) / 2 - 4px)); right: max(12px, calc((100% - 1352px) / 2 - 4px)); }
+    .choix-equipe { max-width: 480px; }
+    .colonnes { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+    .colonne > :last-child { margin-bottom: 0; }
+  }
 </style>
 </head>
 <body>
@@ -691,7 +705,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.03</p>
+    <p>Version 2026.11.04</p>
   </footer>
 </main>
 
@@ -2147,15 +2161,19 @@
       return;
     }
 
+    // Trois colonnes sur grand écran (l'équipe, ses parties, le reste à
+    // jouer de la poule), empilées dans cet ordre sur téléphone.
     var p = pouleDe(etat.standings, team);
-    results.appendChild(buildEnTete(team, p));
-    results.appendChild(buildBilan(team, p));
-    results.appendChild(buildProchaine(team));
-    results.appendChild(buildParties(team));
+    var colonnes = el("div", { class: "colonnes" });
+    colonnes.appendChild(el("div", { class: "colonne" }, [
+      buildEnTete(team, p), buildBilan(team, p), buildProchaine(team)
+    ]));
+    colonnes.appendChild(el("div", { class: "colonne" }, [buildParties(team)]));
     if (p) {
       var reste = resteAJouer(etat.data.rencontres, etat.clubMap, p, cle);
-      if (reste.length) results.appendChild(buildReste(reste));
+      if (reste.length) colonnes.appendChild(el("div", { class: "colonne" }, [buildReste(reste)]));
     }
+    results.appendChild(colonnes);
   }
 
   // Une pastille par équipe suivie, dans l'ordre où elles ont été suivies.

@@ -843,6 +843,25 @@
   footer { text-align: center; padding: 20px 4px 10px; }
   footer p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
+
+  /* --- Grand écran (spec apparence) ---
+     Sous 1000 px, téléphone même à l'horizontale ou tablette en portrait :
+     une seule colonne, comme sur un téléphone. Au-delà, la page s'élargit et
+     ses blocs se rangent côte à côte. */
+  @media (min-width: 1000px) {
+    main { max-width: 1400px; padding-left: 24px; padding-right: 24px; }
+    /* L'en-tête s'aligne sur le contenu centré (1400 - 2 x 24 px). */
+    header { padding-left: max(16px, calc((100% - 1352px) / 2)); padding-right: max(16px, calc((100% - 1352px) / 2)); }
+    .header-bar { left: max(12px, calc((100% - 1352px) / 2 - 4px)); right: max(12px, calc((100% - 1352px) / 2 - 4px)); }
+    /* Les poules d'une série et ses quarts sur une même ligne ; le
+       simulateur dessous, sur toute la largeur, ses parties en grille. */
+    .zone-classement { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+    .zone-classement > .poule-card { flex: 1 1 300px; min-width: 0; margin-bottom: 0; }
+    /* Les quarts, plus larges, passent sous les poules quand la ligne est
+       trop étroite pour les trois cartes. */
+    .zone-classement > .finales-card { flex-basis: 400px; }
+    .sim-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 12px; align-items: start; }
+  }
 </style>
 </head>
 <body>
@@ -888,7 +907,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.03</p>
+    <p>Version 2026.11.04</p>
   </footer>
 </main>
 
@@ -2266,7 +2285,7 @@
         return c !== 0 ? c : a.cat.localeCompare(b.cat, "fr", { numeric: true });
       })
       .forEach(function (s) {
-        var zone = { spec: s.spec, cat: s.cat, el: el("div", {}) };
+        var zone = { spec: s.spec, cat: s.cat, el: el("div", { class: "zone-classement" }) };
         zonesClassement.push(zone);
         remplirZone(zone);
         results.appendChild(zone.el);

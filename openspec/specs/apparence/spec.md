@@ -1,7 +1,7 @@
 # apparence Specification
 
 ## Purpose
-Fixer l'apparence commune à toutes les pages du site : le thème clair ou sombre, réglé par le téléphone du visiteur, puis la typographie, les icônes, le focus au clavier, les zones tactiles et les animations.
+Fixer l'apparence commune à toutes les pages du site : le thème clair ou sombre, réglé par le téléphone du visiteur, puis la typographie, les icônes, le focus au clavier, les zones tactiles, les animations et la mise en page sur grand écran.
 
 ## Requirements
 
@@ -49,6 +49,27 @@ En sombre, les contrôles du navigateur SHALL prendre leur apparence sombre : ch
 #### Scenario: Barre du navigateur
 - **WHEN** l'accueil s'ouvre en sombre
 - **THEN** la barre du navigateur prend la couleur sombre du haut de la page, et non du blanc
+
+### Requirement: Mise en page sur grand écran
+Sous 1000 px de large (téléphone, y compris tourné à l'horizontale, et tablette en portrait), chaque page SHALL garder sa colonne unique. À partir de 1000 px, l'accueil, Mes équipes, Parties, Classement et Créneaux SHALL s'élargir jusqu'à 1400 px et ranger leurs blocs côte à côte, sans défilement horizontal, dans l'ordre de lecture du téléphone :
+- l'accueil : Mes équipes, D'ici dimanche et l'avancement des championnats, en trois colonnes ;
+- Mes équipes : l'équipe (en-tête, bilan, prochaine partie), ses parties, puis le reste à jouer de la poule, en colonnes ;
+- Parties : une carte par journée, en grille, de gauche à droite puis à la ligne ;
+- Classement : les poules d'une série et sa prévision des phases finales sur une même ligne, les phases finales passant sous les poules quand la largeur ne suffit pas à les lire ; le simulateur dessous sur toute la largeur, ses parties en grille ;
+- Créneaux : un week-end par case, autant de colonnes que la largeur en tient.
+Le Compteur, Report et Découvrir ne changent pas. La barre d'onglets reste en bas, comme sur téléphone.
+
+#### Scenario: Accueil sur un écran d'ordinateur
+- **WHEN** un visiteur ouvre l'accueil sur un écran de 1440 px de large
+- **THEN** Mes équipes est à gauche, D'ici dimanche au milieu et l'avancement des championnats à droite, sur une même ligne
+
+#### Scenario: Classement sur un écran d'ordinateur
+- **WHEN** un visiteur ouvre le Classement sur un écran de 1440 px de large
+- **THEN** les deux poules d'une série et ses phases finales sont côte à côte, le simulateur en dessous
+
+#### Scenario: Téléphone à l'horizontale
+- **WHEN** un visiteur tourne son téléphone à l'horizontale, sur moins de 1000 px de large
+- **THEN** les blocs restent empilés en une colonne, comme à la verticale
 
 ### Requirement: Typographie commune
 Les pages de l'application (accueil, Mes équipes, Parties, Classement, Créneaux, Report et compteur) SHALL employer la police Manrope, servie par le site lui-même, sans requête vers un autre domaine. Chaque texte affiché prend sa taille dans l'échelle 12, 14, 16, 18, 20 et 24 px ; seuls les grands chiffres du compteur la dépassent. Aucun texte MUST NOT s'afficher sous 12 px. Les chiffres sont à chasse fixe, pour que les scores et les colonnes restent alignés. Titres, tuiles et étiquettes s'écrivent en casse normale, sans capitales forcées.
