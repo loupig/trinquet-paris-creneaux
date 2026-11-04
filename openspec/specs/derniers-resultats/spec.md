@@ -7,7 +7,7 @@ Répondre sur l'accueil à la première question d'un joueur après un week-end 
 ## Requirements
 
 ### Requirement: Deux vues dans un même bloc
-Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats du week-end » puis « D'ici dim. » suivi de la date du dimanche (par exemple « D'ici dim. 8 nov. »), qui affichent chacun leur liste à la place de l'autre. Les deux onglets tiennent sur une ligne, de 320 à 412 px de large. Du lundi au jeudi, le bloc s'ouvre sur « Résultats du week-end » ; du vendredi au dimanche, sur « D'ici dimanche ». Le choix n'est pas gardé sur l'appareil : chaque ouverture de l'accueil repart de la vue du jour. Le pied du bloc porte le lien vers la page qui prolonge la vue ouverte : « Classement → » pour les résultats, « Tout le programme → » pour les parties à venir. Quand aucun résultat n'est à montrer, il n'y a pas d'onglets : le bloc ne montre que « D'ici dimanche », sous son titre.
+Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats du week-end » puis « D'ici dim. » suivi de la date du dimanche (par exemple « D'ici dim. 8 nov. »), qui affichent chacun leur liste à la place de l'autre. Les deux onglets tiennent sur une ligne, de 320 à 412 px de large. Du lundi au jeudi, le bloc s'ouvre sur « Résultats du week-end » ; du vendredi au dimanche, sur « D'ici dimanche ». Le choix n'est pas gardé sur l'appareil : chaque ouverture de l'accueil repart de la vue du jour ; pendant la visite, l'onglet touché reste ouvert quand les données se rafraîchissent. Au clavier, les onglets ne font qu'un arrêt, celui de l'onglet ouvert, et les flèches gauche et droite, Début et Fin passent de l'un à l'autre. Le pied du bloc porte le lien vers la page qui prolonge la vue ouverte : « Classement → » pour les résultats, « Tout le programme → » pour les parties à venir. Quand aucun résultat n'est à montrer, il n'y a pas d'onglets : le bloc ne montre que « D'ici dimanche », sous son titre.
 
 #### Scenario: Lundi
 - **WHEN** un visiteur ouvre l'accueil un lundi et que des parties ont été jouées le week-end écoulé
@@ -16,6 +16,10 @@ Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats du week-
 #### Scenario: Vendredi
 - **WHEN** un visiteur ouvre l'accueil un vendredi
 - **THEN** le bloc s'ouvre sur « D'ici dimanche », et l'onglet « Résultats du week-end » montre les parties depuis le vendredi précédent
+
+#### Scenario: Données rafraîchies
+- **WHEN** le visiteur a ouvert « D'ici dim. 8 nov. » un lundi, puis les données fraîches arrivent
+- **THEN** l'onglet « D'ici dim. 8 nov. » reste ouvert
 
 #### Scenario: Aucun résultat
 - **WHEN** aucune partie n'est retenue pour les résultats

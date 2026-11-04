@@ -376,8 +376,8 @@
   .headline-unit { font-size: 14px; font-weight: 600; color: var(--muted); }
 
   /* --- Ligne d'une partie ---
-     Tronquée : la tuile entière ouvre le programme, qui donne poule, lieu et
-     noms complets. Sur l'accueil l'utile est "quand, qui, quelle série". */
+     Tronquée : sur l'accueil l'utile est "quand, qui, quelle série" ; le
+     programme, à un toucher du pied du bloc, donne poule et noms complets. */
   .next-when {
     flex: 0 0 auto;
     font-size: 12px;
@@ -484,9 +484,10 @@
   .tile.avec-pied { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
   .tile-pied {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 6px 10px;
     padding: 7px 14px;
     margin-bottom: 10px;
     background: var(--card-bg);
@@ -495,9 +496,9 @@
     border-radius: 0 0 12px 12px;
   }
   .pied-lien { margin-right: auto; text-decoration: none; }
-  .partage-zone { display: flex; align-items: center; gap: 10px; }
+  .partage-zone { display: flex; align-items: center; gap: 10px; min-width: 0; margin-left: auto; }
   .partage-zone[hidden] { display: none; }
-  .partage-ok { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .partage-ok { font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .partager {
     display: inline-flex;
     align-items: center;
@@ -1468,18 +1469,24 @@
     return corps;
   }
 
+  // Libellé de « D'ici dimanche ». En onglet, le jour abrégé, pour que les
+  // deux onglets tiennent sur une ligne à 390 px ; le titre entier reste
+  // celui du bloc sans onglets, du texte et de l'image partagés.
+  function libelleIci(dimanche, abrege) {
+    if (!dimanche) return "Prochaines parties";
+    return (abrege ? "D'ici dim. " : "D'ici dimanche ") + dimanche.getDate() + " " + MONTH_ABBR[dimanche.getMonth()];
+  }
+
+  // L'onglet touché par le visiteur, gardé le temps de la visite : l'arrivée
+  // des données fraîches, qui redessine l'accueil, ne doit pas le défaire.
+  // Rien n'est gardé sur l'appareil.
+  var vueChoisie = null;
+
   // Un seul bloc pour la semaine, à deux vues : les résultats depuis vendredi
   // et les parties d'ici dimanche. Le bloc n'est plus un lien entier, ses
   // onglets étant des boutons : le lien vers la page qui prolonge la vue
   // (Classement ou programme) passe dans le pied, avec le partage. Sans
   // résultat à montrer, pas d'onglets, seulement le titre des parties.
-  // Libellé d'onglet de « D'ici dimanche » : le jour abrégé, pour que les deux
-  // onglets tiennent sur une ligne à 390 px. Le titre entier reste celui du
-  // bloc sans onglets, du texte et de l'image partagés.
-  function ongletIci(ici, titre) {
-    return ici.dimanche ? "D'ici dim. " + ici.dimanche.getDate() + " " + MONTH_ABBR[ici.dimanche.getMonth()] : titre;
-  }
-
   function buildSemaine(resultats, ici, titre, mes, today) {
     var vues = {
       resultats: resultats.length ? {
@@ -1488,7 +1495,7 @@
         partage: partageResultats(resultats)
       } : null,
       ici: {
-        label: ongletIci(ici, titre), corps: buildListeIci(ici, mes),
+        label: libelleIci(ici.dimanche, true), corps: buildListeIci(ici, mes),
         href: "programme.html", lien: "Tout le programme →",
         partage: ici.parties.length ? partageIci(titre, ici.parties) : null
       }
@@ -1501,12 +1508,22 @@
     if (ordre.length === 1) {
       head.appendChild(el("div", { class: "tile-title", text: titre }));
     } else {
+      // Un seul arrêt au clavier pour les onglets, l'ouvert ; les flèches,
+      // Début et Fin passent de l'un à l'autre.
       var onglets = el("div", { class: "vues", role: "tablist", "aria-label": "Parties de la semaine" });
       ordre.forEach(function (k) {
         var b = el("button", { type: "button", class: "vue-btn", role: "tab", id: "onglet-" + k, "aria-controls": "vue-" + k, text: vues[k].label });
-        b.addEventListener("click", function () { montrer(k); });
+        b.addEventListener("click", function () { choisir(k); });
         vues[k].onglet = b;
         onglets.appendChild(b);
+      });
+      onglets.addEventListener("keydown", function (e) {
+        var i = ordre.indexOf(vueOuverte), n = ordre.length;
+        var cible = { ArrowRight: (i + 1) % n, ArrowLeft: (i + n - 1) % n, Home: 0, End: n - 1 }[e.key];
+        if (cible === undefined) return;
+        e.preventDefault();
+        choisir(ordre[cible]);
+        vues[ordre[cible]].onglet.focus();
       });
       head.appendChild(onglets);
     }
@@ -1526,19 +1543,29 @@
     var vueOuverte = null;
     var partage = buildPartage(function () { return vues[vueOuverte].partage; });
     pied.appendChild(partage);
-    ordre.forEach(function (k) { if (vues[k].partage) preparerImage(vues[k].partage); });
 
+    // Seule l'image de la vue ouverte est dessinée, l'autre quand on y passe.
     function montrer(vue) {
       vueOuverte = vue;
       ordre.forEach(function (k) {
         vues[k].corps.hidden = k !== vue;
-        if (vues[k].onglet) vues[k].onglet.setAttribute("aria-selected", String(k === vue));
+        if (vues[k].onglet) {
+          vues[k].onglet.setAttribute("aria-selected", String(k === vue));
+          vues[k].onglet.tabIndex = k === vue ? 0 : -1;
+        }
       });
       lien.href = vues[vue].href;
       lien.textContent = vues[vue].lien;
       partage.hidden = !vues[vue].partage;
+      partage.info.textContent = "";
+      if (vues[vue].partage) preparerImage(vues[vue].partage);
     }
-    montrer(vues[vueParDefaut(today)] ? vueParDefaut(today) : "ici");
+    function choisir(vue) {
+      vueChoisie = vue;
+      montrer(vue);
+    }
+    var depart = vues[vueChoisie] ? vueChoisie : vueParDefaut(today);
+    montrer(vues[depart] ? depart : "ici");
 
     var frag = document.createDocumentFragment();
     frag.appendChild(bloc);
@@ -1752,6 +1779,8 @@
   // doit s'ouvrir dans le geste même, sans attendre un dessin. Une image pas
   // encore prête laisse partir le texte seul.
   function preparerImage(partage) {
+    if (partage.prepare) return;
+    partage.prepare = true;
     var pret = document.fonts && document.fonts.load ? document.fonts.load(police(56, 800)) : Promise.resolve();
     pret.catch(function () {}).then(function () {
       dessinerImage(partage).toBlob(function (blob) {
@@ -1813,6 +1842,7 @@
     });
     zone.appendChild(info);
     zone.appendChild(bouton);
+    zone.info = info;
     return zone;
   }
 
@@ -1841,9 +1871,7 @@
     // --- La semaine : résultats et parties d'ici dimanche ---
     var resultats = derniersResultats(data.rencontres, clubMap, today);
     var ici = affiches(aVenir, standings, clubMap);
-    var titre = ici.dimanche
-      ? "D'ici dimanche " + ici.dimanche.getDate() + " " + MONTH_ABBR[ici.dimanche.getMonth()]
-      : "Prochaines parties";
+    var titre = libelleIci(ici.dimanche, false);
     colIci.appendChild(buildSemaine(resultats, ici, titre, mes, today));
 
     // --- Avancement de la saison ---

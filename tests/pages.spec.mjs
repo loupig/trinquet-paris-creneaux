@@ -1079,6 +1079,57 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     }
   });
 
+  test("au clavier : un seul arrêt sur les onglets, les flèches passent de l'un à l'autre", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const resultats = page.getByRole("tab", { name: "Résultats du week-end" });
+    const ici = page.getByRole("tab", { name: "D'ici dim. 8 nov." });
+    await expect(resultats).toHaveAttribute("tabindex", "0");
+    await expect(ici).toHaveAttribute("tabindex", "-1");
+    await resultats.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(ici).toBeFocused();
+    await expect(ici).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#vue-ici")).toBeVisible();
+    await page.keyboard.press("Home");
+    await expect(resultats).toBeFocused();
+    await expect(resultats).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("l'onglet choisi tient quand l'accueil se redessine", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    await page.getByRole("button", { name: "Rafraîchir" }).click();
+    await attendreChargement(page);
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("sur ordinateur : texte copié, image téléchargée, message effacé au changement d'onglet", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.clock.setFixedTime(new Date("2026-11-02T10:00:00+01:00"));
+    const telechargements = [];
+    page.on("download", (d) => telechargements.push(d.suggestedFilename()));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    const info = page.locator(".partage-ok");
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager", exact: true }).click();
+      return info.textContent();
+    }).toBe("Texte copié, image téléchargée");
+    await expect.poll(() => telechargements).toContain("lidfpb-resultats-du-week-end.png");
+    // Le pied, lien, message et bouton, ne déborde pas à 320 px.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+    await expect(info).toHaveText("");
+  });
+
   test("sans résultat depuis vendredi, pas d'onglets", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-11-23T10:00:00+01:00"));
     await page.goto("index.html");
