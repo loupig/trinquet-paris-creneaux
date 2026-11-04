@@ -947,6 +947,10 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
   ];
   // Un report : prévue samedi 31, jouée plus tard, elle n'est pas un résultat.
   calendrier.push(Object.assign(partie(906, "31102026", BRAVO, CHARLIE, "", ""), { date_rep: "14112026" }));
+  // Un forfait, publié en lettres : affiché tel quel, sans perdant.
+  calendrier.push(Object.assign(partie(907, "31102026", DELTA, BRAVO, "F", "40"), { heure_renc: "1000" }));
+  // Un quart dont les adversaires restent à désigner : pas un résultat.
+  calendrier.push(Object.assign(partie(908, "31102026", "9998", "9998", "", ""), { Phase: "10", Poule: "" }));
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/script.google.com/**", (route) => {
@@ -972,7 +976,7 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.getByRole("button", { name: "Partager", exact: true })).toBeVisible();
 
     const lignes = page.locator("#vue-resultats .resultat");
-    await expect(lignes).toHaveCount(2);
+    await expect(lignes).toHaveCount(3);   // ni le quart à désigner, ni la partie reportée
     await expect(page.locator("#vue-ici")).toBeHidden();
 
     await expect(lignes.nth(0)).toContainText("ven. 30 oct.");
@@ -980,10 +984,14 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(lignes.nth(0).locator(".perdant")).toHaveText("Bravo 1");
     await expect(lignes.nth(0)).not.toHaveClass(/mine/);
 
-    await expect(lignes.nth(1)).toContainText("dim. 1 nov.");
-    await expect(lignes.nth(1).locator(".score")).toHaveText("vs");
-    await expect(lignes.nth(1)).toContainText("Score pas encore publié par la ligue");
-    await expect(lignes.nth(1)).toHaveClass(/mine/);   // Charlie 1 est suivie
+    await expect(lignes.nth(1).locator(".score")).toHaveText("F-40");
+    await expect(lignes.nth(1).locator(".perdant")).toHaveCount(0);
+    await expect(lignes.nth(1)).not.toContainText("pas encore publié");
+
+    await expect(lignes.nth(2)).toContainText("dim. 1 nov.");
+    await expect(lignes.nth(2).locator(".score")).toHaveText("vs");
+    await expect(lignes.nth(2)).toContainText("Score pas encore publié par la ligue");
+    await expect(lignes.nth(2)).toHaveClass(/mine/);   // Charlie 1 est suivie
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
@@ -1013,9 +1021,9 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#vue-ici")).toBeVisible();
 
-    // Depuis le vendredi d'avant : le 30, le dimanche sans score, le lundi sans score.
+    // Depuis le vendredi d'avant : le 30, le forfait, le dimanche et le lundi sans score.
     await page.getByRole("tab", { name: "Résultats du week-end" }).click();
-    await expect(page.locator("#vue-resultats .resultat")).toHaveCount(3);
+    await expect(page.locator("#vue-resultats .resultat")).toHaveCount(4);
     await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
   });
 

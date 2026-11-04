@@ -22,7 +22,7 @@ Le bloc de la semaine SHALL porter en tête deux onglets, « Résultats du week-
 - **THEN** le bloc n'a pas d'onglets et ne montre que les parties d'ici dimanche
 
 ### Requirement: Parties retenues
-Les résultats SHALL lister, tous lieux et toutes séries confondus, les parties dont la date effective (la date de report si elle existe, sinon la date d'origine) va du dernier vendredi passé, aujourd'hui exclu, jusqu'à aujourd'hui inclus : celles qui ont un score, et celles des jours passés qui n'en ont pas encore. Du lundi au jeudi, ce vendredi est celui du week-end écoulé ; le vendredi, celui de la semaine d'avant ; le samedi et le dimanche, celui du week-end en cours. Une partie du jour sans score n'y figure pas : elle est encore à venir et reste dans « D'ici dimanche ». Les parties sont rangées dans l'ordre chronologique.
+Les résultats SHALL lister, tous lieux et toutes séries confondus, les parties dont la date effective (la date de report si elle existe, sinon la date d'origine) va du dernier vendredi passé, aujourd'hui exclu, jusqu'à aujourd'hui inclus : celles qui ont un score, et celles des jours passés qui n'en ont pas encore. Du lundi au jeudi, ce vendredi est celui du week-end écoulé ; le vendredi, celui de la semaine d'avant ; le samedi et le dimanche, celui du week-end en cours. Une partie du jour sans score n'y figure pas : elle est encore à venir et reste dans « D'ici dimanche ». Une partie dont un adversaire est encore à désigner n'y figure pas non plus. Les parties sont rangées dans l'ordre chronologique.
 
 #### Scenario: Week-end écoulé
 - **WHEN** on est mardi et que des parties ont été jouées vendredi, samedi et dimanche
@@ -40,8 +40,12 @@ Les résultats SHALL lister, tous lieux et toutes séries confondus, les parties
 - **WHEN** une partie prévue samedi a été reportée à une date ultérieure
 - **THEN** elle ne figure pas dans le bloc
 
+#### Scenario: Adversaires à désigner
+- **WHEN** un quart de finale prévu samedi oppose encore deux équipes à désigner
+- **THEN** il ne figure pas dans le bloc
+
 ### Requirement: Ligne d'un résultat
-Chaque partie SHALL tenir sur une ligne : le jour, les deux équipes sous leur nom court avec le score entre elles (celui de l'équipe qui reçoit en premier), et la série. Le nom de l'équipe perdante est en retrait. Une partie passée sans score affiche « vs » à la place du score et, sur une seconde ligne, « Score pas encore publié par la ligue ».
+Chaque partie SHALL tenir sur une ligne : le jour, les deux équipes sous leur nom court avec le score entre elles (celui de l'équipe qui reçoit en premier), et la série. Le nom de l'équipe perdante est en retrait. Un score publié qui n'est pas un nombre (un forfait, par exemple) s'affiche tel que la ligue l'écrit, sans perdant en retrait. Une partie passée sans score affiche « vs » à la place du score et, sur une seconde ligne, « Score pas encore publié par la ligue ».
 
 #### Scenario: Lecture d'un résultat
 - **WHEN** Alpha 1 a reçu Bravo 1 samedi et gagné 40 à 25

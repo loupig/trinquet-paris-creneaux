@@ -989,31 +989,42 @@
   // ---------------------------------------------------------------
   // Les prochaines rencontres, tous lieux confondus. Une partie du jour reste
   // "à venir" toute la journée, comme sur le programme.
+  // Une partie telle que l'accueil l'affiche, à venir ou jouée : jour, heure,
+  // série, équipes en nom court et complet, et les champs bruts qui servent
+  // aux critères de l'affiche et au repère des équipes suivies.
+  function partieDe(row, clubMap, d, t) {
+    var cat = String(row["Catégorie"] || "").trim();
+    var phaseRaw = String(row.Phase || "").trim();
+    var rec = clubCourt(clubMap, row.club_rec, row.equip_rec), vis = clubCourt(clubMap, row.club_vis, row.equip_vis);
+    var recLong = clubLabel(clubMap, row.club_rec, row.equip_rec), visLong = clubLabel(clubMap, row.club_vis, row.equip_vis);
+    return {
+      date: d, hour: t.hour, minute: t.minute, cat: cat,
+      serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
+      rec: rec, vis: vis, recLong: recLong, visLong: visLong,
+      teams: rec + " vs " + vis,
+      teamsLong: recLong + " vs " + visLong,
+      lieu: String(row.lieu_renc || "").trim(),
+      meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
+      spec: String(row["Spécialité"] || "").trim(),
+      phase: phaseRaw,
+      poule: String(row.Poule || "").trim(),
+      clubRec: String(row.club_rec || "").trim(), equipRec: String(row.equip_rec || "").trim(),
+      clubVis: String(row.club_vis || "").trim(), equipVis: String(row.equip_vis || "").trim()
+    };
+  }
+
+  function chronologique(a, b) {
+    var dd = a.date.getTime() - b.date.getTime();
+    return dd !== 0 ? dd : (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute);
+  }
+
   function prochaines(rencontres, clubMap, today) {
     return rencontres.map(function (row) {
       var d = effectiveDate(row);
       var t = parseHeureRenc(row.heure_renc);
       if (!d || !t || d < today || hasScore(row)) return null;
-      var cat = String(row["Catégorie"] || "").trim();
-      var phaseRaw = String(row.Phase || "").trim();
-      return {
-        date: d, hour: t.hour, minute: t.minute, cat: cat,
-        serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
-        teams: clubCourt(clubMap, row.club_rec, row.equip_rec) + " vs " + clubCourt(clubMap, row.club_vis, row.equip_vis),
-        teamsLong: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
-        lieu: String(row.lieu_renc || "").trim(),
-        meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
-        // Champs bruts, pour les critères de l'affiche du week-end.
-        spec: String(row["Spécialité"] || "").trim(),
-        phase: phaseRaw,
-        poule: String(row.Poule || "").trim(),
-        clubRec: String(row.club_rec || "").trim(), equipRec: String(row.equip_rec || "").trim(),
-        clubVis: String(row.club_vis || "").trim(), equipVis: String(row.equip_vis || "").trim()
-      };
-    }).filter(Boolean).sort(function (a, b) {
-      var dd = a.date.getTime() - b.date.getTime();
-      return dd !== 0 ? dd : (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute);
-    });
+      return partieDe(row, clubMap, d, t);
+    }).filter(Boolean).sort(chronologique);
   }
 
   // ---------------------------------------------------------------
@@ -1163,33 +1174,24 @@
   // Les parties jouées depuis ce vendredi, aujourd'hui compris, et celles des
   // jours passés restées sans score : une partie du jour sans score est
   // encore à venir, elle reste dans « D'ici dimanche ». Ordre chronologique.
+  // Une partie dont un adversaire est encore « à désigner » n'a pas de
+  // résultat à montrer : elle est écartée. Un score publié qui n'est pas un
+  // nombre (forfait…) s'affiche tel que la ligue l'écrit, sans perdant.
   function derniersResultats(rencontres, clubMap, today) {
     var depuis = vendrediEcoule(today);
     return rencontres.map(function (row) {
       var d = effectiveDate(row);
       var joue = hasScore(row);
       if (!d || d < depuis || d > today || (!joue && d >= today)) return null;
-      var t = parseHeureRenc(row.heure_renc) || { hour: 0, minute: 0 };
-      var cat = String(row["Catégorie"] || "").trim();
-      return {
-        date: d, hour: t.hour, minute: t.minute, cat: cat,
-        serieLabel: SERIE_LABELS[cat] || ("Cat. " + (cat || "?")),
-        rec: clubCourt(clubMap, row.club_rec, row.equip_rec),
-        vis: clubCourt(clubMap, row.club_vis, row.equip_vis),
-        recLong: clubLabel(clubMap, row.club_rec, row.equip_rec),
-        visLong: clubLabel(clubMap, row.club_vis, row.equip_vis),
-        teamsLong: clubLabel(clubMap, row.club_rec, row.equip_rec) + " vs " + clubLabel(clubMap, row.club_vis, row.equip_vis),
-        scoreRec: joue ? parseInt(row.score_cr, 10) : null,
-        scoreVis: joue ? parseInt(row.score_cv, 10) : null,
-        // Champs bruts, pour repérer les parties des équipes suivies.
-        spec: String(row["Spécialité"] || "").trim(),
-        clubRec: String(row.club_rec || "").trim(), equipRec: String(row.equip_rec || "").trim(),
-        clubVis: String(row.club_vis || "").trim(), equipVis: String(row.equip_vis || "").trim()
-      };
-    }).filter(Boolean).sort(function (a, b) {
-      var dd = a.date.getTime() - b.date.getTime();
-      return dd !== 0 ? dd : (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute);
-    });
+      if (clubFictif(row.club_rec) || clubFictif(row.club_vis)) return null;
+      var m = partieDe(row, clubMap, d, parseHeureRenc(row.heure_renc) || { hour: 0, minute: 0 });
+      m.publie = joue;
+      m.scoreTexte = joue ? String(row.score_cr).trim() + "-" + String(row.score_cv).trim() : "";
+      var sr = parseInt(row.score_cr, 10), sv = parseInt(row.score_cv, 10);
+      m.perdRec = joue && !Number.isNaN(sr) && !Number.isNaN(sv) && sr < sv;
+      m.perdVis = joue && !Number.isNaN(sr) && !Number.isNaN(sv) && sv < sr;
+      return m;
+    }).filter(Boolean).sort(chronologique);
   }
 
   // ---------------------------------------------------------------
@@ -1409,10 +1411,6 @@
   // Une ligne par partie, comme « D'ici dimanche », le score entre les deux
   // équipes et le perdant en retrait. Une partie passée sans score le dit sur
   // une seconde ligne : le joueur qui la cherche sait qu'elle n'est pas perdue.
-  function scoreConnu(m) {
-    return m.scoreRec !== null && !Number.isNaN(m.scoreRec) && m.scoreVis !== null && !Number.isNaN(m.scoreVis);
-  }
-
   function buildListeResultats(resultats, mes) {
     var corps = el("div", { class: "tile-body resultats" });
     resultats.forEach(function (m) {
@@ -1421,11 +1419,10 @@
       var ligne = el("div", { class: "affiche-line" });
       ligne.appendChild(el("div", { class: "next-when", text: formatShortDate(m.date) }));
       var equipes = el("div", { class: "next-teams", title: m.teamsLong });
-      var joue = scoreConnu(m);
-      var perdRec = joue && m.scoreRec < m.scoreVis, perdVis = joue && m.scoreVis < m.scoreRec;
-      equipes.appendChild(el("span", { class: perdRec ? "perdant" : "", text: m.rec }));
-      equipes.appendChild(el("span", { class: "score", text: joue ? (m.scoreRec + "-" + m.scoreVis) : "vs" }));
-      equipes.appendChild(el("span", { class: perdVis ? "perdant" : "", text: m.vis }));
+      var joue = m.publie;
+      equipes.appendChild(el("span", { class: m.perdRec ? "perdant" : "", text: m.rec }));
+      equipes.appendChild(el("span", { class: "score", text: joue ? m.scoreTexte : "vs" }));
+      equipes.appendChild(el("span", { class: m.perdVis ? "perdant" : "", text: m.vis }));
       ligne.appendChild(equipes);
       ligne.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
       item.appendChild(ligne);
@@ -1615,18 +1612,18 @@
       nom: "lidfpb-resultats-du-week-end.png",
       titre: TITRE_RESULTATS,
       texte: texteParJour(TITRE_RESULTATS, groupes, function (m) {
-        return m.serieLabel + " · " + m.recLong + (scoreConnu(m) ? " " + m.scoreRec + "-" + m.scoreVis + " " : " vs ") +
-               m.visLong + (scoreConnu(m) ? "" : " (score pas encore publié)");
+        return m.serieLabel + " · " + m.recLong + (m.publie ? " " + m.scoreTexte + " " : " vs ") +
+               m.visLong + (m.publie ? "" : " (score pas encore publié)");
       }, "Classement", "classement.html"),
       groupes: groupes.map(function (g) {
         return { jour: g.jour, lignes: g.lignes.map(function (m) {
-          var joue = scoreConnu(m);
+          var joue = m.publie;
           return {
             heure: "",
             morceaux: [
-              { texte: m.rec, retrait: joue && m.scoreRec < m.scoreVis },
-              { texte: joue ? m.scoreRec + "-" + m.scoreVis : "vs", gras: joue },
-              { texte: m.vis, retrait: joue && m.scoreVis < m.scoreRec }
+              { texte: m.rec, retrait: m.perdRec },
+              { texte: joue ? m.scoreTexte : "vs", gras: joue },
+              { texte: m.vis, retrait: m.perdVis }
             ],
             cat: m.cat, serie: m.serieLabel, etiquette: null, lieu: joue ? "" : "Score pas encore publié par la ligue"
           };
