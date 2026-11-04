@@ -83,6 +83,17 @@
     --sim-bg: #fbfcff;
     --fort-bord: #1a1a2e;
     --sur-accent: #fff;
+    /* Teintes des poules, prises aux rayures du linge basque : bordeaux,
+       bleu marine, vert sapin, ocre. Distinctes des séries, et du vert et du
+       rouge des victoires et défaites. */
+    --poule1-text: #9b1c31;
+    --poule1-bg: #f8e6ea;
+    --poule2-text: #1d4e89;
+    --poule2-bg: #e4ecf7;
+    --poule3-text: #2d5e3e;
+    --poule3-bg: #e8f0e9;
+    --poule4-text: #8a6212;
+    --poule4-bg: #f6eedb;
   }
   /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
      valeurs dans chaque page qui porte ces variables. */
@@ -132,6 +143,14 @@
       --sim-bg: #1a1f30;
       --fort-bord: #6e6e6e;
       --sur-accent: #181818;
+      --poule1-text: #f4a3b1;
+      --poule1-bg: #3a1820;
+      --poule2-text: #9cc0f0;
+      --poule2-bg: #152a45;
+      --poule3-text: #8fd1a6;
+      --poule3-bg: #15291c;
+      --poule4-text: #e8c27a;
+      --poule4-bg: #33270f;
     }
   }
 
@@ -403,6 +422,20 @@
     transition: transform 500ms var(--ease);
   }
   .filters-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  /* Résumé des filtres, sous le titre du bloc replié : une ligne, coupée si
+     elle déborde. */
+  .filters-toggle > span { min-width: 0; }
+  .filters-recap {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .filters-recap[hidden] { display: none; }
   .filters-body { margin-top: 8px; }
   .filters-body[hidden] { display: none; }
 
@@ -506,6 +539,24 @@
   .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
   .rank-main { flex: 1 1 auto; min-width: 0; }
   .rank-team { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  /* Classement général : pastille et liseré de la poule d'origine. */
+  .poule-tag {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    vertical-align: 1px;
+  }
+  /* Les mêmes teintes marquent, au tableau des quarts, l'étiquette « 1er P1 ». */
+  .teinte-1 { --teinte: var(--poule1-text); --teinte-bg: var(--poule1-bg); }
+  .teinte-2 { --teinte: var(--poule2-text); --teinte-bg: var(--poule2-bg); }
+  .teinte-3 { --teinte: var(--poule3-text); --teinte-bg: var(--poule3-bg); }
+  .teinte-4 { --teinte: var(--poule4-text); --teinte-bg: var(--poule4-bg); }
+  .rank-row[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
+  .rank-row[class*="teinte-"] .poule-tag { color: var(--teinte); background: var(--teinte-bg); }
   .rank-detail { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
   .rank-values { flex: 0 0 auto; text-align: right; }
   .rank-score {
@@ -606,6 +657,7 @@
     vertical-align: 1px;
     white-space: nowrap;
   }
+  .quart-seed[class*="teinte-"] { color: var(--teinte); background: var(--teinte-bg); }
   .tableau-arbre { position: relative; border-left: 1px solid var(--border); }
   .tableau-arbre svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .tableau-arbre path { fill: none; stroke: var(--muted); stroke-width: 1.5; }
@@ -885,16 +937,16 @@
     <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
     <div class="filters-body" id="filtersBody">
     <div class="filter-subtitle">Spécialité</div>
-    <div class="filter-group" id="filterSpecs"></div>
+    <div class="filter-group" id="filterSpecs" data-recap-vide="aucune spécialité"></div>
     <div class="filter-subtitle">Série</div>
-    <div class="filter-group" id="filterSeries">
+    <div class="filter-group" id="filterSeries" data-recap-vide="aucune série">
       <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
       <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
     </div>
     <div class="filter-subtitle">Découpage</div>
-    <div class="filter-group" id="filterDecoupage">
-      <button type="button" class="filter-chip" data-mode="poule">Par poule</button>
-      <button type="button" class="filter-chip" data-mode="general">Général</button>
+    <div class="filter-group" id="filterDecoupage" data-recap-choix>
+      <button type="button" class="filter-chip" data-mode="poule" data-recap-defaut>Par poule</button>
+      <button type="button" class="filter-chip" data-mode="general" data-recap="Classement général">Général</button>
     </div>
     <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (chiffre de droite), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
     </div>
@@ -907,7 +959,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.04</p>
+    <p>Version 2026.11.04.2</p>
   </footer>
 </main>
 
@@ -1284,12 +1336,17 @@
 
   var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
 
-  function buildRankRow(team, rang) {
-    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") });
+  // teinte : en classement général, rang de la poule de l'équipe (1 à 4),
+  // qui colore sa pastille « P1 » et le liseré de sa ligne.
+  function buildRankRow(team, rang, teinte) {
+    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (teinte ? " teinte-" + teinte : "") });
     row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
 
     var main = el("div", { class: "rank-main" });
-    main.appendChild(el("div", { class: "rank-team", text: team.label }));
+    var nom = el("div", { class: "rank-team" });
+    if (teinte) nom.appendChild(el("span", { class: "poule-tag", title: "Poule " + team.poule, text: "P" + team.poule }));
+    nom.appendChild(document.createTextNode(team.label));
+    main.appendChild(nom);
     var detail;
     if (team.jouees) {
       detail = team.jouees + " partie" + (team.jouees > 1 ? "s" : "") +
@@ -1316,6 +1373,19 @@
     return row;
   }
 
+  // Chaque poule d'une série a sa teinte, dans l'ordre des poules, pour voir
+  // d'un coup d'œil d'où vient chaque équipe, au classement général comme au
+  // tableau des quarts. Quatre teintes, qui reviennent au-delà de quatre
+  // poules ; le numéro reste écrit. Renvoie { poule: 1 à 4 }.
+  function teintesPoules(teams) {
+    var teintes = {};
+    teams.map(function (t) { return t.poule; })
+      .filter(function (pl, i, tout) { return pl && tout.indexOf(pl) === i; })
+      .sort(function (a, b) { return String(a).localeCompare(String(b), "fr", { numeric: true }); })
+      .forEach(function (pl, i) { teintes[pl] = (i % 4) + 1; });
+    return teintes;
+  }
+
   // Une carte par groupe classé : une poule, ou une catégorie entière en mode
   // général. Le titre dit toujours de quoi il s'agit, sans quoi deux tables
   // côte à côte seraient impossibles à distinguer.
@@ -1327,9 +1397,11 @@
     if (groupe.sousTitre) head.appendChild(el("span", { class: "poule-sub", text: groupe.sousTitre }));
     carte.appendChild(head);
 
+    var teintes = filterState.mode === "general" ? teintesPoules(groupe.teams) : {};
+
     var classees = trierClassement(groupe.teams);
     classees.forEach(function (t, idx) {
-      carte.appendChild(buildRankRow(t, idx + 1));
+      carte.appendChild(buildRankRow(t, idx + 1, teintes[t.poule]));
       // Les quarts se qualifient poule par poule : le trait n'a aucun sens
       // sur une table générale, où les poules sont fusionnées.
       if (filterState.mode === "poule" && idx + 1 === QUALIFIES_PAR_POULE && classees.length > QUALIFIES_PAR_POULE) {
@@ -1782,11 +1854,11 @@
     return [haut, 100 - haut];
   }
 
-  function buildSlot(cote, suivies, chances) {
+  function buildSlot(cote, suivies, chances, teinte) {
     var t = cote.team;
     var suivie = t && estSuivie(suivies, t.spec, t.cat, t.clubCode, t.numero);
     var side = el("div", { class: "quart-side" + (t ? "" : " vide") + (suivie ? " suivie" : "") });
-    side.appendChild(el("span", { class: "quart-seed", text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule }));
+    side.appendChild(el("span", { class: "quart-seed" + (teinte ? " teinte-" + teinte : ""), text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule }));
     side.appendChild(el("span", { class: "quart-nom", text: t ? t.label : "À déterminer" }));
     if (chances) {
       side.appendChild(el("span", {
@@ -1816,6 +1888,7 @@
     carte.appendChild(head);
 
     var tableau = tableauQuarts(teams);
+    var teintes = teintesPoules(teams);
     var note;
     if (!tableau.quarts) {
       note = "Les quarts croisent les deux poules d'une série ; celle-ci en compte " + tableau.nbPoules +
@@ -1836,7 +1909,7 @@
         row.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
         var duo = el("div", {});
         q.cotes.forEach(function (c, i) {
-          duo.appendChild(buildSlot(c, suivies, chances && [chances[i], chances[1 - i]]));
+          duo.appendChild(buildSlot(c, suivies, chances && [chances[i], chances[1 - i]], teintes[c.poule]));
           if (mienQ === null && c.team && estSuivie(suivies, c.team.spec, c.team.cat, c.team.clubCode, c.team.numero)) mienQ = q.num;
         });
         row.appendChild(duo);
@@ -2416,10 +2489,67 @@
   var corps = document.getElementById("filtersBody");
   if (!bouton || !corps) return;
 
+  // Replié, le bloc garde sous son titre ce qui est filtré : seulement ce qui
+  // s'écarte du réglage par défaut, et au plus RECAP_MAX éléments, la suite
+  // comptée (« +2 »). Dans un groupe, la liste la plus courte l'emporte :
+  // « sans 17h » plutôt que les six autres heures.
+  var RECAP_MAX = 3;
+  var recap = document.createElement("span");
+  recap.className = "filters-recap";
+  bouton.querySelector("span").appendChild(recap);
+
+  function libelle(e) { return e.getAttribute("data-recap") || e.textContent.trim(); }
+
+  function elementsRecap() {
+    var liste = [];
+    corps.querySelectorAll(".filter-group").forEach(function (g) {
+      // Une pastille cachée (heure impossible pour les jours choisis) ne
+      // compte pas.
+      var chips = [].slice.call(g.querySelectorAll(".filter-chip")).filter(function (c) { return !c.hidden; });
+      var actives = chips.filter(function (c) { return c.classList.contains("active"); });
+      var autres = chips.filter(function (c) { return !c.classList.contains("active"); });
+      if (g.hasAttribute("data-recap-choix")) {
+        // Un seul choix parmi plusieurs : rien à dire tant que c'est le défaut.
+        actives.forEach(function (c) { if (!c.hasAttribute("data-recap-defaut")) liste.push(libelle(c)); });
+      } else if (g.hasAttribute("data-recap-bascule")) {
+        // Une pastille seule qui s'allume, comme « Masquer les parties passées ».
+        actives.forEach(function (c) { liste.push(libelle(c)); });
+      } else if (!actives.length && chips.length) {
+        liste.push(g.getAttribute("data-recap-vide") || "rien");
+      } else if (autres.length && autres.length < actives.length) {
+        liste.push("sans " + autres.map(libelle).join(", "));
+      } else if (autres.length) {
+        actives.forEach(function (c) { liste.push(libelle(c)); });
+      }
+    });
+    corps.querySelectorAll(".filter-checkbox").forEach(function (l) {
+      var coche = l.querySelector("input").checked;
+      var texte = l.getAttribute(coche ? "data-recap" : "data-recap-off");
+      if (texte) liste.push(texte);
+    });
+    return liste;
+  }
+
+  function majRecap() {
+    var liste = elementsRecap();
+    var texte = liste.length ? liste.slice(0, RECAP_MAX).join(" · ") : "Tout est affiché";
+    if (liste.length > RECAP_MAX) texte += " · +" + (liste.length - RECAP_MAX);
+    recap.textContent = texte;
+  }
+
   function appliquer(ouvert) {
     bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
     corps.hidden = !ouvert;
+    recap.hidden = ouvert;
+    if (!ouvert) majRecap();
   }
+
+  // Les pastilles changent au toucher, ou sont reconstruites à l'arrivée des
+  // données : le résumé suit dans les deux cas.
+  if (window.MutationObserver) {
+    new MutationObserver(majRecap).observe(corps, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
+  }
+  corps.addEventListener("change", majRecap);
 
   var ouvert = true;   // ouvert par défaut : seul un pli explicite le referme
   try { if (localStorage.getItem(CLE_PLI) === "0") ouvert = false; } catch (e) { /* stockage indisponible : on reste ouvert */ }

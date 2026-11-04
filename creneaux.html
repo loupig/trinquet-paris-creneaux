@@ -549,6 +549,20 @@
     transition: transform 500ms var(--ease);
   }
   .filters-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  /* Résumé des filtres, sous le titre du bloc replié : une ligne, coupée si
+     elle déborde. */
+  .filters-toggle > span { min-width: 0; }
+  .filters-recap {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .filters-recap[hidden] { display: none; }
   .filters-body { margin-top: 8px; }
   .filters-body[hidden] { display: none; }
 
@@ -747,11 +761,11 @@
   <div class="recap-card" id="filters">
     <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
     <div class="filters-body" id="filtersBody">
-    <div class="filter-group" id="filterDays">
+    <div class="filter-group" id="filterDays" data-recap-vide="aucun jour">
       <button type="button" class="filter-chip" data-day="5">Vendredi</button>
       <button type="button" class="filter-chip" data-day="0">Dimanche</button>
     </div>
-    <div class="filter-group" id="filterHours">
+    <div class="filter-group" id="filterHours" data-recap-vide="aucune heure">
       <button type="button" class="filter-chip" data-hour="14">14h</button>
       <button type="button" class="filter-chip" data-hour="15">15h</button>
       <button type="button" class="filter-chip" data-hour="16">16h</button>
@@ -760,7 +774,7 @@
       <button type="button" class="filter-chip" data-hour="21">21h</button>
       <button type="button" class="filter-chip" data-hour="22">22h</button>
     </div>
-    <label class="filter-checkbox">
+    <label class="filter-checkbox" data-recap-off="Jours complets compris">
       <input type="checkbox" id="filterOnlyFree">
       Seulement les jours avec un créneau libre
     </label>
@@ -773,7 +787,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.04</p>
+    <p>Version 2026.11.04.2</p>
   </footer>
 </main>
 
@@ -1664,10 +1678,67 @@
   var corps = document.getElementById("filtersBody");
   if (!bouton || !corps) return;
 
+  // Replié, le bloc garde sous son titre ce qui est filtré : seulement ce qui
+  // s'écarte du réglage par défaut, et au plus RECAP_MAX éléments, la suite
+  // comptée (« +2 »). Dans un groupe, la liste la plus courte l'emporte :
+  // « sans 17h » plutôt que les six autres heures.
+  var RECAP_MAX = 3;
+  var recap = document.createElement("span");
+  recap.className = "filters-recap";
+  bouton.querySelector("span").appendChild(recap);
+
+  function libelle(e) { return e.getAttribute("data-recap") || e.textContent.trim(); }
+
+  function elementsRecap() {
+    var liste = [];
+    corps.querySelectorAll(".filter-group").forEach(function (g) {
+      // Une pastille cachée (heure impossible pour les jours choisis) ne
+      // compte pas.
+      var chips = [].slice.call(g.querySelectorAll(".filter-chip")).filter(function (c) { return !c.hidden; });
+      var actives = chips.filter(function (c) { return c.classList.contains("active"); });
+      var autres = chips.filter(function (c) { return !c.classList.contains("active"); });
+      if (g.hasAttribute("data-recap-choix")) {
+        // Un seul choix parmi plusieurs : rien à dire tant que c'est le défaut.
+        actives.forEach(function (c) { if (!c.hasAttribute("data-recap-defaut")) liste.push(libelle(c)); });
+      } else if (g.hasAttribute("data-recap-bascule")) {
+        // Une pastille seule qui s'allume, comme « Masquer les parties passées ».
+        actives.forEach(function (c) { liste.push(libelle(c)); });
+      } else if (!actives.length && chips.length) {
+        liste.push(g.getAttribute("data-recap-vide") || "rien");
+      } else if (autres.length && autres.length < actives.length) {
+        liste.push("sans " + autres.map(libelle).join(", "));
+      } else if (autres.length) {
+        actives.forEach(function (c) { liste.push(libelle(c)); });
+      }
+    });
+    corps.querySelectorAll(".filter-checkbox").forEach(function (l) {
+      var coche = l.querySelector("input").checked;
+      var texte = l.getAttribute(coche ? "data-recap" : "data-recap-off");
+      if (texte) liste.push(texte);
+    });
+    return liste;
+  }
+
+  function majRecap() {
+    var liste = elementsRecap();
+    var texte = liste.length ? liste.slice(0, RECAP_MAX).join(" · ") : "Tout est affiché";
+    if (liste.length > RECAP_MAX) texte += " · +" + (liste.length - RECAP_MAX);
+    recap.textContent = texte;
+  }
+
   function appliquer(ouvert) {
     bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
     corps.hidden = !ouvert;
+    recap.hidden = ouvert;
+    if (!ouvert) majRecap();
   }
+
+  // Les pastilles changent au toucher, ou sont reconstruites à l'arrivée des
+  // données : le résumé suit dans les deux cas.
+  if (window.MutationObserver) {
+    new MutationObserver(majRecap).observe(corps, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
+  }
+  corps.addEventListener("change", majRecap);
 
   var ouvert = true;   // ouvert par défaut : seul un pli explicite le referme
   try { if (localStorage.getItem(CLE_PLI) === "0") ouvert = false; } catch (e) { /* stockage indisponible : on reste ouvert */ }
