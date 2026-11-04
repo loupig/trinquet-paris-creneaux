@@ -80,6 +80,50 @@ for (const largeur of [320, 390]) test.describe(`Barre d'onglets à ${largeur} p
   }
 });
 
+// Spec apparence : sur grand écran, les blocs se rangent côte à côte ; sur
+// téléphone (le Pixel 7 des autres tests), ils restent empilés.
+async function enLigne(locator, combien = Infinity) {
+  const boites = (await locator.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))).slice(0, combien);
+  if (boites.length < 2) return false;
+  return boites.every((b) => Math.abs(b.top - boites[0].top) < 2) &&
+    boites.every((b, i) => i === 0 || b.left >= boites[i - 1].right);
+}
+
+test.describe("Grand écran : blocs côte à côte", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("Accueil, Mes équipes, Classement, Parties et Créneaux en colonnes", async ({ page }) => {
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator("#tiles > .colonne")).toHaveCount(3);
+    expect(await enLigne(page.locator("#tiles > .colonne"))).toBe(true);
+
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
+    await attendreChargement(page);
+    expect(await enLigne(page.locator(".colonnes > .colonne"))).toBe(true);
+
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const zone = page.locator(".zone-classement").first();
+    await expect(zone.locator(".poule-card")).toHaveCount(3);   // deux poules et les phases finales
+    expect(await enLigne(zone.locator(".poule-card"))).toBe(true);
+
+    for (const url of ["programme.html", "creneaux.html"]) {
+      await page.goto(url);
+      await attendreChargement(page);
+      expect(await enLigne(page.locator("#results > .day-card"), 2), url).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), url).toBe(true);
+    }
+  });
+});
+
+test("Téléphone : les blocs de l'accueil restent empilés", async ({ page }) => {
+  await page.goto("index.html");
+  await attendreChargement(page);
+  const [a, b] = await page.locator("#tiles > .colonne").evaluateAll((els) => els.slice(0, 2).map((e) => e.getBoundingClientRect()));
+  expect(b.top).toBeGreaterThanOrEqual(a.bottom);
+});
+
 // Au clavier, le premier arrêt est le lien d'évitement, visible et entouré
 // d'un contour ; il mène au contenu, dont le haut reste visible sous
 // l'en-tête, et le Tab suivant y reste.

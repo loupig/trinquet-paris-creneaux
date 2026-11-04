@@ -563,6 +563,18 @@
   footer { text-align: center; padding: 12px 4px 6px; }
   footer p { margin: 0 0 4px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
+
+  /* --- Grand écran (spec apparence) ---
+     Sous 1000 px, téléphone même à l'horizontale ou tablette en portrait :
+     une seule colonne, comme sur un téléphone. Au-delà, la page s'élargit et
+     ses blocs se rangent côte à côte. */
+  @media (min-width: 1000px) {
+    main { max-width: 1400px; padding-left: 24px; padding-right: 24px; }
+    /* L'en-tête s'aligne sur le contenu centré (1400 - 2 x 24 px). */
+    header { padding-left: max(16px, calc((100% - 1352px) / 2)); padding-right: max(16px, calc((100% - 1352px) / 2)); }
+    #tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    #tiles .colonne > :last-child { margin-bottom: 0; }
+  }
 </style>
 </head>
 <body>
@@ -588,7 +600,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.03.2</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.04</p>
   </footer>
 </main>
 
@@ -1385,8 +1397,17 @@
     var standings = buildStandings(data.rencontres, clubMap);
     var mes = lireMesEquipes();
 
+    // Une colonne par bloc : empilées sur téléphone, côte à côte sur grand
+    // écran (spec accueil). Le pied de partage reste ainsi sous sa tuile.
+    var colMes = el("div", { class: "colonne" });
+    var colIci = el("div", { class: "colonne" });
+    var colSaison = el("div", { class: "colonne" });
+    box.appendChild(colMes);
+    box.appendChild(colIci);
+    box.appendChild(colSaison);
+
     // --- Mes équipes ---
-    box.appendChild(buildMesEquipes(mes, aVenir, standings, clubMap));
+    colMes.appendChild(buildMesEquipes(mes, aVenir, standings, clubMap));
 
     // --- D'ici dimanche ---
     // Toutes les parties jusqu'au prochain dimanche joué. Une partie à voir
@@ -1420,10 +1441,10 @@
       }
       t1.body.appendChild(item);
     });
-    box.appendChild(t1);
+    colIci.appendChild(t1);
     if (ici.parties.length) {
       t1.classList.add("avec-pied");
-      box.appendChild(buildPartage(titre, ici.parties));
+      colIci.appendChild(buildPartage(titre, ici.parties));
     }
 
     // --- Avancement de la saison ---
@@ -1464,7 +1485,7 @@
     });
     t3.body.appendChild(split);
 
-    box.appendChild(t3);
+    colSaison.appendChild(t3);
   }
 
   // ---------------------------------------------------------------

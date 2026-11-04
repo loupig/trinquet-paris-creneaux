@@ -14,7 +14,9 @@ redirection, sans build ni
 dépendance, chacune avec son CSS et son JS inline. La navigation est celle
 d'une application mobile plutôt que celle d'un site : une barre d'onglets en
 bas, des boutons flottants en haut, là où se posent les pouces (spec
-[`navigation`](openspec/specs/navigation/spec.md)).
+[`navigation`](openspec/specs/navigation/spec.md)). Sur un écran d'ordinateur (dès
+1000 px), les blocs se rangent côte à côte (spec
+[`apparence`](openspec/specs/apparence/spec.md)).
 
 Le comportement de chaque page est décrit par sa spec, dans
 [`openspec/specs/`](openspec/specs/). Le README ne le répète pas.
