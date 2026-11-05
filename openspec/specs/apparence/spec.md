@@ -1,12 +1,12 @@
 # apparence Specification
 
 ## Purpose
-Fixer l'apparence commune à toutes les pages du site : le thème clair ou sombre, réglé par le téléphone du visiteur, puis la typographie, les icônes, le focus au clavier, les zones tactiles, les animations et la mise en page sur grand écran.
+Fixer l'apparence commune à toutes les pages du site : le thème clair ou sombre, réglé par le téléphone du visiteur ou choisi sur le site, puis la typographie, les icônes, le focus au clavier, les zones tactiles, les animations et la mise en page sur grand écran.
 
 ## Requirements
 
 ### Requirement: Thème qui suit le téléphone
-Chaque page affichée du site SHALL s'afficher en sombre quand l'appareil demande un thème sombre, et en clair sinon. Cela vaut pour l'accueil, Mes équipes, Parties, Classement, Créneaux, Report, le compteur hors plein écran, Découvrir et la page 404. Le site MUST NOT proposer de bouton ni garder de choix pour ce thème : il suit le réglage de l'appareil, et change aussitôt si ce réglage change, sans recharger la page.
+Sauf thème choisi sur le site (ci-dessous), chaque page affichée du site SHALL s'afficher en sombre quand l'appareil demande un thème sombre, et en clair sinon. Cela vaut pour l'accueil, Mes équipes, Parties, Classement, Créneaux, Report, le compteur hors plein écran, Découvrir et la page 404. Sans choix, le site change aussitôt si ce réglage change, sans recharger la page.
 
 #### Scenario: Téléphone en sombre
 - **WHEN** un visiteur dont le téléphone est réglé en sombre ouvre la page Classement
@@ -23,6 +23,21 @@ Chaque page affichée du site SHALL s'afficher en sombre quand l'appareil demand
 #### Scenario: Pages hors navigation
 - **WHEN** un visiteur au téléphone réglé en sombre ouvre la page Découvrir, puis une adresse inexistante du site
 - **THEN** la présentation et la page 404 s'affichent toutes deux en sombre
+
+### Requirement: Thème choisi sur le site
+L'en-tête des pages qui ont le bouton Rafraîchir (accueil, Mes équipes, Parties, Classement, Créneaux, Report) SHALL porter, juste après lui, un bouton rond sans texte : une lune pour passer en sombre quand la page est claire, un soleil pour passer en clair quand elle est sombre, nommé « Passer en thème sombre » ou « Passer en thème clair ». Le toucher bascule aussitôt la page dans l'autre thème, barre du navigateur comprise, sans la recharger. Le choix est gardé sur l'appareil (`lidfpb_theme_v1`) et vaut pour toutes les pages du site, celles sans bouton comprises (compteur, Découvrir, 404) ; il est appliqué avant l'affichage, sans montrer l'autre thème un instant. Un choix qui revient au thème du téléphone MUST être effacé : le site suit de nouveau le téléphone, y compris quand son réglage change. Un choix fait dans un autre onglet, ou avant de revenir sur une page par le bouton Retour, s'applique aussi à la page déjà ouverte. Sans stockage possible, le bouton vaut pour la page ouverte seulement. Le plein écran du compteur garde son propre bouton Clair/Sombre, qui part du thème de la page.
+
+#### Scenario: Passer en sombre sur un téléphone réglé en clair
+- **WHEN** un visiteur au téléphone réglé en clair touche la lune sur l'accueil, puis ouvre Parties et le compteur
+- **THEN** l'accueil passe en sombre, et Parties et le compteur s'ouvrent en sombre
+
+#### Scenario: Revenir au thème du téléphone
+- **WHEN** ce visiteur touche ensuite le soleil sur le Classement, et que son téléphone passe plus tard en sombre
+- **THEN** la page repasse en clair, plus aucun choix n'est gardé, et elle passe en sombre avec le téléphone
+
+#### Scenario: Clair choisi sur un téléphone réglé en sombre
+- **WHEN** un visiteur qui a choisi le clair ouvre les Créneaux sur un téléphone réglé en sombre
+- **THEN** la page et la barre du navigateur s'affichent en clair, et le bouton montre la lune
 
 ### Requirement: Lisibilité en sombre
 En sombre, les textes SHALL rester lisibles sur leur fond, avec un contraste d'au moins 4,5:1 pour le texte courant et les libellés de la barre d'onglets. Les couleurs qui portent un sens MUST rester reconnaissables : la couleur de chaque série, le rouge et le vert de l'ikurriña, les alertes et les erreurs. Elles peuvent être éclaircies pour rester lisibles. Aucun bloc ne garde un fond blanc éblouissant au milieu d'une page sombre.

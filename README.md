@@ -107,7 +107,8 @@ tournerait sinon avec l'ancien script.
 
 Une couleur nouvelle passe par une variable du `:root` de la page, avec sa
 valeur sombre dans le bloc `@media (prefers-color-scheme: dark)` qui le
-suit. Une variable sombre garde la même valeur dans chaque page qui la
+suit, recopiée dans le bloc `:root[data-theme="dark"]` d'après (thème
+sombre choisi sur le site). Une variable sombre garde la même valeur dans chaque page qui la
 porte : le test « même palette sombre » le vérifie pour les sept pages de
 l'application.
 
@@ -208,6 +209,7 @@ Clés `localStorage` :
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
+| `lidfpb_theme_v1` | toutes (bouton sur les six pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
 
 ## Temps de chargement
 
@@ -260,10 +262,12 @@ voudrait construire autre chose avec les mêmes données.
 - **Pas de fenêtre surgissante** : un popup d'accueil et un popup d'aide ont
   été retirés, leur bouton de fermeture restant bloqué chez au moins un
   utilisateur, cause jamais identifiée.
-- **Thème sombre sans bouton** : chaque page suit le réglage clair ou sombre
-  du téléphone, sans bouton ni choix gardé sur l'appareil. Un bouton viendra
-  si des joueurs le demandent. Seul le plein écran du compteur garde son
-  bouton Clair/Sombre, pour un tableau de score lisible à distance.
+- **Thème du téléphone, bouton en plus** : chaque page suit le réglage clair
+  ou sombre du téléphone. Un bouton soleil/lune, à côté de Rafraîchir, force
+  l'autre thème sur tout le site ; revenir au thème du téléphone efface le
+  choix, sans troisième état « automatique » à expliquer. Le plein écran du
+  compteur garde son propre bouton Clair/Sombre, pour un tableau de score
+  lisible à distance.
 - **Pas de service worker** : jamais de fonctionnement hors connexion, pour ne
   pas laisser un joueur bloqué sur une ancienne version mise en cache.
 - **Palette du compteur** : le rouge et le vert de l'ikurriña, plus une

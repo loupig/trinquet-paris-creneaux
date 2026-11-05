@@ -75,6 +75,12 @@ for (const largeur of [320, 390]) test.describe(`Barre d'onglets à ${largeur} p
         return s.textContent + " : " + r.getClientRects().length + (tient ? "" : " (déborde)");
       }));
       expect(lignes).toEqual(["Accueil : 1", "Mes équipes : 1", "Parties : 1", "Classement : 1", "Créneaux : 1"]);
+      // L'en-tête aussi tient sur une ligne : « Site de la ligue » ne se replie pas.
+      const ligue = page.locator(".header-bar .ligue-btn");
+      if (await ligue.count()) {
+        const lignesLigue = await ligue.evaluate((a) => { const r = document.createRange(); r.selectNodeContents(a); return r.getClientRects().length; });
+        expect(lignesLigue, "« Site de la ligue » sur une ligne").toBe(1);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });
   }
@@ -506,6 +512,16 @@ test("Accueil : la toute première visite passe par la présentation, une seule 
   await expect(page).toHaveURL(/index\.html$/);
   await attendreChargement(page);
   await expect(page.locator("#tiles")).not.toBeEmpty();
+});
+
+test("Accueil : un thème choisi ailleurs ne compte pas comme une visite", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("vierge")) { localStorage.clear(); sessionStorage.setItem("vierge", "1"); }
+    localStorage.removeItem("lidfpb_mes_equipes_v1");
+    localStorage.setItem("lidfpb_theme_v1", "sombre");
+  });
+  await page.goto("index.html");
+  await expect(page).toHaveURL(/decouvrir\.html$/);
 });
 
 test("Accueil : arrivé par un lien vers la présentation, on n'y est pas renvoyé", async ({ page }) => {
@@ -1144,6 +1160,62 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
   });
 });
 
+test.describe("Accueil : alerte des parties en double", () => {
+  // Autour du jeudi 5 novembre 2026. Trois parties le dimanche 8 à 21h au
+  // Trinquet Paris, sous trois libellés du même lieu : en double. Les autres
+  // ne le sont pas : autre heure, autre lieu, ou déjà passées.
+  function partie(oid, date, heure, lieu, rec, vis) {
+    return {
+      oid: String(oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "1", "Poule": "1",
+      club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
+      lieu_renc: lieu, date_renc: date, heure_renc: heure, report: "", date_rep: "", score_cr: "", score_cv: ""
+    };
+  }
+  const PARIS = "PARIS (Trinquet Paris - 75016)", PARIS_BIS = "PARIS (Trinquet de Paris - 75016)";
+  const CAVALERIE = "PARIS (Trinquet de la Cavalerie - 75015)";
+  const ALPHA = "3750001", BRAVO = "3750002", CHARLIE = "3750003", DELTA = "3750004", ECHO = "3750005", FOXTROT = "3750006";
+  const GOLF = "3750007", HOTEL = "3750008";
+  const calendrier = [
+    partie(951, "08112026", "2100", PARIS, ALPHA, BRAVO),
+    partie(952, "08112026", "2100", PARIS_BIS, CHARLIE, DELTA),
+    partie(953, "08112026", "2000", PARIS, ECHO, FOXTROT),       // l'heure d'avant
+    partie(957, "08112026", "2100", "PARIS (Trinquet de Paris - 750", GOLF, HOTEL),   // libellé tronqué, même lieu
+    partie(954, "08112026", "2100", CAVALERIE, ECHO, ALPHA),     // ailleurs
+    partie(955, "01112026", "1500", PARIS, BRAVO, DELTA),        // passées
+    partie(956, "01112026", "1500", PARIS, FOXTROT, CHARLIE)
+  ];
+
+  test("deux parties à la même heure au même lieu s'affichent en alerte", async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? calendrier : (tables[table] || []), lastSync: "2026-11-05T08:00:00Z" })
+      });
+    });
+    await page.clock.setFixedTime(new Date("2026-11-05T10:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    const alerte = page.locator("#banner-slot .banner.doublons");
+    await expect(alerte).toHaveCount(1);
+    await expect(alerte.locator("strong")).toHaveText("Trois parties au même endroit à la même heure");
+    await expect(alerte.locator("li")).toHaveCount(1);
+    await expect(alerte.locator("li")).toHaveText("Dim. 8 nov. · 21h · Trinquet Paris : Alpha 1 vs Bravo 1, Charlie 1 vs Delta 1 et Golf 1 vs Hotel 1");
+    await expect(alerte).toContainText("à signaler à la ligue");
+    // L'alerte vient avant les blocs, qui restent tous là.
+    await expect(page.locator("#tiles > .colonne")).toHaveCount(3);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("sans partie en double, pas d'alerte", async ({ page }) => {
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator("#tiles > .colonne")).toHaveCount(3);
+    await expect(page.locator(".banner.doublons")).toHaveCount(0);
+  });
+});
+
 test.describe("Mes équipes : la prochaine partie dans l'agenda", () => {
   // Prochaine partie de Charlie 1 dans les données fictives : il reçoit
   // Foxtrot 1 dans quatre jours, à 19h30, au Trinquet Paris.
@@ -1342,6 +1414,85 @@ async function auditSombre(page, exceptionsBlanc = []) {
   }, exceptionsBlanc);
 }
 
+test.describe("Thème choisi sur le site", () => {
+  const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "decouvrir", "404"];
+  const fond = (page) => page.evaluate(() => {
+    const [r, g, b] = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  });
+  const couleurBarre = (page) => page.evaluate(() =>
+    [...document.querySelectorAll('meta[name="theme-color"]')].find((m) => matchMedia(m.media).matches).content);
+
+  test("le même script de thème dans chaque page", async () => {
+    const scripts = [];
+    for (const f of PAGES_THEME) {
+      const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
+      const m = html.match(/<script>\n  \/\/ Thème clair ou sombre[\s\S]*?<\/script>/);
+      expect(m, `${f}.html : script de thème`).not.toBeNull();
+      scripts.push(m[0]);
+    }
+    scripts.forEach((s) => expect(s).toBe(scripts[0]));
+  });
+
+  test("téléphone en clair : la lune passe en sombre, gardé d'une page à l'autre, le soleil rend le téléphone", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const bouton = page.locator(".header-actions #themeBtn");
+    await expect(bouton).toHaveAccessibleName("Passer en thème sombre");
+    // À côté de Rafraîchir.
+    expect(await page.locator(".header-actions > *").evaluateAll((els) => els.map((e) => e.id || e.className)))
+      .toEqual(["refreshBtn", "themeBtn", "icon-btn calc"]);
+    expect(await fond(page)).toBeGreaterThan(0.8);
+
+    await bouton.click();
+    await expect(bouton).toHaveAccessibleName("Passer en thème clair");
+    expect(await fond(page)).toBeLessThan(0.1);
+    expect(await couleurBarre(page)).toBe("#1f1f1f");
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_theme_v1"))).toBe("sombre");
+
+    // Les autres pages s'ouvrent en sombre, compteur compris, même sans bouton.
+    for (const url of ["programme.html", "compteur.html", "decouvrir.html"]) {
+      await page.goto(url);
+      expect(await fond(page), url).toBeLessThan(0.1);
+    }
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.locator("#themeBtn").click();
+    expect(await fond(page)).toBeGreaterThan(0.8);
+    expect(await couleurBarre(page)).toBe("#ffffff");
+    // Revenu au thème du téléphone : plus de choix gardé, le site le suit de nouveau.
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_theme_v1"))).toBeNull();
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect(await fond(page)).toBeLessThan(0.1);
+    await expect(page.locator("#themeBtn")).toHaveAccessibleName("Passer en thème clair");
+  });
+
+  test("un choix fait dans un autre onglet s'applique aux pages déjà ouvertes", async ({ page, context }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const autre = await context.newPage();
+    await autre.emulateMedia({ colorScheme: "light" });
+    await autre.goto("compteur.html");
+    await page.locator("#themeBtn").click();
+    await expect.poll(() => fond(autre)).toBeLessThan(0.1);
+    await page.locator("#themeBtn").click();
+    await expect.poll(() => fond(autre)).toBeGreaterThan(0.8);
+    await autre.close();
+  });
+
+  test("téléphone en sombre, clair choisi : la page s'ouvre en clair, la barre du navigateur aussi", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.addInitScript(() => localStorage.setItem("lidfpb_theme_v1", "clair"));
+    await page.goto("creneaux.html");
+    await attendreChargement(page);
+    expect(await fond(page)).toBeGreaterThan(0.8);
+    expect(await couleurBarre(page)).toBe("#ffffff");
+    await expect(page.locator("#themeBtn")).toHaveAccessibleName("Passer en thème sombre");
+  });
+});
+
 test.describe("Thème sombre", () => {
   test.use({ colorScheme: "dark" });
 
@@ -1357,9 +1508,14 @@ test.describe("Thème sombre", () => {
     };
     for (const f of fichiers) {
       const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
-      const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/);
+      const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{([^}]*)\}/);
       expect(bloc, `${f}.html : bloc sombre`).not.toBeNull();
       noter(bloc[1], f);
+      // Le thème sombre choisi sur le site reprend le bloc du téléphone, à l'identique.
+      const choisi = html.match(/\n  :root\[data-theme="dark"\] \{([^}]*)\}/);
+      expect(choisi, `${f}.html : bloc sombre choisi`).not.toBeNull();
+      const valeurs = (b) => [...b.matchAll(/(--[\w-]+|color-scheme):\s*([^;]+);/g)].map((m) => m[1] + ":" + m[2]);
+      expect(valeurs(choisi[1]), `${f}.html : sombre choisi = sombre du téléphone`).toEqual(valeurs(bloc[1]));
       // Le plein écran sombre du compteur reprend la palette sombre.
       const fs = html.match(/\n  \.fs\.sombre \{([^}]*)\}/);
       if (fs) noter(fs[1], f + " (plein écran sombre)");

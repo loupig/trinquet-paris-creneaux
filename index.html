@@ -24,7 +24,9 @@
   (function () {
     try {
       for (var i = 0; i < localStorage.length; i++) {
-        if (String(localStorage.key(i)).indexOf("lidfpb_") === 0) return;
+        // Le thème choisi n'est qu'un réglage d'affichage, pas une visite.
+        var cle = String(localStorage.key(i));
+        if (cle.indexOf("lidfpb_") === 0 && cle !== "lidfpb_theme_v1") return;
       }
       localStorage.setItem("lidfpb_decouvert_v1", "1");
       if (localStorage.getItem("lidfpb_decouvert_v1") === "1") location.replace("decouvrir.html");
@@ -35,6 +37,66 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f">
+<script>
+  // Thème clair ou sombre (spec apparence) : le téléphone décide, sauf choix
+  // fait avec le bouton soleil/lune de l'en-tête, gardé sur l'appareil.
+  // Revenir au thème du téléphone efface le choix : le site le suit de
+  // nouveau. Posé avant l'affichage pour ne jamais montrer l'autre thème un
+  // instant. Même script dans chaque page.
+  (function () {
+    var CLE = "lidfpb_theme_v1";
+    var LUNE = '<svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg>';
+    var SOLEIL = '<svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg>';
+    var racine = document.documentElement;
+    var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    var metas = document.querySelectorAll('meta[name="theme-color"]');
+    var barre = {};
+    function themeDe(meta) { return /dark/.test(meta.media) ? "sombre" : "clair"; }
+    for (var i = 0; i < metas.length; i++) barre[themeDe(metas[i])] = metas[i].getAttribute("content");
+    var choisi = null;
+    // Sans stockage, le choix fait sur cette page reste en mémoire.
+    function lire() {
+      try { var v = localStorage.getItem(CLE); return v === "clair" || v === "sombre" ? v : null; }
+      catch (e) { return choisi; }
+    }
+    choisi = lire();
+    function systeme() { return mq && mq.matches ? "sombre" : "clair"; }
+    function appliquer() {
+      if (choisi) racine.setAttribute("data-theme", choisi === "sombre" ? "dark" : "light");
+      else racine.removeAttribute("data-theme");
+      // Barre du navigateur : la couleur du thème affiché, quel que soit le téléphone.
+      for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", barre[choisi || themeDe(metas[i])]);
+      // Le compteur recalcule ses couleurs d'équipe sur le thème affiché.
+      document.dispatchEvent(new Event("lidfpb-theme"));
+      var bouton = document.getElementById("themeBtn");
+      if (!bouton) return;
+      var sombre = (choisi || systeme()) === "sombre";
+      bouton.innerHTML = sombre ? SOLEIL : LUNE;
+      bouton.setAttribute("aria-label", sombre ? "Passer en thème clair" : "Passer en thème sombre");
+      bouton.title = bouton.getAttribute("aria-label");
+    }
+    appliquer();
+    document.addEventListener("DOMContentLoaded", function () {
+      var bouton = document.getElementById("themeBtn");
+      if (!bouton) return;
+      bouton.addEventListener("click", function () {
+        var voulu = (choisi || systeme()) === "sombre" ? "clair" : "sombre";
+        choisi = voulu === systeme() ? null : voulu;
+        try {
+          if (choisi) localStorage.setItem(CLE, choisi); else localStorage.removeItem(CLE);
+        } catch (e) { /* pas gardé : vaut pour cette page */ }
+        appliquer();
+      });
+      appliquer();
+    });
+    if (mq && mq.addEventListener) mq.addEventListener("change", appliquer);
+    else if (mq && mq.addListener) mq.addListener(appliquer);
+    // Choix changé ailleurs : page revenue par le bouton Retour, ou autre onglet.
+    function relire() { choisi = lire(); appliquer(); }
+    window.addEventListener("pageshow", function (e) { if (e.persisted) relire(); });
+    window.addEventListener("storage", function (e) { if (e.key === CLE || e.key === null) relire(); });
+  })();
+</script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -84,10 +146,10 @@
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --vert: #009B48;
   }
-  /* Thème sombre : suit le réglage du téléphone (spec apparence). Mêmes
+  /* Thème sombre : suit le téléphone, sauf thème clair choisi sur le site (spec apparence). Mêmes
      valeurs dans chaque page qui porte ces variables. */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       color-scheme: dark;
       --bg: #181818;
       --card-bg: #1f1f1f;
@@ -118,6 +180,38 @@
       --titre-a: #9b9b9b;
       --vert: #2fd17a;
     }
+  }
+  /* Thème sombre choisi sur le site : mêmes valeurs que le bloc ci-dessus. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #181818;
+    --card-bg: #1f1f1f;
+    --text: #ebebeb;
+    --muted: #a3a3a3;
+    --border: #313131;
+    --serie1-bg: #10302c;
+    --serie1-text: #5eead4;
+    --serie1-border: #1f4a44;
+    --serie2-bg: #33240f;
+    --serie2-text: #fbbf6a;
+    --serie2-border: #57401c;
+    --accent-bg: #1c2440;
+    --accent-border: #34407a;
+    --warn-bg: #2e2610;
+    --warn-text: #f3d27a;
+    --warn-border: #5a4a1a;
+    --error-bg: #3a1517;
+    --error-text: #ff9a94;
+    --error-border: #6a2a2a;
+    --accent: #8ba6ff;
+    --surface-2: #272727;
+    --surface-3: #313131;
+    --verre: rgba(39, 39, 39, 0.6);
+    --verre-bord: rgba(255, 255, 255, 0.08);
+    --ombre-rgb: 0, 0, 0;
+    --titre-de: #ffffff;
+    --titre-a: #9b9b9b;
+    --vert: #2fd17a;
   }
 
   * { box-sizing: border-box; }
@@ -254,6 +348,9 @@
     font-weight: 700;
   }
   .pill-btn span { line-height: 1; }
+  /* Écrans de 320 px : Rafraîchir en icône seule (son title le nomme), pour
+     que « Site de la ligue » et les trois boutons tiennent sur une ligne. */
+  @media (max-width: 339px) { .pill-btn span { display: none; } }
   .icon-btn, .pill-btn {
     justify-content: center;
     border: 1px solid var(--verre-bord);
@@ -343,6 +440,8 @@
   .banner.error { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
   .banner.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
   .banner strong { display: block; margin-bottom: 4px; }
+  .banner.doublons ul { margin: 0 0 6px; padding-left: 18px; }
+  .banner.doublons li + li { margin-top: 4px; }
 
   /* --- Bloc de tableau de bord --- */
   .tile {
@@ -617,6 +716,7 @@
   <a class="ligue-btn" href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">Site de la ligue</a>
   <div class="header-actions">
     <button id="refreshBtn" type="button" class="pill-btn" title="Rafraîchir"><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"/></svg><span>Rafraîchir</span></button>
+    <button id="themeBtn" type="button" class="icon-btn theme" title="Passer en thème sombre" aria-label="Passer en thème sombre"></button>
     <a class="icon-btn calc" href="compteur.html" title="Compteur de points" aria-label="Compteur de points"><svg viewBox="0 0 256 256" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M80,120h96a8,8,0,0,0,8-8V64a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8v48A8,8,0,0,0,80,120Zm8-48h80v32H88ZM200,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm0,192H56V40H200ZM100,148a12,12,0,1,1-12-12A12,12,0,0,1,100,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,148Zm-80,40a12,12,0,1,1-12-12A12,12,0,0,1,100,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,188Z"/></svg></a>
   </div>
 </div>
@@ -633,7 +733,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.04.2</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.05</p>
   </footer>
 </main>
 
@@ -1026,6 +1126,38 @@
       if (!d || !t || d < today || hasScore(row)) return null;
       return partieDe(row, clubMap, d, t);
     }).filter(Boolean).sort(chronologique);
+  }
+
+  // ---------------------------------------------------------------
+  // Parties en double : même lieu, même jour, même heure
+  // ---------------------------------------------------------------
+  // Un trinquet n'accueille qu'une partie à la fois, et la ligue programme à
+  // l'heure : deux parties à venir sur la même case (jour et heure, comme la
+  // grille des Créneaux) se gênent. Le lieu est un texte libre aux variantes
+  // multiples ("Trinquet Paris", "Trinquet de Paris") : on le compare sans
+  // casse, accents, ponctuation ni petits mots. Lieu vide : pas de doublon.
+  function cleLieu(lieu) {
+    // Ville, puis nom de la salle entre parenthèses sans le code postal :
+    // "PARIS (Trinquet de Paris - 750", libellé tronqué vu dans les données,
+    // rejoint ainsi "PARIS (Trinquet Paris - 75016)".
+    var s = String(lieu || "");
+    var m = /^([^(]*)\(([^)]*)/.exec(s);
+    if (m) s = m[1] + " " + m[2].split(" - ")[0];
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()
+      .replace(/\b(DE|DU|DES|LA|LE|LES|D|L)\b/g, " ").replace(/[^A-Z0-9]/g, "");
+  }
+
+  function partiesEnDouble(aVenir) {
+    var cases = {}, ordre = [];
+    aVenir.forEach(function (m) {
+      var lieu = cleLieu(m.lieu);
+      if (!lieu) return;
+      var k = m.date.getTime() + "|" + m.hour + "|" + lieu;
+      if (!cases[k]) { cases[k] = []; ordre.push(k); }
+      cases[k].push(m);
+    });
+    return ordre.filter(function (k) { return cases[k].length > 1; })
+      .map(function (k) { return cases[k]; });
   }
 
   // ---------------------------------------------------------------
@@ -1913,6 +2045,34 @@
     t3.body.appendChild(split);
 
     colSaison.appendChild(t3);
+    return partiesEnDouble(aVenir);
+  }
+
+  // Bandeau d'alerte au-dessus des blocs : chaque case en double, avec ses
+  // parties, pour que le joueur qui la voit puisse la signaler.
+  function renderDoublons(container, doublons) {
+    if (!doublons.length) return;
+    var b = el("div", { class: "banner warn doublons" });
+    var NOMBRES = ["", "", "Deux", "Trois", "Quatre", "Cinq"];
+    var n = doublons[0].length;
+    b.appendChild(el("strong", { text: doublons.length > 1
+      ? "Plusieurs parties au même endroit à la même heure"
+      : (NOMBRES[n] || n) + " parties au même endroit à la même heure" }));
+    var liste = el("ul");
+    doublons.forEach(function (parties) {
+      var m = parties[0];
+      var li = el("li");
+      li.appendChild(el("b", { text: jourEnTete(m.date) + " · " + formatHour(m.hour, m.minute) + " · " + lieuCourt(m.lieu) }));
+      var noms = parties.map(function (p) {
+        return p.teams + (p.minute !== m.minute ? " (" + formatHour(p.hour, p.minute) + ")" : "");
+      });
+      li.appendChild(document.createTextNode(" : " + noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1]));
+      liste.appendChild(li);
+    });
+    b.appendChild(liste);
+    b.appendChild(document.createTextNode((doublons.length > 1 ? "Une seule par heure pourra se jouer" : "Une seule pourra se jouer") +
+      " : à signaler à la ligue pour qu'elle corrige le calendrier."));
+    container.appendChild(b);
   }
 
   // ---------------------------------------------------------------
@@ -1940,7 +2100,7 @@
     function afficher(data) {
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
-      renderTiles(data, startOfDay(new Date()));
+      renderDoublons(bannerSlot, renderTiles(data, startOfDay(new Date())));
     }
 
     // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le
