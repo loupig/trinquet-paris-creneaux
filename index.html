@@ -343,6 +343,8 @@
   .banner.error { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
   .banner.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
   .banner strong { display: block; margin-bottom: 4px; }
+  .banner.doublons ul { margin: 0 0 6px; padding-left: 18px; }
+  .banner.doublons li + li { margin-top: 4px; }
 
   /* --- Bloc de tableau de bord --- */
   .tile {
@@ -633,7 +635,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.04.2</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.05</p>
   </footer>
 </main>
 
@@ -1026,6 +1028,32 @@
       if (!d || !t || d < today || hasScore(row)) return null;
       return partieDe(row, clubMap, d, t);
     }).filter(Boolean).sort(chronologique);
+  }
+
+  // ---------------------------------------------------------------
+  // Parties en double : même lieu, même jour, même heure
+  // ---------------------------------------------------------------
+  // Un trinquet n'accueille qu'une partie à la fois, et la ligue programme à
+  // l'heure : deux parties à venir sur la même case (jour et heure, comme la
+  // grille des Créneaux) se gênent. Le lieu est un texte libre aux variantes
+  // multiples ("Trinquet Paris", "Trinquet de Paris") : on le compare sans
+  // casse, accents, ponctuation ni petits mots. Lieu vide : pas de doublon.
+  function cleLieu(lieu) {
+    return String(lieu || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase()
+      .replace(/\b(DE|DU|DES|LA|LE|LES|D|L)\b/g, " ").replace(/[^A-Z0-9]/g, "");
+  }
+
+  function partiesEnDouble(aVenir) {
+    var cases = {}, ordre = [];
+    aVenir.forEach(function (m) {
+      var lieu = cleLieu(m.lieu);
+      if (!lieu) return;
+      var k = m.date.getTime() + "|" + m.hour + "|" + lieu;
+      if (!cases[k]) { cases[k] = []; ordre.push(k); }
+      cases[k].push(m);
+    });
+    return ordre.filter(function (k) { return cases[k].length > 1; })
+      .map(function (k) { return cases[k]; });
   }
 
   // ---------------------------------------------------------------
@@ -1913,6 +1941,30 @@
     t3.body.appendChild(split);
 
     colSaison.appendChild(t3);
+    return partiesEnDouble(aVenir);
+  }
+
+  // Bandeau d'alerte au-dessus des blocs : chaque case en double, avec ses
+  // parties, pour que le joueur qui la voit puisse la signaler.
+  function renderDoublons(container, doublons) {
+    if (!doublons.length) return;
+    var b = el("div", { class: "banner warn doublons" });
+    b.appendChild(el("strong", { text: doublons.length > 1
+      ? doublons.length + " fois, deux parties au même endroit à la même heure"
+      : "Deux parties au même endroit à la même heure" }));
+    var liste = el("ul");
+    doublons.forEach(function (parties) {
+      var m = parties[0];
+      var li = el("li");
+      li.appendChild(el("b", { text: jourEnTete(m.date) + " · " + formatHour(m.hour, m.minute) + " · " + lieuCourt(m.lieu) }));
+      li.appendChild(document.createTextNode(" : " + parties.map(function (p) {
+        return p.teams + (p.minute !== m.minute ? " (" + formatHour(p.hour, p.minute) + ")" : "");
+      }).join(" et ")));
+      liste.appendChild(li);
+    });
+    b.appendChild(liste);
+    b.appendChild(document.createTextNode("Une seule pourra se jouer : à signaler à la ligue pour qu'elle corrige le calendrier."));
+    container.appendChild(b);
   }
 
   // ---------------------------------------------------------------
@@ -1940,7 +1992,7 @@
     function afficher(data) {
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
-      renderTiles(data, startOfDay(new Date()));
+      renderDoublons(bannerSlot, renderTiles(data, startOfDay(new Date())));
     }
 
     // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le

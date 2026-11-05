@@ -4,7 +4,8 @@
 // Deux séries de deux poules de six équipes. Les parties de poule passées ont
 // un score, sauf deux par poule ; d'autres sont à venir, au Trinquet Paris,
 // pour que l'accueil, Parties et Créneaux aient de quoi afficher. Les dates
-// sont relatives au jour du test.
+// sont relatives au jour du test. Comme au vrai trinquet, une seule partie
+// par heure : aucune n'est en double (spec accueil).
 
 const LIEU_PARIS = "PARIS (Trinquet Paris - 75016)";
 const NOMS = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot",
@@ -28,8 +29,13 @@ const aVenir = [];
 export const engagements = [];
 export const licencies = [];
 
+// Heures des parties à venir : deux par poule et par jour au plus, chacune
+// sur son heure. Charlie 1 – Foxtrot 1 (série 1, poule 1) reste à 19h30.
+const HEURES = ["1400", "1930", "1500", "1600", "1700", "2000", "2100", "2200"];
+
 let oid = 0;
 let licence = 100000;
+let groupe = 0;
 for (const cat of ["1", "2"]) {
   for (const [poule, premier] of [["1", 0], ["2", 6]]) {
     const equipes = [0, 1, 2, 3, 4, 5].map((k) => premier + k);
@@ -55,19 +61,20 @@ for (const cat of ["1", "2"]) {
           oid: String(++oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": cat,
           "Phase": "1", "Poule": poule,
           club_rec: codeClub(equipes[a]), equip_rec: "1", club_vis: codeClub(equipes[b]), equip_vis: "1",
-          lieu_renc: LIEU_PARIS, date_renc: dateRenc(jours), heure_renc: "1930", report: "", date_rep: "",
+          lieu_renc: LIEU_PARIS, date_renc: dateRenc(jours), heure_renc: estAVenir ? HEURES[groupe * 2 + (n > 9 ? 1 : 0)] : "1930", report: "", date_rep: "",
           score_cr: (estAVenir || sansScore) ? "" : "40",
           score_cv: (estAVenir || sansScore) ? "" : String(15 + ((a * 7 + b * 3) % 24))
         });
       }
     }
+    groupe++;
   }
   // Quarts de finale : programmés, adversaires encore à désigner.
   for (let q = 0; q < 4; q++) {
     rencontres.push({
       oid: String(++oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": cat, "Phase": "10", "Poule": "",
       club_rec: "9998", equip_rec: "1", club_vis: "9998", equip_vis: "1",
-      lieu_renc: LIEU_PARIS, date_renc: dateRenc(30 + q), heure_renc: "2000", report: "", date_rep: "",
+      lieu_renc: LIEU_PARIS, date_renc: dateRenc(30 + q), heure_renc: cat === "1" ? "2000" : "2100", report: "", date_rep: "",
       score_cr: "", score_cv: ""
     });
   }

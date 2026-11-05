@@ -7,11 +7,22 @@ Fixer ce que montre la page d'accueil : les blocs présents, leur ordre, et ce q
 ## Requirements
 
 ### Requirement: Composition de l'accueil
-L'accueil SHALL présenter, dans cet ordre, le bloc « Mes équipes », le bloc de la semaine puis le bloc « Championnats » (avancement de la saison), et aucun autre bloc de contenu. Le bloc de la semaine réunit, sous deux onglets, les résultats depuis vendredi (spec `derniers-resultats`) et les parties d'ici dimanche (spec `affiche-week-end`).
+L'accueil SHALL présenter, dans cet ordre, le bloc « Mes équipes », le bloc de la semaine puis le bloc « Championnats » (avancement de la saison), et aucun autre bloc de contenu. Seuls des bandeaux peuvent les précéder : échec des données (spec `donnees-api`) et parties en double (ci-dessous). Le bloc de la semaine réunit, sous deux onglets, les résultats depuis vendredi (spec `derniers-resultats`) et les parties d'ici dimanche (spec `affiche-week-end`).
 
 #### Scenario: Ouverture de l'accueil
 - **WHEN** un visiteur ouvre l'accueil et que les données sont chargées
 - **THEN** il voit « Mes équipes », le bloc de la semaine puis « Championnats », et rien d'autre entre l'en-tête et le pied de page
+
+### Requirement: Alerte des parties en double
+Quand deux parties à venir (sans score, du jour ou après) sont programmées au même lieu, le même jour et à la même heure, l'accueil SHALL afficher, au-dessus des blocs, un bandeau d'alerte « Deux parties au même endroit à la même heure ». Chaque case en double y tient une ligne : le jour, l'heure, le lieu en nom court, puis les parties concernées, et le bandeau rappelle qu'une seule pourra se jouer et qu'il faut le signaler à la ligue. L'heure s'entend comme la case de la grille des Créneaux : 21h et 21h30 sont la même heure, 20h et 21h non. Le lieu se compare sans tenir compte de la casse, des accents, de la ponctuation ni des petits mots (« Trinquet Paris » et « Trinquet de Paris » sont le même lieu). Une partie sans lieu n'est jamais en double. Sans partie en double, pas de bandeau.
+
+#### Scenario: Deux parties dimanche à 21h au Trinquet Paris
+- **WHEN** Alpha 1 – Bravo 1 et Charlie 1 – Delta 1 sont toutes deux programmées dimanche 8 novembre à 21h au Trinquet Paris
+- **THEN** l'accueil affiche le bandeau, avec la ligne « Dim. 8 nov. · 21h · Trinquet Paris : Alpha 1 vs Bravo 1 et Charlie 1 vs Delta 1 », puis ses blocs habituels
+
+#### Scenario: Parties qui se suivent ou en des lieux différents
+- **WHEN** deux parties sont programmées dimanche, l'une à 20h et l'autre à 21h au Trinquet Paris, et une troisième à 21h à la Cavalerie
+- **THEN** aucun bandeau de parties en double n'apparaît
 
 ### Requirement: Avancement des championnats
 Le bloc « Championnats » SHALL donner le nombre de parties jouées sur le total, toutes phases confondues, puis, par spécialité et par série, deux lignes avec leur barre : « Poules » et « Phases finales », chacune avec ses parties jouées sur son total. Une ligne sans aucune partie dans les données n'apparaît pas. Sous chaque série, un encart rappelle les dates des 1/4, 1/2 et finale de cette série, lues dans ses parties, sans les créneaux ; il reste affiché jusqu'au jour de la dernière de ces dates inclus.
