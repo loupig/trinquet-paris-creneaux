@@ -75,6 +75,12 @@ for (const largeur of [320, 390]) test.describe(`Barre d'onglets à ${largeur} p
         return s.textContent + " : " + r.getClientRects().length + (tient ? "" : " (déborde)");
       }));
       expect(lignes).toEqual(["Accueil : 1", "Mes équipes : 1", "Parties : 1", "Classement : 1", "Créneaux : 1"]);
+      // L'en-tête aussi tient sur une ligne : « Site de la ligue » ne se replie pas.
+      const ligue = page.locator(".header-bar .ligue-btn");
+      if (await ligue.count()) {
+        const lignesLigue = await ligue.evaluate((a) => { const r = document.createRange(); r.selectNodeContents(a); return r.getClientRects().length; });
+        expect(lignesLigue, "« Site de la ligue » sur une ligne").toBe(1);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });
   }
@@ -1396,6 +1402,71 @@ async function auditSombre(page, exceptionsBlanc = []) {
   }, exceptionsBlanc);
 }
 
+test.describe("Thème choisi sur le site", () => {
+  const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "decouvrir", "404"];
+  const fond = (page) => page.evaluate(() => {
+    const [r, g, b] = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  });
+  const couleurBarre = (page) => page.evaluate(() =>
+    [...document.querySelectorAll('meta[name="theme-color"]')].find((m) => matchMedia(m.media).matches).content);
+
+  test("le même script de thème dans chaque page", async () => {
+    const scripts = [];
+    for (const f of PAGES_THEME) {
+      const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
+      const m = html.match(/<script>\n  \/\/ Thème clair ou sombre[\s\S]*?<\/script>/);
+      expect(m, `${f}.html : script de thème`).not.toBeNull();
+      scripts.push(m[0]);
+    }
+    scripts.forEach((s) => expect(s).toBe(scripts[0]));
+  });
+
+  test("téléphone en clair : la lune passe en sombre, gardé d'une page à l'autre, le soleil rend le téléphone", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const bouton = page.locator(".header-actions #themeBtn");
+    await expect(bouton).toHaveAccessibleName("Passer en thème sombre");
+    // À côté de Rafraîchir.
+    expect(await page.locator(".header-actions > *").evaluateAll((els) => els.map((e) => e.id || e.className)))
+      .toEqual(["refreshBtn", "themeBtn", "icon-btn calc"]);
+    expect(await fond(page)).toBeGreaterThan(0.8);
+
+    await bouton.click();
+    await expect(bouton).toHaveAccessibleName("Passer en thème clair");
+    expect(await fond(page)).toBeLessThan(0.1);
+    expect(await couleurBarre(page)).toBe("#1f1f1f");
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_theme_v1"))).toBe("sombre");
+
+    // Les autres pages s'ouvrent en sombre, compteur compris, même sans bouton.
+    for (const url of ["programme.html", "compteur.html", "decouvrir.html"]) {
+      await page.goto(url);
+      expect(await fond(page), url).toBeLessThan(0.1);
+    }
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.locator("#themeBtn").click();
+    expect(await fond(page)).toBeGreaterThan(0.8);
+    expect(await couleurBarre(page)).toBe("#ffffff");
+    // Revenu au thème du téléphone : plus de choix gardé, le site le suit de nouveau.
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_theme_v1"))).toBeNull();
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect(await fond(page)).toBeLessThan(0.1);
+    await expect(page.locator("#themeBtn")).toHaveAccessibleName("Passer en thème clair");
+  });
+
+  test("téléphone en sombre, clair choisi : la page s'ouvre en clair, la barre du navigateur aussi", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.addInitScript(() => localStorage.setItem("lidfpb_theme_v1", "clair"));
+    await page.goto("creneaux.html");
+    await attendreChargement(page);
+    expect(await fond(page)).toBeGreaterThan(0.8);
+    expect(await couleurBarre(page)).toBe("#ffffff");
+    await expect(page.locator("#themeBtn")).toHaveAccessibleName("Passer en thème sombre");
+  });
+});
+
 test.describe("Thème sombre", () => {
   test.use({ colorScheme: "dark" });
 
@@ -1411,9 +1482,14 @@ test.describe("Thème sombre", () => {
     };
     for (const f of fichiers) {
       const html = await readFile(new URL(`../${f}.html`, import.meta.url), "utf8");
-      const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/);
+      const bloc = html.match(/@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{([^}]*)\}/);
       expect(bloc, `${f}.html : bloc sombre`).not.toBeNull();
       noter(bloc[1], f);
+      // Le thème sombre choisi sur le site reprend le bloc du téléphone, à l'identique.
+      const choisi = html.match(/\n  :root\[data-theme="dark"\] \{([^}]*)\}/);
+      expect(choisi, `${f}.html : bloc sombre choisi`).not.toBeNull();
+      const valeurs = (b) => [...b.matchAll(/(--[\w-]+|color-scheme):\s*([^;]+);/g)].map((m) => m[1] + ":" + m[2]);
+      expect(valeurs(choisi[1]), `${f}.html : sombre choisi = sombre du téléphone`).toEqual(valeurs(bloc[1]));
       // Le plein écran sombre du compteur reprend la palette sombre.
       const fs = html.match(/\n  \.fs\.sombre \{([^}]*)\}/);
       if (fs) noter(fs[1], f + " (plein écran sombre)");
