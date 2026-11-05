@@ -25,14 +25,20 @@
     function themeDe(meta) { return /dark/.test(meta.media) ? "sombre" : "clair"; }
     for (var i = 0; i < metas.length; i++) barre[themeDe(metas[i])] = metas[i].getAttribute("content");
     var choisi = null;
-    try { choisi = localStorage.getItem(CLE); } catch (e) { /* stockage indisponible : le téléphone décide */ }
-    if (choisi !== "clair" && choisi !== "sombre") choisi = null;
+    // Sans stockage, le choix fait sur cette page reste en mémoire.
+    function lire() {
+      try { var v = localStorage.getItem(CLE); return v === "clair" || v === "sombre" ? v : null; }
+      catch (e) { return choisi; }
+    }
+    choisi = lire();
     function systeme() { return mq && mq.matches ? "sombre" : "clair"; }
     function appliquer() {
       if (choisi) racine.setAttribute("data-theme", choisi === "sombre" ? "dark" : "light");
       else racine.removeAttribute("data-theme");
       // Barre du navigateur : la couleur du thème affiché, quel que soit le téléphone.
       for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", barre[choisi || themeDe(metas[i])]);
+      // Le compteur recalcule ses couleurs d'équipe sur le thème affiché.
+      document.dispatchEvent(new Event("lidfpb-theme"));
       var bouton = document.getElementById("themeBtn");
       if (!bouton) return;
       var sombre = (choisi || systeme()) === "sombre";
@@ -56,6 +62,10 @@
     });
     if (mq && mq.addEventListener) mq.addEventListener("change", appliquer);
     else if (mq && mq.addListener) mq.addListener(appliquer);
+    // Choix changé ailleurs : page revenue par le bouton Retour, ou autre onglet.
+    function relire() { choisi = lire(); appliquer(); }
+    window.addEventListener("pageshow", function (e) { if (e.persisted) relire(); });
+    window.addEventListener("storage", function (e) { if (e.key === CLE || e.key === null) relire(); });
   })();
 </script>
 <style>

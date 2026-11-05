@@ -514,6 +514,16 @@ test("Accueil : la toute première visite passe par la présentation, une seule 
   await expect(page.locator("#tiles")).not.toBeEmpty();
 });
 
+test("Accueil : un thème choisi ailleurs ne compte pas comme une visite", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("vierge")) { localStorage.clear(); sessionStorage.setItem("vierge", "1"); }
+    localStorage.removeItem("lidfpb_mes_equipes_v1");
+    localStorage.setItem("lidfpb_theme_v1", "sombre");
+  });
+  await page.goto("index.html");
+  await expect(page).toHaveURL(/decouvrir\.html$/);
+});
+
 test("Accueil : arrivé par un lien vers la présentation, on n'y est pas renvoyé", async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem("vierge")) { localStorage.clear(); sessionStorage.setItem("vierge", "1"); }
@@ -1151,8 +1161,8 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
 });
 
 test.describe("Accueil : alerte des parties en double", () => {
-  // Autour du jeudi 5 novembre 2026. Deux parties le dimanche 8 à 21h au
-  // Trinquet Paris, sous deux libellés du même lieu : en double. Les autres
+  // Autour du jeudi 5 novembre 2026. Trois parties le dimanche 8 à 21h au
+  // Trinquet Paris, sous trois libellés du même lieu : en double. Les autres
   // ne le sont pas : autre heure, autre lieu, ou déjà passées.
   function partie(oid, date, heure, lieu, rec, vis) {
     return {
@@ -1164,10 +1174,12 @@ test.describe("Accueil : alerte des parties en double", () => {
   const PARIS = "PARIS (Trinquet Paris - 75016)", PARIS_BIS = "PARIS (Trinquet de Paris - 75016)";
   const CAVALERIE = "PARIS (Trinquet de la Cavalerie - 75015)";
   const ALPHA = "3750001", BRAVO = "3750002", CHARLIE = "3750003", DELTA = "3750004", ECHO = "3750005", FOXTROT = "3750006";
+  const GOLF = "3750007", HOTEL = "3750008";
   const calendrier = [
     partie(951, "08112026", "2100", PARIS, ALPHA, BRAVO),
     partie(952, "08112026", "2100", PARIS_BIS, CHARLIE, DELTA),
     partie(953, "08112026", "2000", PARIS, ECHO, FOXTROT),       // l'heure d'avant
+    partie(957, "08112026", "2100", "PARIS (Trinquet de Paris - 750", GOLF, HOTEL),   // libellé tronqué, même lieu
     partie(954, "08112026", "2100", CAVALERIE, ECHO, ALPHA),     // ailleurs
     partie(955, "01112026", "1500", PARIS, BRAVO, DELTA),        // passées
     partie(956, "01112026", "1500", PARIS, FOXTROT, CHARLIE)
@@ -1187,9 +1199,9 @@ test.describe("Accueil : alerte des parties en double", () => {
 
     const alerte = page.locator("#banner-slot .banner.doublons");
     await expect(alerte).toHaveCount(1);
-    await expect(alerte.locator("strong")).toHaveText("Deux parties au même endroit à la même heure");
+    await expect(alerte.locator("strong")).toHaveText("Trois parties au même endroit à la même heure");
     await expect(alerte.locator("li")).toHaveCount(1);
-    await expect(alerte.locator("li")).toHaveText("Dim. 8 nov. · 21h · Trinquet Paris : Alpha 1 vs Bravo 1 et Charlie 1 vs Delta 1");
+    await expect(alerte.locator("li")).toHaveText("Dim. 8 nov. · 21h · Trinquet Paris : Alpha 1 vs Bravo 1, Charlie 1 vs Delta 1 et Golf 1 vs Hotel 1");
     await expect(alerte).toContainText("à signaler à la ligue");
     // L'alerte vient avant les blocs, qui restent tous là.
     await expect(page.locator("#tiles > .colonne")).toHaveCount(3);
@@ -1454,6 +1466,20 @@ test.describe("Thème choisi sur le site", () => {
     await page.emulateMedia({ colorScheme: "dark" });
     expect(await fond(page)).toBeLessThan(0.1);
     await expect(page.locator("#themeBtn")).toHaveAccessibleName("Passer en thème clair");
+  });
+
+  test("un choix fait dans un autre onglet s'applique aux pages déjà ouvertes", async ({ page, context }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const autre = await context.newPage();
+    await autre.emulateMedia({ colorScheme: "light" });
+    await autre.goto("compteur.html");
+    await page.locator("#themeBtn").click();
+    await expect.poll(() => fond(autre)).toBeLessThan(0.1);
+    await page.locator("#themeBtn").click();
+    await expect.poll(() => fond(autre)).toBeGreaterThan(0.8);
+    await autre.close();
   });
 
   test("téléphone en sombre, clair choisi : la page s'ouvre en clair, la barre du navigateur aussi", async ({ page }) => {

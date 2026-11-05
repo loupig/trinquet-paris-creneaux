@@ -24,7 +24,9 @@
   (function () {
     try {
       for (var i = 0; i < localStorage.length; i++) {
-        if (String(localStorage.key(i)).indexOf("lidfpb_") === 0) return;
+        // Le thème choisi n'est qu'un réglage d'affichage, pas une visite.
+        var cle = String(localStorage.key(i));
+        if (cle.indexOf("lidfpb_") === 0 && cle !== "lidfpb_theme_v1") return;
       }
       localStorage.setItem("lidfpb_decouvert_v1", "1");
       if (localStorage.getItem("lidfpb_decouvert_v1") === "1") location.replace("decouvrir.html");
@@ -52,14 +54,20 @@
     function themeDe(meta) { return /dark/.test(meta.media) ? "sombre" : "clair"; }
     for (var i = 0; i < metas.length; i++) barre[themeDe(metas[i])] = metas[i].getAttribute("content");
     var choisi = null;
-    try { choisi = localStorage.getItem(CLE); } catch (e) { /* stockage indisponible : le téléphone décide */ }
-    if (choisi !== "clair" && choisi !== "sombre") choisi = null;
+    // Sans stockage, le choix fait sur cette page reste en mémoire.
+    function lire() {
+      try { var v = localStorage.getItem(CLE); return v === "clair" || v === "sombre" ? v : null; }
+      catch (e) { return choisi; }
+    }
+    choisi = lire();
     function systeme() { return mq && mq.matches ? "sombre" : "clair"; }
     function appliquer() {
       if (choisi) racine.setAttribute("data-theme", choisi === "sombre" ? "dark" : "light");
       else racine.removeAttribute("data-theme");
       // Barre du navigateur : la couleur du thème affiché, quel que soit le téléphone.
       for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", barre[choisi || themeDe(metas[i])]);
+      // Le compteur recalcule ses couleurs d'équipe sur le thème affiché.
+      document.dispatchEvent(new Event("lidfpb-theme"));
       var bouton = document.getElementById("themeBtn");
       if (!bouton) return;
       var sombre = (choisi || systeme()) === "sombre";
@@ -83,6 +91,10 @@
     });
     if (mq && mq.addEventListener) mq.addEventListener("change", appliquer);
     else if (mq && mq.addListener) mq.addListener(appliquer);
+    // Choix changé ailleurs : page revenue par le bouton Retour, ou autre onglet.
+    function relire() { choisi = lire(); appliquer(); }
+    window.addEventListener("pageshow", function (e) { if (e.persisted) relire(); });
+    window.addEventListener("storage", function (e) { if (e.key === CLE || e.key === null) relire(); });
   })();
 </script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -1125,7 +1137,13 @@
   // multiples ("Trinquet Paris", "Trinquet de Paris") : on le compare sans
   // casse, accents, ponctuation ni petits mots. Lieu vide : pas de doublon.
   function cleLieu(lieu) {
-    return String(lieu || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase()
+    // Ville, puis nom de la salle entre parenthèses sans le code postal :
+    // "PARIS (Trinquet de Paris - 750", libellé tronqué vu dans les données,
+    // rejoint ainsi "PARIS (Trinquet Paris - 75016)".
+    var s = String(lieu || "");
+    var m = /^([^(]*)\(([^)]*)/.exec(s);
+    if (m) s = m[1] + " " + m[2].split(" - ")[0];
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()
       .replace(/\b(DE|DU|DES|LA|LE|LES|D|L)\b/g, " ").replace(/[^A-Z0-9]/g, "");
   }
 
@@ -2035,21 +2053,25 @@
   function renderDoublons(container, doublons) {
     if (!doublons.length) return;
     var b = el("div", { class: "banner warn doublons" });
+    var NOMBRES = ["", "", "Deux", "Trois", "Quatre", "Cinq"];
+    var n = doublons[0].length;
     b.appendChild(el("strong", { text: doublons.length > 1
-      ? doublons.length + " fois, deux parties au même endroit à la même heure"
-      : "Deux parties au même endroit à la même heure" }));
+      ? "Plusieurs parties au même endroit à la même heure"
+      : (NOMBRES[n] || n) + " parties au même endroit à la même heure" }));
     var liste = el("ul");
     doublons.forEach(function (parties) {
       var m = parties[0];
       var li = el("li");
       li.appendChild(el("b", { text: jourEnTete(m.date) + " · " + formatHour(m.hour, m.minute) + " · " + lieuCourt(m.lieu) }));
-      li.appendChild(document.createTextNode(" : " + parties.map(function (p) {
+      var noms = parties.map(function (p) {
         return p.teams + (p.minute !== m.minute ? " (" + formatHour(p.hour, p.minute) + ")" : "");
-      }).join(" et ")));
+      });
+      li.appendChild(document.createTextNode(" : " + noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1]));
       liste.appendChild(li);
     });
     b.appendChild(liste);
-    b.appendChild(document.createTextNode("Une seule pourra se jouer : à signaler à la ligue pour qu'elle corrige le calendrier."));
+    b.appendChild(document.createTextNode((doublons.length > 1 ? "Une seule par heure pourra se jouer" : "Une seule pourra se jouer") +
+      " : à signaler à la ligue pour qu'elle corrige le calendrier."));
     container.appendChild(b);
   }
 
