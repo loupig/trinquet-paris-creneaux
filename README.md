@@ -23,7 +23,8 @@ Le comportement de chaque page est décrit par sa spec, dans
 
 - [`index.html`](index.html) — l'accueil : mes équipes suivies, la semaine
   en deux onglets (résultats depuis vendredi, parties d'ici dimanche) et
-  l'avancement de la saison. Specs
+  l'avancement de la saison, sous une alerte quand deux parties à venir
+  tombent au même lieu à la même heure. Specs
   [`accueil`](openspec/specs/accueil/spec.md),
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md),
   [`derniers-resultats`](openspec/specs/derniers-resultats/spec.md) et
