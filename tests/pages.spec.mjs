@@ -1043,6 +1043,34 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
   });
 
+  test("le dimanche, « D'ici dimanche » garde les parties jouées depuis vendredi, avec leur score", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    await page.clock.setFixedTime(new Date("2026-11-01T18:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.getByRole("tab", { name: "D'ici dim. 1 nov." })).toHaveAttribute("aria-selected", "true");
+
+    // Vendredi joué, samedi forfait, dimanche encore à venir ; ni le quart à
+    // désigner ni la partie reportée.
+    const parties = page.locator("#vue-ici .affiche");
+    await expect(parties).toHaveCount(3);
+    await expect(parties.nth(0)).toContainText("ven. 30 oct.");
+    await expect(parties.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
+    await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
+    await expect(parties.nth(0).locator(".affiche-lieu")).toHaveText("Trinquet Paris");
+    await expect(parties.nth(1).locator(".score")).toHaveText("F-40");
+    await expect(parties.nth(1).locator(".perdant")).toHaveCount(0);
+    await expect(parties.nth(2).locator(".next-teams")).toHaveText("Charlie 1 vs Delta 1");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
+    const texte = await page.evaluate(() => window.__partage.text);
+    expect(texte).toContain("19h30 · Série 1 · Trinquet Paris · Alpha (éq. 1) 40-25 Bravo (éq. 1)");
+    expect(texte).toContain("Charlie (éq. 1) vs Delta (éq. 1)");
+  });
+
   test("Partager envoie l'image PNG de la vue ouverte avec son texte", async ({ page }) => {
     await page.addInitScript(() => {
       navigator.canShare = (d) => !!(d && d.files);
