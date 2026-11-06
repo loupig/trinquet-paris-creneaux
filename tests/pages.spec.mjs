@@ -1043,6 +1043,92 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
   });
 
+  test("le dimanche, « D'ici dimanche » garde les parties jouées depuis vendredi, avec leur score", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    await page.clock.setFixedTime(new Date("2026-11-01T18:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.getByRole("tab", { name: "D'ici dim. 1 nov." })).toHaveAttribute("aria-selected", "true");
+
+    // Vendredi joué, samedi forfait, dimanche encore à venir ; ni le quart à
+    // désigner ni la partie reportée.
+    const parties = page.locator("#vue-ici .affiche");
+    await expect(parties).toHaveCount(3);
+    await expect(parties.nth(0)).toContainText("ven. 30 oct.");
+    await expect(parties.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
+    await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
+    await expect(parties.nth(0).locator(".affiche-lieu")).toHaveText("Trinquet Paris");
+    await expect(parties.nth(1).locator(".score")).toHaveText("F-40");
+    await expect(parties.nth(1).locator(".perdant")).toHaveCount(0);
+    await expect(parties.nth(2).locator(".next-teams")).toHaveText("Charlie 1 vs Delta 1");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
+    const texte = await page.evaluate(() => window.__partage.text);
+    expect(texte).toContain("19h30 · Série 1 · Trinquet Paris · Alpha (éq. 1) 40-25 Bravo (éq. 1)");
+    expect(texte).toContain("Charlie (éq. 1) vs Delta (éq. 1)");
+  });
+
+  // Un autre calendrier pour un test : la route posée en dernier l'emporte.
+  async function servir(page, rencontres) {
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? rencontres : (tables[table] || []), lastSync: "2026-11-02T08:00:00Z" })
+      });
+    });
+  }
+
+  test("en semaine, la partie du jour terminée garde son score, celle de vendredi n'y est plus", async ({ page }) => {
+    await servir(page, [
+      partie(902, "30102026", ALPHA, BRAVO, "40", "25"),
+      partie(904, "02112026", BRAVO, DELTA, "20", "40"),
+      partie(905, "07112026", ALPHA, CHARLIE, "", "")
+    ]);
+    await page.clock.setFixedTime(new Date("2026-11-02T22:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
+
+    const parties = page.locator("#vue-ici .affiche");
+    await expect(parties).toHaveCount(2);
+    await expect(parties.nth(0)).toContainText("lun. 2 nov. 19h30");
+    await expect(parties.nth(0).locator(".next-teams")).toHaveText("Bravo 120-40Delta 1");
+    await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
+    await expect(parties.nth(1).locator(".next-teams")).toHaveText("Alpha 1 vs Charlie 1");
+  });
+
+  test("le dimanche soir, week-end fini : ses scores en tête, puis le week-end suivant", async ({ page }) => {
+    await servir(page, [
+      partie(902, "30102026", ALPHA, BRAVO, "40", "25"),
+      // Samedi, sans heure ni score publié.
+      Object.assign(partie(910, "31102026", ALPHA, CHARLIE, "", ""), { heure_renc: "" }),
+      partie(903, "01112026", CHARLIE, DELTA, "40", "35"),
+      partie(904, "03112026", BRAVO, DELTA, "", ""),
+      partie(905, "07112026", ALPHA, CHARLIE, "", "")
+    ]);
+    await page.clock.setFixedTime(new Date("2026-11-01T22:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    // Le mardi et le week-end suivant ne sont pas cachés par les scores.
+    await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
+    const parties = page.locator("#vue-ici .affiche");
+    await expect(parties).toHaveCount(5);
+    await expect(parties.nth(0).locator(".score")).toHaveText("40-25");
+    // Pas de « 0h » pour une partie sans heure, et le score attendu à la place du lieu.
+    await expect(parties.nth(1).locator(".next-when")).toHaveText("sam. 31 oct.");
+    await expect(parties.nth(1).locator(".score")).toHaveText("vs");
+    await expect(parties.nth(1).locator(".affiche-lieu")).toHaveText("Score pas encore publié par la ligue");
+    await expect(parties.nth(2).locator(".score")).toHaveText("40-35");
+    await expect(parties.nth(3)).toContainText("mar. 3 nov.");
+    await expect(parties.nth(3).locator(".next-teams")).toHaveText("Bravo 1 vs Delta 1");
+    await expect(page.locator("#vue-ici")).not.toContainText("Plus aucune rencontre");
+  });
+
   test("Partager envoie l'image PNG de la vue ouverte avec son texte", async ({ page }) => {
     await page.addInitScript(() => {
       navigator.canShare = (d) => !!(d && d.files);

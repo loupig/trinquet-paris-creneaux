@@ -2,12 +2,14 @@
 
 ## Purpose
 
-Montrer sur l'accueil toutes les parties d'ici le dimanche du prochain week-end joué, et faire ressortir celles qui valent le déplacement en disant en quelques mots pourquoi chacune a été retenue.
+Montrer sur l'accueil toutes les parties d'ici le dimanche du prochain week-end joué, avec le score de celles du week-end déjà jouées, et faire ressortir celles qui valent le déplacement en disant en quelques mots pourquoi chacune a été retenue.
 
 ## Requirements
 
 ### Requirement: Fenêtre du week-end
-Le bloc SHALL couvrir toutes les parties à venir d'aujourd'hui jusqu'au dimanche inclus du premier week-end (vendredi à dimanche) qui compte au moins une partie à venir, tous lieux confondus. Les parties de semaine qui précèdent ce week-end en font partie. Quand plus aucun week-end ne compte de partie mais qu'il reste des parties en semaine, la fenêtre couvre toutes les parties à venir. Une partie à venir est une partie sans score dont la date effective (la date de report si elle existe, sinon la date d'origine) est aujourd'hui ou plus tard. Une partie du jour reste à venir toute la journée.
+Le bloc SHALL couvrir toutes les parties à venir d'aujourd'hui jusqu'au dimanche inclus du premier week-end (vendredi à dimanche) qui compte au moins une partie à venir, tous lieux confondus. Les parties de semaine qui précèdent ce week-end en font partie. Quand plus aucun week-end ne compte de partie mais qu'il reste des parties en semaine, la fenêtre couvre toutes les parties à venir. Une partie à venir est une partie sans score dont la date effective (la date de report si elle existe, sinon la date d'origine) est aujourd'hui ou plus tard. Une partie du jour reste à venir toute la journée, tant qu'elle n'a pas de score.
+
+Le bloc SHALL garder aussi, à leur place chronologique, les parties déjà jouées depuis le début de la fenêtre : le vendredi du week-end en cours du vendredi au dimanche, aujourd'hui du lundi au jeudi. Ce sont celles qui ont un score, et celles des jours passés qui n'en ont pas encore, c'est-à-dire les parties des résultats (spec `derniers-resultats`) depuis ce jour ; une partie dont un adversaire est encore à désigner n'y figure donc qu'à venir. Les parties jouées ne fixent pas le dimanche de la fenêtre, pour ne jamais cacher une partie à venir : le dimanche soir, quand le week-end est fini, le bloc passe au week-end suivant et garde en tête les scores de celui qui s'achève.
 
 #### Scenario: Week-end en cours
 - **WHEN** on est un samedi et qu'une partie sans score est programmée le dimanche
@@ -25,9 +27,21 @@ Le bloc SHALL couvrir toutes les parties à venir d'aujourd'hui jusqu'au dimanch
 - **WHEN** il ne reste que des parties en semaine dans le calendrier
 - **THEN** la fenêtre couvre toutes ces parties
 
-#### Scenario: Partie déjà jouée
-- **WHEN** une partie de la fenêtre a déjà un score
-- **THEN** elle ne figure pas dans le bloc
+#### Scenario: Partie jouée ce week-end
+- **WHEN** on est samedi et qu'Alpha 1 a battu Bravo 1 40-25 vendredi
+- **THEN** la partie de vendredi figure dans le bloc à sa place chronologique, avec « Alpha 1 40-25 Bravo 1 » à la place de « Alpha 1 vs Bravo 1 »
+
+#### Scenario: Partie du jour terminée
+- **WHEN** une partie programmée aujourd'hui a reçu son score
+- **THEN** elle reste dans le bloc, avec son score
+
+#### Scenario: Dimanche soir, week-end terminé
+- **WHEN** on est dimanche, que toutes les parties du week-end ont un score et que la suivante est mardi
+- **THEN** le bloc s'intitule d'après le dimanche suivant et liste les scores du week-end, puis la partie du mardi et celles du week-end suivant
+
+#### Scenario: Partie jouée avant la fenêtre
+- **WHEN** on est mercredi et qu'une partie a été jouée mardi
+- **THEN** elle ne figure pas dans le bloc, seulement dans les résultats
 
 #### Scenario: Partie reportée
 - **WHEN** une partie prévue ce week-end a été reportée à une date ultérieure
@@ -111,11 +125,15 @@ Chaque partie retenue SHALL porter une seule étiquette, celle du critère le pl
 - **THEN** la partie apparaît une seule fois, avec l'étiquette « 1/2 finale »
 
 ### Requirement: Contenu d'une affiche
-Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série, et sur une seconde ligne le lieu, sous le nom court de la salle (« Trinquet Paris »). Une partie à voir porte en plus, en tête de cette seconde ligne, l'étiquette qui explique sa sélection.
+Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série, et sur une seconde ligne le lieu, sous le nom court de la salle (« Trinquet Paris »). Une partie à voir porte en plus, en tête de cette seconde ligne, l'étiquette qui explique sa sélection ; une partie déjà jouée ne prend pas les étiquettes tirées du classement (choc de tête, qualification), qui compte déjà son résultat. Une partie déjà jouée met son score à la place du « vs », l'équipe perdante en retrait, comme dans les résultats ; un score publié qui n'est pas un nombre (forfait…) s'affiche tel que la ligue l'écrit, sans perdant. Une partie d'un jour passé encore sans score garde le « vs » et porte, à la place du lieu, « Score pas encore publié par la ligue ». Une partie jouée sans heure dans les données n'affiche que son jour. Quand plus aucune partie n'est à venir, le message de fin de calendrier suit les parties jouées.
 
 #### Scenario: Lecture d'une affiche
 - **WHEN** un visiteur ouvre l'accueil et qu'une partie de la fenêtre répond à un critère
 - **THEN** il voit dans la même entrée quand, qui, où, et pourquoi elle est à voir, sans défilement horizontal sur un écran de 390 px
+
+#### Scenario: Lecture d'une partie jouée
+- **WHEN** une partie de la fenêtre a un score
+- **THEN** sa première ligne donne le jour, l'heure, le score entre les deux équipes, le perdant en retrait, et la série
 
 #### Scenario: Lecture d'une partie ordinaire
 - **WHEN** une partie de la fenêtre ne répond à aucun critère
@@ -129,7 +147,7 @@ La vue « D'ici dimanche » SHALL mener au programme complet par le lien « Tout
 - **THEN** la page Programme s'ouvre
 
 ### Requirement: Toutes les parties de la fenêtre
-Le bloc SHALL lister toutes les parties à venir de la fenêtre, qu'elles soient à voir ou non, dans l'ordre chronologique. Les parties à voir restent à leur place chronologique et se distinguent par leur présentation, sans être regroupées ni remontées en tête.
+Le bloc SHALL lister toutes les parties de la fenêtre, à venir ou déjà jouées, qu'elles soient à voir ou non, dans l'ordre chronologique. Les parties à voir restent à leur place chronologique et se distinguent par leur présentation, sans être regroupées ni remontées en tête.
 
 #### Scenario: Week-end mêlant parties ordinaires et parties à voir
 - **WHEN** la fenêtre compte 6 parties dont 2 répondent à un critère
@@ -167,8 +185,8 @@ Dans le bloc « D'ici dimanche », une partie jouée par l'une des équipes suiv
 
 ### Requirement: Partage des parties
 Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager », qui partage une image et un texte.
-- L'image est un PNG de 1080 px de large, dessiné dans le navigateur avant le toucher, sans dépendance ni requête, aux couleurs de la page (claires ou sombres) et dans sa police : le titre du bloc (« D'ici dimanche 4 oct. »), puis les parties regroupées sous leur jour, chacune avec l'heure, les équipes sous leur nom court, la série, l'étiquette s'il y en a une et le lieu, sans l'adresse du site. Elle ne porte aucune donnée personnelle ni le repère des équipes suivies.
-- Le texte est prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes, l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet.
+- L'image est un PNG de 1080 px de large, dessiné dans le navigateur avant le toucher, sans dépendance ni requête, aux couleurs de la page (claires ou sombres) et dans sa police : le titre du bloc (« D'ici dimanche 4 oct. »), puis les parties regroupées sous leur jour, chacune avec l'heure, les équipes sous leur nom court (le score entre elles pour une partie jouée), la série, l'étiquette s'il y en a une et le lieu, sans l'adresse du site. Elle ne porte aucune donnée personnelle ni le repère des équipes suivies.
+- Le texte est prêt à poster : le titre du bloc, puis les parties dans l'ordre du bloc, regroupées sous leur jour (en gras au sens de WhatsApp), chacune avec l'heure, la série et le lieu court, les noms complets des deux équipes (le score entre eux pour une partie jouée, « (score pas encore publié) » pour une partie passée sans score), l'étiquette de la partie s'il y en a une, et pour finir le lien vers le programme complet.
 
 Sur un appareil dont la feuille de partage accepte les fichiers (téléphone), l'image et le texte lui sont confiés ensemble ; si elle n'accepte que du texte, ou que l'image n'est pas encore prête, le texte seul. Sans feuille de partage (ordinateur), le texte est copié dans le presse-papiers et l'image téléchargée, pour WhatsApp Web, et le bloc l'indique. Rien n'est envoyé par le site lui-même.
 
