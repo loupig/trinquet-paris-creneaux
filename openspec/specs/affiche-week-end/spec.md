@@ -9,7 +9,7 @@ Montrer sur l'accueil toutes les parties d'ici le dimanche du prochain week-end 
 ### Requirement: Fenêtre du week-end
 Le bloc SHALL couvrir toutes les parties à venir d'aujourd'hui jusqu'au dimanche inclus du premier week-end (vendredi à dimanche) qui compte au moins une partie à venir, tous lieux confondus. Les parties de semaine qui précèdent ce week-end en font partie. Quand plus aucun week-end ne compte de partie mais qu'il reste des parties en semaine, la fenêtre couvre toutes les parties à venir. Une partie à venir est une partie sans score dont la date effective (la date de report si elle existe, sinon la date d'origine) est aujourd'hui ou plus tard. Une partie du jour reste à venir toute la journée, tant qu'elle n'a pas de score.
 
-Le bloc SHALL garder aussi les parties déjà jouées de la fenêtre, qui commence le vendredi du week-end en cours du vendredi au dimanche, et aujourd'hui du lundi au jeudi : celles qui ont un score, et celles des jours passés qui n'en ont pas encore. Ce sont les parties des résultats (spec `derniers-resultats`) qui tombent dans la fenêtre ; une partie dont un adversaire est encore à désigner n'y figure donc qu'à venir. Elles comptent pour fixer le dimanche de la fenêtre : le dimanche soir, le bloc montre encore le week-end qui s'achève, avec ses scores.
+Le bloc SHALL garder aussi, à leur place chronologique, les parties déjà jouées depuis le début de la fenêtre : le vendredi du week-end en cours du vendredi au dimanche, aujourd'hui du lundi au jeudi. Ce sont celles qui ont un score, et celles des jours passés qui n'en ont pas encore, c'est-à-dire les parties des résultats (spec `derniers-resultats`) depuis ce jour ; une partie dont un adversaire est encore à désigner n'y figure donc qu'à venir. Les parties jouées ne fixent pas le dimanche de la fenêtre, pour ne jamais cacher une partie à venir : le dimanche soir, quand le week-end est fini, le bloc passe au week-end suivant et garde en tête les scores de celui qui s'achève.
 
 #### Scenario: Week-end en cours
 - **WHEN** on est un samedi et qu'une partie sans score est programmée le dimanche
@@ -34,6 +34,10 @@ Le bloc SHALL garder aussi les parties déjà jouées de la fenêtre, qui commen
 #### Scenario: Partie du jour terminée
 - **WHEN** une partie programmée aujourd'hui a reçu son score
 - **THEN** elle reste dans le bloc, avec son score
+
+#### Scenario: Dimanche soir, week-end terminé
+- **WHEN** on est dimanche, que toutes les parties du week-end ont un score et que la suivante est mardi
+- **THEN** le bloc s'intitule d'après le dimanche suivant et liste les scores du week-end, puis la partie du mardi et celles du week-end suivant
 
 #### Scenario: Partie jouée avant la fenêtre
 - **WHEN** on est mercredi et qu'une partie a été jouée mardi
@@ -121,7 +125,7 @@ Chaque partie retenue SHALL porter une seule étiquette, celle du critère le pl
 - **THEN** la partie apparaît une seule fois, avec l'étiquette « 1/2 finale »
 
 ### Requirement: Contenu d'une affiche
-Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série, et sur une seconde ligne le lieu, sous le nom court de la salle (« Trinquet Paris »). Une partie à voir porte en plus, en tête de cette seconde ligne, l'étiquette qui explique sa sélection. Une partie déjà jouée met son score à la place du « vs », l'équipe perdante en retrait, comme dans les résultats ; un score publié qui n'est pas un nombre (forfait…) s'affiche tel que la ligue l'écrit, sans perdant. Une partie d'un jour passé encore sans score garde le « vs » et porte, à la place du lieu, « Score pas encore publié par la ligue ».
+Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série, et sur une seconde ligne le lieu, sous le nom court de la salle (« Trinquet Paris »). Une partie à voir porte en plus, en tête de cette seconde ligne, l'étiquette qui explique sa sélection ; une partie déjà jouée ne prend pas les étiquettes tirées du classement (choc de tête, qualification), qui compte déjà son résultat. Une partie déjà jouée met son score à la place du « vs », l'équipe perdante en retrait, comme dans les résultats ; un score publié qui n'est pas un nombre (forfait…) s'affiche tel que la ligue l'écrit, sans perdant. Une partie d'un jour passé encore sans score garde le « vs » et porte, à la place du lieu, « Score pas encore publié par la ligue ». Une partie jouée sans heure dans les données n'affiche que son jour. Quand plus aucune partie n'est à venir, le message de fin de calendrier suit les parties jouées.
 
 #### Scenario: Lecture d'une affiche
 - **WHEN** un visiteur ouvre l'accueil et qu'une partie de la fenêtre répond à un critère

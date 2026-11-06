@@ -1197,17 +1197,18 @@
     return debut;
   }
 
-  // Les parties jusqu'au dimanche du premier week-end qui en compte, parties
-  // de semaine comprises : un joueur du mardi doit voir sa partie. Sans plus
-  // aucun week-end joué, toutes les parties restantes. La liste est triée par
-  // date, reports compris : les parties jouées depuis le début de la fenêtre,
-  // puis les parties à venir.
-  function partiesDIciDimanche(parties) {
+  // Les parties à venir jusqu'au dimanche du premier week-end qui en compte,
+  // parties de semaine comprises : un joueur du mardi doit voir sa partie.
+  // Sans plus aucun week-end joué, toutes les parties restantes. aVenir est
+  // déjà trié par date, reports compris, et privé des parties jouées : les
+  // parties jouées ne fixent pas le dimanche, pour ne jamais cacher une
+  // partie à venir.
+  function partiesDIciDimanche(aVenir) {
     var dimanche = null;
-    for (var i = 0; i < parties.length && !dimanche; i++) dimanche = dimancheDu(parties[i].date);
+    for (var i = 0; i < aVenir.length && !dimanche; i++) dimanche = dimancheDu(aVenir[i].date);
     return {
       dimanche: dimanche,
-      parties: dimanche ? parties.filter(function (m) { return m.date <= dimanche; }) : parties
+      parties: dimanche ? aVenir.filter(function (m) { return m.date <= dimanche; }) : aVenir
     };
   }
 
@@ -1234,8 +1235,9 @@
 
   // Rangs des deux équipes d'une partie de poule, ou null si le classement ne
   // permet pas encore d'en juger.
+  // Une partie jouée n'en a pas : le classement compte déjà son résultat.
   function rangsDeLaPartie(m, ctx) {
-    if (m.phase !== PHASE_POULES) return null;
+    if (m.phase !== PHASE_POULES || m.jouee) return null;
     var a = ctx.rangs[teamKey(m.spec, m.cat, m.poule, m.clubRec, m.equipRec)];
     var b = ctx.rangs[teamKey(m.spec, m.cat, m.poule, m.clubVis, m.equipVis)];
     if (!a || !b || !a.rang || !b.rang) return null;
@@ -1282,19 +1284,19 @@
   // Toutes les parties d'ici dimanche, dans l'ordre chronologique, chacune
   // avec l'étiquette de son critère le plus fort, ou null si elle n'est pas à
   // voir. Les parties jouées depuis le début de la fenêtre (prises dans les
-  // derniers résultats) y restent, marquées « jouee », avec leur score.
+  // derniers résultats, marquées « jouee ») y prennent leur place, avec leur score.
   function affiches(aVenir, resultats, standings, clubMap, today) {
     var ctx = { rangs: rangsParPoule(standings), clubMap: clubMap };
     var debut = debutFenetre(today);
     var jouees = resultats.filter(function (m) { return m.date >= debut; });
-    var jouee = function (m) { return jouees.indexOf(m) !== -1; };
-    var fenetre = partiesDIciDimanche(jouees.concat(aVenir).sort(chronologique));
+    var fenetre = partiesDIciDimanche(aVenir);
     return {
       dimanche: fenetre.dimanche,
-      parties: fenetre.parties.map(function (m) {
+      aVenir: fenetre.parties.length,
+      parties: jouees.concat(fenetre.parties).sort(chronologique).map(function (m) {
         var etiquette = null;
         for (var i = 0; i < CRITERES.length && !etiquette; i++) etiquette = CRITERES[i](m, ctx);
-        return { partie: m, etiquette: etiquette, jouee: jouee(m) };
+        return { partie: m, etiquette: etiquette };
       })
     };
   }
@@ -1332,7 +1334,10 @@
       var joue = hasScore(row);
       if (!d || d < depuis || d > today || (!joue && d >= today)) return null;
       if (clubFictif(row.club_rec) || clubFictif(row.club_vis)) return null;
-      var m = partieDe(row, clubMap, d, parseHeureRenc(row.heure_renc) || { hour: 0, minute: 0 });
+      var t = parseHeureRenc(row.heure_renc);
+      var m = partieDe(row, clubMap, d, t || { hour: 0, minute: 0 });
+      m.jouee = true;
+      m.sansHeure = !t;
       m.publie = joue;
       m.scoreTexte = joue ? String(row.score_cr).trim() + "-" + String(row.score_cv).trim() : "";
       var sr = parseInt(row.score_cr, 10), sv = parseInt(row.score_cv, 10);
@@ -1556,6 +1561,17 @@
     return bloc;
   }
 
+  // Les deux équipes d'une partie jouée, le score entre elles (« vs » tant
+  // qu'il n'est pas publié) et le perdant en retrait. Commun aux résultats et
+  // à « D'ici dimanche ».
+  function equipesAvecScore(m) {
+    var equipes = el("div", { class: "next-teams", title: m.teamsLong });
+    equipes.appendChild(el("span", { class: m.perdRec ? "perdant" : "", text: m.rec }));
+    equipes.appendChild(el("span", { class: "score", text: m.publie ? m.scoreTexte : "vs" }));
+    equipes.appendChild(el("span", { class: m.perdVis ? "perdant" : "", text: m.vis }));
+    return equipes;
+  }
+
   // Une ligne par partie, comme « D'ici dimanche », le score entre les deux
   // équipes et le perdant en retrait. Une partie passée sans score le dit sur
   // une seconde ligne : le joueur qui la cherche sait qu'elle n'est pas perdue.
@@ -1566,12 +1582,8 @@
       var item = el("div", { class: "affiche resultat" + (mienne ? " mine" : "") });
       var ligne = el("div", { class: "affiche-line" });
       ligne.appendChild(el("div", { class: "next-when", text: formatShortDate(m.date) }));
-      var equipes = el("div", { class: "next-teams", title: m.teamsLong });
       var joue = m.publie;
-      equipes.appendChild(el("span", { class: m.perdRec ? "perdant" : "", text: m.rec }));
-      equipes.appendChild(el("span", { class: "score", text: joue ? m.scoreTexte : "vs" }));
-      equipes.appendChild(el("span", { class: m.perdVis ? "perdant" : "", text: m.vis }));
-      ligne.appendChild(equipes);
+      ligne.appendChild(equipesAvecScore(m));
       ligne.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
       item.appendChild(ligne);
       if (!joue) {
@@ -1593,30 +1605,17 @@
   // place du lieu.
   function buildListeIci(ici, mes) {
     var corps = el("div", { class: "tile-body ici" });
-    if (ici.parties.length === 0) {
-      corps.appendChild(el("p", { class: "tile-note", text: "Plus aucune rencontre à venir dans le calendrier publié par la ligue." }));
-    }
     ici.parties.forEach(function (a) {
       var m = a.partie;
       var mienne = mes.some(function (cle) { return joueDans(m, cle); });
-      var item = el("div", { class: "affiche" + (a.jouee ? " resultat" : "") + (mienne ? " mine" : "") });
+      var item = el("div", { class: "affiche" + (m.jouee ? " resultat" : "") + (mienne ? " mine" : "") });
       var ligne1 = el("div", { class: "affiche-line" });
-      ligne1.appendChild(el("div", {
-        class: "next-when",
-        text: formatShortDate(m.date) + " " + formatHour(m.hour, m.minute)
-      }));
-      if (a.jouee) {
-        var equipes = el("div", { class: "next-teams", title: m.teamsLong });
-        equipes.appendChild(el("span", { class: m.perdRec ? "perdant" : "", text: m.rec }));
-        equipes.appendChild(el("span", { class: "score", text: m.publie ? m.scoreTexte : "vs" }));
-        equipes.appendChild(el("span", { class: m.perdVis ? "perdant" : "", text: m.vis }));
-        ligne1.appendChild(equipes);
-      } else {
-        ligne1.appendChild(el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
-      }
+      ligne1.appendChild(el("div", { class: "next-when", text: quandIci(m) }));
+      ligne1.appendChild(m.jouee ? equipesAvecScore(m)
+        : el("div", { class: "next-teams", text: m.teams, title: m.teamsLong }));
       ligne1.appendChild(el("span", { class: "badge serie-" + m.cat, text: m.serieLabel }));
       item.appendChild(ligne1);
-      var attente = a.jouee && !m.publie;
+      var attente = m.jouee && !m.publie;
       if (a.etiquette || m.lieu || attente) {
         var ligne2 = el("div", { class: "affiche-why" });
         if (a.etiquette) ligne2.appendChild(el("span", { class: "affiche-tag", text: a.etiquette }));
@@ -1626,7 +1625,17 @@
       }
       corps.appendChild(item);
     });
+    // Les scores du week-end n'empêchent pas de dire que le calendrier est fini.
+    if (ici.aVenir === 0) {
+      corps.appendChild(el("p", { class: "tile-note", text: "Plus aucune rencontre à venir dans le calendrier publié par la ligue." }));
+    }
     return corps;
+  }
+
+  // Jour et heure d'une partie d'ici dimanche. Une partie jouée dont la ligue
+  // n'a pas publié l'heure n'en montre pas, plutôt qu'un « 0h » qui mentirait.
+  function quandIci(m) {
+    return formatShortDate(m.date) + (m.sansHeure ? "" : " " + formatHour(m.hour, m.minute));
   }
 
   // Libellé de « D'ici dimanche ». En onglet, le jour abrégé, pour que les
@@ -1778,29 +1787,34 @@
       titre: titre,
       texte: texteParJour(titre, groupes, function (a) {
         var m = a.partie;
-        var score = a.jouee && m.publie;
-        return formatHour(m.hour, m.minute) + " · " + m.serieLabel + (m.lieu ? " · " + lieuCourt(m.lieu) : "") +
-               " · " + (score ? m.recLong + " " + m.scoreTexte + " " + m.visLong : m.teamsLong) +
-               (a.jouee && !m.publie ? " (score pas encore publié)" : "") +
+        return (m.sansHeure ? "" : formatHour(m.hour, m.minute) + " · ") + m.serieLabel +
+               (m.lieu ? " · " + lieuCourt(m.lieu) : "") +
+               " · " + (m.publie ? m.recLong + " " + m.scoreTexte + " " + m.visLong : m.teamsLong) +
+               (m.jouee && !m.publie ? " (score pas encore publié)" : "") +
                (a.etiquette ? " → " + a.etiquette : "");
       }, "Programme complet", "programme.html"),
       groupes: groupes.map(function (g) {
         return { jour: g.jour, lignes: g.lignes.map(function (a) {
           var m = a.partie;
-          var score = a.jouee && m.publie;
           return {
-            heure: formatHour(m.hour, m.minute),
-            morceaux: score ? [
-              { texte: m.rec, retrait: m.perdRec },
-              { texte: m.scoreTexte, gras: true },
-              { texte: m.vis, retrait: m.perdVis }
-            ] : [{ texte: m.teams }],
+            heure: m.sansHeure ? "" : formatHour(m.hour, m.minute),
+            morceaux: m.jouee ? morceauxScore(m) : [{ texte: m.teams }],
             cat: m.cat, serie: m.serieLabel, etiquette: a.etiquette,
-            lieu: a.jouee && !m.publie ? "Score pas encore publié par la ligue" : (m.lieu ? lieuCourt(m.lieu) : "")
+            lieu: m.jouee && !m.publie ? "Score pas encore publié par la ligue" : (m.lieu ? lieuCourt(m.lieu) : "")
           };
         }) };
       })
     };
+  }
+
+  // Les équipes d'une partie jouée en morceaux d'image : perdant en retrait,
+  // score en gras, « vs » tant qu'il n'est pas publié.
+  function morceauxScore(m) {
+    return [
+      { texte: m.rec, retrait: m.perdRec },
+      { texte: m.publie ? m.scoreTexte : "vs", gras: m.publie },
+      { texte: m.vis, retrait: m.perdVis }
+    ];
   }
 
   function partageResultats(resultats) {
@@ -1817,11 +1831,7 @@
           var joue = m.publie;
           return {
             heure: "",
-            morceaux: [
-              { texte: m.rec, retrait: m.perdRec },
-              { texte: joue ? m.scoreTexte : "vs", gras: joue },
-              { texte: m.vis, retrait: m.perdVis }
-            ],
+            morceaux: morceauxScore(m),
             cat: m.cat, serie: m.serieLabel, etiquette: null, lieu: joue ? "" : "Score pas encore publié par la ligue"
           };
         }) };
