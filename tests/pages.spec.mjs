@@ -1305,8 +1305,21 @@ test.describe("Accueil : alerte des parties en double", () => {
 test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
   test("masqués par défaut sans rien charger ; un toucher les montre sur l'accueil, puis sur le Classement", async ({ page }) => {
     await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files);
       navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
     });
+    // L'image se dessine juste après l'affichage : on touche jusqu'à l'avoir.
+    async function partager() {
+      await page.evaluate(() => { window.__partage = {}; });
+      await expect.poll(async () => {
+        await page.getByRole("button", { name: "Partager", exact: true }).click();
+        return page.evaluate(() => (window.__partage.files || []).length);
+      }).toBe(1);
+      return page.evaluate(async () => ({
+        hauteur: (await createImageBitmap(window.__partage.files[0])).height,
+        texte: window.__partage.text
+      }));
+    }
     const tablesDemandees = [];
     page.on("request", (r) => {
       if (r.url().includes("script.google.com")) tablesDemandees.push(new URL(r.url()).searchParams.get("table"));
@@ -1320,6 +1333,7 @@ test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
     await expect(page.locator(".affiche-joueurs")).toHaveCount(0);
     expect(tablesDemandees).not.toContain("engagements");
     expect(tablesDemandees).not.toContain("licencies");
+    const sansJoueurs = await partager();
 
     // Le cache n'a pas encore les compositions : elles arrivent du réseau.
     await bouton.click();
@@ -1328,9 +1342,15 @@ test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBe("1");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
-    // Ni le texte ni l'image partagés ne portent de noms de joueurs.
-    await page.getByRole("button", { name: "Partager", exact: true }).click();
-    expect(await page.evaluate(() => window.__partage.text)).not.toContain("Joueur1");
+    // Le focus clavier reste sur le bouton redessiné.
+    await expect(page.getByRole("button", { name: "Joueurs", exact: true })).toBeFocused();
+
+    // Ni le texte ni l'image partagés ne portent de noms de joueurs : même
+    // texte, et pas une ligne de plus dans l'image.
+    const avecJoueurs = await partager();
+    expect(avecJoueurs.texte).not.toContain("Joueur1");
+    expect(avecJoueurs.texte).toBe(sansJoueurs.texte);
+    expect(avecJoueurs.hauteur).toBe(sansJoueurs.hauteur);
 
     // Le réglage suit sur le Classement.
     await page.goto("classement.html");

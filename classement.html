@@ -1260,7 +1260,7 @@
       return {
         rencontres: rencontres,
         clubs: clubsJson.data,
-        joueurs: compo ? compositions(clubsJson.data, compo.engagements, compo.licencies) : null,
+        joueurs: compo && !compo.incomplet ? compositions(clubsJson.data, compo.engagements, compo.licencies) : null,
         joueursIncomplets: !!(compo && compo.incomplet),
         tailleCompo: compo ? compo.engagements.length + "/" + compo.licencies.length : "",
         fetchedAt: Date.now(),
@@ -1283,12 +1283,17 @@
   // charger : ils ne s'affichent qu'à la demande du visiteur. Le réglage
   // est gardé sur l'appareil, commun à l'accueil et au Classement.
   var JOUEURS_KEY = "lidfpb_joueurs_v1";
+  // Le choix de la visite, pour qu'il tienne quand le stockage est refusé
+  // (navigation privée stricte) : null tant que le visiteur n'a rien touché.
+  var joueursVisite = null;
 
   function lireJoueurs() {
+    if (joueursVisite !== null) return joueursVisite;
     try { return localStorage.getItem(JOUEURS_KEY) === "1"; } catch (e) { return false; /* stockage indisponible : noms masqués */ }
   }
 
   function ecrireJoueurs(oui) {
+    joueursVisite = oui;
     try {
       if (oui) localStorage.setItem(JOUEURS_KEY, "1");
       else localStorage.removeItem(JOUEURS_KEY);
@@ -1330,7 +1335,8 @@
     var parEquipe = {};
     (engagements || []).forEach(function (e) {
       var cle = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
-      parEquipe[cle] = LICENCE_COLUMNS.map(function (col) { return normalizeLicence(e[col]); }).filter(Boolean);
+      var licences = LICENCE_COLUMNS.map(function (col) { return normalizeLicence(e[col]); }).filter(Boolean);
+      if (licences.length) parEquipe[cle] = licences;   // une ligne vide n'efface pas une composition
     });
     return function (club, categorie, equipe) {
       var numero = numeroClub[String(club || "").trim()];
@@ -1341,8 +1347,9 @@
   }
 
   // Les compositions sont un bonus d'affichage : sans le réglage, rien n'est
-  // chargé ; un échec laisse la page s'afficher sans les noms, et le signale
-  // pour qu'un cache incomplet soit complété par le réseau.
+  // chargé ; un échec laisse la page s'afficher sans les noms (plutôt que
+  // de dire chaque composition « non déclarée »), et le signale pour qu'un
+  // cache incomplet soit complété par le réseau.
   function chargerCompositions(source) {
     if (!lireJoueurs()) return Promise.resolve(null);
     var manque = false;
@@ -2595,6 +2602,8 @@
     return formatTime(d.getTime());
   }
 
+  var dernierTour = 0;
+
   function run(forceRefresh) {
     var lastSyncText = document.getElementById("lastSyncText");
     var bannerSlot = document.getElementById("banner-slot");
@@ -2620,8 +2629,12 @@
     var rendu = false;
     var signatureRendue = null;
     var sansJoueurs = false;
+    // Seul le dernier chargement lancé affiche : un toucher rapide sur le
+    // réglage des joueurs ne doit pas être défait par une réponse en retard.
+    var tour = ++dernierTour;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
+      if (tour !== dernierTour) return;
       afficher(data);
       rendu = true;
       signatureRendue = signature(data);
@@ -2631,16 +2644,19 @@
     }).then(function () {
       // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit et
       //    qu'il a les joueurs demandés.
+      if (tour !== dernierTour) return;
       if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
       var skeletonTimer = rendu ? null : setTimeout(function () { renderSkeleton(results); }, 150);
 
       return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
+        if (tour !== dernierTour) return;
         if (!rendu || signature(data) !== signatureRendue) afficher(data);
         else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       }).catch(function (err) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
+        if (tour !== dernierTour) return;
         var message = err && err.message ? err.message : String(err);
         if (rendu) {
           renderBanner(bannerSlot, "warn", "Données non rafraîchies",
