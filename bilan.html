@@ -1118,8 +1118,10 @@
 
   // Rencontres et clubs, plus les compositions pour les joueurs entre
   // crochets : mêmes demandes que le Classement, donc le même cache.
-  function fetchLiveData(source) {
-    return Promise.all([source(buildUrl("rencontres", {})), source(buildUrl("clubs", {})), chargerCompositions(source)]).then(function (r) {
+  // sourceCompo : la source des compositions, à part pour que la date
+  // affichée en cas d'échec reste celle des scores.
+  function fetchLiveData(source, sourceCompo) {
+    return Promise.all([source(buildUrl("rencontres", {})), source(buildUrl("clubs", {})), chargerCompositions(sourceCompo || source)]).then(function (r) {
       var compo = r[2];
       return {
         rencontres: r[0].data.filter(function (row) {
@@ -1984,6 +1986,12 @@
 
   function lienBilan() { return location.origin + location.pathname; }
 
+  // Le nom d'une série au partage : la spécialité en plus quand il y en a
+  // plusieurs, sans quoi deux « Série 1 » se confondraient.
+  function nomSerie(ctx, serie) {
+    return (ctx.plusieursSpecs ? (SPEC_LABELS[serie.spec] || ("Spécialité " + serie.spec)) + " · " : "") + serie.label;
+  }
+
   // Ce que l'image et le texte retiennent : l'état des poules, les chiffres,
   // quelques trophées toutes séries et le tableau des quarts de chaque série.
   function preparerPartage(ctx, lastSync) {
@@ -2009,8 +2017,12 @@
     lignesTrophees.forEach(function (l) { texte.push(l[0] + " " + l[1] + " : " + l[2]); });
     ctx.liste.forEach(function (serie) {
       texte.push("");
-      texte.push("*" + serie.label + " · 1/4 de finale" + (serie.restantes.length ? " (prévision)" : "") + "*");
-      if (!serie.tableau.quarts) { texte.push("Pas de tableau des quarts pour cette série."); return; }
+      if (!serie.tableau.quarts) {
+        texte.push("*" + nomSerie(ctx, serie) + "*");
+        texte.push("Pas de tableau des quarts pour cette série.");
+        return;
+      }
+      texte.push("*" + nomSerie(ctx, serie) + " · 1/4 de finale" + (serie.restantes.length ? " (prévision)" : "") + "*");
       serie.tableau.quarts.forEach(function (q) {
         texte.push("Q" + q.num + " " + q.cotes.map(function (c) {
           return ordinal(c.rang) + " P" + c.poule + " " + (c.team ? c.team.label : "à déterminer");
@@ -2021,18 +2033,33 @@
     texte.push("Tout le bilan : " + lienBilan());
 
     var partage = { nom: "lidfpb-bilan-des-poules.png", texte: texte.join("\n"), ctx: ctx, statut: statut, trophees: lignesTrophees, lastSync: lastSync };
-    // L'image est prête avant le toucher : la feuille de partage du téléphone
-    // doit s'ouvrir dans le geste même. Pas encore prête : le texte part seul.
-    var pret = document.fonts && document.fonts.load ? document.fonts.load(police(60, 800)) : Promise.resolve();
-    pret.catch(function () {}).then(function () {
-      if (dernierPartage !== partage) return;
-      var toile = dessinerBilan(partage);
-      if (toile.toBlob) toile.toBlob(function (blob) {
-        if (blob) partage.fichier = new File([blob], partage.nom, { type: "image/png" });
-      }, "image/png");
-    });
+    dessinerPlusTard(partage);
     return partage;
   }
+
+  // L'image est prête avant le toucher : la feuille de partage du téléphone
+  // doit s'ouvrir dans le geste même. Pas encore prête : le texte part seul.
+  // Dessinée un peu après l'affichage pour ne pas le retarder, une seule fois
+  // par jeu de données, et de nouveau quand le thème change : elle prend les
+  // couleurs du thème à l'écran.
+  var minuterieImage = null;
+  function dessinerPlusTard(partage) {
+    clearTimeout(minuterieImage);
+    minuterieImage = setTimeout(function () {
+      var pret = document.fonts && document.fonts.load ? document.fonts.load(police(60, 800)) : Promise.resolve();
+      pret.catch(function () {}).then(function () {
+        if (dernierPartage !== partage) return;
+        var toile = dessinerBilan(partage);
+        if (toile.toBlob) toile.toBlob(function (blob) {
+          if (blob && dernierPartage === partage) partage.fichier = new File([blob], partage.nom, { type: "image/png" });
+        }, "image/png");
+      });
+    }, 300);
+  }
+
+  document.addEventListener("lidfpb-theme", function () {
+    if (dernierPartage) dessinerPlusTard(dernierPartage);
+  });
 
   // L'image : 1080 px de large, dessinée dans le navigateur aux couleurs de la
   // page, sur une toile haute recoupée à la hauteur utile.
@@ -2106,19 +2133,14 @@
       y += 22;
       var cat = serie.cat === "2" ? "serie2" : "serie1";
       var milieu = y + 36;
-      var wS = pastille(g, M, milieu, serie.label, 28, c[cat + "-bg"], c[cat + "-text"], c[cat + "-border"]);
+      var wS = pastille(g, M, milieu, nomSerie(ctx, serie), 28, c[cat + "-bg"], c[cat + "-text"], c[cat + "-border"]);
       g.textBaseline = "middle"; g.fillStyle = c.text; g.font = police(36, 800);
-      g.fillText("1/4 de finale", M + wS + 18, milieu + 2);
+      g.fillText(serie.tableau.quarts ? "1/4 de finale" : "Pas de tableau des quarts", M + wS + 18, milieu + 2);
       var fini = !serie.restantes.length;
       pastille(g, W - M, milieu, fini ? "Poules terminées" : "Prévision", 24,
                fini ? c["win-bg"] : c["warn-bg"], fini ? c["win-text"] : c["warn-text"], null, true);
       y += 88;
-      if (!serie.tableau.quarts) {
-        g.textBaseline = "alphabetic"; g.fillStyle = c.muted; g.font = police(28, 600);
-        g.fillText("Pas de tableau des quarts pour cette série.", M, y + 30);
-        y += 60;
-        return;
-      }
+      if (!serie.tableau.quarts) return;
       var teintes = teintesPoules(serie.teams);
       serie.tableau.quarts.forEach(function (q, i) {
         if (i === 2) { g.fillStyle = c.text; g.fillRect(M, y - 6, W - 2 * M, 3); }
@@ -2195,18 +2217,24 @@
       if (!p) return;
       var fichiers = p.fichier ? [p.fichier] : null;
       info.textContent = "";
-      if (navigator.share) {
+      // Sans feuille de partage, ou une feuille qui refuse l'image : l'image
+      // est téléchargée et le texte copié, plutôt que l'image perdue.
+      function aLaMain() {
+        if (fichiers) telecharger(p.fichier);
+        copier(p.texte).then(function () { info.textContent = fichiers ? "Texte copié, image téléchargée" : "Texte copié, à coller"; },
+                             function () { info.textContent = fichiers ? "Image téléchargée" : "Copie impossible sur ce navigateur"; });
+      }
+      var avecImage = fichiers && navigator.canShare && navigator.canShare({ files: fichiers });
+      if (navigator.share && (!fichiers || avecImage)) {
         var donnees = { text: p.texte };
-        if (fichiers && navigator.canShare && navigator.canShare({ files: fichiers })) donnees.files = fichiers;
+        if (avecImage) donnees.files = fichiers;
         navigator.share(donnees).catch(function (e) {
           if (e && e.name === "AbortError") return;   // partage annulé
-          copier(p.texte).then(function () { info.textContent = "Texte copié"; });
+          aLaMain();
         });
         return;
       }
-      if (fichiers) telecharger(p.fichier);
-      copier(p.texte).then(function () { info.textContent = fichiers ? "Texte copié, image téléchargée" : "Texte copié, à coller"; },
-                           function () { info.textContent = fichiers ? "Image téléchargée" : "Copie impossible sur ce navigateur"; });
+      aLaMain();
     });
     zone.appendChild(bouton);
     zone.appendChild(info);
@@ -2346,7 +2374,7 @@
     var compoCache = null;
     var tour = ++dernierTour;
 
-    fetchLiveData(viaCache(holder)).then(function (data) {
+    fetchLiveData(viaCache(holder), viaCache({})).then(function (data) {
       if (tour !== dernierTour) return;
       afficher(data);
       rendu = true;

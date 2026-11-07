@@ -942,6 +942,21 @@ test.describe("Bilan de la phase de poules", () => {
     expect(p.texte).toContain("Q1 1er P1 Alpha (éq. 1) – 4e P2 India (éq. 1)");
     expect(p.texte).toMatch(/Tout le bilan : http.*\/bilan\.html$/);
     expect(p.texte).not.toContain("Joueur");
+
+    // Thème changé à l'écran : l'image suit, fond clair puis sombre.
+    const fondImage = () => page.evaluate(async () => {
+      const img = await createImageBitmap(window.__partage.files[0]);
+      const t = new OffscreenCanvas(img.width, img.height).getContext("2d");
+      t.drawImage(img, 0, 0);
+      const [r, g, b] = t.getImageData(20, img.height - 10, 1, 1).data;
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    });
+    expect(await fondImage()).toBeGreaterThan(0.8);
+    await page.locator("#themeBtn").click();
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager le bilan" }).click();
+      return fondImage();
+    }).toBeLessThan(0.2);
   });
 
   test("sans feuille de partage, le texte est copié et l'image téléchargée", async ({ page, context }) => {
