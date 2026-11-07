@@ -43,7 +43,8 @@ const PAGES = [
   { nom: "Parties", url: "programme.html", contenu: "#results" },
   { nom: "Classement", url: "classement.html", contenu: "#results" },
   { nom: "Créneaux", url: "creneaux.html", contenu: "#results" },
-  { nom: "Report", url: "report.html?oid=" + oidAVenir, contenu: "#targetCard" }
+  { nom: "Report", url: "report.html?oid=" + oidAVenir, contenu: "#targetCard" },
+  { nom: "Bilan", url: "bilan.html", contenu: "#results" }
 ];
 
 for (const p of PAGES) {
@@ -548,7 +549,7 @@ test("Tout lien partagé montre l'aperçu de Découvrir et ouvre sa propre page"
   };
   const reference = balises(await readFile("decouvrir.html", "utf8"));
   expect(reference.image).toMatch(/og-decouvrir\.png$/);
-  for (const p of ["index", "equipe", "equipes", "programme", "classement", "creneaux", "report", "compteur"]) {
+  for (const p of ["index", "equipe", "equipes", "programme", "classement", "creneaux", "report", "compteur", "bilan"]) {
     const html = await readFile(p + ".html", "utf8");
     expect(balises(html), p).toEqual(reference);
     expect(html, p + " ne doit pas renvoyer l'aperçu vers Découvrir").not.toContain('property="og:url"');
@@ -839,6 +840,176 @@ test.describe("Classement : quarts et simulation", () => {
     await sim.locator(".sim-actions").first().getByRole("button", { name: "Tout effacer" }).click();
     await expect(page.locator(".sim-stats-msg")).toHaveCount(0);
     await expect(page.locator("#sim-slot")).toBeEmpty();
+  });
+});
+
+// Spec bilan : le bilan de la phase de poules, ouvert depuis le Classement
+// seulement, hors barre d'onglets.
+test.describe("Bilan de la phase de poules", () => {
+  test("ouvert depuis le Classement : chiffres, mon équipe, trophées, poules, tableau final", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.getByRole("link", { name: /Bilan de la phase de poules/ }).click();
+    await expect(page).toHaveURL(/bilan\.html$/);
+    await attendreChargement(page);
+
+    // Pas d'onglet de plus : le Classement reste l'onglet courant.
+    await expect(page.locator(".tab-bar a")).toHaveCount(5);
+    await expect(page.locator(".tab-bar a.active")).toHaveText("Classement");
+    await expect(page.getByRole("link", { name: "Classement" }).first()).toHaveAttribute("href", "classement.html");
+
+    // Données fictives : 32 parties jouées, des parties de poule restantes.
+    const hero = page.locator(".bilan-hero");
+    await expect(hero.locator(".bilan-titre")).toHaveText("Dernière ligne droite");
+    await expect(hero).toContainText("bilan provisoire");
+    // Parties passées sans score : des résultats attendus, pas des parties à jouer.
+    await expect(hero.locator(".bilan-sous")).toContainText("Encore 20 parties de poule à jouer");
+    await expect(hero.locator(".bilan-sous")).toContainText("et 8 scores pas encore publiés");
+    await expect(hero.locator(".bilan-tuile b").first()).toHaveText("32");
+
+    // Charlie, suivie : 4e de sa poule pour l'instant, en Q4 contre le 1er de la poule 2.
+    const mien = page.locator(".mien-ligne");
+    await expect(mien).toHaveCount(1);
+    await expect(mien).toContainText("Charlie (éq. 1)");
+    await expect(mien.locator(".mien-verdict")).toHaveText("4e de la poule 1 · en quarts pour l'instant");
+    await expect(mien).toContainText("Quart Q4 contre Golf (éq. 1)");
+    // Les joueurs entre crochets, à côté du nom de l'équipe.
+    await expect(mien.locator("b")).toHaveText(/^Charlie \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
+
+    // D'abord le bilan global : trophées toutes séries, la série dite après l'équipe.
+    const global = page.locator(".bilan-global");
+    await expect(global.locator(".trophees .bilan-carte-titre")).toHaveText("Les trophées · toutes séries");
+    await expect(global.locator(".trophee").first()).toContainText("Meilleur bilan, toutes séries");
+    await expect(global.locator(".trophee").first().locator(".trophee-nom")).toContainText(/Alpha \(éq\. 1\) · Série \d \[Ane/);
+    // Puis chaque série, ses propres chiffres en tête.
+    await expect(page.locator(".serie-bloc").first().locator(".bilan-tuiles.clair .bilan-tuile")).toHaveCount(4);
+
+    // Série 1 : trophées, deux poules, tableau final.
+    const serie = page.locator(".serie-bloc").first();
+    await expect(page.locator(".serie-bloc")).toHaveCount(2);
+    await expect(serie.locator(".trophee").first()).toContainText("Meilleur bilan de la série");
+    await expect(serie.locator(".trophee").first()).toContainText("Alpha (éq. 1)");
+    await expect(serie.locator(".trophee", { hasText: "Plus large victoire" })).toContainText("40–18");
+    // Meilleure attaque : le plus gros goal average cumulé (Alpha, +51).
+    await expect(serie.locator(".trophee", { hasText: "Meilleure attaque" }).locator(".trophee-valeur"))
+      .toHaveText("goal average +51 cumulé · 120 marqués, 69 encaissés");
+    await expect(serie.locator(".poule-card:not(.finales-card)")).toHaveCount(2);
+    const poule1 = serie.locator(".poule-card").first();
+    await expect(poule1.locator(".rank-row")).toHaveCount(6);
+    await expect(poule1.locator(".rank-row.suivie .rank-team")).toHaveText(/^Charlie \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
+    await expect(poule1.locator(".cut-line")).toHaveText("En quarts pour l'instant");
+    // Les 15 parties de la poule, repliées puis dépliées.
+    const resultats = poule1.locator("details.resultats");
+    await expect(resultats.locator("summary")).toHaveText("Les 15 parties de la poule");
+    await expect(resultats.locator(".resultat").first()).toBeHidden();
+    await resultats.locator("summary").click();
+    await expect(resultats.locator(".resultat")).toHaveCount(15);
+    await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "à jouer" })).not.toHaveCount(0);
+    await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "sans score" })).toHaveCount(2);
+
+    // Le tableau final est celui du Classement, les joueurs en plus.
+    const finales = serie.locator(".finales-card");
+    await expect(finales.locator(".statut")).toHaveText("Prévision");
+    await expect(finales.locator(".quart-nom .joueurs")).toHaveCount(8);
+    const sansJoueurs = (textes) => textes.map((t) => t.replace(/ \[[^\]]*\]/g, ""));
+    const quartsBilan = sansJoueurs(await finales.locator(".quart-row").allTextContents());
+    expect(quartsBilan).toHaveLength(4);
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    expect(await page.locator(".finales-card").first().locator(".quart-row").allTextContents()).toEqual(quartsBilan);
+  });
+
+  test("Partager le bilan : une image PNG et un texte pour WhatsApp, sans nom de joueur", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files);
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await expect(page.locator(".joueurs").first()).toBeVisible();
+    // L'image se dessine juste après l'affichage ; un toucher trop tôt
+    // enverrait le texte seul.
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager le bilan" }).click();
+      return page.evaluate(() => (window.__partage && window.__partage.files || []).length);
+    }).toBe(1);
+    const p = await page.evaluate(async () => {
+      const f = window.__partage.files[0];
+      const img = await createImageBitmap(f);
+      return { nom: f.name, type: f.type, largeur: img.width, hauteur: img.height, texte: window.__partage.text };
+    });
+    expect(p).toMatchObject({ nom: "lidfpb-bilan-des-poules.png", type: "image/png", largeur: 1080 });
+    expect(p.hauteur).toBeGreaterThan(1200);
+    expect(p.texte).toMatch(/^\*🏁 Bilan de la phase de poules/);
+    expect(p.texte).toContain("*Série 1 · 1/4 de finale (prévision)*");
+    expect(p.texte).toContain("Q1 1er P1 Alpha (éq. 1) – 4e P2 India (éq. 1)");
+    expect(p.texte).toMatch(/Tout le bilan : http.*\/bilan\.html$/);
+    expect(p.texte).not.toContain("Joueur");
+
+    // Thème changé à l'écran : l'image suit, fond clair puis sombre.
+    const fondImage = () => page.evaluate(async () => {
+      const img = await createImageBitmap(window.__partage.files[0]);
+      const t = new OffscreenCanvas(img.width, img.height).getContext("2d");
+      t.drawImage(img, 0, 0);
+      const [r, g, b] = t.getImageData(20, img.height - 10, 1, 1).data;
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    });
+    expect(await fondImage()).toBeGreaterThan(0.8);
+    await page.locator("#themeBtn").click();
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager le bilan" }).click();
+      return fondImage();
+    }).toBeLessThan(0.2);
+  });
+
+  test("sans feuille de partage, le texte est copié et l'image téléchargée", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await page.waitForTimeout(500);   // le temps de dessiner l'image
+    const telechargement = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Partager le bilan" }).click();
+    expect((await telechargement).suggestedFilename()).toBe("lidfpb-bilan-des-poules.png");
+    await expect(page.locator(".partage-ok")).toHaveText("Texte copié, image téléchargée");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^\*🏁 Bilan de la phase de poules/);
+  });
+
+  test("toutes les parties de poule jouées : verdict des poules et tableau définitif", async ({ page }) => {
+    // Toutes jouées, dont un forfait au score non chiffré : hors des chiffres, mais affiché.
+    const finies = tables.rencontres.map((r) => r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "33" } : r)
+      .map((r) => r.oid === "1" ? { ...r, score_cr: "F", score_cv: "40" } : r);
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? finies : (tables[table] || []), lastSync: new Date().toISOString() })
+      });
+    });
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await expect(page.locator(".bilan-titre")).toHaveText("Les poules ont rendu leur verdict");
+    await expect(page.locator(".bilan-hero")).toContainText("59 parties jouées, 16 équipes qualifiées");
+    const resultats = page.locator("details.resultats").first();
+    await resultats.locator("summary").click();
+    await expect(resultats.locator(".resultat")).toHaveCount(15);
+    await expect(resultats.locator(".resultat-score", { hasText: "F–40" })).toHaveCount(1);
+    await expect(page.locator(".finales-card .statut")).toHaveText(["Poules terminées", "Poules terminées"]);
+    await expect(page.locator(".poule-card:not(.finales-card) .statut").first()).toHaveText("Terminée");
+    await expect(page.locator(".cut-line").first()).toHaveText("Qualifiés pour les quarts");
+    await expect(page.locator(".mien-verdict")).toContainText(/qualifiée pour les quarts|pas de quart cette saison/);
+  });
+
+  test("sans données, rien n'est affiché qu'un bandeau d'erreur", async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => route.fulfill({ status: 500, body: "" }));
+    page.erreurs = [];
+    page.removeAllListeners("console");
+    await page.goto("bilan.html");
+    await expect(page.locator(".banner.error")).toContainText("Impossible d'afficher le bilan");
+    await expect(page.locator("#lastSyncText")).toHaveText("échec du chargement");
+    await expect(page.locator(".bilan-hero")).toHaveCount(0);
   });
 });
 
@@ -1656,7 +1827,7 @@ async function auditSombre(page, exceptionsBlanc = []) {
 }
 
 test.describe("Thème choisi sur le site", () => {
-  const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "decouvrir", "404"];
+  const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "bilan", "decouvrir", "404"];
   const fond = (page) => page.evaluate(() => {
     const [r, g, b] = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
@@ -1764,8 +1935,8 @@ test.describe("Thème sombre", () => {
     return Object.entries(valeurs).filter(([, v]) => Object.keys(v).length > 1);
   }
 
-  test("même palette sombre dans les sept pages de l'application, et entre Découvrir et la 404", async () => {
-    expect(await variablesSombres(["index", "equipe", "programme", "classement", "creneaux", "report", "compteur"]),
+  test("même palette sombre dans les pages de l'application, et entre Découvrir et la 404", async () => {
+    expect(await variablesSombres(["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "bilan"]),
       "variables sombres aux valeurs différentes selon la page").toEqual([]);
     expect(await variablesSombres(["decouvrir", "404"]),
       "variables sombres aux valeurs différentes entre Découvrir et la 404").toEqual([]);
