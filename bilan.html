@@ -1631,8 +1631,12 @@
       ajouter("🏆", global ? "Meilleur bilan, toutes séries" : "Meilleur bilan de la série", [leader],
         fmtMoyenne(leader.moyenne) + " pts par partie · " + leader.gagnees + " G · " + leader.perdues + " P · 1re de la poule " + leader.poule);
     }
-    var attaque = meilleure(classees, function (t) { return t.marques / t.jouees; });
-    if (attaque) ajouter("⚔️", "Meilleure attaque", [attaque.team], fmt1(attaque.valeur) + " points marqués par partie");
+    // Meilleure attaque : le plus gros goal average cumulé, points marqués
+    // moins points encaissés sur toute la poule. Une moyenne de points
+    // marqués ne départage rien : le vainqueur marque toujours 40.
+    var attaque = meilleure(classees, function (t) { return t.ga; });
+    if (attaque) ajouter("⚔️", "Meilleure attaque", [attaque.team],
+      "goal average " + fmtSigne(attaque.valeur) + " cumulé · " + attaque.team.marques + " marqués, " + attaque.team.encaisses + " encaissés");
     var defense = meilleure(classees, function (t) { return t.encaisses / t.jouees; }, true);
     if (defense) ajouter("🛡️", "Meilleure défense", [defense.team], fmt1(defense.valeur) + " points encaissés par partie");
 

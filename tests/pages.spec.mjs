@@ -890,6 +890,9 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(serie.locator(".trophee").first()).toContainText("Meilleur bilan de la série");
     await expect(serie.locator(".trophee").first()).toContainText("Alpha (éq. 1)");
     await expect(serie.locator(".trophee", { hasText: "Plus large victoire" })).toContainText("40–18");
+    // Meilleure attaque : le plus gros goal average cumulé (Alpha, +51).
+    await expect(serie.locator(".trophee", { hasText: "Meilleure attaque" }).locator(".trophee-valeur"))
+      .toHaveText("goal average +51 cumulé · 120 marqués, 69 encaissés");
     await expect(serie.locator(".poule-card:not(.finales-card)")).toHaveCount(2);
     const poule1 = serie.locator(".poule-card").first();
     await expect(poule1.locator(".rank-row")).toHaveCount(6);
