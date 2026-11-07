@@ -57,12 +57,12 @@ En découpage par poule, une carte de plus de quatre équipes SHALL porter, sous
 - **WHEN** le visiteur regarde une poule de quatre équipes
 - **THEN** aucun trait n'apparaît
 
-### Requirement: Joueurs des équipes à la demande
-Le bloc Filtres SHALL proposer, sous « Affichage », une pastille « Joueurs des équipes », éteinte par défaut. Allumée, chaque ligne d'équipe porte sous son détail les noms de ses joueurs, tels que déclarés à la ligue (composition de l'engagement), ou « Composition non déclarée à la ligue ». Le réglage ne change aucun rang ; il est gardé sur l'appareil (`lidfpb_joueurs_v1`) et commun avec l'accueil et Parties. Pastille éteinte, les tables des compositions ne sont pas chargées. Replié, le bloc Filtres le résume par « Avec les joueurs ».
+### Requirement: Joueurs des équipes
+Chaque ligne d'équipe SHALL porter sous son détail les noms de ses joueurs, tels que déclarés à la ligue (composition de l'engagement), ou « Composition non déclarée à la ligue ». Il n'y a aucun réglage : les noms sont toujours affichés. Ils ne changent aucun rang. Si les compositions ne peuvent être chargées, les lignes s'affichent sans noms plutôt que de les dire non déclarées.
 
-#### Scenario: Afficher les joueurs
-- **WHEN** le visiteur allume « Joueurs des équipes »
-- **THEN** sous la ligne d'Alpha (éq. 1) apparaissent les noms de ses joueurs, et l'accueil s'ouvrira lui aussi avec les joueurs
+#### Scenario: Équipe avec composition
+- **WHEN** un visiteur ouvre le Classement
+- **THEN** sous la ligne d'Alpha (éq. 1) apparaissent les noms de ses joueurs
 
 #### Scenario: Équipe sans composition
 - **WHEN** une équipe n'a déclaré aucune composition à la ligue

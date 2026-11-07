@@ -1070,10 +1070,6 @@
       <button type="button" class="filter-chip" data-mode="poule" data-recap-defaut>Par poule</button>
       <button type="button" class="filter-chip" data-mode="general" data-recap="Classement général">Général</button>
     </div>
-    <div class="filter-subtitle">Affichage</div>
-    <div class="filter-group" id="filterJoueurs" data-recap-bascule>
-      <button type="button" class="filter-chip" aria-pressed="false" data-recap="Avec les joueurs">Joueurs des équipes</button>
-    </div>
     <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (chiffre de droite), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
     </div>
   </div>
@@ -1085,7 +1081,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.07</p>
+    <p>Version 2026.11.07.2</p>
   </footer>
 </main>
 
@@ -1279,26 +1275,9 @@
   // ---------------------------------------------------------------
   // Joueurs des équipes
   // ---------------------------------------------------------------
-  // Les noms alourdissent la lecture et coûtent deux tables de plus à
-  // charger : ils ne s'affichent qu'à la demande du visiteur. Le réglage
-  // est gardé sur l'appareil, commun à l'accueil et au Classement.
-  var JOUEURS_KEY = "lidfpb_joueurs_v1";
-  // Le choix de la visite, pour qu'il tienne quand le stockage est refusé
-  // (navigation privée stricte) : null tant que le visiteur n'a rien touché.
-  var joueursVisite = null;
-
-  function lireJoueurs() {
-    if (joueursVisite !== null) return joueursVisite;
-    try { return localStorage.getItem(JOUEURS_KEY) === "1"; } catch (e) { return false; /* stockage indisponible : noms masqués */ }
-  }
-
-  function ecrireJoueurs(oui) {
-    joueursVisite = oui;
-    try {
-      if (oui) localStorage.setItem(JOUEURS_KEY, "1");
-      else localStorage.removeItem(JOUEURS_KEY);
-    } catch (e) { /* pas bloquant : le réglage vaut pour la visite */ }
-  }
+  // Les joueurs de chaque équipe s'affichent sous sa ligne, toujours. Deux
+  // tables de plus à charger, mises en cache comme les autres et partagées
+  // avec l'accueil, Parties et Mes équipes.
 
   // Les en-têtes exportées par le site source contiennent littéralement
   // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite via
@@ -1346,12 +1325,11 @@
     };
   }
 
-  // Les compositions sont un bonus d'affichage : sans le réglage, rien n'est
-  // chargé ; un échec laisse la page s'afficher sans les noms (plutôt que
-  // de dire chaque composition « non déclarée »), et le signale pour qu'un
-  // cache incomplet soit complété par le réseau.
+  // Les compositions sont un bonus d'affichage : un échec laisse la page
+  // s'afficher sans les noms (plutôt que de dire chaque composition « non
+  // déclarée »), et le signale pour qu'un cache incomplet soit complété par
+  // le réseau.
   function chargerCompositions(source) {
-    if (!lireJoueurs()) return Promise.resolve(null);
     var manque = false;
     function table(nom) {
       return source(buildUrl(nom, {})).catch(function () { manque = true; return { data: [] }; });
@@ -1573,7 +1551,7 @@
       detail = "aucune partie jouée";
     }
     main.appendChild(el("div", { class: "rank-detail", text: detail }));
-    // Les joueurs, quand le visiteur les a demandés (filtre « Joueurs des équipes »).
+    // Les joueurs de l'équipe, tels que déclarés à la ligue.
     if (lastData && lastData.joueurs) {
       var noms = lastData.joueurs(team.clubCode, team.cat, team.numero);
       main.appendChild(el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus"), text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
@@ -2699,31 +2677,6 @@
       });
     });
 
-    // Réglage commun avec l'accueil, gardé à part des filtres de la page. Le
-    // toucher recharge : depuis le cache s'il a déjà les compositions, sinon
-    // par le réseau.
-    var chipJoueurs = document.querySelector("#filterJoueurs .filter-chip");
-    function majChipJoueurs() {
-      var oui = lireJoueurs();
-      chipJoueurs.classList.toggle("active", oui);
-      chipJoueurs.setAttribute("aria-pressed", String(oui));
-    }
-    majChipJoueurs();
-    chipJoueurs.addEventListener("click", function () {
-      ecrireJoueurs(!lireJoueurs());
-      majChipJoueurs();
-      run(false);
-    });
-    // Réglage commun : changé sur l'accueil ou Parties, il s'applique au
-    // retour sur la page (cache de navigation) et dans un autre onglet.
-    function relireJoueurs() {
-      var avant = lireJoueurs();
-      joueursVisite = null;
-      majChipJoueurs();
-      if (lireJoueurs() !== avant) run(false);
-    }
-    window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
-    window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });

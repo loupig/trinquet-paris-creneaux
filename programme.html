@@ -580,11 +580,8 @@
     font-size: 12px;
     color: var(--muted);
   }
-  /* Joueurs sous la partie, à la demande : petits et en retrait. */
-  .match-row-joueurs { display: none; margin-top: 2px; font-size: 12px; color: var(--muted); line-height: 1.4; }
-  #results.avec-joueurs .match-row-joueurs { display: block; }
-  .match-row-joueurs .joueurs-vs { font-weight: 700; }
-  .match-row-joueurs .inconnus { font-style: italic; }
+  /* Joueurs entre crochets après chaque équipe, en retrait et sans gras. */
+  .match-row-teams .joueurs { font-weight: 400; color: var(--muted); }
   .match-row-meta .serie-1 { color: var(--serie1-text); font-weight: 700; }
   .match-row-meta .serie-2 { color: var(--serie2-text); font-weight: 700; }
   .match-row-score {
@@ -761,9 +758,6 @@
     <div class="filter-group" id="filterPeriode" data-recap-bascule>
       <button type="button" class="filter-chip" id="chipHidePast" data-recap="Parties à venir">Masquer les parties passées</button>
     </div>
-    <div class="filter-group" id="filterJoueurs" data-recap-bascule>
-      <button type="button" class="filter-chip" id="chipJoueurs" aria-pressed="false" data-recap="Avec les joueurs">Joueurs des équipes</button>
-    </div>
     </div>
   </div>
 
@@ -774,7 +768,7 @@
     <p>Cette page se contente d'afficher le calendrier communiqué par la ligue, elle n'a aucun effet sur le site de la ligue.</p>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.07</p>
+    <p>Version 2026.11.07.2</p>
   </footer>
 </main>
 
@@ -1240,7 +1234,8 @@
         labelVis: labelVis,
         rosterRec: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
         rosterVis: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
-        aDesigner: clubFictif(row.club_rec) || clubFictif(row.club_vis),
+        clubRec: String(row.club_rec || "").trim(),
+        clubVis: String(row.club_vis || "").trim(),
         contactRec: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
         contactVis: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
         lieu: String(row.lieu_renc || "").trim() || LIEU_INCONNU,
@@ -1480,26 +1475,8 @@
   // ---------------------------------------------------------------
   // Joueurs des équipes
   // ---------------------------------------------------------------
-  // Réglage commun avec l'accueil et le Classement, gardé sur l'appareil.
-  // Ici les compositions sont toujours chargées (détail au toucher) : le
-  // réglage ne fait qu'ajouter les noms sous chaque partie.
-  var JOUEURS_KEY = "lidfpb_joueurs_v1";
-  // Le choix de la visite, pour qu'il tienne quand le stockage est refusé
-  // (navigation privée stricte) : null tant que le visiteur n'a rien touché.
-  var joueursVisite = null;
-
-  function lireJoueurs() {
-    if (joueursVisite !== null) return joueursVisite;
-    try { return localStorage.getItem(JOUEURS_KEY) === "1"; } catch (e) { return false; /* stockage indisponible : noms masqués */ }
-  }
-
-  function ecrireJoueurs(oui) {
-    joueursVisite = oui;
-    try {
-      if (oui) localStorage.setItem(JOUEURS_KEY, "1");
-      else localStorage.removeItem(JOUEURS_KEY);
-    } catch (e) { /* pas bloquant : le réglage vaut pour la visite */ }
-  }
+  // Chaque équipe porte entre crochets ses joueurs déclarés à la ligue, comme
+  // sur l'accueil ; le détail au toucher les redonne avec les contacts.
 
   // Les clubs fictifs de la ligue (« Equipe à désigner », CLUB_A_DESIGNER, et
   // les autres codes en 999…), même règle que dans index.html et classement.html.
@@ -1507,21 +1484,22 @@
     return /^9{3,}/.test(String(code || "").trim());
   }
 
-  // « joueurs vs joueurs » sous la partie, comme sur l'accueil, avec le
-  // libellé du détail pour une équipe sans noms. Rien pour une partie dont
-  // aucune composition n'est connue ou dont un adversaire reste à désigner.
-  // La ligne est toujours construite et montrée par la classe de #results :
-  // le réglage n'a pas à redessiner la liste ni à refermer les détails ouverts.
-  function ligneJoueurs(match) {
-    if (match.aDesigner) return null;
-    var rec = match.rosterRec && match.rosterRec.length ? match.rosterRec : null;
-    var vis = match.rosterVis && match.rosterVis.length ? match.rosterVis : null;
-    if (!rec && !vis) return null;
-    var ligne = el("div", { class: "match-row-joueurs" });
-    ligne.appendChild(el("span", { class: rec ? "" : "inconnus", text: rec ? rec.join(", ") : "composition non disponible" }));
-    ligne.appendChild(el("span", { class: "joueurs-vs", text: " vs " }));
-    ligne.appendChild(el("span", { class: vis ? "" : "inconnus", text: vis ? vis.join(", ") : "composition non disponible" }));
-    return ligne;
+  // Les joueurs d'une équipe entre crochets, à la suite de son nom : rien
+  // pour une équipe sans composition connue ou encore à désigner.
+  function crochets(roster, club) {
+    if (clubFictif(club) || !roster || !roster.length) return null;
+    return el("span", { class: "joueurs", text: " [" + roster.join(", ") + "]" });
+  }
+
+  function equipesDe(match) {
+    var equipes = el("div", { class: "match-row-teams" });
+    equipes.appendChild(document.createTextNode(match.labelRec));
+    var rec = crochets(match.rosterRec, match.clubRec);
+    if (rec) equipes.appendChild(rec);
+    equipes.appendChild(document.createTextNode(" vs " + match.labelVis));
+    var vis = crochets(match.rosterVis, match.clubVis);
+    if (vis) equipes.appendChild(vis);
+    return equipes;
   }
 
   function buildMatchRow(match) {
@@ -1530,7 +1508,7 @@
     row.appendChild(el("div", { class: "match-row-time", text: formatHour(match.hour, match.minute) }));
 
     var main = el("div", { class: "match-row-main" });
-    main.appendChild(el("div", { class: "match-row-teams", text: match.teams }));
+    main.appendChild(equipesDe(match));
     var metaParts = [];
     metaParts.push({ text: match.serieLabel, cls: "serie-" + match.serie });
     if (match.meta) metaParts.push({ text: match.meta, cls: null });
@@ -1541,8 +1519,6 @@
       meta.appendChild(el("span", { class: part.cls || "", text: part.text }));
     });
     main.appendChild(meta);
-    var joueurs = ligneJoueurs(match);
-    if (joueurs) main.appendChild(joueurs);
     row.appendChild(main);
 
     if (match.score) row.appendChild(el("div", { class: "match-row-score", text: match.score }));
@@ -1755,23 +1731,6 @@
       rerenderIfLoaded();
     });
 
-    var chipJoueurs = document.getElementById("chipJoueurs");
-    function majChipJoueurs() {
-      var oui = lireJoueurs();
-      chipJoueurs.classList.toggle("active", oui);
-      chipJoueurs.setAttribute("aria-pressed", String(oui));
-      document.getElementById("results").classList.toggle("avec-joueurs", oui);
-    }
-    majChipJoueurs();
-    chipJoueurs.addEventListener("click", function () {
-      ecrireJoueurs(!lireJoueurs());
-      majChipJoueurs();
-    });
-    // Réglage commun : changé sur l'accueil ou le Classement, il s'applique
-    // au retour sur la page (cache de navigation) et dans un autre onglet.
-    function relireJoueurs() { joueursVisite = null; majChipJoueurs(); }
-    window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
-    window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
