@@ -1256,9 +1256,9 @@
       return {
         rencontres: rencontres,
         clubs: clubsJson.data,
-        joueurs: compo && !compo.incomplet ? compositions(clubsJson.data, compo.engagements, compo.licencies) : null,
-        joueursIncomplets: !!(compo && compo.incomplet),
-        tailleCompo: compo ? compo.engagements.length + "/" + compo.licencies.length : "",
+        joueurs: compo.incomplet ? null : compositions(clubsJson.data, compo.engagements, compo.licencies),
+        joueursIncomplets: compo.incomplet,
+        tailleCompo: compo.engagements.length + "/" + compo.licencies.length,
         fetchedAt: Date.now(),
         lastSync: rencontresJson.lastSync || null
       };
@@ -2607,8 +2607,9 @@
     var rendu = false;
     var signatureRendue = null;
     var sansJoueurs = false;
-    // Seul le dernier chargement lancé affiche : un toucher rapide sur le
-    // réglage des joueurs ne doit pas être défait par une réponse en retard.
+    var compoCache = null;
+    // Seul le dernier chargement lancé affiche : deux Rafraîchir rapprochés
+    // ne doivent pas laisser une réponse en retard défaire la plus récente.
     var tour = ++dernierTour;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
@@ -2617,11 +2618,12 @@
       rendu = true;
       signatureRendue = signature(data);
       sansJoueurs = data.joueursIncomplets;
+      if (!sansJoueurs) compoCache = { joueurs: data.joueurs, taille: data.tailleCompo };
     }).catch(function () {
       // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
     }).then(function () {
       // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit et
-      //    qu'il a les joueurs demandés.
+      //    qu'il a les compositions.
       if (tour !== dernierTour) return;
       if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
@@ -2630,6 +2632,12 @@
       return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
         if (tour !== dernierTour) return;
+        // Compositions en échec sur le réseau : celles du cache restent.
+        if (data.joueursIncomplets && compoCache) {
+          data.joueurs = compoCache.joueurs;
+          data.tailleCompo = compoCache.taille;
+          data.joueursIncomplets = false;
+        }
         if (!rendu || signature(data) !== signatureRendue) afficher(data);
         else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       }).catch(function (err) {

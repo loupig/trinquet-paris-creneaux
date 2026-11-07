@@ -475,8 +475,9 @@
   .headline-unit { font-size: 14px; font-weight: 600; color: var(--muted); }
 
   /* --- Ligne d'une partie ---
-     Tronquée : sur l'accueil l'utile est "quand, qui, quelle série" ; le
-     programme, à un toucher du pied du bloc, donne poule et noms complets. */
+     Sur l'accueil l'utile est "quand, qui, quelle série" : sans joueurs, la
+     ligne est tronquée ; avec leurs noms entre crochets, elle passe à la
+     ligne (.avec-joueurs). Le programme donne poule et noms complets. */
   .next-when {
     flex: 0 0 auto;
     font-size: 12px;
@@ -921,9 +922,9 @@
       return {
         rencontres: masquerFinalesPrematurees(rencontres),
         clubs: results[1].data,
-        joueurs: compo && !compo.incomplet ? compositions(results[1].data, compo.engagements, compo.licencies) : null,
-        joueursIncomplets: !!(compo && compo.incomplet),
-        tailleCompo: compo ? compo.engagements.length + "/" + compo.licencies.length : "",
+        joueurs: compo.incomplet ? null : compositions(results[1].data, compo.engagements, compo.licencies),
+        joueursIncomplets: compo.incomplet,
+        tailleCompo: compo.engagements.length + "/" + compo.licencies.length,
         fetchedAt: Date.now(),
         lastSync: results[0].lastSync || null
       };
@@ -1027,7 +1028,7 @@
   }
 
   // Abréviations d'usage, telles que les clubs se nomment entre eux. Elles ne
-  // servent qu'à l'accueil, où chaque partie doit tenir sur une ligne ; le
+  // servent qu'à l'accueil, où le nom de chaque équipe doit rester court ; le
   // programme et les équipes gardent les noms complets de la ligue. Un club
   // absent de cette table garde son nom entier : mieux vaut une ligne tronquée
   // qu'une abréviation inventée. AAESB et PILOTARI sont déjà courts.
@@ -2249,8 +2250,9 @@
     var rendu = false;
     var signatureRendue = null;
     var sansJoueurs = false;
-    // Seul le dernier chargement lancé affiche : un toucher rapide sur le
-    // réglage des joueurs ne doit pas être défait par une réponse en retard.
+    var compoCache = null;
+    // Seul le dernier chargement lancé affiche : deux Rafraîchir rapprochés
+    // ne doivent pas laisser une réponse en retard défaire la plus récente.
     var tour = ++dernierTour;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
@@ -2259,11 +2261,12 @@
       rendu = true;
       signatureRendue = signature(data);
       sansJoueurs = data.joueursIncomplets;
+      if (!sansJoueurs) compoCache = { joueurs: data.joueurs, taille: data.tailleCompo };
     }).catch(function () {
       // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
     }).then(function () {
       // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit et
-      //    qu'il a les joueurs demandés.
+      //    qu'il a les compositions.
       if (tour !== dernierTour) return;
       if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
@@ -2272,6 +2275,12 @@
       return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
         if (tour !== dernierTour) return;
+        // Compositions en échec sur le réseau : celles du cache restent.
+        if (data.joueursIncomplets && compoCache) {
+          data.joueurs = compoCache.joueurs;
+          data.tailleCompo = compoCache.taille;
+          data.joueursIncomplets = false;
+        }
         if (!rendu || signature(data) !== signatureRendue) afficher(data);
         else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       }).catch(function (err) {
