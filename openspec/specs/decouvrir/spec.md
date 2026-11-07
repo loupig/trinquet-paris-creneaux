@@ -24,7 +24,7 @@ La page SHALL rester courte et présenter, dans cet ordre : l'accroche avec l'ap
 La page SHALL rester hors de la barre d'onglets : elle porte sa propre barre du haut, qui marque la section en cours de lecture, et n'appelle pas l'API de la ligue. Elle charge sa police depuis le site, sans requête vers un tiers. Elle est indexable par les moteurs de recherche, avec titre, description, image de partage (`icons/og-decouvrir.png`, 1200 × 630) et questions fréquentes balisées.
 
 ### Requirement: Même aperçu pour tout lien partagé
-Chaque page du site, sauf la page 404, SHALL porter la même description, le même titre de partage et la même image de partage que la page Découvrir. Un lien envoyé vers n'importe quelle page (accueil, Mes équipes, Parties, Classement, Créneaux, Report, Compteur, ancienne adresse `equipes.html`) s'affiche ainsi avec la même carte que `decouvrir.html` dans une messagerie. Ces pages MUST NOT porter `og:url` : le lien partagé ouvre toujours la page envoyée, pas la présentation.
+Chaque page du site, sauf la page 404, SHALL porter la même description, le même titre de partage et la même image de partage que la page Découvrir. Un lien envoyé vers n'importe quelle page (accueil, Mes équipes, Parties, Classement, Bilan, Créneaux, Report, Compteur, ancienne adresse `equipes.html`) s'affiche ainsi avec la même carte que `decouvrir.html` dans une messagerie. Ces pages MUST NOT porter `og:url` : le lien partagé ouvre toujours la page envoyée, pas la présentation.
 
 #### Scenario: Partager le classement
 - **WHEN** un capitaine colle le lien de la page Classement dans le groupe WhatsApp du club

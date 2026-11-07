@@ -13,6 +13,13 @@ L'en-tête de la page SHALL être celui des pages Parties et Mes équipes : titr
 - **WHEN** un visiteur ouvre la page Classement
 - **THEN** l'en-tête ne donne que la source et la synchro, et le bloc Filtres rappelle le barème et le critère de classement
 
+### Requirement: Lien vers le bilan
+Sous le bloc Filtres, la page SHALL porter un lien « Bilan de la phase de poules », seul accès à la page du bilan (spec `bilan`), qui n'a pas d'onglet.
+
+#### Scenario: Ouvrir le bilan
+- **WHEN** un visiteur touche « Bilan de la phase de poules »
+- **THEN** la page du bilan s'ouvre
+
 ### Requirement: Découpage par poule ou général
 La page SHALL proposer deux découpages exclusifs : « Par poule », par défaut, avec une carte par poule, et « Général », qui fusionne en une seule carte les poules d'une même spécialité et d'une même série et les classe selon la même règle. Les cartes sont rangées par spécialité, puis par série, puis par poule. Chaque carte porte la série, son titre (« Poule N » ou « Classement général ») et son nombre d'équipes.
 

@@ -57,7 +57,7 @@ Le site SHALL considérer les quatre premières équipes de chaque poule comme q
 - **THEN** les équipes classées de la 1re à la 4e place sont les qualifiées
 
 ### Requirement: Même classement sur tout le site
-Toute page qui affiche le rang actuel d'une équipe dans sa poule ou s'en sert MUST appliquer ces règles à l'identique : l'accueil (bloc Mes équipes et étiquettes de l'affiche du week-end), la page Mes équipes et la page Classement en découpage par poule. Avec les mêmes données, une équipe a le même rang de poule partout.
+Toute page qui affiche le rang actuel d'une équipe dans sa poule ou s'en sert MUST appliquer ces règles à l'identique : l'accueil (bloc Mes équipes et étiquettes de l'affiche du week-end), la page Mes équipes, la page Classement en découpage par poule et le Bilan. Avec les mêmes données, une équipe a le même rang de poule partout.
 
 #### Scenario: Rang sur trois pages
 - **WHEN** un visiteur compare le rang d'une équipe sur l'accueil, sur sa page Mes équipes et sur la page Classement vue par poule, avec les mêmes données chargées

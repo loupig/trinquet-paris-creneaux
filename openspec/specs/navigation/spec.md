@@ -7,7 +7,7 @@ Fixer ce qui est commun à toutes les pages pour se déplacer dans le site, comm
 ## Requirements
 
 ### Requirement: Barre d'onglets
-La barre d'onglets SHALL compter cinq entrées sur les sept pages du site (la page de redirection `equipes.html` exceptée), dans cet ordre : Accueil, Mes équipes, Parties, Classement, Créneaux, chacune avec une icône et un libellé. L'onglet de la page consultée apparaît comme onglet courant. Les pages Report et Compteur, qui ne sont pas des onglets, n'ont pas d'onglet courant. Sur un écran de 390 px de large, les cinq libellés MUST tenir sans être coupés et sans défilement horizontal, ce qui exclut d'ajouter une sixième entrée.
+La barre d'onglets SHALL compter cinq entrées sur les huit pages du site (la page de redirection `equipes.html` exceptée), dans cet ordre : Accueil, Mes équipes, Parties, Classement, Créneaux, chacune avec une icône et un libellé. L'onglet de la page consultée apparaît comme onglet courant. Les pages Report et Compteur, qui ne sont pas des onglets, n'ont pas d'onglet courant ; le Bilan, ouvert depuis le Classement, a Classement pour onglet courant. Sur un écran de 390 px de large, les cinq libellés MUST tenir sans être coupés et sans défilement horizontal, ce qui exclut d'ajouter une sixième entrée.
 
 #### Scenario: Aller sur la page Mes équipes depuis une autre page
 - **WHEN** un visiteur sur la page Classement touche l'onglet « Mes équipes »
@@ -22,7 +22,7 @@ La barre d'onglets SHALL compter cinq entrées sur les sept pages du site (la pa
 - **THEN** les cinq onglets sont visibles, libellés entiers, sans défilement horizontal
 
 ### Requirement: Boutons flottants du haut
-Chacune des sept pages SHALL porter en haut à gauche un lien « Site de la ligue », qui ouvre le site de la ligue dans un nouvel onglet, et en haut à droite le bouton du compteur de points. Les pages qui chargent les données de la ligue portent aussi, à gauche du compteur, le bouton « Rafraîchir ». Le compteur n'est pas un onglet : sur sa propre page, son bouton apparaît en vert plein, et la page n'a pas de bouton « Rafraîchir ».
+Chacune des huit pages SHALL porter en haut à gauche un lien « Site de la ligue », qui ouvre le site de la ligue dans un nouvel onglet, et en haut à droite le bouton du compteur de points. Les pages qui chargent les données de la ligue portent aussi, à gauche du compteur, le bouton « Rafraîchir ». Le compteur n'est pas un onglet : sur sa propre page, son bouton apparaît en vert plein, et la page n'a pas de bouton « Rafraîchir ».
 
 #### Scenario: Ouvrir le compteur
 - **WHEN** un visiteur touche le bouton calculette depuis n'importe quelle page
@@ -40,7 +40,7 @@ Sur toute page autre que l'accueil, le titre de l'en-tête SHALL être un lien v
 - **THEN** l'accueil s'ouvre
 
 ### Requirement: Retour en haut de page
-Les pages Mes équipes, Parties, Classement, Créneaux et Report SHALL porter un bouton flottant « ↑ » qui ramène en haut de la page.
+Les pages Mes équipes, Parties, Classement, Créneaux, Report et Bilan SHALL porter un bouton flottant « ↑ » qui ramène en haut de la page.
 
 #### Scenario: Longue liste
 - **WHEN** un visiteur a fait défiler la page Parties puis touche « ↑ »
@@ -72,7 +72,7 @@ L'adresse `equipes.html`, ancienne vue « Parties par équipe » retirée, SHALL
 - **THEN** la page Mes équipes s'ouvre, et le bouton Retour ne ramène pas à `equipes.html`
 
 ### Requirement: Version en pied de page
-Chacune des sept pages SHALL indiquer en pied de page sa version, sous la forme « Version AAAA.MM.JJ », ainsi qu'un lien pour signaler un problème.
+Chacune des huit pages SHALL indiquer en pied de page sa version, sous la forme « Version AAAA.MM.JJ », ainsi qu'un lien pour signaler un problème.
 
 #### Scenario: Pied de page
 - **WHEN** un visiteur fait défiler une page jusqu'en bas

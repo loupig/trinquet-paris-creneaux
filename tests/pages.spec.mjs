@@ -43,7 +43,8 @@ const PAGES = [
   { nom: "Parties", url: "programme.html", contenu: "#results" },
   { nom: "Classement", url: "classement.html", contenu: "#results" },
   { nom: "Créneaux", url: "creneaux.html", contenu: "#results" },
-  { nom: "Report", url: "report.html?oid=" + oidAVenir, contenu: "#targetCard" }
+  { nom: "Report", url: "report.html?oid=" + oidAVenir, contenu: "#targetCard" },
+  { nom: "Bilan", url: "bilan.html", contenu: "#results" }
 ];
 
 for (const p of PAGES) {
@@ -548,7 +549,7 @@ test("Tout lien partagé montre l'aperçu de Découvrir et ouvre sa propre page"
   };
   const reference = balises(await readFile("decouvrir.html", "utf8"));
   expect(reference.image).toMatch(/og-decouvrir\.png$/);
-  for (const p of ["index", "equipe", "equipes", "programme", "classement", "creneaux", "report", "compteur"]) {
+  for (const p of ["index", "equipe", "equipes", "programme", "classement", "creneaux", "report", "compteur", "bilan"]) {
     const html = await readFile(p + ".html", "utf8");
     expect(balises(html), p).toEqual(reference);
     expect(html, p + " ne doit pas renvoyer l'aperçu vers Découvrir").not.toContain('property="og:url"');
@@ -839,6 +840,109 @@ test.describe("Classement : quarts et simulation", () => {
     await sim.locator(".sim-actions").first().getByRole("button", { name: "Tout effacer" }).click();
     await expect(page.locator(".sim-stats-msg")).toHaveCount(0);
     await expect(page.locator("#sim-slot")).toBeEmpty();
+  });
+});
+
+// Spec bilan : le bilan de la phase de poules, ouvert depuis le Classement
+// seulement, hors barre d'onglets.
+test.describe("Bilan de la phase de poules", () => {
+  test("ouvert depuis le Classement : chiffres, mon équipe, trophées, poules, tableau final", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.getByRole("link", { name: /Bilan de la phase de poules/ }).click();
+    await expect(page).toHaveURL(/bilan\.html$/);
+    await attendreChargement(page);
+
+    // Pas d'onglet de plus : le Classement reste l'onglet courant.
+    await expect(page.locator(".tab-bar a")).toHaveCount(5);
+    await expect(page.locator(".tab-bar a.active")).toHaveText("Classement");
+    await expect(page.getByRole("link", { name: "Classement" }).first()).toHaveAttribute("href", "classement.html");
+
+    // Données fictives : 32 parties jouées, des parties de poule restantes.
+    const hero = page.locator(".bilan-hero");
+    await expect(hero.locator(".bilan-titre")).toHaveText("Dernière ligne droite");
+    await expect(hero).toContainText("bilan provisoire");
+    await expect(hero.locator(".bilan-tuile b").first()).toHaveText("32");
+
+    // Charlie, suivie : 4e de sa poule pour l'instant, en Q4 contre le 1er de la poule 2.
+    const mien = page.locator(".mien-ligne");
+    await expect(mien).toHaveCount(1);
+    await expect(mien).toContainText("Charlie (éq. 1)");
+    await expect(mien.locator(".mien-verdict")).toHaveText("4e de la poule 1 · en quarts pour l'instant");
+    await expect(mien).toContainText("Quart Q4 contre Golf (éq. 1)");
+
+    // Série 1 : trophées, deux poules, tableau final.
+    const serie = page.locator(".serie-bloc").first();
+    await expect(page.locator(".serie-bloc")).toHaveCount(2);
+    await expect(serie.locator(".trophee").first()).toContainText("Meilleur bilan de la série");
+    await expect(serie.locator(".trophee").first()).toContainText("Alpha (éq. 1)");
+    await expect(serie.locator(".trophee", { hasText: "Plus large victoire" })).toContainText("40–18");
+    await expect(serie.locator(".poule-card:not(.finales-card)")).toHaveCount(2);
+    const poule1 = serie.locator(".poule-card").first();
+    await expect(poule1.locator(".rank-row")).toHaveCount(6);
+    await expect(poule1.locator(".rank-row.suivie")).toContainText("Charlie");
+    await expect(poule1.locator(".cut-line")).toHaveText("En quarts pour l'instant");
+    // Les 15 parties de la poule, repliées puis dépliées.
+    const resultats = poule1.locator("details.resultats");
+    await expect(resultats.locator("summary")).toHaveText("Les 15 parties de la poule");
+    await expect(resultats.locator(".resultat").first()).toBeHidden();
+    await resultats.locator("summary").click();
+    await expect(resultats.locator(".resultat")).toHaveCount(15);
+    await expect(resultats.locator(".resultat-score.a-jouer")).not.toHaveCount(0);
+
+    // Le tableau final est celui du Classement.
+    const finales = serie.locator(".finales-card");
+    await expect(finales.locator(".statut")).toHaveText("Prévision");
+    const quartsBilan = await finales.locator(".quart-row").allTextContents();
+    expect(quartsBilan).toHaveLength(4);
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    expect(await page.locator(".finales-card").first().locator(".quart-row").allTextContents()).toEqual(quartsBilan);
+
+    // Aucun nom de joueur, contrairement au Classement.
+    await expect(page.locator(".rank-joueurs").first()).toBeVisible();
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await expect(page.locator("main")).not.toContainText("Joueur");
+  });
+
+  test("le bilan ne demande ni compositions ni licenciés", async ({ page }) => {
+    const demandes = [];
+    page.on("request", (r) => { if (r.url().includes("script.google.com")) demandes.push(new URL(r.url()).searchParams.get("table")); });
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    expect(new Set(demandes)).toEqual(new Set(["rencontres", "clubs"]));
+  });
+
+  test("toutes les parties de poule jouées : verdict des poules et tableau définitif", async ({ page }) => {
+    const finies = tables.rencontres.map((r) => r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "33" } : r);
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? finies : (tables[table] || []), lastSync: new Date().toISOString() })
+      });
+    });
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await expect(page.locator(".bilan-titre")).toHaveText("Les poules ont rendu leur verdict");
+    await expect(page.locator(".bilan-hero")).toContainText("60 parties jouées, 16 équipes qualifiées");
+    await expect(page.locator(".finales-card .statut")).toHaveText(["Poules terminées", "Poules terminées"]);
+    await expect(page.locator(".poule-card:not(.finales-card) .statut").first()).toHaveText("Terminée");
+    await expect(page.locator(".cut-line").first()).toHaveText("Qualifiés pour les quarts");
+    await expect(page.locator(".mien-verdict")).toContainText(/qualifiée pour les quarts|pas de quart cette saison/);
+  });
+
+  test("sans données, rien n'est affiché qu'un bandeau d'erreur", async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => route.fulfill({ status: 500, body: "" }));
+    page.erreurs = [];
+    page.removeAllListeners("console");
+    await page.goto("bilan.html");
+    await expect(page.locator(".banner.error")).toContainText("Impossible d'afficher le bilan");
+    await expect(page.locator("#lastSyncText")).toHaveText("échec du chargement");
+    await expect(page.locator(".bilan-hero")).toHaveCount(0);
   });
 });
 
@@ -1656,7 +1760,7 @@ async function auditSombre(page, exceptionsBlanc = []) {
 }
 
 test.describe("Thème choisi sur le site", () => {
-  const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "decouvrir", "404"];
+  const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "bilan", "decouvrir", "404"];
   const fond = (page) => page.evaluate(() => {
     const [r, g, b] = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
@@ -1764,8 +1868,8 @@ test.describe("Thème sombre", () => {
     return Object.entries(valeurs).filter(([, v]) => Object.keys(v).length > 1);
   }
 
-  test("même palette sombre dans les sept pages de l'application, et entre Découvrir et la 404", async () => {
-    expect(await variablesSombres(["index", "equipe", "programme", "classement", "creneaux", "report", "compteur"]),
+  test("même palette sombre dans les pages de l'application, et entre Découvrir et la 404", async () => {
+    expect(await variablesSombres(["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "bilan"]),
       "variables sombres aux valeurs différentes selon la page").toEqual([]);
     expect(await variablesSombres(["decouvrir", "404"]),
       "variables sombres aux valeurs différentes entre Découvrir et la 404").toEqual([]);

@@ -9,7 +9,7 @@ compteur de points.
 
 ## Pages
 
-Sept pages statiques indépendantes, plus une page de présentation et une
+Huit pages statiques indépendantes, plus une page de présentation et une
 redirection, sans build ni
 dépendance, chacune avec son CSS et son JS inline. La navigation est celle
 d'une application mobile plutôt que celle d'un site : une barre d'onglets en
@@ -39,6 +39,10 @@ Le comportement de chaque page est décrit par sa spec, dans
   [`classement`](openspec/specs/classement/spec.md) et
   [`calcul-classement`](openspec/specs/calcul-classement/spec.md), la règle
   de classement commune à l'accueil, à Mes équipes et au Classement.
+- [`bilan.html`](bilan.html) — le bilan de la phase de poules : chiffres,
+  trophées, classement et résultats de chaque poule, tableau final. Ouvert
+  depuis le Classement seulement, sans onglet ni nom de joueur. Spec
+  [`bilan`](openspec/specs/bilan/spec.md).
 - [`creneaux.html`](creneaux.html) — les créneaux libres au Trinquet Paris.
   Spec [`creneaux`](openspec/specs/creneaux/spec.md).
 - [`report.html`](report.html) — l'aide au choix d'une date de report, ouverte
@@ -109,7 +113,7 @@ Une couleur nouvelle passe par une variable du `:root` de la page, avec sa
 valeur sombre dans le bloc `@media (prefers-color-scheme: dark)` qui le
 suit, recopiée dans le bloc `:root[data-theme="dark"]` d'après (thème
 sombre choisi sur le site). Une variable sombre garde la même valeur dans chaque page qui la
-porte : le test « même palette sombre » le vérifie pour les sept pages de
+porte : le test « même palette sombre » le vérifie pour les huit pages de
 l'application.
 
 ## Tests
@@ -187,8 +191,8 @@ principaux :
 | `API_CACHE_PREFIX` | toutes sauf le compteur | Préfixe des clés `localStorage` du cache d'appels API |
 | `SERIE_LABELS` | toutes sauf le compteur | Correspondance Catégorie → Série affichée |
 | `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
-| `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement | Barème, phase classée et nombre de qualifiés : à garder identiques dans les trois pages |
-| `QUARTS` | Classement | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
+| `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement, Bilan | Barème, phase classée et nombre de qualifiés : à garder identiques dans les quatre pages |
+| `QUARTS`, `DEMIES` | Classement, Bilan | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
 | `LIEU_VARIANTS` | Créneaux | Libellés `lieu_renc` interrogés côté API pour ce trinquet. L'API ne filtre que par égalité exacte : un nouveau libellé est à ajouter ici |
@@ -201,7 +205,7 @@ Clés `localStorage` :
 | Clé | Page | Contenu |
 |---|---|---|
 | `lidfpb_api_v1:<url>` | toutes sauf le compteur | Cache d'appels API |
-| `lidfpb_mes_equipes_v1` | Mes équipes (lue aussi par l'accueil et le Classement) | Équipes suivies |
+| `lidfpb_mes_equipes_v1` | Mes équipes (lue aussi par l'accueil, le Classement et le Bilan) | Équipes suivies |
 | `lidfpb_equipe_vue_v1` | Mes équipes | Dernière équipe consultée |
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |
@@ -209,7 +213,7 @@ Clés `localStorage` :
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
-| `lidfpb_theme_v1` | toutes (bouton sur les six pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
+| `lidfpb_theme_v1` | toutes (bouton sur les sept pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
 
 ## Temps de chargement
 

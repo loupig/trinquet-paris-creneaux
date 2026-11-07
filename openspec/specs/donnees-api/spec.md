@@ -7,7 +7,7 @@ Fixer comment les pages obtiennent les données de la ligue, comment elles réag
 ## Requirements
 
 ### Requirement: Source des données
-Les pages Accueil, Mes équipes, Parties, Classement, Créneaux et Report SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
+Les pages Accueil, Mes équipes, Parties, Classement, Créneaux, Report et Bilan SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
 
 #### Scenario: Date de synchronisation
 - **WHEN** un visiteur ouvre la page Classement et que les données sont chargées
