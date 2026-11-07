@@ -873,6 +873,16 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(mien).toContainText("Charlie (éq. 1)");
     await expect(mien.locator(".mien-verdict")).toHaveText("4e de la poule 1 · en quarts pour l'instant");
     await expect(mien).toContainText("Quart Q4 contre Golf (éq. 1)");
+    // Les joueurs entre crochets, à côté du nom de l'équipe.
+    await expect(mien.locator("b")).toHaveText(/^Charlie \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
+
+    // D'abord le bilan global : trophées toutes séries, la série dite après l'équipe.
+    const global = page.locator(".bilan-global");
+    await expect(global.locator(".trophees .bilan-carte-titre")).toHaveText("Les trophées · toutes séries");
+    await expect(global.locator(".trophee").first()).toContainText("Meilleur bilan, toutes séries");
+    await expect(global.locator(".trophee").first().locator(".trophee-nom")).toContainText(/Alpha \(éq\. 1\) · Série \d \[Ane/);
+    // Puis chaque série, ses propres chiffres en tête.
+    await expect(page.locator(".serie-bloc").first().locator(".bilan-tuiles.clair .bilan-tuile")).toHaveCount(4);
 
     // Série 1 : trophées, deux poules, tableau final.
     const serie = page.locator(".serie-bloc").first();
@@ -883,7 +893,7 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(serie.locator(".poule-card:not(.finales-card)")).toHaveCount(2);
     const poule1 = serie.locator(".poule-card").first();
     await expect(poule1.locator(".rank-row")).toHaveCount(6);
-    await expect(poule1.locator(".rank-row.suivie")).toContainText("Charlie");
+    await expect(poule1.locator(".rank-row.suivie .rank-team")).toHaveText(/^Charlie \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
     await expect(poule1.locator(".cut-line")).toHaveText("En quarts pour l'instant");
     // Les 15 parties de la poule, repliées puis dépliées.
     const resultats = poule1.locator("details.resultats");
@@ -894,28 +904,57 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "à jouer" })).not.toHaveCount(0);
     await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "sans score" })).toHaveCount(2);
 
-    // Le tableau final est celui du Classement.
+    // Le tableau final est celui du Classement, les joueurs en plus.
     const finales = serie.locator(".finales-card");
     await expect(finales.locator(".statut")).toHaveText("Prévision");
-    const quartsBilan = await finales.locator(".quart-row").allTextContents();
+    await expect(finales.locator(".quart-nom .joueurs")).toHaveCount(8);
+    const sansJoueurs = (textes) => textes.map((t) => t.replace(/ \[[^\]]*\]/g, ""));
+    const quartsBilan = sansJoueurs(await finales.locator(".quart-row").allTextContents());
     expect(quartsBilan).toHaveLength(4);
     await page.goto("classement.html");
     await attendreChargement(page);
     expect(await page.locator(".finales-card").first().locator(".quart-row").allTextContents()).toEqual(quartsBilan);
-
-    // Aucun nom de joueur, contrairement au Classement.
-    await expect(page.locator(".rank-joueurs").first()).toBeVisible();
-    await page.goto("bilan.html");
-    await attendreChargement(page);
-    await expect(page.locator("main")).not.toContainText("Joueur");
   });
 
-  test("le bilan ne demande ni compositions ni licenciés", async ({ page }) => {
-    const demandes = [];
-    page.on("request", (r) => { if (r.url().includes("script.google.com")) demandes.push(new URL(r.url()).searchParams.get("table")); });
+  test("Partager le bilan : une image PNG et un texte pour WhatsApp, sans nom de joueur", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files);
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
     await page.goto("bilan.html");
     await attendreChargement(page);
-    expect(new Set(demandes)).toEqual(new Set(["rencontres", "clubs"]));
+    await expect(page.locator(".joueurs").first()).toBeVisible();
+    // L'image se dessine juste après l'affichage ; un toucher trop tôt
+    // enverrait le texte seul.
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager le bilan" }).click();
+      return page.evaluate(() => (window.__partage && window.__partage.files || []).length);
+    }).toBe(1);
+    const p = await page.evaluate(async () => {
+      const f = window.__partage.files[0];
+      const img = await createImageBitmap(f);
+      return { nom: f.name, type: f.type, largeur: img.width, hauteur: img.height, texte: window.__partage.text };
+    });
+    expect(p).toMatchObject({ nom: "lidfpb-bilan-des-poules.png", type: "image/png", largeur: 1080 });
+    expect(p.hauteur).toBeGreaterThan(1200);
+    expect(p.texte).toMatch(/^\*🏁 Bilan de la phase de poules/);
+    expect(p.texte).toContain("*Série 1 · 1/4 de finale (prévision)*");
+    expect(p.texte).toContain("Q1 1er P1 Alpha (éq. 1) – 4e P2 India (éq. 1)");
+    expect(p.texte).toMatch(/Tout le bilan : http.*\/bilan\.html$/);
+    expect(p.texte).not.toContain("Joueur");
+  });
+
+  test("sans feuille de partage, le texte est copié et l'image téléchargée", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await page.waitForTimeout(500);   // le temps de dessiner l'image
+    const telechargement = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Partager le bilan" }).click();
+    expect((await telechargement).suggestedFilename()).toBe("lidfpb-bilan-des-poules.png");
+    await expect(page.locator(".partage-ok")).toHaveText("Texte copié, image téléchargée");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^\*🏁 Bilan de la phase de poules/);
   });
 
   test("toutes les parties de poule jouées : verdict des poules et tableau définitif", async ({ page }) => {

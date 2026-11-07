@@ -902,6 +902,38 @@
   .zone-bilan .poule-head { flex-wrap: wrap; }
   .zone-bilan .poule-head > span { white-space: nowrap; }
 
+  /* Joueurs entre crochets après le nom de l'équipe, comme à l'accueil : en
+     retrait, sans gras. */
+  .joueurs { font-weight: 400; color: var(--muted); }
+  .trophee-serie { font-weight: 600; color: var(--muted); }
+  .quart-side.suivie .joueurs, .rank-row.suivie .joueurs { color: inherit; opacity: 0.8; }
+
+  /* Chiffres d'une série : les tuiles de l'affiche, en clair. */
+  .bilan-tuiles.clair { margin: 0 0 12px; }
+  .bilan-tuiles.clair .bilan-tuile { background: var(--card-bg); border-color: var(--border); color: var(--text); }
+  .bilan-tuiles.clair .bilan-tuile span { color: var(--muted); }
+
+  /* Partager le bilan : sous les chiffres de l'affiche. */
+  .partage-zone { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .partage-ok { font-size: 12px; font-weight: 600; color: var(--sur-fort-doux); }
+  .partager {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 9999px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .partager:active { opacity: 0.75; }
+
   /* Équipe suivie dans le classement d'une poule. */
   .rank-row.suivie { background: var(--accent-bg); }
   .rank-row.suivie .rank-team { color: var(--accent); }
@@ -952,6 +984,9 @@
     .zone-bilan { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
     .zone-bilan > * { flex: 1 1 300px; min-width: 0; margin-bottom: 0; }
     .zone-bilan > .finales-card { flex-basis: 400px; }
+    /* Bilan global : mon équipe et les trophées toutes séries côte à côte. */
+    .zone-globale { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+    .zone-globale > * { flex: 1 1 400px; min-width: 0; margin-bottom: 0; }
   }
 </style>
 </head>
@@ -1081,22 +1116,77 @@
     });
   }
 
-  // Ni compositions ni contacts : le bilan ne nomme que des équipes, il peut
-  // se montrer et se partager sans données personnelles.
+  // Rencontres et clubs, plus les compositions pour les joueurs entre
+  // crochets : mêmes demandes que le Classement, donc le même cache.
   function fetchLiveData(source) {
-    return Promise.all([source(buildUrl("rencontres", {})), source(buildUrl("clubs", {}))]).then(function (r) {
+    return Promise.all([source(buildUrl("rencontres", {})), source(buildUrl("clubs", {})), chargerCompositions(source)]).then(function (r) {
+      var compo = r[2];
       return {
         rencontres: r[0].data.filter(function (row) {
           return SERIE_LABELS.hasOwnProperty(String(row["Catégorie"] || "").trim()) && row.oid;
         }),
         clubs: r[1].data,
+        joueurs: compo.incomplet ? null : compositions(r[1].data, compo.engagements, compo.licencies),
+        joueursIncomplets: compo.incomplet,
+        tailleCompo: compo.engagements.length + "/" + compo.licencies.length,
         lastSync: r[0].lastSync || null
       };
     });
   }
 
   function signature(data) {
-    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
+    return [data.lastSync, data.rencontres.length, data.clubs.length, data.tailleCompo].join("|");
+  }
+
+  // ---------------------------------------------------------------
+  // Joueurs des équipes, recopié du Classement : seules les licences des
+  // engagements sont lues, ni le responsable ni son téléphone.
+  // ---------------------------------------------------------------
+  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
+  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
+
+  function normalizeLicence(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d+$/.test(s)) return s;
+    return String(Number.parseInt(s, 10));
+  }
+
+  function compositions(clubs, engagements, licencies) {
+    var numeroClub = {};
+    (clubs || []).forEach(function (c) {
+      var numero = String(c["Numéro club"] || "").trim();
+      if (!c["comité"] || !c["club"] || !numero) return;
+      numeroClub[String(c["Ligue"] || "3") + String(c["comité"]).padStart(3, "0") + String(c["club"]).padStart(3, "0")] = numero;
+    });
+    var noms = {};
+    (licencies || []).forEach(function (l) {
+      var licence = normalizeLicence(l["Licence"]);
+      if (licence) noms[licence] = (String(l["prenom"] || "").trim() + " " + String(l["nom"] || "").trim()).trim();
+    });
+    var parEquipe = {};
+    (engagements || []).forEach(function (e) {
+      var cle = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      var licences = LICENCE_COLUMNS.map(function (col) { return normalizeLicence(e[col]); }).filter(Boolean);
+      if (licences.length) parEquipe[cle] = licences;
+    });
+    return function (club, categorie, equipe) {
+      var numero = numeroClub[String(club || "").trim()];
+      var licences = numero && parEquipe[[numero, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
+      var liste = (licences || []).map(function (l) { return noms[l]; }).filter(Boolean);
+      return liste.length ? liste : null;
+    };
+  }
+
+  // Les compositions sont un bonus : un échec laisse le bilan s'afficher sans
+  // les noms, et le signale pour que le réseau complète un cache incomplet.
+  function chargerCompositions(source) {
+    var manque = false;
+    function table(nom) {
+      return source(buildUrl(nom, {})).catch(function () { manque = true; return { data: [] }; });
+    }
+    return Promise.all([table("engagements"), table("licencies")]).then(function (r) {
+      return { engagements: r[0].data, licencies: r[1].data, incomplet: manque };
+    });
   }
 
   // ---------------------------------------------------------------
@@ -1357,54 +1447,91 @@
     return !!suivies[[t.spec, t.cat, t.clubCode, t.numero].join("|")];
   }
 
+  // Compositions du dernier rendu : une fonction (club, catégorie, équipe),
+  // ou null quand elles n'ont pas pu être chargées.
+  var joueursDe = null;
+
+  // Le nom d'une équipe suivi, entre crochets, de ses joueurs déclarés à la
+  // ligue, comme à l'accueil : rien pour une équipe sans composition connue.
+  // Jamais dans l'image ni le texte partagés.
+  // suffixe : écrit juste après le nom, avant les joueurs (la série, au bilan global).
+  function nomEquipe(parent, t, suffixe) {
+    parent.appendChild(document.createTextNode(t.label));
+    if (suffixe) parent.appendChild(el("span", { class: "trophee-serie", text: suffixe }));
+    var noms = joueursDe ? joueursDe(t.clubCode, t.cat, t.numero) : null;
+    if (noms) parent.appendChild(el("span", { class: "joueurs", text: " [" + noms.join(", ") + "]" }));
+    return parent;
+  }
+
   // ---------------------------------------------------------------
   // En-tête : les chiffres de toute la phase de poules
   // ---------------------------------------------------------------
-  function buildHero(ctx) {
-    var jouees = ctx.parties.jouees, restantes = ctx.parties.restantes;
-    var hero = el("section", { class: "bilan-hero", "aria-labelledby": "bilanTitre" });
-    hero.appendChild(el("p", { class: "bilan-kicker", text: "Championnats d'Île-de-France · phase de poules" }));
-    var titre, sous;
-    if (!restantes.length) {
-      titre = "Les poules ont rendu leur verdict";
-      sous = pluriel(jouees.length, "partie jouée", "parties jouées") + ", " + pluriel(ctx.qualifies, "équipe qualifiée", "équipes qualifiées") +
-             " pour les quarts. Place aux phases finales !";
-    } else {
-      // Une partie passée sans score n'est plus « à jouer » : son résultat
-      // est attendu.
-      var aujourdhui = new Date();
-      aujourdhui.setHours(0, 0, 0, 0);
-      var aVenir = restantes.filter(function (p) { return !p.date || p.date >= aujourdhui; });
-      var attendus = restantes.length - aVenir.length;
-      var derniere = aVenir.reduce(function (m, p) { return (p.date && (!m || p.date > m)) ? p.date : m; }, null);
-      titre = "Dernière ligne droite";
-      sous = (aVenir.length
-               ? "Encore " + pluriel(aVenir.length, "partie") + " de poule à jouer" +
-                 (derniere ? ", la dernière prévue le " + fmtJourLong(derniere) : "")
-               : "Toutes les parties de poule sont jouées") +
-             (attendus ? (aVenir.length ? ", et " : ", ") + pluriel(attendus, "score") + " pas encore " + (attendus > 1 ? "publiés" : "publié") : "") +
-             " : bilan provisoire, il bougera d'ici là.";
-    }
-    hero.appendChild(el("h2", { class: "bilan-titre", id: "bilanTitre", text: titre }));
-    hero.appendChild(el("p", { class: "bilan-sous", text: sous }));
-
+  // Les quatre chiffres d'un ensemble de parties : toute la phase de poules
+  // ou une série.
+  function chiffres(jouees, nbEquipes) {
     var points = jouees.reduce(function (s, p) { return s + p.sa + p.sb; }, 0);
     // Écart et parties serrées : entre un vainqueur et un vaincu, nuls exclus.
     var gagnees = jouees.filter(function (p) { return p.ecart > 0; });
     var ecart = gagnees.length ? gagnees.reduce(function (s, p) { return s + p.ecart; }, 0) / gagnees.length : 0;
     var serrees = gagnees.filter(function (p) { return p.ecart <= SERREE_MAX; }).length;
-    var tuiles = [
-      [fmtEntier(jouees.length), (jouees.length > 1 ? "parties jouées" : "partie jouée") + " entre " + ctx.teams.length + " équipes"],
-      [fmtEntier(points), "points marqués, " + (jouees.length ? fmt1(points / jouees.length) : "0") + " par partie"],
-      [fmt1(ecart), "points d'écart en moyenne entre vainqueur et vaincu"],
-      [gagnees.length ? Math.round(100 * serrees / gagnees.length) + " %" : "–",
-       "de parties serrées, gagnées de " + SERREE_MAX + " points ou moins (" + serrees + ")"]
-    ];
-    var grille = el("div", { class: "bilan-tuiles" });
-    tuiles.forEach(function (t) {
+    return {
+      jouees: jouees.length, points: points, ecart: ecart, serrees: serrees,
+      pctSerrees: gagnees.length ? Math.round(100 * serrees / gagnees.length) : null,
+      tuiles: [
+        [fmtEntier(jouees.length), (jouees.length > 1 ? "parties jouées" : "partie jouée") + " entre " + nbEquipes + " équipes"],
+        [fmtEntier(points), "points marqués, " + (jouees.length ? fmt1(points / jouees.length) : "0") + " par partie"],
+        [fmt1(ecart), "points d'écart en moyenne entre vainqueur et vaincu"],
+        [gagnees.length ? Math.round(100 * serrees / gagnees.length) + " %" : "–",
+         "de parties serrées, gagnées de " + SERREE_MAX + " points ou moins (" + serrees + ")"]
+      ]
+    };
+  }
+
+  function buildTuiles(stats, clair) {
+    var grille = el("div", { class: "bilan-tuiles" + (clair ? " clair" : "") });
+    stats.tuiles.forEach(function (t) {
       grille.appendChild(el("div", { class: "bilan-tuile" }, [el("b", { text: t[0] }), el("span", { text: t[1] })]));
     });
-    hero.appendChild(grille);
+    return grille;
+  }
+
+  // Où en sont les poules : une partie passée sans score n'est plus « à
+  // jouer », son résultat est attendu.
+  function etatPoules(ctx) {
+    var restantes = ctx.parties.restantes;
+    var aujourdhui = new Date();
+    aujourdhui.setHours(0, 0, 0, 0);
+    var aVenir = restantes.filter(function (p) { return !p.date || p.date >= aujourdhui; });
+    return {
+      fini: !restantes.length,
+      aVenir: aVenir.length,
+      attendus: restantes.length - aVenir.length,
+      derniere: aVenir.reduce(function (m, p) { return (p.date && (!m || p.date > m)) ? p.date : m; }, null)
+    };
+  }
+
+  function buildHero(ctx) {
+    var etat = ctx.etat;
+    var hero = el("section", { class: "bilan-hero", "aria-labelledby": "bilanTitre" });
+    hero.appendChild(el("p", { class: "bilan-kicker", text: "Championnats d'Île-de-France · phase de poules" }));
+    var titre, sous;
+    if (etat.fini) {
+      titre = "Les poules ont rendu leur verdict";
+      sous = pluriel(ctx.global.jouees, "partie jouée", "parties jouées") + ", " + pluriel(ctx.qualifies, "équipe qualifiée", "équipes qualifiées") +
+             " pour les quarts. Place aux phases finales !";
+    } else {
+      titre = "Dernière ligne droite";
+      sous = (etat.aVenir
+               ? "Encore " + pluriel(etat.aVenir, "partie") + " de poule à jouer" +
+                 (etat.derniere ? ", la dernière prévue le " + fmtJourLong(etat.derniere) : "")
+               : "Toutes les parties de poule sont jouées") +
+             (etat.attendus ? (etat.aVenir ? ", et " : ", ") + pluriel(etat.attendus, "score") + " pas encore " + (etat.attendus > 1 ? "publiés" : "publié") : "") +
+             " : bilan provisoire, il bougera d'ici là.";
+    }
+    hero.appendChild(el("h2", { class: "bilan-titre", id: "bilanTitre", text: titre }));
+    hero.appendChild(el("p", { class: "bilan-sous", text: sous }));
+    hero.appendChild(buildTuiles(ctx.global));
+    hero.appendChild(buildPartage());
     return hero;
   }
 
@@ -1421,7 +1548,7 @@
       var serie = ctx.series[t.spec + "|" + t.cat];
       var provisoire = serie.restantes.length > 0;
       var ligne = el("div", { class: "mien-ligne" });
-      ligne.appendChild(el("b", { text: t.label }));
+      ligne.appendChild(nomEquipe(el("b", {}), t));
       ligne.appendChild(document.createTextNode(" · " + t.serieLabel));
       ligne.appendChild(document.createElement("br"));
       var verdict, genre, detail = "";
@@ -1459,6 +1586,8 @@
   // ---------------------------------------------------------------
   // Trophées d'une série : de quoi chambrer au comptoir
   // ---------------------------------------------------------------
+  function serieDe(p) { return SERIE_LABELS[p.cat] || ("Cat. " + p.cat); }
+
   // Meilleure valeur d'un critère parmi les équipes qui ont joué ; à égalité,
   // l'ordre du classement départage.
   function meilleure(classees, valeur, plusPetit) {
@@ -1483,7 +1612,9 @@
     return max;
   }
 
-  function trophees(serie, suivies) {
+  // groupe : une série, ou toute la phase de poules (global), dont les
+  // trophées disent alors la série de chaque équipe et de chaque partie.
+  function trophees(serie, suivies, global) {
     var liste = [];
     var classees = trierClassement(serie.teams);
     var parCle = {};
@@ -1495,7 +1626,7 @@
 
     var leader = classees[0];
     if (leader && leader.jouees) {
-      ajouter("🏆", "Meilleur bilan de la série", [leader],
+      ajouter("🏆", global ? "Meilleur bilan, toutes séries" : "Meilleur bilan de la série", [leader],
         fmtMoyenne(leader.moyenne) + " pts par partie · " + leader.gagnees + " G · " + leader.perdues + " P · 1re de la poule " + leader.poule);
     }
     var attaque = meilleure(classees, function (t) { return t.marques / t.jouees; });
@@ -1538,7 +1669,7 @@
     }
 
     var carte = el("section", { class: "bilan-carte trophees" });
-    carte.appendChild(el("h3", { class: "bilan-carte-titre", text: "Les trophées · " + serie.label }));
+    carte.appendChild(el(global ? "h2" : "h3", { class: "bilan-carte-titre", text: "Les trophées · " + serie.label }));
     liste.forEach(function (tr) {
       var miennes = tr.equipes ? tr.equipes.some(function (t) { return estSuivie(suivies, t); })
         : tr.partie && [parCle[tr.partie.a], parCle[tr.partie.b]].some(function (t) { return t && estSuivie(suivies, t); });
@@ -1546,8 +1677,17 @@
       ligne.appendChild(el("span", { class: "trophee-emoji", "aria-hidden": "true", text: tr.emoji }));
       var corps = el("div", {});
       corps.appendChild(el("span", { class: "trophee-titre", text: tr.titre }));
-      corps.appendChild(el("span", { class: "trophee-nom", text: tr.equipes ? tr.equipes.map(function (t) { return t.label; }).join(", ") : fmtPartie(tr.partie) }));
-      corps.appendChild(el("span", { class: "trophee-valeur", text: tr.valeur }));
+      var nom = el("span", { class: "trophee-nom" });
+      if (tr.equipes) {
+        tr.equipes.forEach(function (t, i) {
+          if (i) nom.appendChild(document.createTextNode(", "));
+          nomEquipe(nom, t, global ? " · " + t.serieLabel : "");
+        });
+      } else {
+        nom.textContent = fmtPartie(tr.partie);
+      }
+      corps.appendChild(nom);
+      corps.appendChild(el("span", { class: "trophee-valeur", text: (global && !tr.equipes ? serieDe(tr.partie) + " · " : "") + tr.valeur }));
       ligne.appendChild(corps);
       carte.appendChild(ligne);
     });
@@ -1563,7 +1703,7 @@
     var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (suivie ? " suivie" : "") });
     row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
     var main = el("div", { class: "rank-main" });
-    main.appendChild(el("div", { class: "rank-team", text: team.label }));
+    main.appendChild(nomEquipe(el("div", { class: "rank-team" }), team));
     main.appendChild(el("div", {
       class: "rank-detail",
       text: team.jouees
@@ -1677,7 +1817,7 @@
     var suivie = t && estSuivie(suivies, t);
     var side = el("div", { class: "quart-side" + (t ? "" : " vide") + (suivie ? " suivie" : "") });
     side.appendChild(el("span", { class: "quart-seed" + (teinte ? " teinte-" + teinte : ""), text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule }));
-    side.appendChild(el("span", { class: "quart-nom", text: t ? t.label : "À déterminer" }));
+    side.appendChild(t ? nomEquipe(el("span", { class: "quart-nom" }), t) : el("span", { class: "quart-nom", text: "À déterminer" }));
     if (chances) {
       side.appendChild(el("span", {
         class: "quart-proba" + (chances[0] > chances[1] ? " favori" : ""),
@@ -1798,6 +1938,282 @@
   }
 
   // ---------------------------------------------------------------
+  // Partage : une image PNG et un court texte, pour un groupe WhatsApp
+  // (spec bilan). Ni l'un ni l'autre ne porte de nom de joueur.
+  // ---------------------------------------------------------------
+  var dernierPartage = null;
+  var IMG_LARGEUR = 1080, IMG_MARGE = 56;
+
+  function couleursPage() {
+    var st = getComputedStyle(document.documentElement), c = {};
+    ["bg", "card-bg", "text", "muted", "border", "accent", "accent-bg", "accent-border",
+     "serie1-text", "serie1-bg", "serie1-border", "serie2-text", "serie2-bg", "serie2-border",
+     "fort-bg", "fort-text", "sur-fort-doux", "sur-fort-voile", "sur-fort-bord", "loss-text", "vert",
+     "win-text", "win-bg", "warn-text", "warn-bg",
+     "poule1-text", "poule1-bg", "poule2-text", "poule2-bg", "poule3-text", "poule3-bg", "poule4-text", "poule4-bg"].forEach(function (k) {
+      c[k] = st.getPropertyValue("--" + k).trim();
+    });
+    return c;
+  }
+
+  function police(taille, graisse) { return graisse + " " + taille + "px Manrope, sans-serif"; }
+
+  function arrondi(g, x, y, w, h, r) {
+    g.beginPath();
+    if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h);
+  }
+
+  function tronquer(g, texte, max) {
+    if (g.measureText(texte).width <= max) return texte;
+    while (texte.length > 1 && g.measureText(texte + "…").width > max) texte = texte.slice(0, -1);
+    return texte + "…";
+  }
+
+  // Une pastille, comme les badges de la page ; rend sa largeur.
+  function pastille(g, x, yMilieu, texte, taille, fond, encre, bord, aDroite) {
+    g.font = police(taille, 700);
+    var w = g.measureText(texte).width + taille * 1.2, h = taille * 1.65;
+    var gauche = aDroite ? x - w : x;
+    arrondi(g, gauche, yMilieu - h / 2, w, h, h / 2);
+    g.fillStyle = fond; g.fill();
+    if (bord) { g.lineWidth = 2; g.strokeStyle = bord; g.stroke(); }
+    g.fillStyle = encre; g.textBaseline = "middle";
+    g.fillText(texte, gauche + taille * 0.6, yMilieu + 1);
+    return w;
+  }
+
+  function lienBilan() { return location.origin + location.pathname; }
+
+  // Ce que l'image et le texte retiennent : l'état des poules, les chiffres,
+  // quelques trophées toutes séries et le tableau des quarts de chaque série.
+  function preparerPartage(ctx, lastSync) {
+    var etat = ctx.etat;
+    var statut = etat.fini
+      ? "Poules terminées · " + pluriel(ctx.qualifies, "équipe qualifiée", "équipes qualifiées")
+      : "Bilan provisoire · " + (etat.aVenir ? pluriel(etat.aVenir, "partie") + " à jouer" : "toutes les parties jouées") +
+        (etat.attendus ? (etat.aVenir ? ", " : " · ") + pluriel(etat.attendus, "score") + " attendu" + (etat.attendus > 1 ? "s" : "") : "");
+    var tous = trierClassement(ctx.teams);
+    var leader = tous[0] && tous[0].jouees ? tous[0] : null;
+    var decisives = ctx.parties.jouees.slice().sort(ordreChrono).filter(function (p) { return p.ecart > 0; });
+    var large = decisives.length ? decisives.reduce(function (m, p) { return p.ecart > m.ecart ? p : m; }) : null;
+    var serree = decisives.length ? decisives.reduce(function (m, p) { return p.ecart < m.ecart ? p : m; }) : null;
+    var lignesTrophees = [];
+    if (leader) lignesTrophees.push(["🏆", "Meilleur bilan", leader.label + " · " + leader.serieLabel, fmtMoyenne(leader.moyenne) + " pts par partie"]);
+    if (large) lignesTrophees.push(["💥", "Plus large victoire", fmtPartie(large), serieDe(large) + " · " + pluriel(large.ecart, "point") + " d'écart"]);
+    if (serree) lignesTrophees.push(["😰", "Partie la plus serrée", fmtPartie(serree), serieDe(serree) + " · " + pluriel(serree.ecart, "point") + " d'écart"]);
+
+    var g = ctx.global;
+    var texte = ["*🏁 Bilan de la phase de poules · Pala gomme pleine, Île-de-France*", statut,
+      pluriel(g.jouees, "partie jouée", "parties jouées") + ", " + fmtEntier(g.points) + " points marqués" +
+      (g.pctSerrees !== null ? ", " + g.pctSerrees + " % de parties serrées" : "") + "."];
+    lignesTrophees.forEach(function (l) { texte.push(l[0] + " " + l[1] + " : " + l[2]); });
+    ctx.liste.forEach(function (serie) {
+      texte.push("");
+      texte.push("*" + serie.label + " · 1/4 de finale" + (serie.restantes.length ? " (prévision)" : "") + "*");
+      if (!serie.tableau.quarts) { texte.push("Pas de tableau des quarts pour cette série."); return; }
+      serie.tableau.quarts.forEach(function (q) {
+        texte.push("Q" + q.num + " " + q.cotes.map(function (c) {
+          return ordinal(c.rang) + " P" + c.poule + " " + (c.team ? c.team.label : "à déterminer");
+        }).join(" – "));
+      });
+    });
+    texte.push("");
+    texte.push("Tout le bilan : " + lienBilan());
+
+    var partage = { nom: "lidfpb-bilan-des-poules.png", texte: texte.join("\n"), ctx: ctx, statut: statut, trophees: lignesTrophees, lastSync: lastSync };
+    // L'image est prête avant le toucher : la feuille de partage du téléphone
+    // doit s'ouvrir dans le geste même. Pas encore prête : le texte part seul.
+    var pret = document.fonts && document.fonts.load ? document.fonts.load(police(60, 800)) : Promise.resolve();
+    pret.catch(function () {}).then(function () {
+      if (dernierPartage !== partage) return;
+      var toile = dessinerBilan(partage);
+      if (toile.toBlob) toile.toBlob(function (blob) {
+        if (blob) partage.fichier = new File([blob], partage.nom, { type: "image/png" });
+      }, "image/png");
+    });
+    return partage;
+  }
+
+  // L'image : 1080 px de large, dessinée dans le navigateur aux couleurs de la
+  // page, sur une toile haute recoupée à la hauteur utile.
+  function dessinerBilan(partage) {
+    var c = couleursPage(), ctx = partage.ctx;
+    var W = IMG_LARGEUR, M = IMG_MARGE;
+    var brouillon = document.createElement("canvas");
+    brouillon.width = W;
+    brouillon.height = 5000;
+    var g = brouillon.getContext("2d");
+    g.fillStyle = c["card-bg"]; g.fillRect(0, 0, W, brouillon.height);
+
+    // En-tête foncé, liseré aux couleurs de l'ikurriña, et les chiffres.
+    var HAUT = 430;
+    g.fillStyle = c["fort-bg"]; g.fillRect(0, 0, W, HAUT);
+    g.fillStyle = c["loss-text"]; g.fillRect(0, 0, W / 2, 10);
+    g.fillStyle = c.vert; g.fillRect(W / 2, 0, W / 2, 10);
+    g.textBaseline = "alphabetic";
+    g.fillStyle = c["sur-fort-doux"]; g.font = police(28, 700);
+    g.fillText("Pala gomme pleine · Championnats d'Île-de-France", M, 74);
+    g.fillStyle = c["fort-text"]; g.font = police(60, 800);
+    g.fillText("Bilan de la phase de poules", M, 146);
+    g.fillStyle = c["sur-fort-doux"]; g.font = police(30, 600);
+    g.fillText(tronquer(g, partage.statut, W - 2 * M), M, 196);
+    var gl = ctx.global;
+    var tuiles = [
+      [fmtEntier(gl.jouees), "parties jouées"], [fmtEntier(gl.points), "points marqués"],
+      [fmt1(gl.ecart), "d'écart moyen"], [gl.pctSerrees !== null ? gl.pctSerrees + " %" : "–", "parties serrées"]
+    ];
+    var wT = (W - 2 * M - 3 * 16) / 4;
+    tuiles.forEach(function (t, i) {
+      var x = M + i * (wT + 16);
+      arrondi(g, x, 236, wT, 150, 20);
+      g.fillStyle = c["sur-fort-voile"]; g.fill();
+      g.lineWidth = 2; g.strokeStyle = c["sur-fort-bord"]; g.stroke();
+      g.textBaseline = "alphabetic";
+      g.fillStyle = c["fort-text"]; g.font = police(50, 800);
+      g.fillText(tronquer(g, t[0], wT - 40), x + 20, 312);
+      g.fillStyle = c["sur-fort-doux"]; g.font = police(24, 600);
+      g.fillText(tronquer(g, t[1], wT - 40), x + 20, 356);
+    });
+
+    var y = HAUT + 24;
+    function trait() { g.fillStyle = c.border; g.fillRect(M, y, W - 2 * M, 2); }
+
+    // Trophées toutes séries.
+    if (partage.trophees.length) {
+      g.textBaseline = "alphabetic";
+      g.fillStyle = c.text; g.font = police(36, 800);
+      g.fillText("Les trophées", M, y + 48);
+      y += 72;
+      partage.trophees.forEach(function (l) {
+        g.textBaseline = "middle";
+        g.font = police(40, 400); g.fillStyle = c.text;
+        g.fillText(l[0], M, y + 46);
+        g.textBaseline = "alphabetic";
+        g.fillStyle = c.muted; g.font = police(24, 700);
+        g.fillText(l[1].toUpperCase(), M + 70, y + 30);
+        g.fillStyle = c.text; g.font = police(32, 700);
+        g.fillText(tronquer(g, l[2], W - 2 * M - 70), M + 70, y + 70);
+        g.fillStyle = c.muted; g.font = police(26, 600);
+        g.fillText(tronquer(g, l[3], W - 2 * M - 70), M + 70, y + 106);
+        y += 126;
+      });
+    }
+
+    // Tableau des quarts de chaque série.
+    ctx.liste.forEach(function (serie) {
+      y += 12;
+      trait();
+      y += 22;
+      var cat = serie.cat === "2" ? "serie2" : "serie1";
+      var milieu = y + 36;
+      var wS = pastille(g, M, milieu, serie.label, 28, c[cat + "-bg"], c[cat + "-text"], c[cat + "-border"]);
+      g.textBaseline = "middle"; g.fillStyle = c.text; g.font = police(36, 800);
+      g.fillText("1/4 de finale", M + wS + 18, milieu + 2);
+      var fini = !serie.restantes.length;
+      pastille(g, W - M, milieu, fini ? "Poules terminées" : "Prévision", 24,
+               fini ? c["win-bg"] : c["warn-bg"], fini ? c["win-text"] : c["warn-text"], null, true);
+      y += 88;
+      if (!serie.tableau.quarts) {
+        g.textBaseline = "alphabetic"; g.fillStyle = c.muted; g.font = police(28, 600);
+        g.fillText("Pas de tableau des quarts pour cette série.", M, y + 30);
+        y += 60;
+        return;
+      }
+      var teintes = teintesPoules(serie.teams);
+      serie.tableau.quarts.forEach(function (q, i) {
+        if (i === 2) { g.fillStyle = c.text; g.fillRect(M, y - 6, W - 2 * M, 3); }
+        g.textBaseline = "middle"; g.fillStyle = c.accent; g.font = police(30, 800);
+        g.fillText("Q" + q.num, M, y + 52);
+        q.cotes.forEach(function (cote, k) {
+          var ym = y + 26 + k * 52;
+          var tn = "poule" + (teintes[cote.poule] || 1);
+          pastille(g, M + 74, ym, ordinal(cote.rang) + " P" + cote.poule, 24, c[tn + "-bg"], c[tn + "-text"], null);
+          // Les noms alignés, quelle que soit la largeur de l'étiquette.
+          var xNom = M + 74 + 116;
+          g.textBaseline = "middle";
+          g.fillStyle = cote.team ? c.text : c.muted; g.font = police(32, cote.team ? 700 : 600);
+          g.fillText(tronquer(g, cote.team ? cote.team.label : "À déterminer", W - M - xNom), xNom, ym + 1);
+        });
+        y += 116;
+        if (i % 2 === 0) { g.fillStyle = c.border; g.fillRect(M + 74, y - 8, W - 2 * M - 74, 2); }
+      });
+    });
+
+    // Pied : d'où viennent les chiffres, où lire la suite.
+    y += 8;
+    trait();
+    y += 18;
+    g.textBaseline = "alphabetic"; g.fillStyle = c.muted; g.font = police(26, 600);
+    g.fillText(tronquer(g, "Tout le bilan : " + lienBilan().replace(/^https?:\/\//, ""), W - 2 * M), M, y + 32);
+    var sync = formatSync(partage.lastSync);
+    g.fillText(tronquer(g, "Scores du site de la ligue" + (sync ? ", synchro du " + sync : "") + ".", W - 2 * M), M, y + 72);
+    g.fillText("Le tableau officiel reste celui de la ligue.", M, y + 112);
+    y += 140;
+
+    var toile = document.createElement("canvas");
+    toile.width = W;
+    toile.height = Math.ceil(y);
+    toile.getContext("2d").drawImage(brouillon, 0, 0);
+    return toile;
+  }
+
+  function copier(texte) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texte);
+    return new Promise(function (resolve, reject) {
+      var zone = el("textarea", { style: "position:fixed;opacity:0" });
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { /* refusé */ }
+      zone.remove();
+      if (ok) resolve(); else reject(new Error("copie impossible"));
+    });
+  }
+
+  function telecharger(fichier) {
+    var url = URL.createObjectURL(fichier);
+    var lien = el("a", { href: url, download: fichier.name });
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  // Comme le partage de l'accueil : la feuille de partage du téléphone
+  // (WhatsApp…) reçoit l'image et le texte ; sans feuille de partage,
+  // ordinateur surtout, le texte est copié et l'image téléchargée. Rien
+  // n'est envoyé par le site lui-même.
+  function buildPartage() {
+    var zone = el("div", { class: "partage-zone" });
+    var bouton = el("button", { type: "button", class: "partager" });
+    bouton.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
+    bouton.appendChild(el("span", { text: "Partager le bilan" }));
+    var info = el("span", { class: "partage-ok", "aria-live": "polite" });
+    bouton.addEventListener("click", function () {
+      var p = dernierPartage;
+      if (!p) return;
+      var fichiers = p.fichier ? [p.fichier] : null;
+      info.textContent = "";
+      if (navigator.share) {
+        var donnees = { text: p.texte };
+        if (fichiers && navigator.canShare && navigator.canShare({ files: fichiers })) donnees.files = fichiers;
+        navigator.share(donnees).catch(function (e) {
+          if (e && e.name === "AbortError") return;   // partage annulé
+          copier(p.texte).then(function () { info.textContent = "Texte copié"; });
+        });
+        return;
+      }
+      if (fichiers) telecharger(p.fichier);
+      copier(p.texte).then(function () { info.textContent = fichiers ? "Texte copié, image téléchargée" : "Texte copié, à coller"; },
+                           function () { info.textContent = fichiers ? "Image téléchargée" : "Copie impossible sur ce navigateur"; });
+    });
+    zone.appendChild(bouton);
+    zone.appendChild(info);
+    return zone;
+  }
+
+  // ---------------------------------------------------------------
   // Assemblage
   // ---------------------------------------------------------------
   function contexte(data) {
@@ -1825,49 +2241,66 @@
       // Qualifiées : les places occupées du tableau des quarts, s'il existe.
       (s.tableau.quarts || []).forEach(function (q) { q.cotes.forEach(function (c) { if (c.team) qualifies++; }); });
     });
+    Object.keys(series).forEach(function (k) { series[k].chiffres = chiffres(series[k].jouees, series[k].teams.length); });
     var specs = {};
     teams.forEach(function (t) { specs[t.spec] = true; });
-    return { teams: teams, parties: parties, series: series, qualifies: qualifies, plusieursSpecs: Object.keys(specs).length > 1 };
+    var ctx = {
+      teams: teams, parties: parties, series: series, qualifies: qualifies,
+      plusieursSpecs: Object.keys(specs).length > 1,
+      global: chiffres(parties.jouees, teams.length),
+      liste: Object.keys(series).map(function (k) { return series[k]; }).sort(function (a, b) {
+        var c = a.spec.localeCompare(b.spec, "fr", { numeric: true });
+        return c !== 0 ? c : a.cat.localeCompare(b.cat, "fr", { numeric: true });
+      })
+    };
+    ctx.etat = etatPoules(ctx);
+    return ctx;
   }
 
+  // D'abord le bilan global (chiffres, mon équipe, trophées toutes séries),
+  // puis chaque série : ses chiffres, ses trophées, ses poules, son tableau.
   function rendre(data) {
     var results = document.getElementById("results");
     results.innerHTML = "";
     var ctx = contexte(data);
+    joueursDe = data.joueurs || null;
+    dernierPartage = null;
     if (!ctx.teams.length) {
       results.appendChild(el("div", { class: "empty-state", text: "Aucune partie de poule publiée pour l'instant : le bilan attendra." }));
       return;
     }
+    dernierPartage = preparerPartage(ctx, data.lastSync);
     var suivies = mesEquipes();
-    results.appendChild(buildHero(ctx));
+    var global = el("section", { class: "bilan-global", "aria-label": "Bilan global" });
+    global.appendChild(buildHero(ctx));
+    var zoneGlobale = el("div", { class: "zone-globale" });
     var mes = buildMesEquipes(ctx);
-    if (mes) results.appendChild(mes);
+    if (mes) zoneGlobale.appendChild(mes);
+    zoneGlobale.appendChild(trophees({ label: "toutes séries", teams: ctx.teams, jouees: ctx.parties.jouees }, suivies, true));
+    global.appendChild(zoneGlobale);
+    results.appendChild(global);
 
-    Object.keys(ctx.series).map(function (k) { return ctx.series[k]; })
-      .sort(function (a, b) {
-        var c = a.spec.localeCompare(b.spec, "fr", { numeric: true });
-        return c !== 0 ? c : a.cat.localeCompare(b.cat, "fr", { numeric: true });
-      })
-      .forEach(function (serie) {
-        var section = el("section", { class: "serie-bloc", "aria-label": serie.label });
-        var titre = el("h2", { class: "serie-titre" });
-        titre.appendChild(el("span", { class: "badge serie-" + serie.cat, text: serie.label }));
-        if (ctx.plusieursSpecs) titre.appendChild(el("span", { text: SPEC_LABELS[serie.spec] || ("Spécialité " + serie.spec) }));
-        titre.appendChild(el("span", { text: pluriel(serie.jouees.length, "partie") + ", " + pluriel(serie.teams.length, "équipe") }));
-        titre.appendChild(el("span", {
-          class: "statut" + (serie.restantes.length ? "" : " final"),
-          text: serie.restantes.length ? "encore " + serie.restantes.length + " à jouer" : "poules terminées"
-        }));
-        section.appendChild(titre);
+    ctx.liste.forEach(function (serie) {
+      var section = el("section", { class: "serie-bloc", "aria-label": serie.label });
+      var titre = el("h2", { class: "serie-titre" });
+      titre.appendChild(el("span", { class: "badge serie-" + serie.cat, text: serie.label }));
+      if (ctx.plusieursSpecs) titre.appendChild(el("span", { text: SPEC_LABELS[serie.spec] || ("Spécialité " + serie.spec) }));
+      titre.appendChild(el("span", { text: "Bilan de la série" }));
+      titre.appendChild(el("span", {
+        class: "statut" + (serie.restantes.length ? "" : " final"),
+        text: serie.restantes.length ? "encore " + serie.restantes.length + " sans score" : "poules terminées"
+      }));
+      section.appendChild(titre);
+      section.appendChild(buildTuiles(serie.chiffres, true));
 
-        var zone = el("div", { class: "zone-bilan" });
-        zone.appendChild(trophees(serie, suivies));
-        Object.keys(serie.poules).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
-          .forEach(function (pl) { zone.appendChild(buildPouleCard(serie, pl, suivies)); });
-        zone.appendChild(buildFinalesCard(serie, suivies));
-        section.appendChild(zone);
-        results.appendChild(section);
-      });
+      var zone = el("div", { class: "zone-bilan" });
+      zone.appendChild(trophees(serie, suivies));
+      Object.keys(serie.poules).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+        .forEach(function (pl) { zone.appendChild(buildPouleCard(serie, pl, suivies)); });
+      zone.appendChild(buildFinalesCard(serie, suivies));
+      section.appendChild(zone);
+      results.appendChild(section);
+    });
 
     results.appendChild(el("p", {
       class: "bilan-note",
@@ -1909,6 +2342,8 @@
     var holder = {};
     var rendu = false;
     var signatureRendue = null;
+    var sansJoueurs = false;
+    var compoCache = null;
     var tour = ++dernierTour;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
@@ -1916,17 +2351,25 @@
       afficher(data);
       rendu = true;
       signatureRendue = signature(data);
+      sansJoueurs = data.joueursIncomplets;
+      if (!sansJoueurs) compoCache = { joueurs: data.joueurs, taille: data.tailleCompo };
     }).catch(function () {
       // Cache incomplet : rien à afficher avant la réponse réseau.
     }).then(function () {
       if (tour !== dernierTour) return;
-      if (rendu && !forceRefresh && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
+      if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
       var skeletonTimer = rendu ? null : setTimeout(function () { renderSkeleton(results); }, 150);
 
       return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
         if (tour !== dernierTour) return;
+        // Compositions en échec sur le réseau : celles du cache restent.
+        if (data.joueursIncomplets && compoCache) {
+          data.joueurs = compoCache.joueurs;
+          data.tailleCompo = compoCache.taille;
+          data.joueursIncomplets = false;
+        }
         if (!rendu || signature(data) !== signatureRendue) afficher(data);
         else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       }).catch(function (err) {

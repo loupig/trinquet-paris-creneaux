@@ -39,9 +39,10 @@ Le comportement de chaque page est décrit par sa spec, dans
   [`classement`](openspec/specs/classement/spec.md) et
   [`calcul-classement`](openspec/specs/calcul-classement/spec.md), la règle
   de classement commune à l'accueil, à Mes équipes et au Classement.
-- [`bilan.html`](bilan.html) — le bilan de la phase de poules : chiffres,
-  trophées, classement et résultats de chaque poule, tableau final. Ouvert
-  depuis le Classement seulement, sans onglet ni nom de joueur. Spec
+- [`bilan.html`](bilan.html) — le bilan de la phase de poules, global puis
+  par série : chiffres, trophées, classement et résultats de chaque poule,
+  tableau final, et une image à partager sur WhatsApp. Ouvert depuis le
+  Classement seulement, sans onglet. Spec
   [`bilan`](openspec/specs/bilan/spec.md).
 - [`creneaux.html`](creneaux.html) — les créneaux libres au Trinquet Paris.
   Spec [`creneaux`](openspec/specs/creneaux/spec.md).
@@ -234,8 +235,8 @@ uniquement pour les clubs du comité et pour les joueurs d'autres clubs
 déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
-- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil
-  et Parties, sous chaque équipe sur le Classement et Mes équipes, et au
+- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil,
+  Parties et le Bilan, sous chaque équipe sur le Classement et Mes équipes, et au
   détail d'une partie sur Parties et Créneaux ; jamais dans le texte ni
   l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
