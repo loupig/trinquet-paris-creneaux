@@ -1070,10 +1070,6 @@
       <button type="button" class="filter-chip" data-mode="poule" data-recap-defaut>Par poule</button>
       <button type="button" class="filter-chip" data-mode="general" data-recap="Classement général">Général</button>
     </div>
-    <div class="filter-subtitle">Affichage</div>
-    <div class="filter-group" id="filterJoueurs" data-recap-bascule>
-      <button type="button" class="filter-chip" aria-pressed="false" data-recap="Avec les joueurs">Joueurs des équipes</button>
-    </div>
     <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (chiffre de droite), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
     </div>
   </div>
@@ -1085,7 +1081,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.07</p>
+    <p>Version 2026.11.07.2</p>
   </footer>
 </main>
 
@@ -1260,9 +1256,9 @@
       return {
         rencontres: rencontres,
         clubs: clubsJson.data,
-        joueurs: compo && !compo.incomplet ? compositions(clubsJson.data, compo.engagements, compo.licencies) : null,
-        joueursIncomplets: !!(compo && compo.incomplet),
-        tailleCompo: compo ? compo.engagements.length + "/" + compo.licencies.length : "",
+        joueurs: compo.incomplet ? null : compositions(clubsJson.data, compo.engagements, compo.licencies),
+        joueursIncomplets: compo.incomplet,
+        tailleCompo: compo.engagements.length + "/" + compo.licencies.length,
         fetchedAt: Date.now(),
         lastSync: rencontresJson.lastSync || null
       };
@@ -1279,26 +1275,9 @@
   // ---------------------------------------------------------------
   // Joueurs des équipes
   // ---------------------------------------------------------------
-  // Les noms alourdissent la lecture et coûtent deux tables de plus à
-  // charger : ils ne s'affichent qu'à la demande du visiteur. Le réglage
-  // est gardé sur l'appareil, commun à l'accueil et au Classement.
-  var JOUEURS_KEY = "lidfpb_joueurs_v1";
-  // Le choix de la visite, pour qu'il tienne quand le stockage est refusé
-  // (navigation privée stricte) : null tant que le visiteur n'a rien touché.
-  var joueursVisite = null;
-
-  function lireJoueurs() {
-    if (joueursVisite !== null) return joueursVisite;
-    try { return localStorage.getItem(JOUEURS_KEY) === "1"; } catch (e) { return false; /* stockage indisponible : noms masqués */ }
-  }
-
-  function ecrireJoueurs(oui) {
-    joueursVisite = oui;
-    try {
-      if (oui) localStorage.setItem(JOUEURS_KEY, "1");
-      else localStorage.removeItem(JOUEURS_KEY);
-    } catch (e) { /* pas bloquant : le réglage vaut pour la visite */ }
-  }
+  // Les joueurs de chaque équipe s'affichent sous sa ligne, toujours. Deux
+  // tables de plus à charger, mises en cache comme les autres et partagées
+  // avec l'accueil, Parties et Mes équipes.
 
   // Les en-têtes exportées par le site source contiennent littéralement
   // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite via
@@ -1346,12 +1325,11 @@
     };
   }
 
-  // Les compositions sont un bonus d'affichage : sans le réglage, rien n'est
-  // chargé ; un échec laisse la page s'afficher sans les noms (plutôt que
-  // de dire chaque composition « non déclarée »), et le signale pour qu'un
-  // cache incomplet soit complété par le réseau.
+  // Les compositions sont un bonus d'affichage : un échec laisse la page
+  // s'afficher sans les noms (plutôt que de dire chaque composition « non
+  // déclarée »), et le signale pour qu'un cache incomplet soit complété par
+  // le réseau.
   function chargerCompositions(source) {
-    if (!lireJoueurs()) return Promise.resolve(null);
     var manque = false;
     function table(nom) {
       return source(buildUrl(nom, {})).catch(function () { manque = true; return { data: [] }; });
@@ -1573,7 +1551,7 @@
       detail = "aucune partie jouée";
     }
     main.appendChild(el("div", { class: "rank-detail", text: detail }));
-    // Les joueurs, quand le visiteur les a demandés (filtre « Joueurs des équipes »).
+    // Les joueurs de l'équipe, tels que déclarés à la ligue.
     if (lastData && lastData.joueurs) {
       var noms = lastData.joueurs(team.clubCode, team.cat, team.numero);
       main.appendChild(el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus"), text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
@@ -2629,8 +2607,9 @@
     var rendu = false;
     var signatureRendue = null;
     var sansJoueurs = false;
-    // Seul le dernier chargement lancé affiche : un toucher rapide sur le
-    // réglage des joueurs ne doit pas être défait par une réponse en retard.
+    var compoCache = null;
+    // Seul le dernier chargement lancé affiche : deux Rafraîchir rapprochés
+    // ne doivent pas laisser une réponse en retard défaire la plus récente.
     var tour = ++dernierTour;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
@@ -2639,11 +2618,12 @@
       rendu = true;
       signatureRendue = signature(data);
       sansJoueurs = data.joueursIncomplets;
+      if (!sansJoueurs) compoCache = { joueurs: data.joueurs, taille: data.tailleCompo };
     }).catch(function () {
       // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
     }).then(function () {
       // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit et
-      //    qu'il a les joueurs demandés.
+      //    qu'il a les compositions.
       if (tour !== dernierTour) return;
       if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
@@ -2652,6 +2632,12 @@
       return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
         if (tour !== dernierTour) return;
+        // Compositions en échec sur le réseau : celles du cache restent.
+        if (data.joueursIncomplets && compoCache) {
+          data.joueurs = compoCache.joueurs;
+          data.tailleCompo = compoCache.taille;
+          data.joueursIncomplets = false;
+        }
         if (!rendu || signature(data) !== signatureRendue) afficher(data);
         else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       }).catch(function (err) {
@@ -2699,31 +2685,6 @@
       });
     });
 
-    // Réglage commun avec l'accueil, gardé à part des filtres de la page. Le
-    // toucher recharge : depuis le cache s'il a déjà les compositions, sinon
-    // par le réseau.
-    var chipJoueurs = document.querySelector("#filterJoueurs .filter-chip");
-    function majChipJoueurs() {
-      var oui = lireJoueurs();
-      chipJoueurs.classList.toggle("active", oui);
-      chipJoueurs.setAttribute("aria-pressed", String(oui));
-    }
-    majChipJoueurs();
-    chipJoueurs.addEventListener("click", function () {
-      ecrireJoueurs(!lireJoueurs());
-      majChipJoueurs();
-      run(false);
-    });
-    // Réglage commun : changé sur l'accueil ou Parties, il s'applique au
-    // retour sur la page (cache de navigation) et dans un autre onglet.
-    function relireJoueurs() {
-      var avant = lireJoueurs();
-      joueursVisite = null;
-      majChipJoueurs();
-      if (lireJoueurs() !== avant) run(false);
-    }
-    window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
-    window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });

@@ -942,6 +942,12 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
   });
 });
 
+// Les tests du bloc de la semaine lisent les équipes et les scores : sans
+// compositions, aucune équipe ne porte de joueurs entre crochets.
+function sansCompositions(table) {
+  return table === "engagements" || table === "licencies" ? [] : (tables[table] || []);
+}
+
 test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () => {
   // Calendrier propre à ces tests, autour du lundi 2 novembre 2026 : les
   // données communes sont datées par rapport au jour où les tests tournent.
@@ -971,7 +977,7 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
   test.beforeEach(async ({ page }) => {
     await page.route("**/script.google.com/**", (route) => {
       const table = new URL(route.request().url()).searchParams.get("table");
-      const data = table === "rencontres" ? calendrier : (tables[table] || []);
+      const data = table === "rencontres" ? calendrier : sansCompositions(table);
       route.fulfill({
         status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
         body: JSON.stringify({ table, data, lastSync: "2026-11-02T08:00:00Z" })
@@ -1077,7 +1083,7 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
       const table = new URL(route.request().url()).searchParams.get("table");
       route.fulfill({
         status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify({ table, data: table === "rencontres" ? rencontres : (tables[table] || []), lastSync: "2026-11-02T08:00:00Z" })
+        body: JSON.stringify({ table, data: table === "rencontres" ? rencontres : sansCompositions(table), lastSync: "2026-11-02T08:00:00Z" })
       });
     });
   }
@@ -1303,7 +1309,9 @@ test.describe("Accueil : alerte des parties en double", () => {
 });
 
 test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
-  test("masqués par défaut sans rien charger ; un toucher les montre sur l'accueil, puis sur le Classement", async ({ page }) => {
+  const NOMS = /^ \[Ane Joueur\d+, Bixente Joueur\d+\]$/;
+
+  test("accueil : les joueurs entre crochets après chaque équipe, jamais dans le partage", async ({ page }) => {
     await page.addInitScript(() => {
       navigator.canShare = (d) => !!(d && d.files);
       navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
@@ -1320,108 +1328,110 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
         texte: window.__partage.text
       }));
     }
-    const tablesDemandees = [];
-    page.on("request", (r) => {
-      if (r.url().includes("script.google.com")) tablesDemandees.push(new URL(r.url()).searchParams.get("table"));
-    });
     await page.goto("index.html");
     await attendreChargement(page);
     await ouvrirDIciDimanche(page);
 
-    const bouton = page.getByRole("button", { name: "Joueurs", exact: true });
-    await expect(bouton).toHaveAttribute("aria-pressed", "false");
-    await expect(page.locator(".affiche-joueurs")).toHaveCount(0);
-    expect(tablesDemandees).not.toContain("engagements");
-    expect(tablesDemandees).not.toContain("licencies");
-    const sansJoueurs = await partager();
-
-    // Le cache n'a pas encore les compositions : elles arrivent du réseau.
-    await bouton.click();
-    await expect(page.locator("#vue-ici .affiche-joueurs").first()).toHaveText(/^Ane Joueur\d+, Bixente Joueur\d+ vs Ane Joueur\d+, Bixente Joueur\d+$/);
-    await expect(page.getByRole("button", { name: "Joueurs", exact: true })).toHaveAttribute("aria-pressed", "true");
-    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBe("1");
+    const equipes = page.locator("#vue-ici .next-teams").first();
+    await expect(equipes).toHaveText(/^\S+ 1 \[Ane Joueur\d+, Bixente Joueur\d+\] vs \S+ 1 \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
+    await expect(equipes.locator(".joueurs")).toHaveText([NOMS, NOMS]);
+    // Plus de réglage : ni bouton, ni clé sur l'appareil.
+    await expect(page.getByRole("button", { name: "Joueurs", exact: true })).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
+    // Les noms passent à la ligne, sans déborder ni être coupés.
+    expect(await equipes.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
-    // Le focus clavier reste sur le bouton redessiné.
-    await expect(page.getByRole("button", { name: "Joueurs", exact: true })).toBeFocused();
+    const avecNoms = await partager();
+    expect(avecNoms.texte).toContain(" vs ");
+    expect(avecNoms.texte).not.toContain("Joueur1");
 
-    // Ni le texte ni l'image partagés ne portent de noms de joueurs : même
-    // texte, et pas une ligne de plus dans l'image.
-    const avecJoueurs = await partager();
-    expect(avecJoueurs.texte).not.toContain("Joueur1");
-    expect(avecJoueurs.texte).toBe(sansJoueurs.texte);
-    expect(avecJoueurs.hauteur).toBe(sansJoueurs.hauteur);
-
-    // Le réglage suit sur le Classement.
-    await page.goto("classement.html");
+    // Sans compositions, le partage est le même : texte identique, et pas une
+    // ligne de plus dans l'image.
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: sansCompositions(table), lastSync: new Date().toISOString() })
+      });
+    });
+    await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("lidfpb_api_v1:")).forEach((k) => localStorage.removeItem(k)));
+    await page.reload();
     await attendreChargement(page);
-    const pastille = page.getByRole("button", { name: "Joueurs des équipes" });
-    await expect(pastille).toHaveAttribute("aria-pressed", "true");
-    const alpha = page.locator(".rank-row").filter({ hasText: "Alpha (éq. 1)" }).first();
-    await expect(alpha.locator(".rank-joueurs")).toHaveText("Ane Joueur100001, Bixente Joueur100002");
-
-    await pastille.click();
-    await expect(pastille).toHaveAttribute("aria-pressed", "false");
-    await expect(page.locator(".rank-joueurs")).toHaveCount(0);
-    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
+    await ouvrirDIciDimanche(page);
+    await expect(page.locator(".next-teams .joueurs")).toHaveCount(0);
+    const sansNoms = await partager();
+    expect(sansNoms.texte).toBe(avecNoms.texte);
+    expect(sansNoms.hauteur).toBe(avecNoms.hauteur);
   });
 
-  test("Parties : le même réglage met les joueurs sous chaque partie, sans le toucher", async ({ page, context }) => {
-    // Un barrage dont l'un des adversaires reste à désigner : pas de ligne.
+  test("accueil : une partie jouée met le score entre les deux équipes et leurs joueurs", async ({ page }) => {
+    const partie = (oid, date, rec, vis, a, b) => ({
+      oid: String(oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "1", "Poule": "1",
+      club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
+      lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: date, heure_renc: "1930", report: "", date_rep: "",
+      score_cr: a, score_cv: b
+    });
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      const data = table === "rencontres"
+        ? [partie(1, "30102026", codeClub(0), codeClub(1), "40", "25"), partie(2, "01112026", codeClub(2), codeClub(3), "", "")]
+        : (tables[table] || []);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: "2026-11-01T08:00:00Z" })
+      });
+    });
+    await page.clock.setFixedTime(new Date("2026-11-01T18:00:00+01:00"));
+    await page.goto("index.html");
+    await attendreChargement(page);
+
+    const parties = page.locator("#vue-ici .next-teams");
+    await expect(parties.nth(0)).toHaveText("Alpha 1 [Ane Joueur100001, Bixente Joueur100002]40-25Bravo 1 [Ane Joueur100003, Bixente Joueur100004]");
+    await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
+    await expect(parties.nth(1)).toHaveText("Charlie 1 [Ane Joueur100005, Bixente Joueur100006] vs Delta 1 [Ane Joueur100007, Bixente Joueur100008]");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("Parties : les joueurs entre crochets, rien pour un adversaire à désigner", async ({ page }) => {
+    // Un barrage dont l'un des adversaires reste à désigner.
     const barrage = {
       oid: "990", "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "2", "Poule": "",
       club_rec: codeClub(0), equip_rec: "1", club_vis: "9998", equip_vis: "1",
       lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: "01012026", heure_renc: "2000", report: "", date_rep: "",
       score_cr: "", score_cv: ""
     };
-    const servir = (route) => {
+    await page.route("**/script.google.com/**", (route) => {
       const table = new URL(route.request().url()).searchParams.get("table");
       const data = table === "rencontres" ? [...tables.rencontres, barrage] : (tables[table] || []);
       route.fulfill({
         status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
         body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
       });
-    };
-    await page.route("**/script.google.com/**", servir);
-    await page.addInitScript(() => { localStorage.setItem("lidfpb_joueurs_v1", "1"); });
+    });
     await page.goto("programme.html");
     await attendreChargement(page);
 
-    const pastille = page.getByRole("button", { name: "Joueurs des équipes" });
-    await expect(pastille).toHaveAttribute("aria-pressed", "true");
-    const lignes = page.locator(".match-row-joueurs:visible");
-    await expect(lignes.first()).toHaveText(/^Ane Joueur\d+, Bixente Joueur\d+ vs Ane Joueur\d+, Bixente Joueur\d+$/);
-    const ligneBarrage = page.locator(".match-item").filter({ hasText: "Barrage" });
+    await expect(page.getByRole("button", { name: "Joueurs des équipes" })).toHaveCount(0);
+    const equipes = page.locator(".match-item").filter({ hasNotText: "Barrage" }).first().locator(".match-row-teams");
+    await expect(equipes).toHaveText(/^\S+ \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\] vs \S+ \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
+    await expect(equipes.locator(".joueurs")).toHaveText([NOMS, NOMS]);
+    // Alpha garde ses joueurs, l'équipe à désigner n'en a pas.
+    const ligneBarrage = page.locator(".match-item").filter({ hasText: "Barrage" }).locator(".match-row-teams");
     await expect(ligneBarrage).toHaveCount(1);
-    await expect(ligneBarrage.locator(".match-row-joueurs")).toHaveCount(0);
+    await expect(ligneBarrage.locator(".joueurs")).toHaveText(["[Ane Joueur100001, Bixente Joueur100002]"]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-
-    // Replié, le bloc Filtres le dit.
-    await page.locator("#filtersToggle").click();
-    await expect(page.locator(".filters-recap")).toContainText("Avec les joueurs");
-    await page.locator("#filtersToggle").click();
-
-    // Un détail ouvert reste ouvert quand on éteint les joueurs.
-    await page.locator(".match-row").first().click();
-    await expect(page.locator(".match-detail").first()).toBeVisible();
-    await pastille.click();
-    await expect(pastille).toHaveAttribute("aria-pressed", "false");
-    await expect(lignes).toHaveCount(0);
-    await expect(page.locator(".match-detail").first()).toBeVisible();
-    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
-
-    // Rallumé depuis le Classement, dans un autre onglet : Parties suit.
-    const autre = await context.newPage();
-    await autre.route("**/script.google.com/**", servir);
-    await autre.goto("classement.html");
-    await attendreChargement(autre);
-    await autre.getByRole("button", { name: "Joueurs des équipes" }).click();
-    await expect(pastille).toHaveAttribute("aria-pressed", "true");
-    await expect(lignes.first()).toBeVisible();
-    await autre.close();
   });
 
-  test("une équipe sans composition déclarée le dit", async ({ page }) => {
+  test("Classement : les joueurs toujours sous chaque équipe", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await expect(page.getByRole("button", { name: "Joueurs des équipes" })).toHaveCount(0);
+    const alpha = page.locator(".rank-row").filter({ hasText: "Alpha (éq. 1)" }).first();
+    await expect(alpha.locator(".rank-joueurs")).toHaveText("Ane Joueur100001, Bixente Joueur100002");
+  });
+
+  test("une équipe sans composition déclarée le dit sur le Classement, sans crochets ailleurs", async ({ page }) => {
     await page.route("**/script.google.com/**", (route) => {
       const table = new URL(route.request().url()).searchParams.get("table");
       const data = table === "engagements"
@@ -1432,7 +1442,6 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
         body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
       });
     });
-    await page.addInitScript(() => { localStorage.setItem("lidfpb_joueurs_v1", "1"); });
 
     await page.goto("classement.html");
     await attendreChargement(page);
@@ -1440,6 +1449,11 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     await expect(ligne("Alpha (éq. 1)")).toHaveText("Composition non déclarée à la ligue");
     await expect(ligne("Alpha (éq. 1)")).toHaveClass(/inconnus/);
     await expect(ligne("Bravo (éq. 1)")).toHaveText("Ane Joueur100003, Bixente Joueur100004");
+
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const partieAlpha = page.locator(".match-row-teams").filter({ hasText: /^Alpha \(éq\. 1\) vs / }).first();
+    await expect(partieAlpha.locator(".joueurs")).toHaveCount(1);   // l'adversaire seul
   });
 });
 

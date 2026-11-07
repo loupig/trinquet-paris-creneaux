@@ -88,16 +88,16 @@ Chaque partie SHALL tenir sur une ligne colorée selon sa série, qui donne : l'
 - **WHEN** une demi-finale a été jouée
 - **THEN** sa ligne porte le libellé de la phase à la place de la poule, et le score à droite
 
-### Requirement: Joueurs sous chaque partie, à la demande
-Le bloc Filtres SHALL proposer, sous « Affichage », une pastille « Joueurs des équipes », éteinte par défaut. Allumée, chaque ligne de partie porte, sous ses informations et sans toucher la partie, les joueurs de l'équipe qui reçoit, « vs », ceux de l'équipe visiteuse, tels qu'affichés dans son détail ; une équipe dont aucun nom n'est connu y est dite « composition non disponible », comme dans le détail. Toucher la pastille ne referme pas les détails ouverts. Changé sur une autre page, le réglage s'applique au retour sur Parties. Une partie sans aucune composition connue, ou dont un adversaire reste à désigner, n'a pas cette ligne. Le réglage ne filtre aucune partie ; il est gardé sur l'appareil (`lidfpb_joueurs_v1`) et commun avec l'accueil et le Classement. Replié, le bloc Filtres le résume par « Avec les joueurs ».
+### Requirement: Joueurs des équipes entre crochets
+Chaque ligne de partie SHALL faire suivre le nom de chaque équipe, entre crochets, des joueurs affichés dans son détail : « Alpha (éq. 1) [Ane Exemple, Bixente Exemple] vs Bravo (éq. 1) [Ane Autre, Bixente Autre] », noms en retrait et sans gras. Une équipe dont aucun nom n'est connu, ou encore à désigner, n'a pas de crochets. Il n'y a aucun réglage : les noms sont toujours affichés, et le détail au toucher les redonne avec les contacts.
 
-#### Scenario: Afficher les joueurs
-- **WHEN** le visiteur allume « Joueurs des équipes »
-- **THEN** chaque partie dont une composition est connue montre « Ane Exemple, Bixente Exemple vs … » sous ses informations, et l'accueil et le Classement s'ouvriront eux aussi avec les joueurs
+#### Scenario: Lecture d'une partie
+- **WHEN** un visiteur ouvre Parties
+- **THEN** chaque équipe dont la composition est connue est suivie de ses joueurs entre crochets
 
-#### Scenario: Éteindre
-- **WHEN** le visiteur éteint la pastille
-- **THEN** les lignes de joueurs disparaissent, le détail au toucher les donne toujours
+#### Scenario: Adversaire à désigner
+- **WHEN** un barrage oppose Alpha (éq. 1) à une équipe à désigner
+- **THEN** seule Alpha porte des crochets
 
 ### Requirement: Détail d'une partie
 Toucher la ligne d'une partie SHALL déplier son détail, et la toucher à nouveau le replier. Le détail donne, pour l'équipe qui reçoit puis pour l'équipe visiteuse, les noms des joueurs déclarés à la ligue, sous la forme « Prénom Nom », ou « composition non disponible » quand aucun joueur n'est connu. Si les compositions ne peuvent pas être chargées, le calendrier s'affiche quand même, avec « composition non disponible ».
