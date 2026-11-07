@@ -143,6 +143,11 @@
     --sim-bg: #fbfcff;
     --fort-bord: #1a1a2e;
     --sur-accent: #fff;
+    /* Texte secondaire et voile sur les fonds foncés (--fort-bg), foncés
+       dans les deux thèmes : mêmes valeurs en sombre. */
+    --sur-fort-doux: rgba(255, 255, 255, 0.75);
+    --sur-fort-voile: rgba(255, 255, 255, 0.08);
+    --sur-fort-bord: rgba(255, 255, 255, 0.12);
     /* Teintes des poules, prises aux rayures du linge basque : bordeaux,
        bleu marine, vert sapin, ocre. Distinctes des séries, et du vert et du
        rouge des victoires et défaites. */
@@ -203,6 +208,9 @@
       --sim-bg: #1a1f30;
       --fort-bord: #6e6e6e;
       --sur-accent: #181818;
+      --sur-fort-doux: rgba(255, 255, 255, 0.75);
+      --sur-fort-voile: rgba(255, 255, 255, 0.08);
+      --sur-fort-bord: rgba(255, 255, 255, 0.12);
       --poule1-text: #f4a3b1;
       --poule1-bg: #3a1820;
       --poule2-text: #9cc0f0;
@@ -259,6 +267,9 @@
     --sim-bg: #1a1f30;
     --fort-bord: #6e6e6e;
     --sur-accent: #181818;
+    --sur-fort-doux: rgba(255, 255, 255, 0.75);
+    --sur-fort-voile: rgba(255, 255, 255, 0.08);
+    --sur-fort-bord: rgba(255, 255, 255, 0.12);
     --poule1-text: #f4a3b1;
     --poule1-bg: #3a1820;
     --poule2-text: #9cc0f0;
@@ -804,9 +815,9 @@
     height: 4px;
     background: linear-gradient(90deg, var(--loss-text) 0 50%, var(--vert) 50% 100%);
   }
-  .bilan-kicker { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+  .bilan-kicker { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sur-fort-doux); }
   .bilan-titre { margin: 4px 0 2px; font-size: 24px; font-weight: 800; line-height: 1.2; }
-  .bilan-sous { margin: 0; font-size: 14px; line-height: 1.45; color: rgba(255, 255, 255, 0.8); }
+  .bilan-sous { margin: 0; font-size: 14px; line-height: 1.45; color: var(--sur-fort-doux); }
   .bilan-tuiles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -816,11 +827,11 @@
   .bilan-tuile {
     padding: 10px 12px;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--sur-fort-voile);
+    border: 1px solid var(--sur-fort-bord);
   }
   .bilan-tuile b { display: block; font-size: 24px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .bilan-tuile span { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; line-height: 1.35; color: rgba(255, 255, 255, 0.75); }
+  .bilan-tuile span { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; line-height: 1.35; color: var(--sur-fort-doux); }
 
   /* --- Mes équipes : où en est l'équipe suivie, en une ligne chacune --- */
   .bilan-carte {
@@ -1236,7 +1247,7 @@
   // Parties de poule : jouées (score numérique) et restantes (sans score).
   // ---------------------------------------------------------------
   function partiesDePoule(rencontres, clubMap) {
-    var jouees = [], restantes = [];
+    var jouees = [], restantes = [], autres = [];
     rencontres.forEach(function (row) {
       if (!estPhaseDePoules(row) || clubFictif(row.club_rec) || clubFictif(row.club_vis)) return;
       var p = {
@@ -1253,11 +1264,18 @@
       if (!hasScore(row)) { restantes.push(p); return; }
       p.sa = parseInt(row.score_cr, 10);
       p.sb = parseInt(row.score_cv, 10);
-      if (Number.isNaN(p.sa) || Number.isNaN(p.sb)) return;
+      // Score publié mais pas chiffré (forfait…) : hors des chiffres et du
+      // classement, comme au Classement, mais montré tel quel dans les résultats.
+      if (Number.isNaN(p.sa) || Number.isNaN(p.sb)) {
+        p.sa = p.sb = undefined;
+        p.brut = String(row.score_cr).trim() + "–" + String(row.score_cv).trim();
+        autres.push(p);
+        return;
+      }
       p.ecart = Math.abs(p.sa - p.sb);
       jouees.push(p);
     });
-    return { jouees: jouees, restantes: restantes };
+    return { jouees: jouees, restantes: restantes, autres: autres };
   }
 
   // Ordre de la saison : par date, puis par identifiant de la ligue pour
@@ -1352,27 +1370,34 @@
       sous = pluriel(jouees.length, "partie jouée", "parties jouées") + ", " + pluriel(ctx.qualifies, "équipe qualifiée", "équipes qualifiées") +
              " pour les quarts. Place aux phases finales !";
     } else {
-      var derniere = restantes.reduce(function (m, p) { return (p.date && (!m || p.date > m)) ? p.date : m; }, null);
-      // Une date déjà passée (résultat en attente) ne s'annonce pas.
+      // Une partie passée sans score n'est plus « à jouer » : son résultat
+      // est attendu.
       var aujourdhui = new Date();
       aujourdhui.setHours(0, 0, 0, 0);
-      if (derniere && derniere < aujourdhui) derniere = null;
+      var aVenir = restantes.filter(function (p) { return !p.date || p.date >= aujourdhui; });
+      var attendus = restantes.length - aVenir.length;
+      var derniere = aVenir.reduce(function (m, p) { return (p.date && (!m || p.date > m)) ? p.date : m; }, null);
       titre = "Dernière ligne droite";
-      sous = "Encore " + pluriel(restantes.length, "partie") + " de poule à jouer" +
-             (derniere ? ", la dernière prévue le " + fmtJourLong(derniere) : "") +
+      sous = (aVenir.length
+               ? "Encore " + pluriel(aVenir.length, "partie") + " de poule à jouer" +
+                 (derniere ? ", la dernière prévue le " + fmtJourLong(derniere) : "")
+               : "Toutes les parties de poule sont jouées") +
+             (attendus ? (aVenir.length ? ", et " : ", ") + pluriel(attendus, "score") + " pas encore " + (attendus > 1 ? "publiés" : "publié") : "") +
              " : bilan provisoire, il bougera d'ici là.";
     }
     hero.appendChild(el("h2", { class: "bilan-titre", id: "bilanTitre", text: titre }));
     hero.appendChild(el("p", { class: "bilan-sous", text: sous }));
 
     var points = jouees.reduce(function (s, p) { return s + p.sa + p.sb; }, 0);
-    var ecart = jouees.length ? jouees.reduce(function (s, p) { return s + p.ecart; }, 0) / jouees.length : 0;
-    var serrees = jouees.filter(function (p) { return p.ecart <= SERREE_MAX; }).length;
+    // Écart et parties serrées : entre un vainqueur et un vaincu, nuls exclus.
+    var gagnees = jouees.filter(function (p) { return p.ecart > 0; });
+    var ecart = gagnees.length ? gagnees.reduce(function (s, p) { return s + p.ecart; }, 0) / gagnees.length : 0;
+    var serrees = gagnees.filter(function (p) { return p.ecart <= SERREE_MAX; }).length;
     var tuiles = [
       [fmtEntier(jouees.length), (jouees.length > 1 ? "parties jouées" : "partie jouée") + " entre " + ctx.teams.length + " équipes"],
       [fmtEntier(points), "points marqués, " + (jouees.length ? fmt1(points / jouees.length) : "0") + " par partie"],
       [fmt1(ecart), "points d'écart en moyenne entre vainqueur et vaincu"],
-      [jouees.length ? Math.round(100 * serrees / jouees.length) + " %" : "–",
+      [gagnees.length ? Math.round(100 * serrees / gagnees.length) + " %" : "–",
        "de parties serrées, gagnées de " + SERREE_MAX + " points ou moins (" + serrees + ")"]
     ];
     var grille = el("div", { class: "bilan-tuiles" });
@@ -1400,13 +1425,17 @@
       ligne.appendChild(document.createTextNode(" · " + t.serieLabel));
       ligne.appendChild(document.createElement("br"));
       var verdict, genre, detail = "";
-      if (!t.jouees) {
+      var rang = serie.rangs[cleEquipe(t)];
+      if (!t.jouees || !rang) {
         verdict = "pas encore classée"; genre = "attente";
       } else {
-        var rang = serie.rangs[cleEquipe(t)];
         detail = t.gagnees + " victoire" + (t.gagnees > 1 ? "s" : "") + ", " + t.perdues + " défaite" + (t.perdues > 1 ? "s" : "") +
                  " · " + fmtMoyenne(t.moyenne) + " pts par partie · GA " + fmtSigne(t.ga);
-        if (rang > QUALIFIES_PAR_POULE) {
+        if (!serie.tableau.quarts) {
+          // Pas deux poules : pas de tableau des quarts, donc pas de verdict.
+          verdict = ordinal(rang) + " de la poule " + t.poule;
+          genre = "attente";
+        } else if (rang > QUALIFIES_PAR_POULE) {
           verdict = ordinal(rang) + " de la poule " + t.poule + " · " + (provisoire ? "hors des quarts pour l'instant" : "pas de quart cette saison");
           genre = "ko";
         } else {
@@ -1490,18 +1519,21 @@
       if (tenants.length) ajouter("🔥", "Plus longue série de victoires", tenants, record + " victoires d'affilée");
     }
 
-    if (serie.jouees.length) {
-      var large = serie.jouees.reduce(function (m, p) { return p.ecart > m.ecart ? p : m; });
+    // Trophées de partie, dans l'ordre des dates : à égalité, la plus
+    // ancienne l'emporte. Un nul n'a ni vainqueur ni écart.
+    var chrono = serie.jouees.slice().sort(ordreChrono);
+    var decisives = chrono.filter(function (p) { return p.ecart > 0; });
+    if (decisives.length) {
+      var large = decisives.reduce(function (m, p) { return p.ecart > m.ecart ? p : m; });
       ajouter("💥", "Plus large victoire", null, pluriel(large.ecart, "point") + " d'écart", large);
-      var decisives = serie.jouees.filter(function (p) { return p.ecart > 0; });
-      if (decisives.length) {
-        var min = decisives.reduce(function (m, p) { return Math.min(m, p.ecart); }, Infinity);
-        var serrees = decisives.filter(function (p) { return p.ecart === min; }).sort(ordreChrono);
-        var autres = serrees.length - 1;
-        ajouter("😰", "Partie la plus serrée", null, pluriel(min, "point") + " d'écart" +
-          (autres ? ", comme " + (autres > 1 ? autres + " autres parties" : "une autre partie") : ""), serrees[0]);
-      }
-      var prolifique = serie.jouees.reduce(function (m, p) { return (p.sa + p.sb) > (m.sa + m.sb) ? p : m; });
+      var min = decisives.reduce(function (m, p) { return Math.min(m, p.ecart); }, Infinity);
+      var serrees = decisives.filter(function (p) { return p.ecart === min; });
+      var autres = serrees.length - 1;
+      ajouter("😰", "Partie la plus serrée", null, pluriel(min, "point") + " d'écart" +
+        (autres ? ", comme " + (autres > 1 ? autres + " autres parties" : "une autre partie") : ""), serrees[0]);
+    }
+    if (chrono.length) {
+      var prolifique = chrono.reduce(function (m, p) { return (p.sa + p.sb) > (m.sa + m.sb) ? p : m; });
       ajouter("🎆", "Partie la plus prolifique", null, (prolifique.sa + prolifique.sb) + " points marqués à deux", prolifique);
     }
 
@@ -1551,6 +1583,7 @@
     var teams = trierClassement(serie.teams.filter(function (t) { return t.poule === poule; }));
     var jouees = serie.jouees.filter(function (p) { return p.poule === poule; });
     var restantes = serie.restantes.filter(function (p) { return p.poule === poule; });
+    var autres = serie.autres.filter(function (p) { return p.poule === poule; });
     var mesCles = {};
     teams.forEach(function (t) { if (estSuivie(suivies, t)) mesCles[cleEquipe(t)] = true; });
 
@@ -1577,18 +1610,18 @@
 
     // Les résultats, repliés : la poule se lit d'abord au classement.
     var details = el("details", { class: "resultats" });
-    var n = jouees.length + restantes.length;
+    var n = jouees.length + restantes.length + autres.length;
     details.appendChild(el("summary", { text: "Les " + pluriel(n, "partie") + " de la poule" }));
     var aujourdhui = new Date();
     aujourdhui.setHours(0, 0, 0, 0);
-    jouees.concat(restantes).sort(ordreChrono).forEach(function (p) {
+    jouees.concat(restantes, autres).sort(ordreChrono).forEach(function (p) {
       var joue = p.sa != null;
       // Passée sans score : en attente du résultat, pas « à jouer ».
-      var attente = !joue && p.date && p.date < aujourdhui;
+      var attente = !joue && !p.brut && p.date && p.date < aujourdhui;
       var ligne = el("div", { class: "resultat" + (mesCles[p.a] || mesCles[p.b] ? " suivie" : "") });
       ligne.appendChild(el("span", { class: "resultat-date", text: fmtJour(p.date) }));
       ligne.appendChild(el("span", { class: "resultat-eq rec" + (joue && p.sa > p.sb ? " gagne" : ""), text: p.nomA }));
-      ligne.appendChild(el("span", { class: "resultat-score" + (joue ? "" : " a-jouer"), text: joue ? p.sa + "–" + p.sb : (attente ? "sans score" : "à jouer") }));
+      ligne.appendChild(el("span", { class: "resultat-score" + (joue || p.brut ? "" : " a-jouer"), text: joue ? p.sa + "–" + p.sb : (p.brut || (attente ? "sans score" : "à jouer")) }));
       ligne.appendChild(el("span", { class: "resultat-eq" + (joue && p.sb > p.sa ? " gagne" : ""), text: p.nomB }));
       details.appendChild(ligne);
     });
@@ -1774,10 +1807,11 @@
     var series = {};
     teams.forEach(function (t) {
       var cle = t.spec + "|" + t.cat;
-      (series[cle] = series[cle] || { spec: t.spec, cat: t.cat, label: t.serieLabel, teams: [], jouees: [], restantes: [] }).teams.push(t);
+      (series[cle] = series[cle] || { spec: t.spec, cat: t.cat, label: t.serieLabel, teams: [], jouees: [], restantes: [], autres: [] }).teams.push(t);
     });
     parties.jouees.forEach(function (p) { var s = series[p.spec + "|" + p.cat]; if (s) s.jouees.push(p); });
     parties.restantes.forEach(function (p) { var s = series[p.spec + "|" + p.cat]; if (s) s.restantes.push(p); });
+    parties.autres.forEach(function (p) { var s = series[p.spec + "|" + p.cat]; if (s) s.autres.push(p); });
     var qualifies = 0;
     Object.keys(series).forEach(function (k) {
       var s = series[k];
@@ -1786,9 +1820,10 @@
       Object.keys(s.poules).forEach(function (pl) {
         var classees = trierClassement(s.teams.filter(function (t) { return t.poule === pl; }));
         classees.forEach(function (t, i) { s.rangs[cleEquipe(t)] = i + 1; });
-        qualifies += Math.min(QUALIFIES_PAR_POULE, classees.length);
       });
       s.tableau = tableauQuarts(s.teams);
+      // Qualifiées : les places occupées du tableau des quarts, s'il existe.
+      (s.tableau.quarts || []).forEach(function (q) { q.cotes.forEach(function (c) { if (c.team) qualifies++; }); });
     });
     var specs = {};
     teams.forEach(function (t) { specs[t.spec] = true; });

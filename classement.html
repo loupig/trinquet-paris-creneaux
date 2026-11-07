@@ -143,6 +143,11 @@
     --sim-bg: #fbfcff;
     --fort-bord: #1a1a2e;
     --sur-accent: #fff;
+    /* Texte secondaire et voile sur les fonds foncés (--fort-bg), foncés
+       dans les deux thèmes : mêmes valeurs en sombre. */
+    --sur-fort-doux: rgba(255, 255, 255, 0.75);
+    --sur-fort-voile: rgba(255, 255, 255, 0.08);
+    --sur-fort-bord: rgba(255, 255, 255, 0.12);
     /* Teintes des poules, prises aux rayures du linge basque : bordeaux,
        bleu marine, vert sapin, ocre. Distinctes des séries, et du vert et du
        rouge des victoires et défaites. */
@@ -203,6 +208,9 @@
       --sim-bg: #1a1f30;
       --fort-bord: #6e6e6e;
       --sur-accent: #181818;
+      --sur-fort-doux: rgba(255, 255, 255, 0.75);
+      --sur-fort-voile: rgba(255, 255, 255, 0.08);
+      --sur-fort-bord: rgba(255, 255, 255, 0.12);
       --poule1-text: #f4a3b1;
       --poule1-bg: #3a1820;
       --poule2-text: #9cc0f0;
@@ -259,6 +267,9 @@
     --sim-bg: #1a1f30;
     --fort-bord: #6e6e6e;
     --sur-accent: #181818;
+    --sur-fort-doux: rgba(255, 255, 255, 0.75);
+    --sur-fort-voile: rgba(255, 255, 255, 0.08);
+    --sur-fort-bord: rgba(255, 255, 255, 0.12);
     --poule1-text: #f4a3b1;
     --poule1-bg: #3a1820;
     --poule2-text: #9cc0f0;
@@ -968,7 +979,7 @@
   }
   .bilan-lien .bilan-lien-emoji { flex: none; font-size: 20px; line-height: 1; }
   .bilan-lien .bilan-lien-texte { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.3; }
-  .bilan-lien small { display: block; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.7); }
+  .bilan-lien small { display: block; font-size: 12px; font-weight: 600; color: var(--sur-fort-doux); }
   .bilan-lien svg { flex: none; }
 
   .legende {

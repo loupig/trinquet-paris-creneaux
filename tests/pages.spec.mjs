@@ -862,6 +862,9 @@ test.describe("Bilan de la phase de poules", () => {
     const hero = page.locator(".bilan-hero");
     await expect(hero.locator(".bilan-titre")).toHaveText("Dernière ligne droite");
     await expect(hero).toContainText("bilan provisoire");
+    // Parties passées sans score : des résultats attendus, pas des parties à jouer.
+    await expect(hero.locator(".bilan-sous")).toContainText("Encore 20 parties de poule à jouer");
+    await expect(hero.locator(".bilan-sous")).toContainText("et 8 scores pas encore publiés");
     await expect(hero.locator(".bilan-tuile b").first()).toHaveText("32");
 
     // Charlie, suivie : 4e de sa poule pour l'instant, en Q4 contre le 1er de la poule 2.
@@ -888,7 +891,8 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(resultats.locator(".resultat").first()).toBeHidden();
     await resultats.locator("summary").click();
     await expect(resultats.locator(".resultat")).toHaveCount(15);
-    await expect(resultats.locator(".resultat-score.a-jouer")).not.toHaveCount(0);
+    await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "à jouer" })).not.toHaveCount(0);
+    await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "sans score" })).toHaveCount(2);
 
     // Le tableau final est celui du Classement.
     const finales = serie.locator(".finales-card");
@@ -915,7 +919,9 @@ test.describe("Bilan de la phase de poules", () => {
   });
 
   test("toutes les parties de poule jouées : verdict des poules et tableau définitif", async ({ page }) => {
-    const finies = tables.rencontres.map((r) => r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "33" } : r);
+    // Toutes jouées, dont un forfait au score non chiffré : hors des chiffres, mais affiché.
+    const finies = tables.rencontres.map((r) => r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "33" } : r)
+      .map((r) => r.oid === "1" ? { ...r, score_cr: "F", score_cv: "40" } : r);
     await page.route("**/script.google.com/**", (route) => {
       const table = new URL(route.request().url()).searchParams.get("table");
       route.fulfill({
@@ -928,7 +934,11 @@ test.describe("Bilan de la phase de poules", () => {
     await page.goto("bilan.html");
     await attendreChargement(page);
     await expect(page.locator(".bilan-titre")).toHaveText("Les poules ont rendu leur verdict");
-    await expect(page.locator(".bilan-hero")).toContainText("60 parties jouées, 16 équipes qualifiées");
+    await expect(page.locator(".bilan-hero")).toContainText("59 parties jouées, 16 équipes qualifiées");
+    const resultats = page.locator("details.resultats").first();
+    await resultats.locator("summary").click();
+    await expect(resultats.locator(".resultat")).toHaveCount(15);
+    await expect(resultats.locator(".resultat-score", { hasText: "F–40" })).toHaveCount(1);
     await expect(page.locator(".finales-card .statut")).toHaveText(["Poules terminées", "Poules terminées"]);
     await expect(page.locator(".poule-card:not(.finales-card) .statut").first()).toHaveText("Terminée");
     await expect(page.locator(".cut-line").first()).toHaveText("Qualifiés pour les quarts");

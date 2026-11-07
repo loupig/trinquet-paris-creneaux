@@ -25,32 +25,32 @@ Le bilan SHALL lire les rencontres et les clubs comme le Classement, avec le mê
 - **THEN** la page n'affiche qu'un bandeau d'erreur « Impossible d'afficher le bilan »
 
 ### Requirement: Affiche de la phase de poules
-En tête, la page SHALL afficher une affiche sur fond foncé qui dit où en sont les poules : « Les poules ont rendu leur verdict » avec le nombre de parties jouées et d'équipes qualifiées quand toutes les parties de poule ont un score, sinon « Dernière ligne droite » avec le nombre de parties restantes, la date de la dernière prévue et la mention d'un bilan provisoire. Quatre chiffres suivent, sur toutes les séries : les parties jouées et le nombre d'équipes, les points marqués et leur moyenne par partie, l'écart moyen entre vainqueur et vaincu, la part de parties serrées (gagnées de 5 points ou moins).
+En tête, la page SHALL afficher une affiche sur fond foncé qui dit où en sont les poules : « Les poules ont rendu leur verdict » avec le nombre de parties jouées et d'équipes qualifiées quand toutes les parties de poule ont un score, sinon « Dernière ligne droite » avec le nombre de parties encore à jouer et la date de la dernière prévue, le nombre de scores attendus pour les parties passées sans résultat publié, et la mention d'un bilan provisoire. Quatre chiffres suivent, sur toutes les séries : les parties jouées et le nombre d'équipes, les points marqués et leur moyenne par partie, l'écart moyen entre vainqueur et vaincu, la part de parties serrées (gagnées de 5 points ou moins). Seules comptent les parties au score chiffré ; un nul n'entre ni dans l'écart moyen ni dans les parties serrées.
 
 #### Scenario: Poules en cours
 - **WHEN** des parties de poule restent sans score
-- **THEN** l'affiche titre « Dernière ligne droite » et parle d'un bilan provisoire
+- **THEN** l'affiche titre « Dernière ligne droite », sépare les parties à jouer des scores attendus, et parle d'un bilan provisoire
 
 #### Scenario: Poules terminées
 - **WHEN** toutes les parties de poule ont un score
 - **THEN** l'affiche titre « Les poules ont rendu leur verdict » et donne le nombre de parties jouées et d'équipes qualifiées
 
 ### Requirement: Mes équipes au bilan
-Pour chaque équipe suivie (spec `mes-equipes`), la page SHALL donner sous l'affiche son rang de poule, son bilan (victoires, défaites, moyenne, goal average) et son sort : qualifiée avec son quart et son adversaire, ou non qualifiée ; « pour l'instant » tant que sa série a des parties de poule sans score. Sans équipe suivie, le bloc n'apparaît pas.
+Pour chaque équipe suivie (spec `mes-equipes`), la page SHALL donner sous l'affiche son rang de poule, son bilan (victoires, défaites, moyenne, goal average) et son sort : qualifiée avec son quart et son adversaire, ou non qualifiée ; « pour l'instant » tant que sa série a des parties de poule sans score. Dans une série qui n'a pas exactement deux poules, donc pas de tableau, seul le rang est donné. Sans équipe suivie, le bloc n'apparaît pas.
 
 #### Scenario: Équipe suivie qualifiée
 - **WHEN** l'équipe suivie est 4e de la poule 1 et que des parties restent
 - **THEN** le bloc dit « 4e de la poule 1 · en quarts pour l'instant » et nomme son adversaire de quart
 
 ### Requirement: Trophées d'une série
-Pour chaque série, la page SHALL décerner, d'après les seuls scores réels de poule : le meilleur bilan (première au classement de la série), la meilleure attaque (points marqués par partie), la meilleure défense (points encaissés par partie), les équipes invaincues s'il y en a, la plus longue série de victoires d'affilée (deux au moins, si elle n'est pas celle d'une invaincue), la plus large victoire, la partie la plus serrée et la partie la plus prolifique (le plus de points à deux). À égalité, l'ordre du classement départage. Un trophée qui revient à une équipe suivie est mis en évidence.
+Pour chaque série, la page SHALL décerner, d'après les seuls scores réels de poule : le meilleur bilan (première au classement de la série), la meilleure attaque (points marqués par partie), la meilleure défense (points encaissés par partie), les équipes invaincues s'il y en a, la plus longue série de victoires d'affilée (deux au moins, si elle n'est pas celle d'une invaincue), la plus large victoire, la partie la plus serrée et la partie la plus prolifique (le plus de points à deux). À égalité, l'ordre du classement départage les équipes, et la date les parties (la plus ancienne l'emporte). Un nul n'est jamais la plus large victoire ni la plus serrée. Un trophée qui revient à une équipe suivie est mis en évidence.
 
 #### Scenario: Plus large victoire
 - **WHEN** la plus grande différence de score d'une série est un 40–18
 - **THEN** le trophée « Plus large victoire » donne la partie, vainqueur en premier, et « 22 points d'écart »
 
 ### Requirement: Poules et résultats
-Pour chaque poule, la page SHALL afficher le classement, avec le trait des qualifiés sous la 4e équipe (« En quarts pour l'instant » tant que la poule n'est pas finie, « Qualifiés pour les quarts » ensuite), l'équipe suivie mise en évidence, puis les parties de la poule, repliées, dans l'ordre des dates : score avec le vainqueur en gras, « à jouer » pour une partie à venir et « sans score » pour une partie passée sans résultat publié.
+Pour chaque poule, la page SHALL afficher le classement, avec le trait des qualifiés sous la 4e équipe (« En quarts pour l'instant » tant que la poule n'est pas finie, « Qualifiés pour les quarts » ensuite), l'équipe suivie mise en évidence, puis les parties de la poule, repliées, dans l'ordre des dates : score avec le vainqueur en gras, « à jouer » pour une partie à venir, « sans score » pour une partie passée sans résultat publié, et le score tel que publié pour un score non chiffré (forfait), qui ne compte pas au classement.
 
 #### Scenario: Déplier les résultats
 - **WHEN** le visiteur touche « Les 15 parties de la poule »
