@@ -210,7 +210,7 @@ Clés `localStorage` :
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
 | `lidfpb_theme_v1` | toutes (bouton sur les six pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
-| `lidfpb_joueurs_v1` | Accueil, Classement | Joueurs des équipes affichés (`1`) ; absente, masqués et compositions non chargées |
+| `lidfpb_joueurs_v1` | Accueil, Parties, Classement | Joueurs des équipes affichés (`1`) ; absente, masqués (et, sur l'accueil et le Classement, compositions non chargées) |
 
 ## Temps de chargement
 
@@ -232,8 +232,9 @@ déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
 - **Noms de joueurs** : sur Parties et Créneaux (au détail d'une partie) et
-  sur Mes équipes ; sur l'accueil et le Classement seulement si le visiteur
-  les demande (bouton « Joueurs », masqués par défaut), jamais dans le texte
+  sur Mes équipes ; sous chaque partie ou équipe de l'accueil, de Parties et
+  du Classement seulement si le visiteur les demande (réglage « Joueurs »,
+  masqués par défaut), jamais dans le texte
   ni l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
   numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,

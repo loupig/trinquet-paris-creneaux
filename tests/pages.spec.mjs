@@ -1366,6 +1366,23 @@ test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
   });
 
+  test("Parties : le même réglage met les joueurs sous chaque partie, sans le toucher", async ({ page }) => {
+    await page.addInitScript(() => { localStorage.setItem("lidfpb_joueurs_v1", "1"); });
+    await page.goto("programme.html");
+    await attendreChargement(page);
+
+    const pastille = page.getByRole("button", { name: "Joueurs des équipes" });
+    await expect(pastille).toHaveAttribute("aria-pressed", "true");
+    const lignes = page.locator(".match-row-joueurs");
+    await expect(lignes.first()).toHaveText(/^Ane Joueur\d+, Bixente Joueur\d+ vs Ane Joueur\d+, Bixente Joueur\d+$/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await pastille.click();
+    await expect(pastille).toHaveAttribute("aria-pressed", "false");
+    await expect(lignes).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
+  });
+
   test("une équipe sans composition déclarée le dit", async ({ page }) => {
     await page.route("**/script.google.com/**", (route) => {
       const table = new URL(route.request().url()).searchParams.get("table");
