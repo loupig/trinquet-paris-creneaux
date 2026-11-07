@@ -57,6 +57,17 @@ En découpage par poule, une carte de plus de quatre équipes SHALL porter, sous
 - **WHEN** le visiteur regarde une poule de quatre équipes
 - **THEN** aucun trait n'apparaît
 
+### Requirement: Joueurs des équipes à la demande
+Le bloc Filtres SHALL proposer, sous « Affichage », une pastille « Joueurs des équipes », éteinte par défaut. Allumée, chaque ligne d'équipe porte sous son détail les noms de ses joueurs, tels que déclarés à la ligue (composition de l'engagement), ou « Composition non déclarée à la ligue ». Le réglage ne change aucun rang ; il est gardé sur l'appareil (`lidfpb_joueurs_v1`) et commun avec l'accueil. Pastille éteinte, les tables des compositions ne sont pas chargées. Replié, le bloc Filtres le résume par « Avec les joueurs ».
+
+#### Scenario: Afficher les joueurs
+- **WHEN** le visiteur allume « Joueurs des équipes »
+- **THEN** sous la ligne d'Alpha (éq. 1) apparaissent les noms de ses joueurs, et l'accueil s'ouvrira lui aussi avec les joueurs
+
+#### Scenario: Équipe sans composition
+- **WHEN** une équipe n'a déclaré aucune composition à la ligue
+- **THEN** sa ligne porte « Composition non déclarée à la ligue »
+
 ### Requirement: Filtres du classement
 La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un filtre par série (Série 1, Série 2), tous actifs par défaut. Replié, le bloc résume les filtres choisis (spec `programme`, « Résumé des filtres repliés »), le découpage « Général » y compris. Ces filtres masquent des cartes entières et ne changent jamais le rang d'une équipe. Le choix de spécialité, de série et de découpage MUST être retrouvé d'une visite à l'autre sur le même navigateur, sans être envoyé nulle part. Quand aucune carte ne reste, la page affiche « Aucune équipe ne correspond aux filtres. ».
 

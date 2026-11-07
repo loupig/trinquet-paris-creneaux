@@ -1302,6 +1302,72 @@ test.describe("Accueil : alerte des parties en double", () => {
   });
 });
 
+test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
+  test("masqués par défaut sans rien charger ; un toucher les montre sur l'accueil, puis sur le Classement", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    const tablesDemandees = [];
+    page.on("request", (r) => {
+      if (r.url().includes("script.google.com")) tablesDemandees.push(new URL(r.url()).searchParams.get("table"));
+    });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await ouvrirDIciDimanche(page);
+
+    const bouton = page.getByRole("button", { name: "Joueurs", exact: true });
+    await expect(bouton).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator(".affiche-joueurs")).toHaveCount(0);
+    expect(tablesDemandees).not.toContain("engagements");
+    expect(tablesDemandees).not.toContain("licencies");
+
+    // Le cache n'a pas encore les compositions : elles arrivent du réseau.
+    await bouton.click();
+    await expect(page.locator("#vue-ici .affiche-joueurs").first()).toHaveText(/^Ane Joueur\d+, Bixente Joueur\d+ vs Ane Joueur\d+, Bixente Joueur\d+$/);
+    await expect(page.getByRole("button", { name: "Joueurs", exact: true })).toHaveAttribute("aria-pressed", "true");
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBe("1");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    // Ni le texte ni l'image partagés ne portent de noms de joueurs.
+    await page.getByRole("button", { name: "Partager", exact: true }).click();
+    expect(await page.evaluate(() => window.__partage.text)).not.toContain("Joueur1");
+
+    // Le réglage suit sur le Classement.
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const pastille = page.getByRole("button", { name: "Joueurs des équipes" });
+    await expect(pastille).toHaveAttribute("aria-pressed", "true");
+    const alpha = page.locator(".rank-row").filter({ hasText: "Alpha (éq. 1)" }).first();
+    await expect(alpha.locator(".rank-joueurs")).toHaveText("Ane Joueur100001, Bixente Joueur100002");
+
+    await pastille.click();
+    await expect(pastille).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator(".rank-joueurs")).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
+  });
+
+  test("une équipe sans composition déclarée le dit", async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      const data = table === "engagements"
+        ? tables.engagements.filter((e) => e["Numéro club"] !== "03-750-001")   // Alpha
+        : (tables[table] || []);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+      });
+    });
+    await page.addInitScript(() => { localStorage.setItem("lidfpb_joueurs_v1", "1"); });
+
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const ligne = (nom) => page.locator(".rank-row").filter({ hasText: nom }).first().locator(".rank-joueurs");
+    await expect(ligne("Alpha (éq. 1)")).toHaveText("Composition non déclarée à la ligue");
+    await expect(ligne("Alpha (éq. 1)")).toHaveClass(/inconnus/);
+    await expect(ligne("Bravo (éq. 1)")).toHaveText("Ane Joueur100003, Bixente Joueur100004");
+  });
+});
+
 test.describe("Mes équipes : la prochaine partie dans l'agenda", () => {
   // Prochaine partie de Charlie 1 dans les données fictives : il reçoit
   // Foxtrot 1 dans quatre jours, à 19h30, au Trinquet Paris.

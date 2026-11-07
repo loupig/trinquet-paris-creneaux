@@ -614,6 +614,29 @@
   }
   .partager:active { opacity: 0.75; }
 
+  /* Réglage des joueurs, dans le pied du bloc de la semaine : une bascule,
+     éteinte en gris, allumée aux couleurs de l'onglet ouvert. */
+  .joueurs-btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .pied-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; min-width: 0; }
+  .pied-actions .partage-zone { margin-left: 0; }
+  .joueurs-btn[aria-pressed="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+
+  /* Noms des joueurs sous une partie : petits et en retrait, pour que la
+     liste reste lisible d'un coup d'œil. */
+  .affiche-joueurs { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 3px; }
+  .affiche-joueurs .joueurs-vs { font-weight: 700; }
+  .affiche-joueurs .inconnus { font-style: italic; }
+
   /* --- Barre de progression de la saison --- */
   .progress {
     height: 7px;
@@ -733,7 +756,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.06</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.07</p>
   </footer>
 </main>
 
@@ -906,14 +929,18 @@
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
 
-    return Promise.all([rencontresPromise, clubsPromise]).then(function (results) {
+    return Promise.all([rencontresPromise, clubsPromise, chargerCompositions(source)]).then(function (results) {
       var rencontres = results[0].data.filter(function (row) {
         var cat = String(row["Catégorie"] || "").trim();
         return SERIE_LABELS.hasOwnProperty(cat) && row.oid;
       });
+      var compo = results[2];
       return {
         rencontres: masquerFinalesPrematurees(rencontres),
         clubs: results[1].data,
+        joueurs: compo ? compositions(results[1].data, compo.engagements, compo.licencies) : null,
+        joueursIncomplets: !!(compo && compo.incomplet),
+        tailleCompo: compo ? compo.engagements.length + "/" + compo.licencies.length : "",
         fetchedAt: Date.now(),
         lastSync: results[0].lastSync || null
       };
@@ -921,7 +948,85 @@
   }
 
   function signature(data) {
-    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
+    return [data.lastSync, data.rencontres.length, data.clubs.length, data.tailleCompo].join("|");
+  }
+
+  // ---------------------------------------------------------------
+  // Joueurs des équipes
+  // ---------------------------------------------------------------
+  // Les noms alourdissent la lecture et coûtent deux tables de plus à
+  // charger : ils ne s'affichent qu'à la demande du visiteur. Le réglage
+  // est gardé sur l'appareil, commun à l'accueil et au Classement.
+  var JOUEURS_KEY = "lidfpb_joueurs_v1";
+
+  function lireJoueurs() {
+    try { return localStorage.getItem(JOUEURS_KEY) === "1"; } catch (e) { return false; /* stockage indisponible : noms masqués */ }
+  }
+
+  function ecrireJoueurs(oui) {
+    try {
+      if (oui) localStorage.setItem(JOUEURS_KEY, "1");
+      else localStorage.removeItem(JOUEURS_KEY);
+    } catch (e) { /* pas bloquant : le réglage vaut pour la visite */ }
+  }
+
+  // Les en-têtes exportées par le site source contiennent littéralement
+  // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite via
+  // fromCharCode pour éviter qu'un éditeur ne la décode en espace insécable.
+  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
+  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
+
+  // Les numéros de licence ne sont pas formatés pareil selon la table
+  // ("058863" dans licencies, "58863" dans engagements) : on compare toujours
+  // la forme sans zéros de tête.
+  function normalizeLicence(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d+$/.test(s)) return s;
+    return String(Number.parseInt(s, 10));
+  }
+
+  // La composition déclarée à la ligue de chaque équipe, comme sur Mes
+  // équipes : une fonction qui, pour un club (code des rencontres,
+  // "3750030"), une catégorie et un numéro d'équipe, rend la liste des noms,
+  // ou null. Seules les licences des engagements sont lues : ni le
+  // responsable ni son téléphone.
+  function compositions(clubs, engagements, licencies) {
+    var numeroClub = {};
+    (clubs || []).forEach(function (c) {
+      var numero = String(c["Numéro club"] || "").trim();
+      if (!c["comité"] || !c["club"] || !numero) return;
+      numeroClub[String(c["Ligue"] || "3") + String(c["comité"]).padStart(3, "0") + String(c["club"]).padStart(3, "0")] = numero;
+    });
+    var noms = {};
+    (licencies || []).forEach(function (l) {
+      var licence = normalizeLicence(l["Licence"]);
+      if (licence) noms[licence] = (String(l["prenom"] || "").trim() + " " + String(l["nom"] || "").trim()).trim();
+    });
+    var parEquipe = {};
+    (engagements || []).forEach(function (e) {
+      var cle = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      parEquipe[cle] = LICENCE_COLUMNS.map(function (col) { return normalizeLicence(e[col]); }).filter(Boolean);
+    });
+    return function (club, categorie, equipe) {
+      var numero = numeroClub[String(club || "").trim()];
+      var licences = numero && parEquipe[[numero, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
+      var liste = (licences || []).map(function (l) { return noms[l]; }).filter(Boolean);
+      return liste.length ? liste : null;
+    };
+  }
+
+  // Les compositions sont un bonus d'affichage : sans le réglage, rien n'est
+  // chargé ; un échec laisse la page s'afficher sans les noms, et le signale
+  // pour qu'un cache incomplet soit complété par le réseau.
+  function chargerCompositions(source) {
+    if (!lireJoueurs()) return Promise.resolve(null);
+    var manque = false;
+    function table(nom) {
+      return source(buildUrl(nom, {})).catch(function () { manque = true; return { data: [] }; });
+    }
+    return Promise.all([table("engagements"), table("licencies")]).then(function (r) {
+      return { engagements: r[0].data, licencies: r[1].data, incomplet: manque };
+    });
   }
 
   // ---------------------------------------------------------------
@@ -1572,10 +1677,24 @@
     return equipes;
   }
 
+  // Les joueurs des deux équipes, sur une ligne à part, quand le visiteur les
+  // a demandés. Rien pour une partie dont aucune composition n'est connue
+  // (adversaires à désigner, équipe non déclarée des deux côtés).
+  function ligneJoueurs(m, joueurs) {
+    if (!joueurs) return null;
+    var rec = joueurs(m.clubRec, m.cat, m.equipRec), vis = joueurs(m.clubVis, m.cat, m.equipVis);
+    if (!rec && !vis) return null;
+    var ligne = el("div", { class: "affiche-joueurs" });
+    ligne.appendChild(el("span", { class: rec ? "" : "inconnus", text: rec ? rec.join(", ") : "composition non déclarée" }));
+    ligne.appendChild(el("span", { class: "joueurs-vs", text: " vs " }));
+    ligne.appendChild(el("span", { class: vis ? "" : "inconnus", text: vis ? vis.join(", ") : "composition non déclarée" }));
+    return ligne;
+  }
+
   // Une ligne par partie, comme « D'ici dimanche », le score entre les deux
   // équipes et le perdant en retrait. Une partie passée sans score le dit sur
   // une seconde ligne : le joueur qui la cherche sait qu'elle n'est pas perdue.
-  function buildListeResultats(resultats, mes) {
+  function buildListeResultats(resultats, mes, joueurs) {
     var corps = el("div", { class: "tile-body resultats" });
     resultats.forEach(function (m) {
       var mienne = mes.some(function (cle) { return joueDans(m, cle); });
@@ -1591,6 +1710,8 @@
         attente.appendChild(el("span", { class: "affiche-lieu", text: "Score pas encore publié par la ligue" }));
         item.appendChild(attente);
       }
+      var noms = ligneJoueurs(m, joueurs);
+      if (noms) item.appendChild(noms);
       corps.appendChild(item);
     });
     return corps;
@@ -1603,7 +1724,7 @@
   // Une partie déjà jouée montre son score à la place du « vs », perdant en
   // retrait, comme dans les résultats ; sans score publié, elle le dit à la
   // place du lieu.
-  function buildListeIci(ici, mes) {
+  function buildListeIci(ici, mes, joueurs) {
     var corps = el("div", { class: "tile-body ici" });
     ici.parties.forEach(function (a) {
       var m = a.partie;
@@ -1623,6 +1744,8 @@
         else if (m.lieu) ligne2.appendChild(el("span", { class: "affiche-lieu", text: lieuCourt(m.lieu), title: m.lieu }));
         item.appendChild(ligne2);
       }
+      var noms = ligneJoueurs(m, joueurs);
+      if (noms) item.appendChild(noms);
       corps.appendChild(item);
     });
     // Les scores du week-end n'empêchent pas de dire que le calendrier est fini.
@@ -1656,15 +1779,15 @@
   // onglets étant des boutons : le lien vers la page qui prolonge la vue
   // (Classement ou programme) passe dans le pied, avec le partage. Sans
   // résultat à montrer, pas d'onglets, seulement le titre des parties.
-  function buildSemaine(resultats, ici, titre, mes, today) {
+  function buildSemaine(resultats, ici, titre, mes, today, joueurs, changerJoueurs) {
     var vues = {
       resultats: resultats.length ? {
-        label: TITRE_RESULTATS, corps: buildListeResultats(resultats, mes),
+        label: TITRE_RESULTATS, corps: buildListeResultats(resultats, mes, joueurs),
         href: "classement.html", lien: "Classement →",
         partage: partageResultats(resultats)
       } : null,
       ici: {
-        label: libelleIci(ici.dimanche, true), corps: buildListeIci(ici, mes),
+        label: libelleIci(ici.dimanche, true), corps: buildListeIci(ici, mes, joueurs),
         href: "programme.html", lien: "Tout le programme →",
         partage: ici.parties.length ? partageIci(titre, ici.parties) : null
       }
@@ -1709,9 +1832,18 @@
     var pied = el("div", { class: "tile-pied" });
     var lien = el("a", { class: "tile-go pied-lien" });
     pied.appendChild(lien);
+    // Le réglage des joueurs vaut pour les deux vues, et pour le Classement.
+    var avecJoueurs = lireJoueurs();
+    var boutonJoueurs = el("button", { type: "button", class: "joueurs-btn", "aria-pressed": String(avecJoueurs), text: "Joueurs" });
+    boutonJoueurs.addEventListener("click", function () { changerJoueurs(!avecJoueurs); });
+    // Les deux boutons restent ensemble à droite, et passent ensemble sous le
+    // lien quand la ligne est trop étroite.
+    var actions = el("div", { class: "pied-actions" });
+    actions.appendChild(boutonJoueurs);
+    pied.appendChild(actions);
     var vueOuverte = null;
     var partage = buildPartage(function () { return vues[vueOuverte].partage; });
-    pied.appendChild(partage);
+    actions.appendChild(partage);
 
     // Seule l'image de la vue ouverte est dessinée, l'autre quand on y passe.
     function montrer(vue) {
@@ -2026,6 +2158,13 @@
     return zone;
   }
 
+  // Le toucher du bouton Joueurs garde le réglage et redessine l'accueil :
+  // depuis le cache s'il a déjà les compositions, sinon par le réseau.
+  function changerJoueurs(oui) {
+    ecrireJoueurs(oui);
+    run(false);
+  }
+
   function renderTiles(data, today) {
     var box = document.getElementById("tiles");
     box.innerHTML = "";
@@ -2052,7 +2191,7 @@
     var resultats = derniersResultats(data.rencontres, clubMap, today);
     var ici = affiches(aVenir, resultats, standings, clubMap, today);
     var titre = libelleIci(ici.dimanche, false);
-    colIci.appendChild(buildSemaine(resultats, ici, titre, mes, today));
+    colIci.appendChild(buildSemaine(resultats, ici, titre, mes, today, data.joueurs, changerJoueurs));
 
     // --- Avancement de la saison ---
     var total = data.rencontres.length;
@@ -2157,16 +2296,19 @@
     var holder = {};
     var rendu = false;
     var signatureRendue = null;
+    var sansJoueurs = false;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
       afficher(data);
       rendu = true;
       signatureRendue = signature(data);
+      sansJoueurs = data.joueursIncomplets;
     }).catch(function () {
       // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
     }).then(function () {
-      // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit.
-      if (rendu && !forceRefresh && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
+      // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit et
+      //    qu'il a les joueurs demandés.
+      if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
       var skeletonTimer = rendu ? null : setTimeout(function () { renderSkeleton(tiles); }, 150);
 
