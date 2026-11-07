@@ -2173,6 +2173,16 @@
     run(false);
   }
 
+  // Réglage commun : changé sur Parties ou le Classement, il s'applique au
+  // retour sur l'accueil (cache de navigation) et dans un autre onglet.
+  function relireJoueurs() {
+    var avant = lireJoueurs();
+    joueursVisite = null;
+    if (lireJoueurs() !== avant) run(false);
+  }
+  window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
+  window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
+
   function renderTiles(data, today) {
     var box = document.getElementById("tiles");
     box.innerHTML = "";

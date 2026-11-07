@@ -3,7 +3,7 @@
 // complet pour la prévision des quarts et le simulateur du Classement.
 import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
-import { tables, oidAVenir } from "./donnees.mjs";
+import { tables, oidAVenir, codeClub } from "./donnees.mjs";
 
 const EQUIPE_SUIVIE = "2|1|3750003|1";   // Charlie, série 1, poule 1
 
@@ -1302,7 +1302,7 @@ test.describe("Accueil : alerte des parties en double", () => {
   });
 });
 
-test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
+test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
   test("masqués par défaut sans rien charger ; un toucher les montre sur l'accueil, puis sur le Classement", async ({ page }) => {
     await page.addInitScript(() => {
       navigator.canShare = (d) => !!(d && d.files);
@@ -1366,21 +1366,59 @@ test.describe("Joueurs des équipes, sur l'accueil et le Classement", () => {
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
   });
 
-  test("Parties : le même réglage met les joueurs sous chaque partie, sans le toucher", async ({ page }) => {
+  test("Parties : le même réglage met les joueurs sous chaque partie, sans le toucher", async ({ page, context }) => {
+    // Un barrage dont l'un des adversaires reste à désigner : pas de ligne.
+    const barrage = {
+      oid: "990", "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "2", "Poule": "",
+      club_rec: codeClub(0), equip_rec: "1", club_vis: "9998", equip_vis: "1",
+      lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: "01012026", heure_renc: "2000", report: "", date_rep: "",
+      score_cr: "", score_cv: ""
+    };
+    const servir = (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      const data = table === "rencontres" ? [...tables.rencontres, barrage] : (tables[table] || []);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+      });
+    };
+    await page.route("**/script.google.com/**", servir);
     await page.addInitScript(() => { localStorage.setItem("lidfpb_joueurs_v1", "1"); });
     await page.goto("programme.html");
     await attendreChargement(page);
 
     const pastille = page.getByRole("button", { name: "Joueurs des équipes" });
     await expect(pastille).toHaveAttribute("aria-pressed", "true");
-    const lignes = page.locator(".match-row-joueurs");
+    const lignes = page.locator(".match-row-joueurs:visible");
     await expect(lignes.first()).toHaveText(/^Ane Joueur\d+, Bixente Joueur\d+ vs Ane Joueur\d+, Bixente Joueur\d+$/);
+    const ligneBarrage = page.locator(".match-item").filter({ hasText: "Barrage" });
+    await expect(ligneBarrage).toHaveCount(1);
+    await expect(ligneBarrage.locator(".match-row-joueurs")).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
+    // Replié, le bloc Filtres le dit.
+    await page.locator("#filtersToggle").click();
+    await expect(page.locator(".filters-recap")).toContainText("Avec les joueurs");
+    await page.locator("#filtersToggle").click();
+
+    // Un détail ouvert reste ouvert quand on éteint les joueurs.
+    await page.locator(".match-row").first().click();
+    await expect(page.locator(".match-detail").first()).toBeVisible();
     await pastille.click();
     await expect(pastille).toHaveAttribute("aria-pressed", "false");
     await expect(lignes).toHaveCount(0);
+    await expect(page.locator(".match-detail").first()).toBeVisible();
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
+
+    // Rallumé depuis le Classement, dans un autre onglet : Parties suit.
+    const autre = await context.newPage();
+    await autre.route("**/script.google.com/**", servir);
+    await autre.goto("classement.html");
+    await attendreChargement(autre);
+    await autre.getByRole("button", { name: "Joueurs des équipes" }).click();
+    await expect(pastille).toHaveAttribute("aria-pressed", "true");
+    await expect(lignes.first()).toBeVisible();
+    await autre.close();
   });
 
   test("une équipe sans composition déclarée le dit", async ({ page }) => {

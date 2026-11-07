@@ -2714,6 +2714,16 @@
       majChipJoueurs();
       run(false);
     });
+    // Réglage commun : changé sur l'accueil ou Parties, il s'applique au
+    // retour sur la page (cache de navigation) et dans un autre onglet.
+    function relireJoueurs() {
+      var avant = lireJoueurs();
+      joueursVisite = null;
+      majChipJoueurs();
+      if (lireJoueurs() !== avant) run(false);
+    }
+    window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
+    window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });

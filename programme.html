@@ -581,7 +581,8 @@
     color: var(--muted);
   }
   /* Joueurs sous la partie, à la demande : petits et en retrait. */
-  .match-row-joueurs { margin-top: 2px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .match-row-joueurs { display: none; margin-top: 2px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  #results.avec-joueurs .match-row-joueurs { display: block; }
   .match-row-joueurs .joueurs-vs { font-weight: 700; }
   .match-row-joueurs .inconnus { font-style: italic; }
   .match-row-meta .serie-1 { color: var(--serie1-text); font-weight: 700; }
@@ -759,6 +760,8 @@
     <div class="filter-subtitle">Affichage</div>
     <div class="filter-group" id="filterPeriode" data-recap-bascule>
       <button type="button" class="filter-chip" id="chipHidePast" data-recap="Parties à venir">Masquer les parties passées</button>
+    </div>
+    <div class="filter-group" id="filterJoueurs" data-recap-bascule>
       <button type="button" class="filter-chip" id="chipJoueurs" aria-pressed="false" data-recap="Avec les joueurs">Joueurs des équipes</button>
     </div>
     </div>
@@ -1498,23 +1501,26 @@
     } catch (e) { /* pas bloquant : le réglage vaut pour la visite */ }
   }
 
-  // Les clubs fictifs de la ligue (« Equipe à désigner »…), comme sur l'accueil.
+  // Les clubs fictifs de la ligue (« Equipe à désigner », CLUB_A_DESIGNER, et
+  // les autres codes en 999…), même règle que dans index.html et classement.html.
   function clubFictif(code) {
     return /^9{3,}/.test(String(code || "").trim());
   }
 
-  // « joueurs vs joueurs » sous la partie, comme sur l'accueil. Rien pour une
-  // partie dont aucune composition n'est connue ou dont un adversaire reste
-  // à désigner.
+  // « joueurs vs joueurs » sous la partie, comme sur l'accueil, avec le
+  // libellé du détail pour une équipe sans noms. Rien pour une partie dont
+  // aucune composition n'est connue ou dont un adversaire reste à désigner.
+  // La ligne est toujours construite et montrée par la classe de #results :
+  // le réglage n'a pas à redessiner la liste ni à refermer les détails ouverts.
   function ligneJoueurs(match) {
-    if (!lireJoueurs() || match.aDesigner) return null;
+    if (match.aDesigner) return null;
     var rec = match.rosterRec && match.rosterRec.length ? match.rosterRec : null;
     var vis = match.rosterVis && match.rosterVis.length ? match.rosterVis : null;
     if (!rec && !vis) return null;
     var ligne = el("div", { class: "match-row-joueurs" });
-    ligne.appendChild(el("span", { class: rec ? "" : "inconnus", text: rec ? rec.join(", ") : "composition non déclarée" }));
+    ligne.appendChild(el("span", { class: rec ? "" : "inconnus", text: rec ? rec.join(", ") : "composition non disponible" }));
     ligne.appendChild(el("span", { class: "joueurs-vs", text: " vs " }));
-    ligne.appendChild(el("span", { class: vis ? "" : "inconnus", text: vis ? vis.join(", ") : "composition non déclarée" }));
+    ligne.appendChild(el("span", { class: vis ? "" : "inconnus", text: vis ? vis.join(", ") : "composition non disponible" }));
     return ligne;
   }
 
@@ -1754,13 +1760,18 @@
       var oui = lireJoueurs();
       chipJoueurs.classList.toggle("active", oui);
       chipJoueurs.setAttribute("aria-pressed", String(oui));
+      document.getElementById("results").classList.toggle("avec-joueurs", oui);
     }
     majChipJoueurs();
     chipJoueurs.addEventListener("click", function () {
       ecrireJoueurs(!lireJoueurs());
       majChipJoueurs();
-      rerenderIfLoaded();
     });
+    // Réglage commun : changé sur l'accueil ou le Classement, il s'applique
+    // au retour sur la page (cache de navigation) et dans un autre onglet.
+    function relireJoueurs() { joueursVisite = null; majChipJoueurs(); }
+    window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
+    window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
