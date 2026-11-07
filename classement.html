@@ -676,6 +676,9 @@
   .rank-row[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
   .rank-row[class*="teinte-"] .poule-tag { color: var(--teinte); background: var(--teinte-bg); }
   .rank-detail { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+  /* Joueurs de l'équipe, à la demande : sous le détail, même taille. */
+  .rank-joueurs { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+  .rank-joueurs.inconnus { font-style: italic; }
   .rank-values { flex: 0 0 auto; text-align: right; }
   .rank-score {
     font-size: 16px;
@@ -1067,6 +1070,10 @@
       <button type="button" class="filter-chip" data-mode="poule" data-recap-defaut>Par poule</button>
       <button type="button" class="filter-chip" data-mode="general" data-recap="Classement général">Général</button>
     </div>
+    <div class="filter-subtitle">Affichage</div>
+    <div class="filter-group" id="filterJoueurs" data-recap-bascule>
+      <button type="button" class="filter-chip" aria-pressed="false" data-recap="Avec les joueurs">Joueurs des équipes</button>
+    </div>
     <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (chiffre de droite), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
     </div>
   </div>
@@ -1078,7 +1085,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.05</p>
+    <p>Version 2026.11.07</p>
   </footer>
 </main>
 
@@ -1240,9 +1247,10 @@
     var rencontresPromise = source(buildUrl("rencontres", {}));
     var clubsPromise = source(buildUrl("clubs", {}));
 
-    return Promise.all([rencontresPromise, clubsPromise]).then(function (results) {
+    return Promise.all([rencontresPromise, clubsPromise, chargerCompositions(source)]).then(function (results) {
       var rencontresJson = results[0];
       var clubsJson = results[1];
+      var compo = results[2];
 
       var rencontres = rencontresJson.data.filter(function (row) {
         var cat = String(row["Catégorie"] || "").trim();
@@ -1252,6 +1260,9 @@
       return {
         rencontres: rencontres,
         clubs: clubsJson.data,
+        joueurs: compo && !compo.incomplet ? compositions(clubsJson.data, compo.engagements, compo.licencies) : null,
+        joueursIncomplets: !!(compo && compo.incomplet),
+        tailleCompo: compo ? compo.engagements.length + "/" + compo.licencies.length : "",
         fetchedAt: Date.now(),
         lastSync: rencontresJson.lastSync || null
       };
@@ -1262,7 +1273,92 @@
   // de re-rendre la page si rien n'a changé — la source ne se synchronise
   // qu'une fois par nuit.
   function signature(data) {
-    return [data.lastSync, data.rencontres.length, data.clubs.length].join("|");
+    return [data.lastSync, data.rencontres.length, data.clubs.length, data.tailleCompo].join("|");
+  }
+
+  // ---------------------------------------------------------------
+  // Joueurs des équipes
+  // ---------------------------------------------------------------
+  // Les noms alourdissent la lecture et coûtent deux tables de plus à
+  // charger : ils ne s'affichent qu'à la demande du visiteur. Le réglage
+  // est gardé sur l'appareil, commun à l'accueil et au Classement.
+  var JOUEURS_KEY = "lidfpb_joueurs_v1";
+  // Le choix de la visite, pour qu'il tienne quand le stockage est refusé
+  // (navigation privée stricte) : null tant que le visiteur n'a rien touché.
+  var joueursVisite = null;
+
+  function lireJoueurs() {
+    if (joueursVisite !== null) return joueursVisite;
+    try { return localStorage.getItem(JOUEURS_KEY) === "1"; } catch (e) { return false; /* stockage indisponible : noms masqués */ }
+  }
+
+  function ecrireJoueurs(oui) {
+    joueursVisite = oui;
+    try {
+      if (oui) localStorage.setItem(JOUEURS_KEY, "1");
+      else localStorage.removeItem(JOUEURS_KEY);
+    } catch (e) { /* pas bloquant : le réglage vaut pour la visite */ }
+  }
+
+  // Les en-têtes exportées par le site source contiennent littéralement
+  // l'entité HTML "&nbsp;" (non décodée), ex: "Licence&nbsp;1". Construite via
+  // fromCharCode pour éviter qu'un éditeur ne la décode en espace insécable.
+  var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
+  var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
+
+  // Les numéros de licence ne sont pas formatés pareil selon la table
+  // ("058863" dans licencies, "58863" dans engagements) : on compare toujours
+  // la forme sans zéros de tête.
+  function normalizeLicence(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d+$/.test(s)) return s;
+    return String(Number.parseInt(s, 10));
+  }
+
+  // La composition déclarée à la ligue de chaque équipe, comme sur Mes
+  // équipes : une fonction qui, pour un club (code des rencontres,
+  // "3750030"), une catégorie et un numéro d'équipe, rend la liste des noms,
+  // ou null. Seules les licences des engagements sont lues : ni le
+  // responsable ni son téléphone.
+  function compositions(clubs, engagements, licencies) {
+    var numeroClub = {};
+    (clubs || []).forEach(function (c) {
+      var numero = String(c["Numéro club"] || "").trim();
+      if (!c["comité"] || !c["club"] || !numero) return;
+      numeroClub[String(c["Ligue"] || "3") + String(c["comité"]).padStart(3, "0") + String(c["club"]).padStart(3, "0")] = numero;
+    });
+    var noms = {};
+    (licencies || []).forEach(function (l) {
+      var licence = normalizeLicence(l["Licence"]);
+      if (licence) noms[licence] = (String(l["prenom"] || "").trim() + " " + String(l["nom"] || "").trim()).trim();
+    });
+    var parEquipe = {};
+    (engagements || []).forEach(function (e) {
+      var cle = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      var licences = LICENCE_COLUMNS.map(function (col) { return normalizeLicence(e[col]); }).filter(Boolean);
+      if (licences.length) parEquipe[cle] = licences;   // une ligne vide n'efface pas une composition
+    });
+    return function (club, categorie, equipe) {
+      var numero = numeroClub[String(club || "").trim()];
+      var licences = numero && parEquipe[[numero, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
+      var liste = (licences || []).map(function (l) { return noms[l]; }).filter(Boolean);
+      return liste.length ? liste : null;
+    };
+  }
+
+  // Les compositions sont un bonus d'affichage : sans le réglage, rien n'est
+  // chargé ; un échec laisse la page s'afficher sans les noms (plutôt que
+  // de dire chaque composition « non déclarée »), et le signale pour qu'un
+  // cache incomplet soit complété par le réseau.
+  function chargerCompositions(source) {
+    if (!lireJoueurs()) return Promise.resolve(null);
+    var manque = false;
+    function table(nom) {
+      return source(buildUrl(nom, {})).catch(function () { manque = true; return { data: [] }; });
+    }
+    return Promise.all([table("engagements"), table("licencies")]).then(function (r) {
+      return { engagements: r[0].data, licencies: r[1].data, incomplet: manque };
+    });
   }
 
   // ---------------------------------------------------------------
@@ -1477,6 +1573,11 @@
       detail = "aucune partie jouée";
     }
     main.appendChild(el("div", { class: "rank-detail", text: detail }));
+    // Les joueurs, quand le visiteur les a demandés (filtre « Joueurs des équipes »).
+    if (lastData && lastData.joueurs) {
+      var noms = lastData.joueurs(team.clubCode, team.cat, team.numero);
+      main.appendChild(el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus"), text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
+    }
     row.appendChild(main);
 
     // À droite, le seul critère de classement. Le goal average qui départage
@@ -2501,6 +2602,8 @@
     return formatTime(d.getTime());
   }
 
+  var dernierTour = 0;
+
   function run(forceRefresh) {
     var lastSyncText = document.getElementById("lastSyncText");
     var bannerSlot = document.getElementById("banner-slot");
@@ -2512,7 +2615,7 @@
       bannerSlot.innerHTML = "";
       lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       var clubMap = buildClubMap(data.clubs);
-      lastData = { rencontres: data.rencontres, clubMap: clubMap };
+      lastData = { rencontres: data.rencontres, clubMap: clubMap, joueurs: data.joueurs };
       cheminCache = {};
       lastTeams = buildStandings(avecSimulation(data.rencontres), clubMap);
       renderSpecChips(lastTeams);
@@ -2525,25 +2628,35 @@
     var holder = {};
     var rendu = false;
     var signatureRendue = null;
+    var sansJoueurs = false;
+    // Seul le dernier chargement lancé affiche : un toucher rapide sur le
+    // réglage des joueurs ne doit pas être défait par une réponse en retard.
+    var tour = ++dernierTour;
 
     fetchLiveData(viaCache(holder)).then(function (data) {
+      if (tour !== dernierTour) return;
       afficher(data);
       rendu = true;
       signatureRendue = signature(data);
+      sansJoueurs = data.joueursIncomplets;
     }).catch(function () {
       // Cache incomplet : il n'y a rien à afficher avant la réponse réseau.
     }).then(function () {
-      // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit.
-      if (rendu && !forceRefresh && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
+      // 2) Rafraîchissement, sauf si le cache vient tout juste d'être écrit et
+      //    qu'il a les joueurs demandés.
+      if (tour !== dernierTour) return;
+      if (rendu && !forceRefresh && !sansJoueurs && (Date.now() - holder.fetchedAt) < CACHE_TTL_MS) return;
 
       var skeletonTimer = rendu ? null : setTimeout(function () { renderSkeleton(results); }, 150);
 
       return fetchLiveData(viaReseau(forceRefresh ? 0 : CACHE_TTL_MS)).then(function (data) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
+        if (tour !== dernierTour) return;
         if (!rendu || signature(data) !== signatureRendue) afficher(data);
         else lastSyncText.textContent = formatSync(data.lastSync) || "information indisponible";
       }).catch(function (err) {
         if (skeletonTimer) clearTimeout(skeletonTimer);
+        if (tour !== dernierTour) return;
         var message = err && err.message ? err.message : String(err);
         if (rendu) {
           renderBanner(bannerSlot, "warn", "Données non rafraîchies",
@@ -2585,6 +2698,32 @@
         if (lastTeams) renderResults(lastTeams);
       });
     });
+
+    // Réglage commun avec l'accueil, gardé à part des filtres de la page. Le
+    // toucher recharge : depuis le cache s'il a déjà les compositions, sinon
+    // par le réseau.
+    var chipJoueurs = document.querySelector("#filterJoueurs .filter-chip");
+    function majChipJoueurs() {
+      var oui = lireJoueurs();
+      chipJoueurs.classList.toggle("active", oui);
+      chipJoueurs.setAttribute("aria-pressed", String(oui));
+    }
+    majChipJoueurs();
+    chipJoueurs.addEventListener("click", function () {
+      ecrireJoueurs(!lireJoueurs());
+      majChipJoueurs();
+      run(false);
+    });
+    // Réglage commun : changé sur l'accueil ou Parties, il s'applique au
+    // retour sur la page (cache de navigation) et dans un autre onglet.
+    function relireJoueurs() {
+      var avant = lireJoueurs();
+      joueursVisite = null;
+      majChipJoueurs();
+      if (lireJoueurs() !== avant) run(false);
+    }
+    window.addEventListener("storage", function (e) { if (e.key === JOUEURS_KEY || e.key === null) relireJoueurs(); });
+    window.addEventListener("pageshow", function (e) { if (e.persisted) relireJoueurs(); });
   }
 
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });

@@ -63,3 +63,18 @@ Le pied de page de l'accueil SHALL porter un lien « Présenter le site à un jo
 #### Scenario: Visiteur habitué
 - **WHEN** un visiteur qui suit déjà une équipe ouvre l'accueil
 - **THEN** l'accueil s'affiche directement
+
+### Requirement: Joueurs des équipes à la demande
+Le bloc de la semaine SHALL proposer dans son pied, à côté de « Partager », un bouton « Joueurs », éteint par défaut. Allumé, chaque partie des deux vues (résultats et « D'ici dimanche ») porte une ligne de plus, en petit et en retrait : les noms des joueurs de l'équipe qui reçoit, « vs », ceux de l'équipe visiteuse, tels que déclarés à la ligue (composition de l'engagement, comme sur Mes équipes). Une équipe sans composition déclarée y est dite « composition non déclarée » ; une partie sans aucune composition connue (adversaires à désigner) n'a pas cette ligne. Le réglage est gardé sur l'appareil (`lidfpb_joueurs_v1`) et commun avec Parties et le Classement. Bouton éteint, les tables des compositions ne sont pas chargées. Les noms n'entrent jamais dans le texte ni l'image partagés.
+
+#### Scenario: Par défaut
+- **WHEN** un visiteur ouvre l'accueil sans avoir jamais touché « Joueurs »
+- **THEN** aucune partie ne porte de noms de joueurs, et les compositions ne sont pas demandées à l'API
+
+#### Scenario: Afficher les joueurs
+- **WHEN** le visiteur touche « Joueurs »
+- **THEN** chaque partie dont une composition est connue montre une ligne « Ane Exemple, Bixente Exemple vs … », le bouton reste allumé, et le Classement s'ouvrira lui aussi avec les joueurs
+
+#### Scenario: Partage avec joueurs affichés
+- **WHEN** les joueurs sont affichés et que le visiteur touche « Partager »
+- **THEN** le texte et l'image partagés ne contiennent aucun nom de joueur
