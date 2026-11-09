@@ -1060,17 +1060,22 @@ test.describe("Bilan de la phase de poules", () => {
       expect(alpha.texte).toContain("🎉 *Qualifiés pour les quarts de finale !*");
       expect(alpha.texte).toMatch(/\*Partie suivante : 1\/4 de finale\*\ncontre India \(éq\. 1\)\n\S+ \d+ \S+ à 21h\nPARIS \(Trinquet Paris - 75016\)/);
       expect(alpha.texte).toContain("les phases finales ne se reportent pas");
-      expect(alpha.texte).toMatch(/Tout le bilan : http.*\/bilan\.html$/);
+      // Un mot sportif pour finir, sans lien vers le site.
+      expect(alpha.texte).toMatch(/👏 Bravo, première place de la poule : félicitations à toute l'équipe ! .*$/);
+      expect(alpha.texte).not.toMatch(/https?:\/\/(?!wa\.me)|bilan\.html/);
+      expect((await texteDe(lignes.nth(1))).texte).toMatch(/👏 Bravo et félicitations pour la qualification ! .*bonne chance pour les quarts\.$/);
 
       // L'avant-dernier : barrage contre un demi-finaliste de la Série 3, pas encore programmé.
       const barrage = (await texteDe(lignes.nth(4))).texte;
       expect(barrage).toContain("Classement final : *5e sur 6*");
       expect(barrage).toContain("⚠️ *Barrage pour le maintien* en Série 2, contre un demi-finaliste de la Série 3.");
+      expect(barrage).toMatch(/💪 Rien n'est joué : .*Bon courage à toute l'équipe !$/);
       expect(barrage).toContain("*Partie suivante : Barrage maintien*\nà la fin de la saison de la Série 3, vers juin ou septembre, date et lieu communiqués par la ligue");
       // Le dernier descend, et n'a plus de partie.
       const dernier = (await texteDe(lignes.nth(5))).texte;
       expect(dernier).toContain("📉 *Descente en Série 3* la saison prochaine.");
       expect(dernier).toContain("Plus de partie cette saison.");
+      expect(dernier).toMatch(/💪 Saison difficile, .*Revenez plus forts, à l'année prochaine !$/);
 
       // Série 1 : le dernier descend en Série 2, sans barrage ; un qualifié pas encore inscrit
       // par la ligue a son adversaire du tableau et les jours des quarts.
@@ -1138,7 +1143,9 @@ test.describe("Bilan de la phase de poules", () => {
       const mikeMsg = await texteDe(lignes.last());
       expect(mikeMsg.href).toMatch(/^https:\/\/wa\.me\/\?text=/);
       expect(mikeMsg.texte).toMatch(/^Bonjour,\n/);
-      expect((await texteDe(lignes.nth(4))).texte).toContain("👍 *Maintien en Série 2* la saison prochaine.");
+      const maintenu = (await texteDe(lignes.nth(4))).texte;
+      expect(maintenu).toContain("👍 *Maintien en Série 2* la saison prochaine.");
+      expect(maintenu).toMatch(/💪 Félicitations pour le maintien, objectif rempli ! .*$/);
     });
   });
 

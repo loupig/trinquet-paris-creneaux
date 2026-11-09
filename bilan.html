@@ -1063,7 +1063,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.09</p>
+    <p>Version 2026.11.09.2</p>
   </footer>
 </main>
 
@@ -1971,6 +1971,18 @@
     "descente": { libelle: "Descente", classe: "ko" }
   };
 
+  // Le mot de la fin, selon l'issue des poules : bravo aux qualifiés,
+  // félicitations au maintien, encouragements au barrage et à la descente.
+  function motSportif(sort, rang, quarts) {
+    var suite = quarts ? "les quarts" : "les phases finales";
+    if (sort === "quarts" && rang === 1) return "👏 Bravo, première place de la poule : félicitations à toute l'équipe ! Bonne chance pour " + suite + ", allez chercher le titre.";
+    if (sort === "quarts") return "👏 Bravo et félicitations pour la qualification ! Tout se joue maintenant : bonne chance pour " + suite + ".";
+    if (sort === "maintien") return "💪 Félicitations pour le maintien, objectif rempli ! Merci pour cette saison, et à l'année prochaine pour viser plus haut.";
+    if (sort === "barrage") return "💪 Rien n'est joué : on compte sur vous pour arracher le maintien au barrage. Bon courage à toute l'équipe !";
+    if (sort === "descente") return "💪 Saison difficile, mais merci pour votre engagement tout au long des poules. Revenez plus forts, à l'année prochaine !";
+    return "💪 Merci pour votre engagement tout au long des poules, et à l'année prochaine !";
+  }
+
   // Le message d'une équipe, en gras et italique WhatsApp (*…*, _…_). Ni nom
   // de joueur ni numéro de téléphone : le prénom du responsable seulement.
   function messageFinDePoule(ctx, serie, t, rang, taille, contact) {
@@ -2040,10 +2052,10 @@
     } else if (sort === "quarts" || sort === "barrage") {
       blocs.push("*Partie suivante : " + (sort === "quarts" ? "phases finales" : "barrage") + "*\ndate et lieu communiqués par la ligue");
     } else {
-      blocs.push("Plus de partie cette saison. Merci et à l'année prochaine !");
+      blocs.push("Plus de partie cette saison.");
     }
     if (sort === "quarts") blocs.push("Rappel : les phases finales ne se reportent pas.");
-    blocs.push("Tout le bilan : " + lienBilan());
+    blocs.push(motSportif(sort, rang, !!serie.tableau.quarts));
     return blocs.join("\n\n");
   }
 
