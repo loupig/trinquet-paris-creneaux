@@ -1063,7 +1063,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.09.2</p>
+    <p>Version 2026.11.09.3</p>
   </footer>
 </main>
 
@@ -2054,7 +2054,13 @@
     } else {
       blocs.push("Plus de partie cette saison.");
     }
-    if (sort === "quarts") blocs.push("Rappel : les phases finales ne se reportent pas.");
+    // Un quart peut être avancé, jamais reporté : la date limite est celle
+    // que la ligue a fixée pour ce quart, quand elle est connue.
+    if (sort === "quarts") {
+      var limite = suite && suite.phase === PHASE_QUARTS ? suite.date : null;
+      blocs.push("Rappel : " + (serie.tableau.quarts ? "le quart" : "la partie") + " peut se jouer plus tôt, en accord avec l'adversaire, mais pas après " +
+        (limite ? "le " + fmtJourLong(limite) : "la date prévue") + ".");
+    }
     blocs.push(motSportif(sort, rang, !!serie.tableau.quarts));
     return blocs.join("\n\n");
   }

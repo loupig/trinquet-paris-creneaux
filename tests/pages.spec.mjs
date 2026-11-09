@@ -1059,7 +1059,8 @@ test.describe("Bilan de la phase de poules", () => {
       expect(alpha.texte).toContain("Classement final : *1er sur 6*");
       expect(alpha.texte).toContain("🎉 *Qualifiés pour les quarts de finale !*");
       expect(alpha.texte).toMatch(/\*Partie suivante : 1\/4 de finale\*\ncontre India \(éq\. 1\)\n\S+ \d+ \S+ à 21h\nPARIS \(Trinquet Paris - 75016\)/);
-      expect(alpha.texte).toContain("les phases finales ne se reportent pas");
+      // Le quart peut être avancé, pas reporté au-delà de sa date.
+      expect(alpha.texte).toMatch(/Rappel : le quart peut se jouer plus tôt, en accord avec l'adversaire, mais pas après le \S+ \d+ \S+\./);
       // Un mot sportif pour finir, sans lien vers le site.
       expect(alpha.texte).toMatch(/👏 Bravo, première place de la poule : félicitations à toute l'équipe ! .*$/);
       expect(alpha.texte).not.toMatch(/https?:\/\/(?!wa\.me)|bilan\.html/);
@@ -1084,6 +1085,7 @@ test.describe("Bilan de la phase de poules", () => {
       const lignes1 = serie1.locator(".message-eq");
       await expect(lignes1.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Maintien", "Descente"]);
       const qualifie = (await texteDe(lignes1.first())).texte;
+      expect(qualifie).toContain("Rappel : le quart peut se jouer plus tôt, en accord avec l'adversaire, mais pas après la date prévue.");
       expect(qualifie).toMatch(/\*Partie suivante : 1\/4 de finale\*\nQ1 contre \S+ \(éq\. 1\), d'après le classement des poules\nentre le \S+ \d+ \S+ et le \S+ \d+ \S+$/m);
       const sixieme = (await texteDe(lignes1.nth(5))).texte;
       expect(sixieme).toContain("📉 *Descente en Série 2* la saison prochaine.");
