@@ -1002,6 +1002,145 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(page.locator(".mien-verdict")).toContainText(/qualifiée pour les quarts|pas de quart cette saison/);
   });
 
+  // Spec bilan, « Messages de fin de poule » : un message WhatsApp par équipe.
+  test.describe("Messages de fin de poule", () => {
+    const servir = (page, rencontres, clubs = tables.clubs) => page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      const data = table === "rencontres" ? rencontres : (table === "clubs" ? clubs : (tables[table] || []));
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+      });
+    });
+    // Toutes les parties de poule jouées (oid 1, Alpha – Bravo en série 1, par forfait).
+    const finies = () => tables.rencontres.map((r) => r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "33" } : r)
+      .map((r) => r.oid === "1" ? { ...r, score_cr: "F", score_cv: "40" } : r);
+    const texteDe = async (ligne) => {
+      const href = await ligne.locator("a.message-btn.wa").getAttribute("href");
+      return { href, texte: new URL(href).searchParams.get("text") };
+    };
+
+    test("pas avant la fin des poules de la série", async ({ page }) => {
+      await page.goto("bilan.html");
+      await attendreChargement(page);
+      await expect(page.locator("details.messages")).toHaveCount(0);
+      await expect(page.locator(".messages-attente").first())
+        .toContainText("prêts quand toutes les parties de poule de la Série 1 auront un score");
+    });
+
+    test("parties, classement, sort et partie suivante de chaque équipe", async ({ page, context }) => {
+      // La ligue a inscrit Alpha contre India sur le premier quart de la série 2.
+      let premierQuart = true;
+      const rencontres = finies().map((r) => {
+        if (r.Phase !== "10" || r["Catégorie"] !== "2" || !premierQuart) return r;
+        premierQuart = false;
+        return { ...r, club_rec: codeClub(0), club_vis: codeClub(8) };
+      });
+      await servir(page, rencontres);
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.goto("bilan.html");
+      await attendreChargement(page);
+
+      const serie2 = page.locator(".serie-bloc").nth(1);
+      const messages = serie2.locator("details.messages").first();
+      await messages.locator("summary").click();
+      const lignes = messages.locator(".message-eq");
+      await expect(lignes).toHaveCount(6);
+      // Poule de six en série 2 : quatre en quarts, l'avant-dernier en barrage, le dernier descend.
+      await expect(lignes.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Barrage", "Descente"]);
+
+      // Alpha, 1re : ses cinq parties, son rang, et le quart inscrit par la ligue.
+      const alpha = await texteDe(lignes.first());
+      expect(alpha.href).toMatch(/^https:\/\/wa\.me\/33600000100\?text=/);
+      expect(alpha.texte).toMatch(/^Bonjour Responsable,\n\n\*🏁 Fin des poules · Série 2 · Poule 1\*/);
+      expect(alpha.texte.match(/^(✅|❌) \d+\/\d+ · \d+–\d+ contre /gm)).toHaveLength(5);
+      expect(alpha.texte).toContain("Classement final : *1er sur 6*");
+      expect(alpha.texte).toContain("🎉 *Qualifiés pour les quarts de finale !*");
+      expect(alpha.texte).toMatch(/\*Partie suivante : 1\/4 de finale\*\ncontre India \(éq\. 1\)\n\S+ \d+ \S+ à 21h\nPARIS \(Trinquet Paris - 75016\)/);
+      expect(alpha.texte).toContain("les phases finales ne se reportent pas");
+      expect(alpha.texte).toMatch(/Tout le bilan : http.*\/bilan\.html$/);
+
+      // L'avant-dernier : barrage contre un demi-finaliste de la Série 3, pas encore programmé.
+      const barrage = (await texteDe(lignes.nth(4))).texte;
+      expect(barrage).toContain("Classement final : *5e sur 6*");
+      expect(barrage).toContain("⚠️ *Barrage pour le maintien* en Série 2, contre un demi-finaliste de la Série 3.");
+      expect(barrage).toContain("*Partie suivante : Barrage maintien*\ndate et lieu communiqués par la ligue");
+      // Le dernier descend, et n'a plus de partie.
+      const dernier = (await texteDe(lignes.nth(5))).texte;
+      expect(dernier).toContain("📉 *Descente en Série 3* la saison prochaine.");
+      expect(dernier).toContain("Plus de partie cette saison.");
+
+      // Série 1 : pas de règle de descente ; un qualifié pas encore inscrit
+      // par la ligue a son adversaire du tableau et les jours des quarts.
+      const serie1 = page.locator(".serie-bloc").first().locator("details.messages").first();
+      await serie1.locator("summary").click();
+      const lignes1 = serie1.locator(".message-eq");
+      await expect(lignes1.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Pas de quart", "Pas de quart"]);
+      const qualifie = (await texteDe(lignes1.first())).texte;
+      expect(qualifie).toMatch(/\*Partie suivante : 1\/4 de finale\*\nQ1 contre \S+ \(éq\. 1\), d'après le classement des poules\nentre le \S+ \d+ \S+ et le \S+ \d+ \S+$/m);
+      const sixieme = (await texteDe(lignes1.nth(5))).texte;
+      expect(sixieme).toContain("Pas de phase finale cette saison.");
+      expect(sixieme).not.toContain("Série 3");
+      // Le forfait d'Alpha – Bravo est rappelé, hors classement, vu de chaque équipe.
+      const textes1 = await Promise.all([0, 1, 2, 3, 4, 5].map(async (i) => (await texteDe(lignes1.nth(i))).texte));
+      expect(textes1.filter((t) => /F–40 contre Bravo \(éq\. 1\) \(hors classement\)/.test(t))).toHaveLength(1);
+      expect(textes1.filter((t) => /40–F contre Alpha \(éq\. 1\) \(hors classement\)/.test(t))).toHaveLength(1);
+
+      // Ni nom de joueur ni numéro écrit : le numéro n'est que dans le lien.
+      for (const t of [alpha.texte, barrage, dernier, ...textes1]) expect(t).not.toMatch(/Joueur|0600000|33600000/);
+      expect(await page.locator("body").innerText()).not.toMatch(/0600000|33600000/);
+
+      // Copier : le même texte que WhatsApp.
+      await lignes.first().getByRole("button", { name: "Copier" }).click();
+      await expect(lignes.first().getByRole("button", { name: /Copié/ })).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(alpha.texte);
+    });
+
+    test("quart déjà joué : pas de quart annoncé une seconde fois", async ({ page }) => {
+      let premierQuart = true;
+      const rencontres = finies().map((r) => {
+        if (r.Phase !== "10" || r["Catégorie"] !== "2" || !premierQuart) return r;
+        premierQuart = false;
+        return { ...r, club_rec: codeClub(0), club_vis: codeClub(8), score_cr: "40", score_cv: "35" };
+      });
+      await servir(page, rencontres);
+      await page.goto("bilan.html");
+      await attendreChargement(page);
+      const messages = page.locator(".serie-bloc").nth(1).locator("details.messages").first();
+      await messages.locator("summary").click();
+      const alpha = (await texteDe(messages.locator(".message-eq").first())).texte;
+      expect(alpha).toContain("Pas d'autre partie programmée pour l'instant.");
+      expect(alpha).not.toContain("Partie suivante");
+    });
+
+    test("poule de sept : le 5e est maintenu, le 6e en barrage, le 7e descend", async ({ page }) => {
+      // Mike rejoint la poule 1 de la série 2 et perd ses six parties.
+      const mike = { "Ligue": "3", "comité": "750", "club": "013", "Nom club": "Mike", "Numéro club": "03-750-013" };
+      const poule = tables.rencontres.filter((r) => r["Catégorie"] === "2" && r.Poule === "1");
+      const adversaires = [...new Set(poule.map((r) => r.club_rec))];
+      const reference = poule[0];
+      const parties = adversaires.map((club, i) => ({
+        ...reference, oid: String(9000 + i), club_rec: club, club_vis: codeClub(12), score_cr: "40", score_cv: "10"
+      }));
+      await servir(page, finies().concat(parties), tables.clubs.concat([mike]));
+      await page.goto("bilan.html");
+      await attendreChargement(page);
+      const messages = page.locator(".serie-bloc").nth(1).locator("details.messages").first();
+      await messages.locator("summary").click();
+      const lignes = messages.locator(".message-eq");
+      await expect(lignes.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Maintien", "Barrage", "Descente"]);
+      await expect(lignes.last()).toContainText("Mike (éq. 1)");
+      // Sans numéro de responsable : WhatsApp s'ouvre sans destinataire.
+      await expect(lignes.last()).toContainText("responsable sans numéro");
+      const mikeMsg = await texteDe(lignes.last());
+      expect(mikeMsg.href).toMatch(/^https:\/\/wa\.me\/\?text=/);
+      expect(mikeMsg.texte).toMatch(/^Bonjour,\n/);
+      expect((await texteDe(lignes.nth(4))).texte).toContain("👍 *Maintien en Série 2* la saison prochaine.");
+    });
+  });
+
   test("sans données, rien n'est affiché qu'un bandeau d'erreur", async ({ page }) => {
     await page.route("**/script.google.com/**", (route) => route.fulfill({ status: 500, body: "" }));
     page.erreurs = [];
