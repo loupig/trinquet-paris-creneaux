@@ -1063,7 +1063,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.09.2</p>
+    <p>Version 2026.11.09.3</p>
   </footer>
 </main>
 
@@ -1950,7 +1950,6 @@
     return chiffres.length >= 8 ? chiffres : null;
   }
 
-  function fmtJourCourt(d) { return d.getDate() + "/" + (d.getMonth() + 1); }
   function fmtHeure(h) { return h.m ? h.h + "h" + String(h.m).padStart(2, "0") : h.h + "h"; }
 
   // Le sort d'une équipe classée en fin de poule : quarts, puis, selon la
@@ -1975,7 +1974,7 @@
   // félicitations au maintien, encouragements au barrage et à la descente.
   function motSportif(sort, rang, quarts) {
     var suite = quarts ? "les quarts" : "les phases finales";
-    if (sort === "quarts" && rang === 1) return "👏 Bravo, première place de la poule : félicitations à toute l'équipe ! Bonne chance pour " + suite + ", allez chercher le titre.";
+    if (sort === "quarts" && rang === 1) return "👏 Bravo pour votre première place de la poule, félicitations à toute l'équipe. Bonne chance pour " + suite + ", allez chercher le titre !";
     if (sort === "quarts") return "👏 Bravo et félicitations pour la qualification ! Tout se joue maintenant : bonne chance pour " + suite + ".";
     if (sort === "maintien") return "💪 Félicitations pour le maintien, objectif rempli ! Merci pour cette saison, et à l'année prochaine pour viser plus haut.";
     if (sort === "barrage") return "💪 Rien n'est joué : on compte sur vous pour arracher le maintien au barrage. Bon courage à toute l'équipe !";
@@ -1992,22 +1991,6 @@
     var blocs = ["Bonjour" + (prenom ? " " + prenom : "") + ",",
       "*🏁 Fin des poules · " + nomSerie(ctx, serie) + " · Poule " + t.poule + "*"];
 
-    var cle = cleEquipe(t);
-    var parties = serie.jouees.concat(serie.autres)
-      .filter(function (p) { return p.a === cle || p.b === cle; })
-      .sort(ordreChrono)
-      .map(function (p) {
-        var chezSoi = p.a === cle, adv = chezSoi ? p.nomB : p.nomA;
-        var jour = p.date ? fmtJourCourt(p.date) + " · " : "";
-        if (p.sa == null) {
-          var brut = [String(p.row.score_cr).trim(), String(p.row.score_cv).trim()];
-          return "▫️ " + jour + (chezSoi ? brut : brut.reverse()).join("–") + " contre " + adv + " (hors classement)";
-        }
-        var pour = chezSoi ? p.sa : p.sb, contre = chezSoi ? p.sb : p.sa;
-        return (pour > contre ? "✅ " : (pour < contre ? "❌ " : "➖ ")) + jour + pour + "–" + contre + " contre " + adv;
-      });
-    blocs.push("Vos parties de poule, " + t.label + " :\n" + parties.join("\n"));
-
     blocs.push("Classement final : *" + ordinal(rang) + " sur " + taille + "*\n" + (!t.jouees ? "aucune partie au score chiffré" :
       pluriel(t.gagnees, "victoire") + ", " + pluriel(t.perdues, "défaite") + (t.nulles ? ", " + pluriel(t.nulles, "nul") : "") +
       " · " + t.points + " pts · goal average " + fmtSigne(t.ga)));
@@ -2019,7 +2002,8 @@
       "barrage": "⚠️ *Barrage pour le maintien* en " + (regle && regle.serie) + ", contre " + (regle && regle.barrage) + ".",
       "descente": "📉 *Descente en " + (regle && regle.descente) + "* la saison prochaine."
     }[sort];
-    blocs.push(verdict);
+    // Le mot sportif suit l'annonce du résultat, dans le même bloc.
+    blocs.push(verdict + "\n" + motSportif(sort, rang, !!serie.tableau.quarts));
 
     var id = idEquipe(t.spec, t.cat, t.clubCode, t.numero);
     var suite = ctx.suivantes.parEquipe[id];
@@ -2054,8 +2038,23 @@
     } else {
       blocs.push("Plus de partie cette saison.");
     }
-    if (sort === "quarts") blocs.push("Rappel : les phases finales ne se reportent pas.");
-    blocs.push(motSportif(sort, rang, !!serie.tableau.quarts));
+    // Un quart peut être avancé si les deux équipes s'accordent, jamais
+    // reporté ; demies et finale ne se déplacent pas. Le rappel ne parle du
+    // quart que s'il reste à jouer : prochaine partie inscrite en quart, ou
+    // équipe que la ligue n'a encore placée nulle part. La date est celle que
+    // la ligue a fixée pour ce quart, quand elle est connue.
+    if (sort === "quarts") {
+      var quartAJouer = suite ? suite.phase === PHASE_QUARTS : !ctx.suivantes.engagees[id];
+      if (!serie.tableau.quarts) {
+        blocs.push("Rappel : les phases finales ne se reportent pas.");
+      } else if (quartAJouer) {
+        blocs.push("Rappel : le quart peut être joué avant " + (suite ? "le " + fmtJourLong(suite.date) : "la date prévue") +
+          " si un accord est trouvé avec l'adversaire. Les 1/2 et la finale ne sont pas déplaçables.");
+      } else if (suite) {
+        // Déjà en demie ou en finale : seul le non-déplacement vaut encore.
+        blocs.push(suite.phase === "12" ? "Rappel : la finale n'est pas déplaçable." : "Rappel : les 1/2 et la finale ne sont pas déplaçables.");
+      }
+    }
     return blocs.join("\n\n");
   }
 
