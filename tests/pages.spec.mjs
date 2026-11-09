@@ -1051,32 +1051,32 @@ test.describe("Bilan de la phase de poules", () => {
       // Poule de six en série 2 : quatre en quarts, l'avant-dernier en barrage, le dernier descend.
       await expect(lignes.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Barrage", "Descente"]);
 
-      // Alpha, 1re : ses cinq parties, son rang, et le quart inscrit par la ligue.
+      // Alpha, 1re : le message entier, dans l'ordre. Classement, résultat et
+      // mot sportif, puis le quart inscrit par la ligue et le rappel : un quart
+      // peut être avancé, pas les demies ni la finale. Ni récap des parties, ni lien.
       const alpha = await texteDe(lignes.first());
       expect(alpha.href).toMatch(/^https:\/\/wa\.me\/33600000100\?text=/);
-      expect(alpha.texte).toMatch(/^Bonjour Responsable,\n\n\*🏁 Fin des poules · Série 2 · Poule 1\*/);
-      expect(alpha.texte.match(/^(✅|❌) \d+\/\d+ · \d+–\d+ contre /gm)).toHaveLength(5);
-      expect(alpha.texte).toContain("Classement final : *1er sur 6*");
-      expect(alpha.texte).toContain("🎉 *Qualifiés pour les quarts de finale !*");
-      expect(alpha.texte).toMatch(/\*Partie suivante : 1\/4 de finale\*\ncontre India \(éq\. 1\)\n\S+ \d+ \S+ à 21h\nPARIS \(Trinquet Paris - 75016\)/);
-      // Le quart peut être avancé, pas reporté au-delà de sa date.
-      expect(alpha.texte).toMatch(/Rappel : le quart peut se jouer plus tôt, en accord avec l'adversaire, mais pas après le \S+ \d+ \S+\./);
-      // Un mot sportif pour finir, sans lien vers le site.
-      expect(alpha.texte).toMatch(/👏 Bravo, première place de la poule : félicitations à toute l'équipe ! .*$/);
-      expect(alpha.texte).not.toMatch(/https?:\/\/(?!wa\.me)|bilan\.html/);
-      expect((await texteDe(lignes.nth(1))).texte).toMatch(/👏 Bravo et félicitations pour la qualification ! .*bonne chance pour les quarts\.$/);
+      expect(alpha.texte).toMatch(new RegExp("^Bonjour Responsable,\n\n" +
+        "\\*🏁 Fin des poules · Série 2 · Poule 1\\*\n\n" +
+        "Classement final : \\*1er sur 6\\*\n\\d+ victoires, 0 défaite · \\d+ pts · goal average \\+\\d+\n\n" +
+        "🎉 \\*Qualifiés pour les quarts de finale !\\*\n" +
+        "👏 Bravo pour votre première place de la poule, félicitations à toute l'équipe\\. Bonne chance pour les quarts, allez chercher le titre !\n\n" +
+        "\\*Partie suivante : 1/4 de finale\\*\ncontre India \\(éq\\. 1\\)\n(\\S+ \\d+ \\S+) à 21h\nPARIS \\(Trinquet Paris - 75016\\)\n\n" +
+        "Rappel : le quart peut être joué avant le \\1 si un accord est trouvé avec l'adversaire\\. Les 1/2 et la finale ne sont pas déplaçables\\.$"));
+      expect(alpha.texte).not.toMatch(/✅|❌|https?:\/\/(?!wa\.me)|bilan\.html/);
+      expect((await texteDe(lignes.nth(1))).texte).toMatch(/🎉 \*Qualifiés pour les quarts de finale !\*\n👏 Bravo et félicitations pour la qualification ! .*bonne chance pour les quarts\.\n\n/);
 
       // L'avant-dernier : barrage contre un demi-finaliste de la Série 3, pas encore programmé.
       const barrage = (await texteDe(lignes.nth(4))).texte;
       expect(barrage).toContain("Classement final : *5e sur 6*");
       expect(barrage).toContain("⚠️ *Barrage pour le maintien* en Série 2, contre un demi-finaliste de la Série 3.");
-      expect(barrage).toMatch(/💪 Rien n'est joué : .*Bon courage à toute l'équipe !$/);
+      expect(barrage).toMatch(/contre un demi-finaliste de la Série 3\.\n💪 Rien n'est joué : .*Bon courage à toute l'équipe !\n\n/);
       expect(barrage).toContain("*Partie suivante : Barrage maintien*\nà la fin de la saison de la Série 3, vers juin ou septembre, date et lieu communiqués par la ligue");
       // Le dernier descend, et n'a plus de partie.
       const dernier = (await texteDe(lignes.nth(5))).texte;
       expect(dernier).toContain("📉 *Descente en Série 3* la saison prochaine.");
       expect(dernier).toContain("Plus de partie cette saison.");
-      expect(dernier).toMatch(/💪 Saison difficile, .*Revenez plus forts, à l'année prochaine !$/);
+      expect(dernier).toMatch(/la saison prochaine\.\n💪 Saison difficile, .*Revenez plus forts, à l'année prochaine !\n\nPlus de partie cette saison\.$/);
 
       // Série 1 : le dernier descend en Série 2, sans barrage ; un qualifié pas encore inscrit
       // par la ligue a son adversaire du tableau et les jours des quarts.
@@ -1085,16 +1085,13 @@ test.describe("Bilan de la phase de poules", () => {
       const lignes1 = serie1.locator(".message-eq");
       await expect(lignes1.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Maintien", "Descente"]);
       const qualifie = (await texteDe(lignes1.first())).texte;
-      expect(qualifie).toContain("Rappel : le quart peut se jouer plus tôt, en accord avec l'adversaire, mais pas après la date prévue.");
+      expect(qualifie).toContain("Rappel : le quart peut être joué avant la date prévue si un accord est trouvé avec l'adversaire. Les 1/2 et la finale ne sont pas déplaçables.");
       expect(qualifie).toMatch(/\*Partie suivante : 1\/4 de finale\*\nQ1 contre \S+ \(éq\. 1\), d'après le classement des poules\nentre le \S+ \d+ \S+ et le \S+ \d+ \S+$/m);
       const sixieme = (await texteDe(lignes1.nth(5))).texte;
       expect(sixieme).toContain("📉 *Descente en Série 2* la saison prochaine.");
       expect(sixieme).not.toContain("Barrage");
       expect((await texteDe(lignes1.nth(4))).texte).toContain("👍 *Maintien en Série 1* la saison prochaine.");
-      // Le forfait d'Alpha – Bravo est rappelé, hors classement, vu de chaque équipe.
       const textes1 = await Promise.all([0, 1, 2, 3, 4, 5].map(async (i) => (await texteDe(lignes1.nth(i))).texte));
-      expect(textes1.filter((t) => /F–40 contre Bravo \(éq\. 1\) \(hors classement\)/.test(t))).toHaveLength(1);
-      expect(textes1.filter((t) => /40–F contre Alpha \(éq\. 1\) \(hors classement\)/.test(t))).toHaveLength(1);
 
       // Ni nom de joueur ni numéro écrit : le numéro n'est que dans le lien.
       for (const t of [alpha.texte, barrage, dernier, ...textes1]) expect(t).not.toMatch(/Joueur|0600000|33600000/);
@@ -1147,7 +1144,7 @@ test.describe("Bilan de la phase de poules", () => {
       expect(mikeMsg.texte).toMatch(/^Bonjour,\n/);
       const maintenu = (await texteDe(lignes.nth(4))).texte;
       expect(maintenu).toContain("👍 *Maintien en Série 2* la saison prochaine.");
-      expect(maintenu).toMatch(/💪 Félicitations pour le maintien, objectif rempli ! .*$/);
+      expect(maintenu).toMatch(/la saison prochaine\.\n💪 Félicitations pour le maintien, objectif rempli ! .*\n\nPlus de partie cette saison\.$/);
     });
   });
 
