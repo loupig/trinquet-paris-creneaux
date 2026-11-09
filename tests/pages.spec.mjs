@@ -1066,23 +1066,24 @@ test.describe("Bilan de la phase de poules", () => {
       const barrage = (await texteDe(lignes.nth(4))).texte;
       expect(barrage).toContain("Classement final : *5e sur 6*");
       expect(barrage).toContain("⚠️ *Barrage pour le maintien* en Série 2, contre un demi-finaliste de la Série 3.");
-      expect(barrage).toContain("*Partie suivante : Barrage maintien*\ndate et lieu communiqués par la ligue");
+      expect(barrage).toContain("*Partie suivante : Barrage maintien*\nà la fin de la saison de la Série 3, vers juin ou septembre, date et lieu communiqués par la ligue");
       // Le dernier descend, et n'a plus de partie.
       const dernier = (await texteDe(lignes.nth(5))).texte;
       expect(dernier).toContain("📉 *Descente en Série 3* la saison prochaine.");
       expect(dernier).toContain("Plus de partie cette saison.");
 
-      // Série 1 : pas de règle de descente ; un qualifié pas encore inscrit
+      // Série 1 : le dernier descend en Série 2, sans barrage ; un qualifié pas encore inscrit
       // par la ligue a son adversaire du tableau et les jours des quarts.
       const serie1 = page.locator(".serie-bloc").first().locator("details.messages").first();
       await serie1.locator("summary").click();
       const lignes1 = serie1.locator(".message-eq");
-      await expect(lignes1.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Pas de quart", "Pas de quart"]);
+      await expect(lignes1.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Maintien", "Descente"]);
       const qualifie = (await texteDe(lignes1.first())).texte;
       expect(qualifie).toMatch(/\*Partie suivante : 1\/4 de finale\*\nQ1 contre \S+ \(éq\. 1\), d'après le classement des poules\nentre le \S+ \d+ \S+ et le \S+ \d+ \S+$/m);
       const sixieme = (await texteDe(lignes1.nth(5))).texte;
-      expect(sixieme).toContain("Pas de phase finale cette saison.");
-      expect(sixieme).not.toContain("Série 3");
+      expect(sixieme).toContain("📉 *Descente en Série 2* la saison prochaine.");
+      expect(sixieme).not.toContain("Barrage");
+      expect((await texteDe(lignes1.nth(4))).texte).toContain("👍 *Maintien en Série 1* la saison prochaine.");
       // Le forfait d'Alpha – Bravo est rappelé, hors classement, vu de chaque équipe.
       const textes1 = await Promise.all([0, 1, 2, 3, 4, 5].map(async (i) => (await texteDe(lignes1.nth(i))).texte));
       expect(textes1.filter((t) => /F–40 contre Bravo \(éq\. 1\) \(hors classement\)/.test(t))).toHaveLength(1);

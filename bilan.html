@@ -1114,10 +1114,14 @@
   };
   var PHASE_QUARTS = "10";
   // Sort des non-qualifiés de chaque poule, par série, fixé par la ligue : le
-  // dernier descend, l'avant-dernier joue un barrage pour le maintien, les
-  // autres restent. Une série absente d'ici ne dit rien de la saison suivante.
+  // dernier descend ; en Série 2, l'avant-dernier joue un barrage pour le
+  // maintien contre un demi-finaliste de la Série 3, à la fin de la saison de
+  // celle-ci ; les autres restent. Une série absente d'ici ne dit rien de la
+  // saison suivante.
   var FIN_DE_POULE = {
-    "2": { serie: "Série 2", descente: "Série 3", barrage: "un demi-finaliste de la Série 3", phaseBarrage: "6" }
+    "1": { serie: "Série 1", descente: "Série 2" },
+    "2": { serie: "Série 2", descente: "Série 3", barrage: "un demi-finaliste de la Série 3", phaseBarrage: "6",
+           quandBarrage: "à la fin de la saison de la Série 3, vers juin ou septembre" }
   };
 
   // ---------------------------------------------------------------
@@ -1956,7 +1960,7 @@
     var regle = FIN_DE_POULE[serie.cat];
     if (!regle) return "hors-quarts";
     if (rang === taille) return "descente";
-    if (rang === taille - 1) return "barrage";
+    if (regle.barrage && rang === taille - 1) return "barrage";
     return "maintien";
   }
   var SORTS = {
@@ -2026,7 +2030,7 @@
         });
       }
       var jours = ctx.suivantes.jours[t.spec + "|" + t.cat + "|" + phaseAttendue];
-      ligne += "\n" + (!jours || !jours.length ? "date et lieu communiqués par la ligue"
+      ligne += "\n" + (!jours || !jours.length ? (sort === "barrage" ? regle.quandBarrage + ", " : "") + "date et lieu communiqués par la ligue"
         : (jours.length === 1 ? "le " + fmtJourLong(jours[0])
           : "entre le " + fmtJourLong(jours[0]) + " et le " + fmtJourLong(jours[jours.length - 1])));
       blocs.push(ligne);
