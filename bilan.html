@@ -2039,14 +2039,21 @@
       blocs.push("Plus de partie cette saison.");
     }
     // Un quart peut être avancé si les deux équipes s'accordent, jamais
-    // reporté ; demies et finale ne se déplacent pas. La date est celle que
+    // reporté ; demies et finale ne se déplacent pas. Le rappel ne parle du
+    // quart que s'il reste à jouer : prochaine partie inscrite en quart, ou
+    // équipe que la ligue n'a encore placée nulle part. La date est celle que
     // la ligue a fixée pour ce quart, quand elle est connue.
     if (sort === "quarts") {
-      var limite = suite && suite.phase === PHASE_QUARTS ? suite.date : null;
-      blocs.push(serie.tableau.quarts
-        ? "Rappel : le quart peut être joué avant " + (limite ? "le " + fmtJourLong(limite) : "la date prévue") +
-          " si un accord est trouvé avec l'adversaire. Les 1/2 et la finale ne sont pas déplaçables."
-        : "Rappel : les phases finales ne se reportent pas.");
+      var quartAJouer = suite ? suite.phase === PHASE_QUARTS : !ctx.suivantes.engagees[id];
+      if (!serie.tableau.quarts) {
+        blocs.push("Rappel : les phases finales ne se reportent pas.");
+      } else if (quartAJouer) {
+        blocs.push("Rappel : le quart peut être joué avant " + (suite ? "le " + fmtJourLong(suite.date) : "la date prévue") +
+          " si un accord est trouvé avec l'adversaire. Les 1/2 et la finale ne sont pas déplaçables.");
+      } else if (suite) {
+        // Déjà en demie ou en finale : seul le non-déplacement vaut encore.
+        blocs.push(suite.phase === "12" ? "Rappel : la finale n'est pas déplaçable." : "Rappel : les 1/2 et la finale ne sont pas déplaçables.");
+      }
     }
     return blocs.join("\n\n");
   }

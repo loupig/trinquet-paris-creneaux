@@ -1118,6 +1118,27 @@ test.describe("Bilan de la phase de poules", () => {
       const alpha = (await texteDe(messages.locator(".message-eq").first())).texte;
       expect(alpha).toContain("Pas d'autre partie programmée pour l'instant.");
       expect(alpha).not.toContain("Partie suivante");
+      expect(alpha).not.toContain("Rappel");
+    });
+
+    test("quart joué, demie inscrite : le rappel ne parle plus du quart", async ({ page }) => {
+      let premierQuart = true;
+      const rencontres = finies().map((r) => {
+        if (r.Phase !== "10" || r["Catégorie"] !== "2" || !premierQuart) return r;
+        premierQuart = false;
+        return { ...r, club_rec: codeClub(0), club_vis: codeClub(8), score_cr: "40", score_cv: "35" };
+      });
+      const quart = tables.rencontres.find((r) => r.Phase === "10" && r["Catégorie"] === "2");
+      rencontres.push({ ...quart, oid: "9100", Phase: "11", club_rec: codeClub(0), club_vis: codeClub(1) });
+      await servir(page, rencontres);
+      await page.goto("bilan.html");
+      await attendreChargement(page);
+      const messages = page.locator(".serie-bloc").nth(1).locator("details.messages").first();
+      await messages.locator("summary").click();
+      const alpha = (await texteDe(messages.locator(".message-eq").first())).texte;
+      expect(alpha).toContain("*Partie suivante : 1/2 finale*\ncontre Bravo (éq. 1)");
+      expect(alpha).toMatch(/\n\nRappel : les 1\/2 et la finale ne sont pas déplaçables\.$/);
+      expect(alpha).not.toContain("le quart peut être joué");
     });
 
     test("poule de sept : le 5e est maintenu, le 6e en barrage, le 7e descend", async ({ page }) => {
