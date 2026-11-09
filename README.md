@@ -41,7 +41,9 @@ Le comportement de chaque page est décrit par sa spec, dans
   de classement commune à l'accueil, à Mes équipes et au Classement.
 - [`bilan.html`](bilan.html) — le bilan de la phase de poules, global puis
   par série : chiffres, trophées, classement et résultats de chaque poule,
-  tableau final, et une image à partager sur WhatsApp. Ouvert depuis le
+  tableau final, une image à partager sur WhatsApp et, les poules finies,
+  un message WhatsApp par équipe (parties, rang, quarts, maintien, barrage
+  ou descente, partie suivante). Ouvert depuis le
   Classement seulement, sans onglet. Spec
   [`bilan`](openspec/specs/bilan/spec.md).
 - [`creneaux.html`](creneaux.html) — les créneaux libres au Trinquet Paris.
@@ -191,7 +193,8 @@ principaux :
 | `CACHE_TTL_MS` | toutes sauf le compteur | Au-delà de cette ancienneté, une entrée de cache est revalidée |
 | `API_CACHE_PREFIX` | toutes sauf le compteur | Préfixe des clés `localStorage` du cache d'appels API |
 | `SERIE_LABELS` | toutes sauf le compteur | Correspondance Catégorie → Série affichée |
-| `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
+| `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report, Bilan | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
+| `FIN_DE_POULE` | Bilan | Sort des non-qualifiés par série, pour les messages de fin de poule : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement, Bilan | Barème, phase classée et nombre de qualifiés : à garder identiques dans les quatre pages |
 | `QUARTS`, `DEMIES` | Classement, Bilan | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
@@ -241,10 +244,12 @@ la date de naissance, à aucun moment exposées par l'API.
   l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
   numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,
-  Mes équipes et Report. Le numéro n'est jamais écrit dans les pages. Le nom
+  Mes équipes et Report, et sur le Bilan pour les messages de fin de poule.
+  Le numéro n'est jamais écrit dans les pages. Le nom
   du responsable n'apparaît pas sur Mes équipes, figure en info-bulle sur
   Parties et en clair sur Report, et le message WhatsApp prérempli de Parties
-  contient le nom et le numéro du responsable adverse.
+  contient le nom et le numéro du responsable adverse ; celui du Bilan salue
+  seulement le responsable destinataire, par son prénom quand il s'isole.
 - **Rien n'est envoyé** : ce que le site retient (équipes suivies, filtres,
   partie du compteur, cache des données) reste dans le navigateur.
 

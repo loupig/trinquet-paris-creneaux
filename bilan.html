@@ -967,6 +967,53 @@
   .resultat-score.a-jouer { font-size: 12px; font-weight: 600; color: var(--warn-text); background: var(--warn-bg); border-radius: 9999px; padding: 1px 7px; }
   .resultat.suivie { box-shadow: inset 3px 0 0 var(--accent); }
 
+  /* Messages de fin de poule : une ligne par équipe, son sort en pastille,
+     WhatsApp et Copier à droite (sous le nom quand la place manque). */
+  .messages-attente { margin: 0; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .messages-aide { margin: 0; padding: 0 14px 8px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .message-eq {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .message-rang { font-weight: 700; color: var(--muted); text-align: center; }
+  .message-main { min-width: 0; overflow-wrap: anywhere; }
+  .message-sort { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700; border-radius: 9999px; padding: 1px 8px; vertical-align: 1px; }
+  .message-sort.ok { color: var(--win-text); background: var(--win-bg); }
+  .message-sort.ko { color: var(--loss-text); background: var(--error-bg); }
+  .message-sort.neutre { color: var(--muted); background: var(--surface-3); }
+  .message-sort.barrage { color: var(--warn-text); background: var(--warn-bg); }
+  .message-sans { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .message-actions { display: flex; gap: 6px; }
+  .message-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 6px 10px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 9999px;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .message-btn.wa { color: var(--win-text); background: var(--win-bg); border-color: var(--win-border); }
+  .message-btn:active { opacity: 0.75; }
+  @media (max-width: 380px) {
+    .message-eq { grid-template-columns: 22px minmax(0, 1fr); }
+    .message-actions { grid-column: 2; }
+  }
+
   .bilan-note { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 4px 2px 0; text-align: center; }
 
   /* --- Grand écran (spec apparence) ---
@@ -1016,7 +1063,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.07</p>
+    <p>Version 2026.11.09</p>
   </footer>
 </main>
 
@@ -1057,6 +1104,25 @@
   var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
   // Une partie « serrée » se gagne de cinq points au plus.
   var SERREE_MAX = 5;
+
+  // Phases de la ligue (mêmes libellés que Parties), pour nommer la partie
+  // suivante d'une équipe dans son message de fin de poule.
+  var PHASE_LABELS = {
+    "1": "Poules", "2": "Barrage", "3": "Barrage 1er tour", "4": "Barrage 2e tour", "5": "Barrage 3e tour",
+    "6": "Barrage maintien", "7": "1/32e de finale", "8": "1/16e de finale", "9": "1/8e de finale",
+    "10": "1/4 de finale", "11": "1/2 finale", "12": "Finale"
+  };
+  var PHASE_QUARTS = "10";
+  // Sort des non-qualifiés de chaque poule, par série, fixé par la ligue : le
+  // dernier descend ; en Série 2, l'avant-dernier joue un barrage pour le
+  // maintien contre un demi-finaliste de la Série 3, à la fin de la saison de
+  // celle-ci ; les autres restent. Une série absente d'ici ne dit rien de la
+  // saison suivante.
+  var FIN_DE_POULE = {
+    "1": { serie: "Série 1", descente: "Série 2" },
+    "2": { serie: "Série 2", descente: "Série 3", barrage: "un demi-finaliste de la Série 3", phaseBarrage: "6",
+           quandBarrage: "à la fin de la saison de la Série 3, vers juin ou septembre" }
+  };
 
   // ---------------------------------------------------------------
   // Cache des appels API, partagé avec les autres pages (spec donnees-api).
@@ -1129,6 +1195,7 @@
         }),
         clubs: r[1].data,
         joueurs: compo.incomplet ? null : compositions(r[1].data, compo.engagements, compo.licencies),
+        contacts: compo.incomplet ? null : contactsResponsables(r[1].data, compo.engagements),
         joueursIncomplets: compo.incomplet,
         tailleCompo: compo.engagements.length + "/" + compo.licencies.length,
         lastSync: r[0].lastSync || null
@@ -1141,8 +1208,10 @@
   }
 
   // ---------------------------------------------------------------
-  // Joueurs des équipes, recopié du Classement : seules les licences des
-  // engagements sont lues, ni le responsable ni son téléphone.
+  // Joueurs des équipes, recopié du Classement. Le responsable et son
+  // téléphone ne servent qu'aux messages de fin de poule : le numéro ne
+  // s'écrit jamais dans la page, seulement dans le lien WhatsApp (spec
+  // donnees-api).
   // ---------------------------------------------------------------
   var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
   var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
@@ -1154,12 +1223,7 @@
   }
 
   function compositions(clubs, engagements, licencies) {
-    var numeroClub = {};
-    (clubs || []).forEach(function (c) {
-      var numero = String(c["Numéro club"] || "").trim();
-      if (!c["comité"] || !c["club"] || !numero) return;
-      numeroClub[String(c["Ligue"] || "3") + String(c["comité"]).padStart(3, "0") + String(c["club"]).padStart(3, "0")] = numero;
-    });
+    var numeroClub = numerosClubs(clubs);
     var noms = {};
     (licencies || []).forEach(function (l) {
       var licence = normalizeLicence(l["Licence"]);
@@ -1176,6 +1240,35 @@
       var licences = numero && parEquipe[[numero, String(categorie || "").trim(), String(equipe || "").trim()].join("|")];
       var liste = (licences || []).map(function (l) { return noms[l]; }).filter(Boolean);
       return liste.length ? liste : null;
+    };
+  }
+
+  // Numéro club au format des rencontres (« 3750030 ») -> format avec tirets
+  // des engagements (« 03-750-030 »).
+  function numerosClubs(clubs) {
+    var numeroClub = {};
+    (clubs || []).forEach(function (c) {
+      var numero = String(c["Numéro club"] || "").trim();
+      if (!c["comité"] || !c["club"] || !numero) return;
+      numeroClub[String(c["Ligue"] || "3") + String(c["comité"]).padStart(3, "0") + String(c["club"]).padStart(3, "0")] = numero;
+    });
+    return numeroClub;
+  }
+
+  // Responsable de chaque équipe, comme sur Parties : une fonction (club,
+  // catégorie, équipe) -> { responsable, tel }, ou null sans numéro déclaré.
+  function contactsResponsables(clubs, engagements) {
+    var numeroClub = numerosClubs(clubs);
+    var parEquipe = {};
+    (engagements || []).forEach(function (e) {
+      var tel = String(e["Tél1. Resp."] || "").trim() || String(e["Tél2. Resp."] || "").trim();
+      if (!tel) return;
+      var cle = [String(e["Numéro club"] || "").trim(), String(e["Catégorie"] || "").trim(), String(e["Equipe"] || "").trim()].join("|");
+      parEquipe[cle] = { responsable: String(e["Responsable"] || "").trim(), tel: tel };
+    });
+    return function (club, categorie, equipe) {
+      var numero = numeroClub[String(club || "").trim()];
+      return (numero && parEquipe[[numero, String(categorie || "").trim(), String(equipe || "").trim()].join("|")]) || null;
     };
   }
 
@@ -1452,6 +1545,9 @@
   // Compositions du dernier rendu : une fonction (club, catégorie, équipe),
   // ou null quand elles n'ont pas pu être chargées.
   var joueursDe = null;
+  // Responsables du dernier rendu, pour les messages de fin de poule : même
+  // forme, null sans engagements chargés.
+  var contactsDe = null;
 
   // Le nom d'une équipe suivi, entre crochets, de ses joueurs déclarés à la
   // ligue, comme à l'accueil : rien pour une équipe sans composition connue.
@@ -1725,7 +1821,7 @@
     return row;
   }
 
-  function buildPouleCard(serie, poule, suivies) {
+  function buildPouleCard(serie, poule, suivies, ctx) {
     var teams = trierClassement(serie.teams.filter(function (t) { return t.poule === poule; }));
     var jouees = serie.jouees.filter(function (p) { return p.poule === poule; });
     var restantes = serie.restantes.filter(function (p) { return p.poule === poule; });
@@ -1772,8 +1868,240 @@
       details.appendChild(ligne);
     });
     carte.appendChild(details);
+    carte.appendChild(buildMessages(ctx, serie, poule, teams));
     return carte;
   }
+
+  // ---------------------------------------------------------------
+  // Messages de fin de poule : un message WhatsApp par équipe, avec ses
+  // parties, son rang, son sort et sa partie suivante
+  // ---------------------------------------------------------------
+  function parseHeureRenc(raw) {
+    var s = String(raw || "").trim();
+    if (!/^\d{1,4}$/.test(s)) return null;
+    s = s.padStart(4, "0");
+    var h = parseInt(s.slice(0, 2), 10), m = parseInt(s.slice(2, 4), 10);
+    return (h > 23 || m > 59) ? null : { h: h, m: m };
+  }
+
+  function idEquipe(spec, cat, club, equipe) {
+    return [String(spec || "").trim(), String(cat || "").trim(), String(club || "").trim(), String(equipe || "").trim()].join("|");
+  }
+
+  // Parties après les poules, encore sans score et pas encore passées : la
+  // prochaine de chaque équipe inscrite, et les jours de chaque phase d'une
+  // série (pour une équipe que la ligue n'a pas encore placée). « engagees » :
+  // les équipes déjà inscrites hors poules, même sur une partie jouée, pour ne
+  // pas leur annoncer un quart déjà disputé.
+  function partiesSuivantes(rencontres, clubMap) {
+    var aujourdhui = new Date();
+    aujourdhui.setHours(0, 0, 0, 0);
+    var parEquipe = {}, jours = {}, engagees = {};
+    rencontres.forEach(function (row) {
+      var phase = String(row.Phase || "").trim();
+      if (phase === PHASE_POULES) return;
+      var spec = String(row["Spécialité"] || "").trim(), cat = String(row["Catégorie"] || "").trim();
+      [[row.club_rec, row.equip_rec], [row.club_vis, row.equip_vis]].forEach(function (c) {
+        if (!clubFictif(c[0])) engagees[idEquipe(spec, cat, c[0], c[1])] = true;
+      });
+      var date = effectiveDate(row);
+      if (hasScore(row) || !date || date < aujourdhui) return;
+      var heure = parseHeureRenc(row.heure_renc);
+      var quand = date.getTime() + (heure ? (heure.h * 60 + heure.m) * 60000 : 0);
+      var cleJours = spec + "|" + cat + "|" + phase;
+      var liste = jours[cleJours] = jours[cleJours] || [];
+      if (!liste.some(function (d) { return d.getTime() === date.getTime(); })) liste.push(date);
+      [[row.club_rec, row.equip_rec, row.club_vis, row.equip_vis], [row.club_vis, row.equip_vis, row.club_rec, row.equip_rec]].forEach(function (c) {
+        if (clubFictif(c[0])) return;
+        var id = idEquipe(spec, cat, c[0], c[1]);
+        if (parEquipe[id] && parEquipe[id].quand <= quand) return;
+        parEquipe[id] = {
+          quand: quand, date: date, heure: heure, phase: phase,
+          adversaire: clubFictif(c[2]) ? null : clubLabel(clubMap, String(c[2] || "").trim(), c[3]),
+          lieu: String(row.lieu_renc || "").trim()
+        };
+      });
+    });
+    Object.keys(jours).forEach(function (k) { jours[k].sort(function (a, b) { return a - b; }); });
+    return { parEquipe: parEquipe, jours: jours, engagees: engagees };
+  }
+
+  // Le prénom du responsable, saisi librement par les clubs (« NOM Prénom »,
+  // « Prénom Nom » ou le nom seul), comme sur Parties : la valeur brute dès
+  // qu'elle est ambiguë, plutôt qu'un mauvais prénom.
+  function prenomDuResponsable(raw) {
+    var mots = String(raw || "").trim().split(/\s+/).filter(Boolean);
+    if (!mots.length) return "";
+    var capitales = mots.filter(function (t) { return t === t.toUpperCase(); });
+    if (capitales.length === mots.length) return mots.join(" ");
+    if (!capitales.length) return mots[0];
+    return mots.filter(function (t) { return t !== t.toUpperCase(); }).join(" ");
+  }
+
+  // Numéro au format international sans « + » ni séparateurs, pour wa.me,
+  // comme sur Parties ; null s'il n'est pas exploitable.
+  function numeroWhatsapp(raw) {
+    var chiffres = String(raw || "").replace(/\D/g, "");
+    if (!chiffres) return null;
+    if (chiffres.slice(0, 2) === "00") chiffres = chiffres.slice(2);
+    if (chiffres.slice(0, 2) === "33") return chiffres;
+    if (chiffres.length === 10 && chiffres[0] === "0") return "33" + chiffres.slice(1);
+    if (chiffres.length === 9) return "33" + chiffres;
+    return chiffres.length >= 8 ? chiffres : null;
+  }
+
+  function fmtJourCourt(d) { return d.getDate() + "/" + (d.getMonth() + 1); }
+  function fmtHeure(h) { return h.m ? h.h + "h" + String(h.m).padStart(2, "0") : h.h + "h"; }
+
+  // Le sort d'une équipe classée en fin de poule : quarts, puis, selon la
+  // règle de sa série (FIN_DE_POULE), maintien, barrage ou descente.
+  function sortFinDePoule(serie, rang, taille) {
+    if (rang <= QUALIFIES_PAR_POULE) return "quarts";
+    var regle = FIN_DE_POULE[serie.cat];
+    if (!regle) return "hors-quarts";
+    if (rang === taille) return "descente";
+    if (regle.barrage && rang === taille - 1) return "barrage";
+    return "maintien";
+  }
+  var SORTS = {
+    "quarts": { libelle: "Quarts", classe: "ok" },
+    "hors-quarts": { libelle: "Pas de quart", classe: "neutre" },
+    "maintien": { libelle: "Maintien", classe: "neutre" },
+    "barrage": { libelle: "Barrage", classe: "barrage" },
+    "descente": { libelle: "Descente", classe: "ko" }
+  };
+
+  // Le message d'une équipe, en gras et italique WhatsApp (*…*, _…_). Ni nom
+  // de joueur ni numéro de téléphone : le prénom du responsable seulement.
+  function messageFinDePoule(ctx, serie, t, rang, taille, contact) {
+    var regle = FIN_DE_POULE[serie.cat];
+    var sort = sortFinDePoule(serie, rang, taille);
+    var prenom = contact ? prenomDuResponsable(contact.responsable) : "";
+    var blocs = ["Bonjour" + (prenom ? " " + prenom : "") + ",",
+      "*🏁 Fin des poules · " + nomSerie(ctx, serie) + " · Poule " + t.poule + "*"];
+
+    var cle = cleEquipe(t);
+    var parties = serie.jouees.concat(serie.autres)
+      .filter(function (p) { return p.a === cle || p.b === cle; })
+      .sort(ordreChrono)
+      .map(function (p) {
+        var chezSoi = p.a === cle, adv = chezSoi ? p.nomB : p.nomA;
+        var jour = p.date ? fmtJourCourt(p.date) + " · " : "";
+        if (p.sa == null) {
+          var brut = [String(p.row.score_cr).trim(), String(p.row.score_cv).trim()];
+          return "▫️ " + jour + (chezSoi ? brut : brut.reverse()).join("–") + " contre " + adv + " (hors classement)";
+        }
+        var pour = chezSoi ? p.sa : p.sb, contre = chezSoi ? p.sb : p.sa;
+        return (pour > contre ? "✅ " : (pour < contre ? "❌ " : "➖ ")) + jour + pour + "–" + contre + " contre " + adv;
+      });
+    blocs.push("Vos parties de poule, " + t.label + " :\n" + parties.join("\n"));
+
+    blocs.push("Classement final : *" + ordinal(rang) + " sur " + taille + "*\n" + (!t.jouees ? "aucune partie au score chiffré" :
+      pluriel(t.gagnees, "victoire") + ", " + pluriel(t.perdues, "défaite") + (t.nulles ? ", " + pluriel(t.nulles, "nul") : "") +
+      " · " + t.points + " pts · goal average " + fmtSigne(t.ga)));
+
+    var verdict = {
+      "quarts": "🎉 *Qualifiés pour les " + (serie.tableau.quarts ? "quarts de finale" : "phases finales") + " !*",
+      "hors-quarts": "Pas de phase finale cette saison.",
+      "maintien": "👍 *Maintien en " + (regle && regle.serie) + "* la saison prochaine.",
+      "barrage": "⚠️ *Barrage pour le maintien* en " + (regle && regle.serie) + ", contre " + (regle && regle.barrage) + ".",
+      "descente": "📉 *Descente en " + (regle && regle.descente) + "* la saison prochaine."
+    }[sort];
+    blocs.push(verdict);
+
+    var id = idEquipe(t.spec, t.cat, t.clubCode, t.numero);
+    var suite = ctx.suivantes.parEquipe[id];
+    var phaseAttendue = sort === "quarts" ? (serie.tableau.quarts ? PHASE_QUARTS : null) : (sort === "barrage" ? regle.phaseBarrage : null);
+    if (suite) {
+      blocs.push("*Partie suivante : " + (PHASE_LABELS[suite.phase] || "phase " + suite.phase) + "*\n" +
+        "contre " + (suite.adversaire || "un adversaire à désigner") + "\n" +
+        fmtJourLong(suite.date) + (suite.heure ? " à " + fmtHeure(suite.heure) : "") +
+        (suite.lieu ? "\n" + suite.lieu : ""));
+    } else if (phaseAttendue && !ctx.suivantes.engagees[id]) {
+      // La ligue n'a pas encore inscrit l'équipe : l'adversaire du tableau
+      // calculé pour un quart, et les jours prévus pour la phase.
+      var ligne = "*Partie suivante : " + PHASE_LABELS[phaseAttendue] + "*";
+      if (sort === "quarts") {
+        (serie.tableau.quarts || []).forEach(function (q) {
+          var i = q.cotes[0].team === t ? 0 : (q.cotes[1].team === t ? 1 : -1);
+          if (i === -1) return;
+          var adv = q.cotes[1 - i];
+          ligne += "\nQ" + q.num + " contre " + (adv.team ? adv.team.label : "un adversaire à déterminer") + ", d'après le classement des poules";
+        });
+      }
+      var jours = ctx.suivantes.jours[t.spec + "|" + t.cat + "|" + phaseAttendue];
+      ligne += "\n" + (!jours || !jours.length ? (sort === "barrage" ? regle.quandBarrage + ", " : "") + "date et lieu communiqués par la ligue"
+        : (jours.length === 1 ? "le " + fmtJourLong(jours[0])
+          : "entre le " + fmtJourLong(jours[0]) + " et le " + fmtJourLong(jours[jours.length - 1])));
+      blocs.push(ligne);
+    } else if (ctx.suivantes.engagees[id]) {
+      // Déjà inscrite hors poules, plus rien à venir : le quart est joué.
+      blocs.push("Pas d'autre partie programmée pour l'instant.");
+    } else if (sort === "quarts" || sort === "barrage") {
+      blocs.push("*Partie suivante : " + (sort === "quarts" ? "phases finales" : "barrage") + "*\ndate et lieu communiqués par la ligue");
+    } else {
+      blocs.push("Plus de partie cette saison. Merci et à l'année prochaine !");
+    }
+    if (sort === "quarts") blocs.push("Rappel : les phases finales ne se reportent pas.");
+    blocs.push("Tout le bilan : " + lienBilan());
+    return blocs.join("\n\n");
+  }
+
+  // Le bloc des messages d'une poule : prêt quand toutes les parties de poule
+  // de la série ont un score, puisque les quarts croisent les deux poules et
+  // que la ligue ne nomme les équipes des phases finales qu'à ce moment-là.
+  function buildMessages(ctx, serie, poule, teams) {
+    if (serie.restantes.length) {
+      return el("p", { class: "messages-attente", text: "📲 Messages de fin de poule aux équipes : prêts quand toutes les parties de poule de la " +
+        nomSerie(ctx, serie) + " auront un score (encore " + serie.restantes.length + ")." });
+    }
+    // Toutes les équipes de la poule, dans l'ordre du classement : une équipe
+    // qui n'a que des forfaits ferme la marche, mais compte dans la taille.
+    var classees = teams;
+    var details = el("details", { class: "resultats messages" });
+    details.appendChild(el("summary", { text: "📲 Messages de fin de poule aux équipes" }));
+    details.appendChild(el("p", { class: "messages-aide", text: "Un message par équipe : ses parties, son classement, son sort et sa partie suivante. " +
+      "WhatsApp s'ouvre vers son responsable quand la ligue a son numéro, sinon vers le contact de votre choix." }));
+    classees.forEach(function (t, idx) {
+      var rang = idx + 1;
+      var sort = SORTS[sortFinDePoule(serie, rang, classees.length)];
+      var contact = contactsDe ? contactsDe(t.clubCode, t.cat, t.numero) : null;
+      var numero = contact && numeroWhatsapp(contact.tel);
+      var texte = messageFinDePoule(ctx, serie, t, rang, classees.length, numero ? contact : null);
+      var ligne = el("div", { class: "message-eq" });
+      ligne.appendChild(el("span", { class: "message-rang", text: String(rang) }));
+      var corps = el("div", { class: "message-main" });
+      corps.appendChild(el("b", { text: t.label }));
+      corps.appendChild(el("span", { class: "message-sort " + sort.classe, text: sort.libelle }));
+      if (!numero) corps.appendChild(el("span", { class: "message-sans", text: "responsable sans numéro : contact à choisir" }));
+      ligne.appendChild(corps);
+      var actions = el("div", { class: "message-actions" });
+      var wa = el("a", {
+        class: "message-btn wa", target: "_blank", rel: "noopener",
+        href: "https://wa.me/" + (numero || "") + "?text=" + encodeURIComponent(texte),
+        title: numero ? "WhatsApp au responsable de " + t.label + ", message prérempli" : "WhatsApp, message prérempli pour " + t.label
+      });
+      wa.innerHTML = ICON_SVG_WHATSAPP;
+      wa.appendChild(el("span", { text: "WhatsApp" }));
+      actions.appendChild(wa);
+      var copie = el("button", { type: "button", class: "message-btn", title: "Copier le message de " + t.label, text: "Copier" });
+      var minuterie = null;
+      copie.addEventListener("click", function () {
+        function afficher(libelle) {
+          clearTimeout(minuterie);
+          copie.textContent = libelle;
+          minuterie = setTimeout(function () { copie.textContent = "Copier"; }, 2500);
+        }
+        copier(texte).then(function () { afficher("Copié ✓"); }, function () { afficher("Copie impossible"); });
+      });
+      actions.appendChild(copie);
+      ligne.appendChild(actions);
+      details.appendChild(ligne);
+    });
+    return details;
+  }
+
+  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M187.58,144.84l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88,40,40,0,0,0,40-40A8,8,0,0,0,187.58,144.84ZM152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155l14.61-9.74,23,11.48A24,24,0,0,1,152,176ZM128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"/></svg>';
 
   // ---------------------------------------------------------------
   // Tableau final : les quarts croisés, comme au Classement
@@ -2278,6 +2606,7 @@
     teams.forEach(function (t) { specs[t.spec] = true; });
     var ctx = {
       teams: teams, parties: parties, series: series, qualifies: qualifies,
+      suivantes: partiesSuivantes(data.rencontres, clubMap),
       plusieursSpecs: Object.keys(specs).length > 1,
       global: chiffres(parties.jouees, teams.length),
       liste: Object.keys(series).map(function (k) { return series[k]; }).sort(function (a, b) {
@@ -2296,6 +2625,7 @@
     results.innerHTML = "";
     var ctx = contexte(data);
     joueursDe = data.joueurs || null;
+    contactsDe = data.contacts || null;
     dernierPartage = null;
     if (!ctx.teams.length) {
       results.appendChild(el("div", { class: "empty-state", text: "Aucune partie de poule publiée pour l'instant : le bilan attendra." }));
@@ -2328,7 +2658,7 @@
       var zone = el("div", { class: "zone-bilan" });
       zone.appendChild(trophees(serie, suivies));
       Object.keys(serie.poules).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
-        .forEach(function (pl) { zone.appendChild(buildPouleCard(serie, pl, suivies)); });
+        .forEach(function (pl) { zone.appendChild(buildPouleCard(serie, pl, suivies, ctx)); });
       zone.appendChild(buildFinalesCard(serie, suivies));
       section.appendChild(zone);
       results.appendChild(section);
@@ -2384,7 +2714,7 @@
       rendu = true;
       signatureRendue = signature(data);
       sansJoueurs = data.joueursIncomplets;
-      if (!sansJoueurs) compoCache = { joueurs: data.joueurs, taille: data.tailleCompo };
+      if (!sansJoueurs) compoCache = { joueurs: data.joueurs, contacts: data.contacts, taille: data.tailleCompo };
     }).catch(function () {
       // Cache incomplet : rien à afficher avant la réponse réseau.
     }).then(function () {
@@ -2399,6 +2729,7 @@
         // Compositions en échec sur le réseau : celles du cache restent.
         if (data.joueursIncomplets && compoCache) {
           data.joueurs = compoCache.joueurs;
+          data.contacts = compoCache.contacts;
           data.tailleCompo = compoCache.taille;
           data.joueursIncomplets = false;
         }

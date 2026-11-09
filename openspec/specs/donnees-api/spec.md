@@ -53,7 +53,7 @@ Les compositions d'équipe et les contacts des responsables SHALL être des donn
 - **THEN** la page Parties affiche le calendrier, et le détail des parties indique « composition non disponible »
 
 ### Requirement: Noms de joueurs seuls
-Les noms de joueurs SHALL n'apparaître que sur l'accueil, Parties et le Bilan (entre crochets après chaque équipe), le Classement et Mes équipes (sous chaque équipe), et Parties et Créneaux (au détail d'une partie), sous la forme « Prénom Nom ». Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report.
+Les noms de joueurs SHALL n'apparaître que sur l'accueil, Parties et le Bilan (entre crochets après chaque équipe), le Classement et Mes équipes (sous chaque équipe), et Parties et Créneaux (au détail d'une partie), sous la forme « Prénom Nom ». Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report, et dans le message WhatsApp prérempli de Parties et du Bilan.
 
 #### Scenario: Détail d'une partie
 - **WHEN** un visiteur déplie une partie dont les équipes ont déclaré leurs joueurs
