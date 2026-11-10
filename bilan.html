@@ -1063,7 +1063,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.09.3</p>
+    <p>Version 2026.11.10</p>
   </footer>
 </main>
 
@@ -1209,9 +1209,9 @@
 
   // ---------------------------------------------------------------
   // Joueurs des équipes, recopié du Classement. Le responsable et son
-  // téléphone ne servent qu'aux messages de fin de poule : le numéro ne
-  // s'écrit jamais dans la page, seulement dans le lien WhatsApp (spec
-  // donnees-api).
+  // téléphone ne servent qu'aux messages de fin de poule (destinataire et
+  // responsable adverse) : le numéro ne s'écrit jamais dans la page,
+  // seulement dans le lien WhatsApp et le texte copié (spec donnees-api).
   // ---------------------------------------------------------------
   var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
   var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
@@ -1918,6 +1918,7 @@
         parEquipe[id] = {
           quand: quand, date: date, heure: heure, phase: phase,
           adversaire: clubFictif(c[2]) ? null : clubLabel(clubMap, String(c[2] || "").trim(), c[3]),
+          advClub: clubFictif(c[2]) ? null : String(c[2] || "").trim(), advEquipe: String(c[3] || "").trim(),
           lieu: String(row.lieu_renc || "").trim()
         };
       });
@@ -1982,6 +1983,15 @@
     return "💪 Merci pour votre engagement tout au long des poules, et à l'année prochaine !";
   }
 
+  // Le responsable de l'équipe adverse, pour s'organiser avant la partie,
+  // comme dans le message de Parties : « Responsable adverse : Nom (tél.) ».
+  // Le numéro n'entre que dans le message, jamais dans le texte de la page.
+  function responsableAdverse(club, categorie, equipe) {
+    var c = club && contactsDe ? contactsDe(club, categorie, equipe) : null;
+    if (!c) return "";
+    return "\nResponsable adverse : " + (c.responsable ? c.responsable + " (" + c.tel + ")" : c.tel);
+  }
+
   // Le message d'une équipe, en gras et italique WhatsApp (*…*, _…_). Ni nom
   // de joueur ni numéro de téléphone : le prénom du responsable seulement.
   function messageFinDePoule(ctx, serie, t, rang, taille, contact) {
@@ -2012,23 +2022,24 @@
       blocs.push("*Partie suivante : " + (PHASE_LABELS[suite.phase] || "phase " + suite.phase) + "*\n" +
         "contre " + (suite.adversaire || "un adversaire à désigner") + "\n" +
         fmtJourLong(suite.date) + (suite.heure ? " à " + fmtHeure(suite.heure) : "") +
-        (suite.lieu ? "\n" + suite.lieu : ""));
+        (suite.lieu ? "\n" + suite.lieu : "") + responsableAdverse(suite.advClub, t.cat, suite.advEquipe));
     } else if (phaseAttendue && !ctx.suivantes.engagees[id]) {
       // La ligue n'a pas encore inscrit l'équipe : l'adversaire du tableau
       // calculé pour un quart, et les jours prévus pour la phase.
-      var ligne = "*Partie suivante : " + PHASE_LABELS[phaseAttendue] + "*";
+      var ligne = "*Partie suivante : " + PHASE_LABELS[phaseAttendue] + "*", contactAdv = "";
       if (sort === "quarts") {
         (serie.tableau.quarts || []).forEach(function (q) {
           var i = q.cotes[0].team === t ? 0 : (q.cotes[1].team === t ? 1 : -1);
           if (i === -1) return;
           var adv = q.cotes[1 - i];
           ligne += "\nQ" + q.num + " contre " + (adv.team ? adv.team.label : "un adversaire à déterminer") + ", d'après le classement des poules";
+          if (adv.team) contactAdv = responsableAdverse(adv.team.clubCode, adv.team.cat, adv.team.numero);
         });
       }
       var jours = ctx.suivantes.jours[t.spec + "|" + t.cat + "|" + phaseAttendue];
       ligne += "\n" + (!jours || !jours.length ? (sort === "barrage" ? regle.quandBarrage + ", " : "") + "date et lieu communiqués par la ligue"
         : (jours.length === 1 ? "le " + fmtJourLong(jours[0])
-          : "entre le " + fmtJourLong(jours[0]) + " et le " + fmtJourLong(jours[jours.length - 1])));
+          : "entre le " + fmtJourLong(jours[0]) + " et le " + fmtJourLong(jours[jours.length - 1]))) + contactAdv;
       blocs.push(ligne);
     } else if (ctx.suivantes.engagees[id]) {
       // Déjà inscrite hors poules, plus rien à venir : le quart est joué.

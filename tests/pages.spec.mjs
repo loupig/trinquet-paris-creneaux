@@ -1061,7 +1061,8 @@ test.describe("Bilan de la phase de poules", () => {
         "Classement final : \\*1er sur 6\\*\n\\d+ victoires, 0 défaite · \\d+ pts · goal average \\+\\d+\n\n" +
         "🎉 \\*Qualifiés pour les quarts de finale !\\*\n" +
         "👏 Bravo pour votre première place de la poule, félicitations à toute l'équipe\\. Bonne chance pour les quarts, allez chercher le titre !\n\n" +
-        "\\*Partie suivante : 1/4 de finale\\*\ncontre India \\(éq\\. 1\\)\n(\\S+ \\d+ \\S+) à 21h\nPARIS \\(Trinquet Paris - 75016\\)\n\n" +
+        "\\*Partie suivante : 1/4 de finale\\*\ncontre India \\(éq\\. 1\\)\n(\\S+ \\d+ \\S+) à 21h\nPARIS \\(Trinquet Paris - 75016\\)\n" +
+        "Responsable adverse : Responsable India \\(0600000108\\)\n\n" +
         "Rappel : le quart peut être joué avant le \\1 si un accord est trouvé avec l'adversaire\\. Les 1/2 et la finale ne sont pas déplaçables\\.$"));
       expect(alpha.texte).not.toMatch(/✅|❌|https?:\/\/(?!wa\.me)|bilan\.html/);
       expect((await texteDe(lignes.nth(1))).texte).toMatch(/🎉 \*Qualifiés pour les quarts de finale !\*\n👏 Bravo et félicitations pour la qualification ! .*bonne chance pour les quarts\.\n\n/);
@@ -1086,7 +1087,7 @@ test.describe("Bilan de la phase de poules", () => {
       await expect(lignes1.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Maintien", "Descente"]);
       const qualifie = (await texteDe(lignes1.first())).texte;
       expect(qualifie).toContain("Rappel : le quart peut être joué avant la date prévue si un accord est trouvé avec l'adversaire. Les 1/2 et la finale ne sont pas déplaçables.");
-      expect(qualifie).toMatch(/\*Partie suivante : 1\/4 de finale\*\nQ1 contre \S+ \(éq\. 1\), d'après le classement des poules\nentre le \S+ \d+ \S+ et le \S+ \d+ \S+$/m);
+      expect(qualifie).toMatch(/\*Partie suivante : 1\/4 de finale\*\nQ1 contre (\S+) \(éq\. 1\), d'après le classement des poules\nentre le \S+ \d+ \S+ et le \S+ \d+ \S+\nResponsable adverse : Responsable \1 \(06000001\d\d\)$/m);
       const sixieme = (await texteDe(lignes1.nth(5))).texte;
       expect(sixieme).toContain("📉 *Descente en Série 2* la saison prochaine.");
       expect(sixieme).not.toContain("Barrage");
@@ -1094,7 +1095,12 @@ test.describe("Bilan de la phase de poules", () => {
       const textes1 = await Promise.all([0, 1, 2, 3, 4, 5].map(async (i) => (await texteDe(lignes1.nth(i))).texte));
 
       // Ni nom de joueur ni numéro écrit : le numéro n'est que dans le lien.
-      for (const t of [alpha.texte, barrage, dernier, ...textes1]) expect(t).not.toMatch(/Joueur|0600000|33600000/);
+      // Le seul numéro d'un message est celui du responsable adverse ; jamais
+      // celui du destinataire, ni aucun dans le texte de la page.
+      for (const t of [alpha.texte, barrage, dernier, ...textes1]) expect(t).not.toMatch(/Joueur/);
+      expect(alpha.texte).not.toContain("0600000100");
+      expect(barrage).not.toMatch(/0600000|Responsable adverse/);
+      expect(dernier).not.toMatch(/0600000|Responsable adverse/);
       expect(await page.locator("body").innerText()).not.toMatch(/0600000|33600000/);
 
       // Copier : le même texte que WhatsApp.

@@ -248,8 +248,9 @@ la date de naissance, à aucun moment exposées par l'API.
   Le numéro n'est jamais écrit dans les pages. Le nom
   du responsable n'apparaît pas sur Mes équipes, figure en info-bulle sur
   Parties et en clair sur Report, et le message WhatsApp prérempli de Parties
-  contient le nom et le numéro du responsable adverse ; celui du Bilan salue
-  seulement le responsable destinataire, par son prénom quand il s'isole.
+  contient le nom et le numéro du responsable adverse, comme les messages de
+  fin de poule du Bilan, qui saluent en plus le destinataire par son prénom
+  quand il s'isole.
 - **Rien n'est envoyé** : ce que le site retient (équipes suivies, filtres,
   partie du compteur, cache des données) reste dans le navigateur.
 
