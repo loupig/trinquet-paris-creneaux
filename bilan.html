@@ -1988,12 +1988,13 @@
   // Le numéro n'entre que dans le message, jamais dans le texte de la page.
   function responsableAdverse(club, categorie, equipe) {
     var c = club && contactsDe ? contactsDe(club, categorie, equipe) : null;
-    if (!c) return "";
+    if (!c || !c.tel) return "";
     return "\nResponsable adverse : " + (c.responsable ? c.responsable + " (" + c.tel + ")" : c.tel);
   }
 
-  // Le message d'une équipe, en gras et italique WhatsApp (*…*, _…_). Ni nom
-  // de joueur ni numéro de téléphone : le prénom du responsable seulement.
+  // Le message d'une équipe, en gras et italique WhatsApp (*…*, _…_). Aucun
+  // nom de joueur ; du destinataire, le prénom seulement ; un seul numéro,
+  // celui du responsable adverse.
   function messageFinDePoule(ctx, serie, t, rang, taille, contact) {
     var regle = FIN_DE_POULE[serie.cat];
     var sort = sortFinDePoule(serie, rang, taille);
