@@ -62,7 +62,11 @@ Une équipe sans partie jouée n'a pas de zone. Elle serait sinon marquée « de
 Le `<p class="legende">` du bloc Filtres est retiré.
 
 **4. Lien Bilan : déplacé par le script, pas dupliqué.**
-Après chaque rendu, `renderResults` décide où mettre l'unique élément `.bilan-lien`. Si une série affichée a fini ses poules, il va sous le bloc Filtres, comme dans le HTML. Sinon, il va à la fin de `#results`. Un seul élément dans la page : le test du Bilan qui le touche reste valable. Sans données (échec du chargement), il reste en haut.
+Le HTML a deux emplacements, hors de `#results`, que chaque rendu vide :
+- `#bilanHaut`, sous le bloc Filtres ;
+- `#bilanBas`, après `#results`.
+
+L'unique `.bilan-lien` part dans `#bilanBas` dès le HTML. Pendant la saison, il ne bouge donc pas à l'arrivée des données. Après chaque rendu, `renderResults` le passe dans `#bilanHaut` si une série affichée a fini ses poules, sinon dans `#bilanBas`, y compris quand aucune équipe ne reste affichée. Sans données (échec du chargement), il reste en bas, où le HTML l'a mis. Un seul élément dans la page : le test du Bilan qui le touche reste valable.
 
 **5. Phrase d'aide et lien Bilan.**
 L'aide reste sur la première carte. Avec le lien Bilan en bas pendant la saison et sans trait des qualifiés, la mesure de la maquette donne une poule de six entière sur l'iPhone 15 Pro (393 × 659).
