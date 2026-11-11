@@ -34,4 +34,4 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 - [x] 3.4 Captures Pixel 7 du Classement en clair et en sombre (par poule, général, une ligne dépliée), de Parties et Créneaux repliés, et du Classement à 1280 px. Comparer avec 1.1.
 - [x] 3.5 `/code-review` sur le diff, et corriger les constats. `/security-review` si le diff touche à l'usage de `localStorage` au-delà du défaut.
 - [x] 3.6 Archiver le changement dans la même PR : specs `classement` et `programme` à jour.
-- [ ] 3.7 Ouvrir la PR sur le modèle du dépôt, avec les captures et la mesure avant/après (équipes visibles au premier écran). Laisser la rubrique « Décision humaine » à la personne qui décide.
+- [x] 3.7 Ouvrir la PR sur le modèle du dépôt, avec les captures et la mesure avant/après (équipes visibles au premier écran). Laisser la rubrique « Décision humaine » à la personne qui décide.
