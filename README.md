@@ -214,7 +214,7 @@ Clés `localStorage` :
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
-| `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages |
+| `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages : `1` ouvert à la main, `0` replié à la main ; absente, le bloc est replié |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
 | `lidfpb_theme_v1` | toutes (bouton sur les sept pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
@@ -239,8 +239,9 @@ déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
 - **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil,
-  Parties et le Bilan, sous chaque équipe sur le Classement et Mes équipes, et au
-  détail d'une partie sur Parties et Créneaux ; jamais dans le texte ni
+  Parties et le Bilan, sous chaque équipe sur Mes équipes, au toucher de la
+  ligne d'une équipe sur le Classement, et au détail d'une partie sur Parties
+  et Créneaux ; jamais dans le texte ni
   l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
   numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,

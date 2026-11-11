@@ -620,6 +620,8 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
     await page.goto("programme.html");
     await attendreChargement(page);
     const recap = page.locator(".filters-recap");
+    await expect(recap).toHaveText("Tout est affiché");   // replié par défaut
+    await page.locator("#filtersToggle").click();
     await expect(recap).toBeHidden();   // déplié : pas de résumé
     await page.locator("#filtersToggle").click();
     await expect(recap).toHaveText("Tout est affiché");
@@ -650,6 +652,7 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
   test("Créneaux : une heure retirée se lit « sans 17h », la case décochée se dit", async ({ page }) => {
     await page.goto("creneaux.html");
     await attendreChargement(page);
+    await page.locator("#filtersToggle").click();
     await page.locator("#filterHours .filter-chip[data-hour='17']").click();
     await page.locator("#filterOnlyFree").uncheck();
     await page.locator("#filtersToggle").click();
@@ -659,7 +662,6 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
   test("Classement : le découpage général figure, pas le découpage par défaut", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
-    await page.locator("#filtersToggle").click();
     await expect(page.locator(".filters-recap")).toHaveText("Tout est affiché");
     await page.locator("#filtersToggle").click();
     await page.locator("#filterDecoupage .filter-chip[data-mode='general']").click();
@@ -668,11 +670,184 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
   });
 });
 
+// Spec programme, « Filtres mémorisés sur l'appareil » : le bloc est replié
+// par défaut sur les trois pages, et le pli est commun.
+test.describe("Filtres repliés par défaut", () => {
+  for (const url of ["programme.html", "classement.html", "creneaux.html"]) {
+    test(`${url} : première visite, bloc replié qui dit « Tout est affiché »`, async ({ page }) => {
+      await page.goto(url);
+      await attendreChargement(page);
+      await expect(page.locator("#filtersToggle")).toHaveAttribute("aria-expanded", "false");
+      await expect(page.locator("#filtersBody")).toBeHidden();
+      await expect(page.locator(".filters-recap")).toHaveText("Tout est affiché");
+    });
+  }
+
+  test("ouvert à la main sur le Classement, il est ouvert sur Créneaux", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.locator("#filtersToggle").click();
+    await expect(page.locator("#filtersBody")).toBeVisible();
+    await page.goto("creneaux.html");
+    await attendreChargement(page);
+    await expect(page.locator("#filtersToggle")).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator("#filtersBody")).toBeVisible();
+  });
+});
+
+// Spec classement, « Ligne d'une équipe » et « Joueurs des équipes » : une
+// ligne en colonnes, les joueurs et le détail au toucher.
+test.describe("Classement : une ligne par équipe, en colonnes", () => {
+  const ligne = (page, nom) => page.locator(".rank-row").filter({ hasText: nom }).first();
+  const colonnes = (row) => row.locator(".rank-n").allTextContents();
+
+  test("en-tête de colonnes et valeurs d'une équipe classée", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const carte = page.locator(".zone-classement").first().locator(".poule-card").first();
+    await expect(carte.locator(".rank-head > span")).toHaveText(["#", "Équipe", "J", "G", "P", "GA", "Moy.", ""]);
+    const alpha = ligne(page, "Alpha (éq. 1)");
+    expect(await colonnes(alpha)).toEqual(["3", "3", "0", "+51"]);
+    await expect(alpha.locator(".rank-score")).toHaveText("3,00");
+    expect(await colonnes(ligne(page, "Bravo (éq. 1)"))).toEqual(["3", "2", "1", "−7"]);
+    await expect(ligne(page, "Bravo (éq. 1)").locator(".rank-score")).toHaveText("2,33");
+    // Rien d'autre sur la ligne : ni phrase de détail, ni joueurs.
+    await expect(page.locator(".rank-joueurs:visible")).toHaveCount(0);
+    await expect(page.locator(".rank-detail:visible")).toHaveCount(0);
+  });
+
+  test("toucher une ligne montre ses joueurs puis son détail, un second toucher les cache", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const bravo = ligne(page, "Bravo (éq. 1)");
+    await expect(bravo).toHaveAttribute("aria-expanded", "false");
+    const chevron = () => bravo.locator(".rank-chevron svg").evaluate((s) => getComputedStyle(s).transform);
+    const replie = await chevron();
+    const fond = () => bravo.evaluate((e) => getComputedStyle(e).backgroundColor);
+    const fondReplie = await fond();
+
+    await bravo.click();
+    await expect(bravo).toHaveAttribute("aria-expanded", "true");
+    const plus = page.locator("#" + await bravo.getAttribute("aria-controls"));
+    await expect(plus).toBeVisible();
+    await expect(plus.locator(".rank-joueurs")).toHaveText("Ane Joueur100003, Bixente Joueur100004");
+    await expect(plus.locator(".rank-detail")).toHaveText(/^3 parties · 2 G · 1 P · 7 pts · /);
+    // Les joueurs d'abord, le détail chiffré ensuite.
+    expect(await plus.locator(".rank-joueurs, .rank-detail").evaluateAll((l) => l.map((e) => e.className.split(" ")[0])))
+      .toEqual(["rank-joueurs", "rank-detail"]);
+    await expect.poll(chevron).toBe("none");
+    expect(replie).not.toBe("none");
+    await expect.poll(fond).not.toBe(fondReplie);
+
+    // Deux lignes ouvertes à la fois.
+    await ligne(page, "Alpha (éq. 1)").click();
+    await expect(page.locator(".rank-row[aria-expanded='true']")).toHaveCount(2);
+
+    await bravo.click();
+    await expect(bravo).toHaveAttribute("aria-expanded", "false");
+    await expect(plus).toBeHidden();
+    await expect.poll(chevron).toBe(replie);
+  });
+
+  test("une ligne ouverte le reste quand la simulation recalcule le classement", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await ligne(page, "Bravo (éq. 1)").click();
+    const sim = page.locator(".sim-card").first();
+    await sim.locator(".sim-toggle").click();
+    await sim.locator(".sim-match").first().locator(".sim-pick").first().click();
+    await expect(page.locator("#sim-slot")).toContainText("Simulation en cours");
+    await expect(ligne(page, "Bravo (éq. 1)")).toHaveAttribute("aria-expanded", "true");
+  });
+
+  test("la phrase d'aide, sur la première carte seulement", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const aide = page.locator(".rank-aide");
+    await expect(aide).toHaveCount(1);
+    await expect(aide).toHaveText("👥 Touchez une équipe pour voir ses joueurs");
+    await expect(page.locator(".poule-card").first().locator(".rank-aide")).toHaveCount(1);
+    // Série 1 masquée : la phrase passe sur la première carte de la série 2.
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterSeries .filter-chip[data-serie='1']").click();
+    await expect(aide).toHaveCount(1);
+    await expect(page.locator(".poule-card").first().locator(".badge")).toHaveText("Série 2");
+    await expect(page.locator(".poule-card").first().locator(".rank-aide")).toHaveCount(1);
+  });
+
+  test("une équipe qui n'a pas joué : 0 partie et des tirets", async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      // Foxtrot (série 1) n'a plus aucun score.
+      const data = table === "rencontres"
+        ? tables.rencontres.map((r) => r["Catégorie"] === "1" && (r.club_rec === codeClub(5) || r.club_vis === codeClub(5)) ? { ...r, score_cr: "", score_cv: "" } : r)
+        : (tables[table] || []);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+      });
+    });
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const foxtrot = ligne(page, "Foxtrot (éq. 1)");
+    await expect(foxtrot.locator(".rank-pos")).toHaveText("–");
+    expect(await colonnes(foxtrot)).toEqual(["0", "–", "–", "–"]);
+    await expect(foxtrot.locator(".rank-score")).toHaveText("–");
+    await foxtrot.click();
+    await expect(page.locator("#" + await foxtrot.getAttribute("aria-controls")).locator(".rank-detail")).toHaveText("aucune partie jouée");
+  });
+
+  test("une poule de six entière au premier écran, lien Bilan sur une ligne", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.evaluate(() => document.fonts.ready);
+    const haut = await page.locator(".tab-bar").evaluate((e) => e.getBoundingClientRect().top);
+    const lignes = page.locator(".zone-classement").first().locator(".poule-card").first().locator(".rank-row");
+    await expect(lignes).toHaveCount(6);
+    const bas = await lignes.last().evaluate((e) => e.getBoundingClientRect().bottom);
+    expect(bas, "la 6e équipe passe sous la barre d'onglets").toBeLessThanOrEqual(haut);
+    const titre = page.locator(".bilan-lien .bilan-lien-texte");
+    expect(await titre.evaluate((e) => {
+      const r = document.createRange(); r.selectNodeContents(e); return r.getClientRects().length;
+    })).toBe(1);
+    await expect(page.locator(".bilan-lien small")).toHaveCount(0);
+  });
+
+  test("lecteur d'écran : chaque nombre dit ce qu'il compte", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const alpha = ligne(page, "Alpha (éq. 1)");
+    expect(await alpha.locator(".rank-n").evaluateAll((l) => l.map((e) => e.getAttribute("aria-label"))))
+      .toEqual(["3 parties jouées", "3 gagnées", "0 perdue", "goal average +51"]);
+    await expect(page.locator(".rank-head").first()).toHaveAttribute("aria-hidden", "true");
+  });
+});
+
+for (const largeur of [320, 390]) test.describe(`Classement à ${largeur} px`, () => {
+  test.use({ viewport: { width: largeur, height: 844 } });
+  test("pas de défilement horizontal, par poule comme en général", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterDecoupage .filter-chip[data-mode='general']").click();
+    await ouvrirUneLigne(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+});
+
+// Ouvre une ligne du classement, pour mesurer aussi le détail déplié.
+async function ouvrirUneLigne(page) {
+  await page.locator(".rank-row").first().click();
+  await expect(page.locator(".rank-plus:visible")).toHaveCount(1);
+}
+
 // Spec classement, « Poule d'origine en classement général ».
 test("Classement : chaque équipe montre sa poule, d'une teinte par poule, jusqu'au tableau des quarts", async ({ page }) => {
   await page.goto("classement.html");
   await attendreChargement(page);
   await expect(page.locator(".poule-tag")).toHaveCount(0);
+  await page.locator("#filtersToggle").click();
   await page.locator("#filterDecoupage .filter-chip[data-mode='general']").click();
   const carte = page.locator(".zone-classement").first().locator(".poule-card").first();
   const lignes = carte.locator(".rank-row");
@@ -1767,11 +1942,13 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
-  test("Classement : les joueurs toujours sous chaque équipe", async ({ page }) => {
+  test("Classement : les joueurs au toucher de la ligne de chaque équipe", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
     await expect(page.getByRole("button", { name: "Joueurs des équipes" })).toHaveCount(0);
-    const alpha = page.locator(".rank-row").filter({ hasText: "Alpha (éq. 1)" }).first();
+    const alpha = page.locator(".rank-item").filter({ hasText: "Alpha (éq. 1)" }).first();
+    await expect(alpha.locator(".rank-joueurs")).toBeHidden();
+    await alpha.locator(".rank-row").click();
     await expect(alpha.locator(".rank-joueurs")).toHaveText("Ane Joueur100001, Bixente Joueur100002");
   });
 
@@ -1789,7 +1966,9 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
 
     await page.goto("classement.html");
     await attendreChargement(page);
-    const ligne = (nom) => page.locator(".rank-row").filter({ hasText: nom }).first().locator(".rank-joueurs");
+    const ligne = (nom) => page.locator(".rank-item").filter({ hasText: nom }).first().locator(".rank-joueurs");
+    await page.locator(".rank-row").filter({ hasText: "Alpha (éq. 1)" }).first().click();
+    await page.locator(".rank-row").filter({ hasText: "Bravo (éq. 1)" }).first().click();
     await expect(ligne("Alpha (éq. 1)")).toHaveText("Composition non déclarée à la ligue");
     await expect(ligne("Alpha (éq. 1)")).toHaveClass(/inconnus/);
     await expect(ligne("Bravo (éq. 1)")).toHaveText("Ane Joueur100003, Bixente Joueur100004");
