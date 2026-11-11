@@ -25,8 +25,12 @@ jobs:
       - run: npm ci
       - name: Syntaxe JavaScript des pages
         run: npm run test:syntaxe
-      - name: Navigateur Chromium
-        run: npx playwright install --with-deps chromium
+      # Pas de téléchargement de navigateur : les tests utilisent le Google
+      # Chrome de l'image ubuntu-24.04 (channel « chrome » dans
+      # playwright.config.mjs). Le télécharger à chaque exécution a bloqué la
+      # CI jusqu'à son délai de 10 minutes.
+      - name: Navigateur
+        run: google-chrome --version
       - name: Pages sur données fictives
         run: npm run test:pages
       - name: Rapport en cas d'échec

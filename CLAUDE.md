@@ -30,7 +30,9 @@ fusionne jamais.
 - Tout en français : interface, commentaires, commits, specs.
 - Chaque page est autonome (CSS et JS inline), sans dépendance ni build.
   Les constantes dupliquées (`PTS_VICTOIRE`, `PHASE_POULES`,
-  `QUALIFIES_PAR_POULE`…) restent identiques dans les pages qui les portent.
+  `QUALIFIES_PAR_POULE`, `FIN_DE_POULE`, `CLUBS_ABREGES`…) restent identiques
+  dans les pages qui les portent ; les noms courts des clubs se changent
+  d'abord dans la spec `noms-clubs`.
 - Page modifiée : mettre à jour `Version AAAA.MM.JJ` dans son pied de page
   (`.2`, `.3`… pour une deuxième mise en ligne le même jour).
 - Script partagé (`.js` à la racine) modifié : changer son `?v=` dans chaque page qui le charge.
