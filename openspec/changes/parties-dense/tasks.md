@@ -5,7 +5,7 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 ## 1. Scénarios d'abord
 
 - [ ] 1.1 Dans `tests/pages.spec.mjs`, écrire :
-  - la ligne en noms courts, avec un club de la table servi par les données (« MPBA 1 vs … ») ;
+  - la ligne en noms courts, avec un club de la table servi par les données : texte exact des équipes « MPBA 1 vs Bravo 1 », une espace de chaque côté de « vs » (la maquette les collait) ;
   - la pastille « P1 » ou « P2 » dans la teinte de sa poule, et « 1/4 » pour un quart ;
   - plus de « Série 1 » écrit ni de lieu sur la ligne, sauf « 📍 » pour une partie servie dans un autre lieu ;
   - la légende (séries présentes, pastilles, 📍 s'il sert, phrase d'aide), qui suit le filtre Série ;
