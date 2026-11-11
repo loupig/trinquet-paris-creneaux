@@ -6,13 +6,16 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 
 - [ ] 1.1 Dans `tests/pages.spec.mjs`, écrire :
   - la ligne en noms courts, avec un club de la table servi par les données (« MPBA 1 vs … ») ;
-  - le lieu court « Trinquet Paris » ;
+  - la pastille « P1 » ou « P2 » dans la teinte de sa poule, et « 1/4 » pour un quart ;
+  - plus de « Série 1 » écrit ni de lieu sur la ligne, sauf « 📍 » pour une partie servie dans un autre lieu ;
+  - la légende (séries présentes, pastilles, 📍 s'il sert, phrase d'aide), qui suit le filtre Série ;
   - aucun crochet ni nom de joueur sur la ligne ;
   - le chevron qui tourne, le fond teinté et `aria-expanded` au toucher ;
   - le détail avec le nom officiel, les joueurs et le lieu complet ;
   - le message WhatsApp inchangé, avec les noms officiels et le lieu complet ;
   - le compteur ouvert avec les noms courts ;
-  - au moins quatre parties au premier écran d'un iPhone 15 Pro ;
+  - au moins cinq parties au premier écran d'un iPhone 15 Pro ;
+  - la phrase lue de la ligne, avec la série, la poule et le lieu ;
   - `CLUBS_ABREGES` et `lieuCourt` identiques entre `index.html` et `programme.html`.
 
   Vérifier : ils échouent sur la page actuelle.
@@ -20,10 +23,11 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 ## 2. Page Parties
 
 - [ ] 2.1 `programme.html` :
-  - `CLUBS_ABREGES` et `lieuCourt` recopiés ;
+  - `CLUBS_ABREGES`, `lieuCourt` et les teintes `--poule*` recopiés ;
+  - `lieuHabituel`, pastille de poule ou de phase, légende ;
   - libellés courts et officiels ;
   - `equipesDe` sans crochets ;
-  - détail avec les noms officiels et le lieu complet ;
+  - détail avec les noms officiels, la série et la poule, et le lieu complet ;
   - `button.match-row` avec chevron et `aria-expanded` ;
   - CSS (centrage, padding, fond à l'ouverture, remise à zéro du bouton).
 

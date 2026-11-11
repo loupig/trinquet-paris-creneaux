@@ -12,20 +12,27 @@ Le Classement vient de passer en noms courts, avec les joueurs au toucher, et le
 
 ## What Changes
 
-- **Ligne d'une partie, en noms courts** (spec `noms-clubs`) : « 19h30 MPBA 1 vs PEP 2 40 – 27 », puis « Série 1 · Poule 1 · Trinquet Paris ».
-  - Le lieu passe sous son nom court, comme à l'accueil : la partie entre parenthèses, sans le code postal.
-  - **BREAKING** pour la spec `programme` : les noms officiels quittent la ligne.
-- **Joueurs au toucher.** Les crochets disparaissent de la ligne. **BREAKING** : les joueurs ne sont plus « toujours affichés ».
-  - Le détail, qui les donnait déjà avec les contacts, devient le seul endroit où les lire, sous le nom officiel de chaque équipe.
-  - Le lieu complet y figure aussi.
-- **Le toucher se voit**, comme au Classement :
-  - un chevron « › » au bout de chaque ligne, qui passe en « ⌄ » une fois ouverte ;
-  - un fond teinté sur la partie ouverte ;
-  - la ligne devient un bouton qui annonce s'il est déplié.
+- **Une partie, une ligne** : « 19h30 [P2] MPBA 1 vs PEP 2 40 – 27 › ». Sur la maquette : 33 px par partie, contre 150 à 170 px aujourd'hui.
+  - **Équipes en noms courts** (spec `noms-clubs`). **BREAKING** pour la spec `programme` : les noms officiels quittent la ligne.
+  - **Série par la couleur** de la ligne (liseré et fond, déjà en place) au lieu de « Série 1 » écrit.
+  - **Poule en pastille** « P1 », « P2 », aux teintes de poule du Classement ; une phase finale en pastille neutre (« 1/4 », « 1/2 », « Finale », « Barrage »).
+  - **Lieu au détail**, puisque presque tout se joue au même endroit. Exception : une partie hors du lieu habituel garde « 📍 Trinquet … » sur sa ligne, pour éviter de se tromper de trinquet. *À valider par le demandeur.*
+  - **Joueurs au toucher.** Les crochets disparaissent. **BREAKING** : les joueurs ne sont plus « toujours affichés ».
+- **Légende** au-dessus des jours :
+  - la couleur de chaque série, les pastilles de poule, le 📍 s'il sert ;
+  - « Touchez une partie : joueurs, lieu, contacts ».
+- **Le toucher se voit**, comme au Classement : chevron « › » puis « ⌄ », fond teinté, ligne-bouton qui annonce s'il est déplié et dont la phrase lue dit la série, la poule et le lieu.
+- **Détail** :
+  - pour chaque équipe, son nom officiel, ses joueurs et ses contacts ;
+  - la série et la poule en toutes lettres ;
+  - le lieu complet.
 - **Ce qui ne change pas** :
-  - le message WhatsApp aux responsables garde les noms officiels et le lieu complet : il part vers des gens qui ne lisent pas forcément le site ;
-  - le lien « Compter cette partie » envoie au compteur les noms courts, plus lisibles sur un tableau de score.
-- **`CLUBS_ABREGES` recopiée dans `programme.html`**, identique à l'accueil et au Classement. Le test qui compare les copies à la spec couvre la troisième page.
+  - le message WhatsApp aux responsables garde les noms officiels et le lieu complet ;
+  - le compteur reçoit les noms courts, plus lisibles sur un tableau de score.
+- **Recopiés dans `programme.html`**, à l'identique :
+  - `CLUBS_ABREGES`, déjà comparé à la spec par un test ;
+  - `lieuCourt`, de l'accueil ;
+  - les teintes de poule `--poule1-*` à `--poule4-*` du Classement, avec leurs valeurs sombres.
 
 ## Capabilities
 
@@ -34,8 +41,9 @@ Aucune.
 
 ### Modified Capabilities
 - `programme` :
-  - « Ligne d'une partie » : noms courts, lieu court, chevron ;
-  - « Détail d'une partie » : nom officiel, joueurs, lieu complet ;
+  - « Ligne d'une partie » : une ligne, noms courts, pastille de poule, série par la couleur, lieu seulement s'il est inhabituel, chevron ;
+  - « Légende des parties » : ajoutée ;
+  - « Détail d'une partie » : nom officiel, joueurs, série et poule, lieu complet ;
   - « Joueurs des équipes entre crochets » : retirée.
 - `donnees-api` : « Noms de joueurs seuls », Parties ne les donne plus qu'au détail d'une partie.
 
@@ -46,7 +54,7 @@ La spec `noms-clubs` ne change pas : elle ne liste pas les pages qui portent la 
 - **Pages** : `programme.html` (rendu des lignes et du détail, CSS, `CLUBS_ABREGES`, `lieuCourt`). Pied de page `Version 2026.11.11.2`.
 - **Tests** :
   - les scénarios de Parties qui lisent les crochets ou « Alpha (éq. 1) » sur la ligne sont revus ;
-  - les nouveaux scénarios couvrent les noms courts, le lieu court, les joueurs au toucher, le chevron, le message WhatsApp inchangé et quatre parties au moins au premier écran d'un iPhone 15 Pro ;
+  - les nouveaux scénarios couvrent les noms courts, le lieu court, les joueurs au toucher, le chevron, le message WhatsApp inchangé, la pastille de poule, la légende, le 📍 d'un lieu inhabituel, et cinq parties au moins au premier écran d'un iPhone 15 Pro ;
   - le test des copies identiques ajoute `programme.html`.
 - **README** (constante `CLUBS_ABREGES`, liste des endroits où s'affichent les noms de joueurs) et **spec `donnees-api`** (noms de joueurs sur Parties : au détail seulement).
 - **Hors champ** :
@@ -56,4 +64,5 @@ La spec `noms-clubs` ne change pas : elle ne liste pas les pages qui portent la 
 ## Hypothèses à valider
 
 1. **Personne ne venait sur Parties pour lire les joueurs d'un coup d'œil.** Le Classement a fait le même pari. Si des joueurs le regrettent, les joueurs de l'équipe suivie pourraient revenir sur la ligne.
-2. **« Trinquet Paris » suffit à situer une partie**, comme à l'accueil. L'adresse complète reste au toucher et dans le message WhatsApp.
+2. **La couleur suffit à dire la série**, avec la légende en haut de page. Le liseré de série existe déjà ; seul le mot disparaît.
+3. **Le lieu habituel n'a pas besoin d'être répété.** Seule une partie ailleurs le dit sur sa ligne. L'adresse complète reste au toucher et dans le message WhatsApp.

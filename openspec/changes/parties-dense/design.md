@@ -24,7 +24,7 @@
 ## Goals / Non-Goals
 
 **Goals:**
-- Au moins quatre parties sur le premier écran d'un iPhone 15 Pro, avec les vrais noms.
+- Une partie par ligne, au moins cinq sur le premier écran d'un iPhone 15 Pro, avec les vrais noms.
 - Le même geste qu'au Classement pour voir les joueurs, et un indice visible.
 - Aucun changement du message envoyé aux responsables.
 
@@ -41,14 +41,34 @@
 
 Le détail construit ses `sides` avec les libellés officiels. Ainsi `buildWhatsappMessage` reçoit exactement ce qu'il recevait avant, sans être modifié. Le compteur reçoit les noms courts (`lienCompteur(match.labelRec, …)`), plus lisibles sur un tableau de score.
 
-**2. `lieuCourt` recopiée de l'accueil.**
-Même fonction, même nom, avec un commentaire qui renvoie à l'accueil. La ligne affiche `lieuCourt(match.lieu)`. Le détail ajoute une ligne « Lieu : … » avec le libellé complet, sauf si le lieu est absent (`LIEU_INCONNU`). Un test compare les deux copies, comme pour les constantes.
+**2. Le lieu au détail, sauf lieu inhabituel.**
+- Au chargement, `lieuHabituel` est le lieu le plus fréquent de toutes les rencontres reçues, avant tout filtre, pour qu'il ne change pas en filtrant. Il est comparé sur le libellé normalisé, comme les doublons de l'accueil : sans casse, accents ni ponctuation.
+- Une partie dont le lieu est connu et diffère du lieu habituel porte sur sa ligne `📍 ` + `lieuCourt(match.lieu)`.
+- `lieuCourt` est recopiée de l'accueil, avec son nom et un commentaire qui y renvoie. Un test compare les deux copies.
+- Le détail donne toujours le lieu complet, ou « Lieu non précisé ».
+
+Alternative écartée : ne jamais mettre le lieu sur la ligne. Un joueur qui ne déplie pas la partie irait au mauvais trinquet.
+
+**2 bis. La poule en pastille, la série par la couleur.**
+- La pastille reprend le style `.poule-tag` du Classement et ses teintes `--poule1-*` à `--poule4-*`, recopiées dans le `:root` de `programme.html` avec leurs valeurs sombres, à l'identique dans les deux blocs sombres (spec `apparence`).
+- La teinte suit le rang de la poule dans sa série (poule 1 → teinte 1), comme `teintesPoules` au Classement.
+- Hors poule, la pastille porte le libellé court de la phase (« 1/4 de finale » → « 1/4 », « Barrage maintien » → « Barrage »), en `--accent` sur `--accent-bg`.
+- La ligne `.match-row-meta` disparaît. Série, poule et lieu passent dans le détail et dans l'`aria-label` de la ligne.
+
+**2 ter. Légende.**
+Un `div.legende-parties`, au début de `#results` à chaque rendu, construit d'après les parties affichées :
+- une pastille de couleur par série présente ;
+- les pastilles de poule présentes, puis « poule » ;
+- « 📍 lieu inhabituel » si une partie affichée en porte un ;
+- « Touchez une partie : joueurs, lieu, contacts ».
+
+Elle prend le style de la légende du Classement.
 
 **3. Ligne-bouton.**
 `div.match-row` devient `button.match-row` (styles de bouton remis à zéro), avec `aria-expanded` et `aria-controls` vers le détail. Le chevron est le tracé du bloc Filtres, déjà présent dans la page, inséré en constante comme au Classement.
 - À l'ouverture, `.match-item` prend le fond `--accent-bg`, qui couvre la ligne et son détail. Le liseré de série reste à gauche.
-- `align-items: center` remplace `baseline`, pour aligner l'heure, les équipes, le score et le chevron.
-- Le padding vertical passe de 10 à 8 px.
+- `align-items: center` remplace `baseline`, pour aligner l'heure, la pastille, les équipes, le score et le chevron.
+- Le padding vertical passe de 10 à 7 px.
 
 **4. Plus de crochets sur la ligne.**
 `equipesDe(match)` n'écrit plus que « A vs B ». `crochets()` disparaît. Le numéro est collé au nom par une espace insécable, comme au Classement.
@@ -59,7 +79,8 @@ Comme aujourd'hui, une partie ouverte se referme au prochain rendu (filtre). Rie
 ## Risks / Trade-offs
 
 - **Joueurs moins visibles.** C'est l'hypothèse 1 de la proposition, le même pari qu'au Classement.
-- **Lieu court ambigu.** Deux salles au nom proche dans deux villes. → Le détail donne le lieu complet. Les lieux de la ligue diffèrent par leur nom de salle.
+- **Lieu habituel faux en début de saison**, si les premières parties publiées se jouent surtout ailleurs. → Le lieu le plus fréquent se recalcule à chaque chargement, et le détail donne toujours le lieu complet.
+- **Série par la couleur seule** : moins lisible pour un daltonien. → La légende, le détail et la phrase lue la disent en mots. Le filtre Série reste disponible.
 - **Une copie de plus de `CLUBS_ABREGES`.** → Le test compare désormais trois pages à la spec.
 
 ## Migration Plan
