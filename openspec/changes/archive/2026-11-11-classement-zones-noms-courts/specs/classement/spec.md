@@ -74,6 +74,21 @@ Une équipe sans partie jouée a « 0 » parties, « – » dans les autres colo
 - **WHEN** un visiteur ouvre le Classement sur un Pixel 7 ou un iPhone 15 Pro, avec le bloc Filtres replié, poules en cours
 - **THEN** les six équipes de la première poule sont toutes visibles sans défiler, au-dessus de la barre d'onglets
 
+### Requirement: Joueurs des équipes
+Le détail déplié de chaque ligne d'équipe SHALL porter, juste après le nom officiel de l'équipe, les noms de ses joueurs, en gras et précédés d'une icône de joueurs, tels que déclarés à la ligue (composition de l'engagement), ou « Composition non déclarée à la ligue ». Les noms n'apparaissent pas sur la ligne repliée. Ils ne changent aucun rang. Si les compositions ne peuvent être chargées, le détail s'affiche sans noms plutôt que de les dire non déclarés.
+
+#### Scenario: Équipe avec composition
+- **WHEN** un visiteur ouvre le Classement puis touche la ligne d'Alpha 1
+- **THEN** le détail déplié porte les noms de ses joueurs
+
+#### Scenario: Ligne repliée
+- **WHEN** un visiteur ouvre le Classement sans toucher aucune ligne
+- **THEN** aucun nom de joueur n'est visible
+
+#### Scenario: Équipe sans composition
+- **WHEN** une équipe n'a déclaré aucune composition à la ligue et que le visiteur touche sa ligne
+- **THEN** le détail porte « Composition non déclarée à la ligue »
+
 ## ADDED Requirements
 
 ### Requirement: Zones de fin de poule

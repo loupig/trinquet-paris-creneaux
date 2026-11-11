@@ -846,7 +846,7 @@ test("noms courts et règle de fin de poule identiques d'une page à l'autre, et
   const accueil = await constante("index.html", "CLUBS_ABREGES");
   expect(await constante("classement.html", "CLUBS_ABREGES")).toEqual(accueil);
   expect(await constante("classement.html", "FIN_DE_POULE")).toEqual(await constante("bilan.html", "FIN_DE_POULE"));
-  const spec = await readFile(new URL("../openspec/changes/classement-zones-noms-courts/specs/noms-clubs/spec.md", import.meta.url), "utf8");
+  const spec = await readFile(new URL("../openspec/specs/noms-clubs/spec.md", import.meta.url), "utf8");
   const table = {};
   for (const l of spec.split("\n")) {
     const m = l.match(/^\| ([A-Z0-9 ]+) \| (.+) \|$/);
