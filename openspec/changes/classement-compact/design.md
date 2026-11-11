@@ -29,11 +29,22 @@
 ## Decisions
 
 **1. Une grille CSS par ligne, pas un `<table>`.**
-La ligne devient un `button.rank-row` en `display: grid` avec `grid-template-columns: 22px minmax(0,1fr) 22px 22px 22px 38px 44px`. L'en-tête `.rank-head` utilise la même grille. Le détail déplié `.rank-plus` est un frère qui suit la ligne. Il commence sous la colonne du nom, avec le même retrait.
+La ligne devient un `button.rank-row` en `display: grid` avec `grid-template-columns: 22px minmax(0,1fr) 20px 20px 20px 34px 40px 14px` : la dernière colonne porte le chevron (décision 2). L'en-tête `.rank-head` utilise la même grille. Le détail déplié `.rank-plus` est un frère qui suit la ligne. Il commence sous la colonne du nom, avec le même retrait.
 Alternative écartée : un `<table>`. La sémantique serait meilleure pour un lecteur d'écran, mais une ligne de tableau ne peut pas être un bouton, et le dépli demanderait une ligne `colspan` insérée. Le bouton avec `aria-expanded` et `aria-controls` annonce le dépli. L'en-tête porte `aria-hidden="true"`, et chaque nombre a un libellé lisible (`aria-label` « 3 parties jouées », etc.) pour que la ligne se lise en entier.
 
-**2. Le bouton garde l'allure d'une ligne.**
-Il remet à zéro les styles du bouton (`font: inherit`, `background: none`, `border: 0`, `text-align: inherit`, `width: 100%`) et garde le liseré de teinte (`box-shadow` inset) et le trait du haut. Un chevron discret n'est pas ajouté : la colonne Moy. est déjà la plus à droite, et la place manque. Le dépli s'annonce par l'état `aria-expanded` et par un léger fond `--surface-2` sur la ligne dépliée.
+**2. Le bouton garde l'allure d'une ligne, et dit qu'il se déplie.**
+Il remet à zéro les styles du bouton (`font: inherit`, `background: none`, `border: 0`, `text-align: inherit`, `width: 100%`). Il garde le liseré de teinte (`box-shadow` inset) et le trait du haut.
+
+Trois signes rendent le dépli évident, validés sur maquette (Pixel 7, clair et sombre) :
+- **Un chevron** en 8e colonne de 14 px. C'est le tracé Phosphor du bloc Filtres, déjà dans la page : tourné de −90° (« › ») replié, droit (« ⌄ ») déplié. C'est le même geste que pour les filtres, donc rien de nouveau à apprendre. On paie la place en serrant J, G et P à 20 px et GA à 34 px.
+- **Un fond `--accent-bg`** sur la ligne dépliée et son détail, avec le chevron en `--accent`. On voit tout de suite ce qui est ouvert, et à quelle équipe le détail appartient.
+- **Une phrase d'aide** sous l'en-tête de colonnes de la première carte affichée seulement : « 👥 Touchez une équipe pour voir ses joueurs », en 12 px `--muted`. Elle coûte une ligne, une seule fois par page. La poule entière tient toujours au premier écran.
+
+Dans le détail, les joueurs viennent en premier, en gras, en `--text`, précédés de l'icône Phosphor « users » (celle de l'onglet Mes équipes). Le détail chiffré suit, en `--muted`. C'est ce que le visiteur venait chercher.
+
+Alternatives écartées :
+- **Les joueurs en clair sur la ligne de l'équipe suivie seulement.** Cela reste possible plus tard, mais n'aide pas à découvrir le geste.
+- **Une icône 👥 à la place du chevron.** Elle dit « joueurs », mais pas « se déplie », et elle prendrait la même place.
 
 **3. Le nom passe à la ligne.**
 `overflow-wrap: anywhere` sur le nom, et pas de `text-overflow: ellipsis`. Un club au nom long prend deux lignes plutôt que de perdre son numéro d'équipe (« (éq. 2) »), qui est souvent ce qui distingue deux équipes d'un même club.

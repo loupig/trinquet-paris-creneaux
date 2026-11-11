@@ -15,7 +15,10 @@ Une maquette jetable (CSS injecté, rien de mis en ligne) a montré qu'une poule
 ## What Changes
 
 - **Classement : une ligne par équipe, en colonnes.** On garde le rang, l'équipe, puis J (parties jouées), G, P, GA (goal average total) et Moy. (moyenne de points par partie, le critère de tri, en gras). Un en-tête de colonnes ouvre chaque carte. La ligne fait environ 40 px au lieu de 90.
-- **Détail et joueurs au toucher.** Toucher une ligne déplie le détail actuel (points, points marqués et encaissés, goal average moyen, nuls) et les noms des joueurs. La toucher à nouveau le replie, comme une partie sur la page Parties. **BREAKING** pour la spec `classement` : les noms ne sont plus « toujours affichés ».
+- **Joueurs et détail au toucher, et ça se voit.** Toucher une ligne déplie d'abord les noms des joueurs, puis le détail actuel (points, points marqués et encaissés, goal average moyen, nuls). La toucher à nouveau le replie, comme une partie sur la page Parties. Pour que le geste se devine :
+  - chaque ligne finit par un chevron « › », le même que celui du bloc Filtres ;
+  - une ligne ouverte passe sur fond teinté, avec « ⌄ » ;
+  - la première carte dit « 👥 Touchez une équipe pour voir ses joueurs ». **BREAKING** pour la spec `classement` : les noms ne sont plus « toujours affichés ».
 - **Bloc Filtres replié par défaut** sur Parties, Classement et Créneaux, avec son résumé (« Tout est affiché »). Le pli reste commun aux trois pages et retenu sur l'appareil. Un visiteur qui l'a déjà ouvert à la main le retrouve ouvert.
 - **Lien Bilan sur une ligne.** Le sous-titre « Chiffres, trophées, résultats et tableau final » disparaît.
 

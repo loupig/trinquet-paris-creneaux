@@ -21,7 +21,12 @@ Chaque carte de classement SHALL commencer par un en-tête de colonnes : « # »
 - son goal average total, signé ;
 - en gras, sa moyenne de points par partie à deux décimales, qui est le critère de tri.
 
-Les nombres sont alignés à droite, en chiffres de même largeur. Toucher la ligne SHALL déplier sous elle son détail : parties jouées, gagnées, perdues, nuls s'il y en a, points, points marqués et encaissés, goal average total et moyen. La toucher à nouveau le replie. Plusieurs lignes peuvent être dépliées en même temps. La ligne est un bouton, qui annonce si elle est dépliée. Une équipe sans partie jouée a « 0 » parties, « – » dans les autres colonnes, et pour détail « aucune partie jouée ». Sur un téléphone de 412 px de large, une poule de six équipes MUST tenir en entier, en-tête de carte compris, sur le premier écran de la page, quand le bloc Filtres est replié.
+Les nombres sont alignés à droite, en chiffres de même largeur. Toucher la ligne SHALL déplier sous elle les joueurs de l'équipe, puis son détail : parties jouées, gagnées, perdues, nuls s'il y en a, points, points marqués et encaissés, goal average total et moyen. La toucher à nouveau le replie. Plusieurs lignes peuvent être dépliées en même temps. La ligne est un bouton, qui annonce si elle est dépliée.
+
+Que la ligne se déplie MUST se voir sans l'avoir essayé :
+- chaque ligne finit par un chevron « › », celui du bloc Filtres replié ;
+- une ligne dépliée a un chevron « ⌄ » et un fond teinté, que partage son détail ;
+- sous l'en-tête de colonnes de la première carte de la page, une phrase d'aide dit « 👥 Touchez une équipe pour voir ses joueurs ». Une équipe sans partie jouée a « 0 » parties, « – » dans les autres colonnes, et pour détail « aucune partie jouée ». Sur un téléphone de 412 px de large, une poule de six équipes MUST tenir en entier, en-tête de carte compris, sur le premier écran de la page, quand le bloc Filtres est replié.
 
 #### Scenario: Équipe classée
 - **WHEN** une équipe a joué 3 parties, en a gagné 2, pour 7 points
@@ -29,8 +34,13 @@ Les nombres sont alignés à droite, en chiffres de même largeur. Toucher la li
 
 #### Scenario: Déplier le détail
 - **WHEN** le visiteur touche la ligne de cette équipe
-- **THEN** sous la ligne apparaît un détail qui commence par « 3 parties · 2 G · 1 P · 7 pts »
+- **THEN** son chevron passe de « › » à « ⌄ », et sous la ligne apparaissent ses joueurs, puis un détail qui commence par « 3 parties · 2 G · 1 P · 7 pts »
 - **AND** un second toucher le replie
+
+#### Scenario: L'action se devine
+- **WHEN** un visiteur ouvre le Classement pour la première fois
+- **THEN** chaque ligne porte un chevron « › », et la première carte dit « 👥 Touchez une équipe pour voir ses joueurs » sous son en-tête de colonnes
+- **AND** les cartes suivantes n'ont pas cette phrase
 
 #### Scenario: Équipe qui n'a pas joué
 - **WHEN** une équipe de la poule n'a encore joué aucune partie
@@ -41,7 +51,7 @@ Les nombres sont alignés à droite, en chiffres de même largeur. Toucher la li
 - **THEN** les six équipes de la première poule sont toutes visibles sans défiler, au-dessus de la barre d'onglets
 
 ### Requirement: Joueurs des équipes
-Le détail déplié de chaque ligne d'équipe SHALL porter les noms de ses joueurs, tels que déclarés à la ligue (composition de l'engagement), ou « Composition non déclarée à la ligue ». Les noms n'apparaissent pas sur la ligne repliée. Ils ne changent aucun rang. Si les compositions ne peuvent être chargées, le détail s'affiche sans noms plutôt que de les dire non déclarés.
+Le détail déplié de chaque ligne d'équipe SHALL commencer par les noms de ses joueurs, en gras et précédés d'une icône de joueurs, tels que déclarés à la ligue (composition de l'engagement), ou « Composition non déclarée à la ligue ». Les noms n'apparaissent pas sur la ligne repliée. Ils ne changent aucun rang. Si les compositions ne peuvent être chargées, le détail s'affiche sans noms plutôt que de les dire non déclarés.
 
 #### Scenario: Équipe avec composition
 - **WHEN** un visiteur ouvre le Classement puis touche la ligne d'Alpha (éq. 1)

@@ -8,7 +8,9 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 - [ ] 1.2 Écrire d'abord les scénarios dans `tests/pages.spec.mjs` :
   - en-tête de colonnes ;
   - valeurs J, G, P, GA et Moy. d'une équipe classée et d'une équipe sans partie ;
-  - dépli et repli au toucher, avec `aria-expanded` ;
+  - dépli et repli au toucher, avec `aria-expanded`, le chevron qui tourne et le fond teinté ;
+  - phrase d'aide « 👥 Touchez une équipe pour voir ses joueurs » sur la première carte seulement, y compris après un filtre qui masque la série 1 ;
+  - joueurs en tête du détail déplié ;
   - joueurs invisibles sur la ligne repliée ;
   - six lignes de la première poule visibles au premier écran ;
   - pas de défilement horizontal à 320 px.
