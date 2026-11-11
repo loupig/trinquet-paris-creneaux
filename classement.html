@@ -636,20 +636,51 @@
   .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 12px; }
 
   /* --- Une ligne de classement ---
-     Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
-     tableau obligerait à défiler horizontalement, ou à des colonnes de 22px
-     illisibles. Le critère de tri est à droite, en gros ; le détail qui le
-     compose est sur la ligne du dessous. */
-  .rank-row {
-    display: flex;
+     Une ligne par équipe, en colonnes, pour comparer d'un coup d'œil comme
+     sur le site de la ligue : rang, équipe, J, G, P, GA et la moyenne, critère
+     de tri, en gras. Huit colonnes tiennent sur 320px sans défiler : le nom
+     prend la place qui reste et passe à la ligne. Les joueurs et le détail
+     chiffré se déplient au toucher, sous la ligne. */
+  .rank-head, .rank-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) 20px 20px 20px 36px 40px 14px;
+    column-gap: 6px;
     align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    border-top: 1px solid var(--border);
+    padding: 6px 10px 6px 12px;
   }
-  .rank-row:first-of-type { border-top: none; }
+  /* Sous 360px, les écarts se resserrent pour laisser au nom de quoi lire. */
+  @media (max-width: 359px) {
+    .rank-head, .rank-row { column-gap: 4px; padding-left: 10px; padding-right: 8px; }
+  }
+  .rank-head {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .rank-head span:nth-child(n+3) { text-align: right; }
+  /* Dite une fois par page, sur la première carte : toucher une ligne. */
+  .rank-aide {
+    padding: 5px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .rank-item + .rank-item { border-top: 1px solid var(--border); }
+  .rank-row {
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .rank-row:focus-visible { outline-offset: -2px; }
   .rank-pos {
-    flex: 0 0 22px;
+    width: 22px;
     height: 22px;
     display: flex;
     align-items: center;
@@ -666,8 +697,7 @@
   .rank-row.or .rank-pos { color: var(--or-text); background: var(--or-bg); }
   .rank-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
   .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
-  .rank-main { flex: 1 1 auto; min-width: 0; }
-  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
   /* Classement général : pastille et liseré de la poule d'origine. */
   .poule-tag {
     display: inline-block;
@@ -684,20 +714,45 @@
   .teinte-2 { --teinte: var(--poule2-text); --teinte-bg: var(--poule2-bg); }
   .teinte-3 { --teinte: var(--poule3-text); --teinte-bg: var(--poule3-bg); }
   .teinte-4 { --teinte: var(--poule4-text); --teinte-bg: var(--poule4-bg); }
-  .rank-row[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
+  .rank-row[class*="teinte-"], .rank-plus[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
   .rank-row[class*="teinte-"] .poule-tag { color: var(--teinte); background: var(--teinte-bg); }
-  .rank-detail { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
-  /* Joueurs de l'équipe, à la demande : sous le détail, même taille. */
-  .rank-joueurs { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
-  .rank-joueurs.inconnus { font-style: italic; }
-  .rank-values { flex: 0 0 auto; text-align: right; }
+  .rank-n {
+    text-align: right;
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
   .rank-score {
+    text-align: right;
     font-size: 16px;
     font-weight: 700;
-    line-height: 1.1;
     font-variant-numeric: tabular-nums;
   }
   .rank-score.vide { font-size: 14px; color: var(--muted); }
+  /* Le chevron du bloc Filtres : « › » replié, « ⌄ » déplié. */
+  .rank-chevron { display: flex; justify-content: center; color: var(--muted); }
+  .rank-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
+  /* Ouverte, la ligne et son détail partagent un fond teinté : on voit ce qui
+     est ouvert, et à quelle équipe le détail appartient. Le gris y passe au
+     texte courant, plus lisible sur ce fond. */
+  .rank-row[aria-expanded="true"], .rank-plus { background: var(--accent-bg); }
+  .rank-row[aria-expanded="true"] .rank-n { color: var(--text); }
+  .rank-row[aria-expanded="true"] .rank-chevron { color: var(--accent); }
+  .rank-row[aria-expanded="true"] .rank-chevron svg { transform: none; }
+  /* Sous la colonne du nom : 12px de marge, 22px de rang, 6px d'écart. */
+  .rank-plus { padding: 0 10px 9px 40px; }
+  .rank-joueurs {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .rank-joueurs svg { flex: none; margin-top: 2px; color: var(--muted); }
+  .rank-joueurs.inconnus { font-weight: 600; font-style: italic; color: var(--muted); }
+  .rank-detail { font-size: 12px; line-height: 1.4; margin-top: 3px; }
 
   /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
      pour une séparation de carte. */
@@ -970,7 +1025,7 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
-    padding: 10px 14px;
+    padding: 8px 14px;
     border-radius: 12px;
     border: 2px solid var(--fort-bord);
     background: var(--fort-bg);
@@ -979,7 +1034,6 @@
   }
   .bilan-lien .bilan-lien-emoji { flex: none; font-size: 20px; line-height: 1; }
   .bilan-lien .bilan-lien-texte { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.3; }
-  .bilan-lien small { display: block; font-size: 12px; font-weight: 600; color: var(--sur-fort-doux); }
   .bilan-lien svg { flex: none; }
 
   .legende {
@@ -1086,8 +1140,8 @@
 
 <main id="contenu">
   <div class="recap-card">
-    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
-    <div class="filters-body" id="filtersBody">
+    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="false" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
+    <div class="filters-body" id="filtersBody" hidden>
     <div class="filter-subtitle">Spécialité</div>
     <div class="filter-group" id="filterSpecs" data-recap-vide="aucune spécialité"></div>
     <div class="filter-subtitle">Série</div>
@@ -1100,11 +1154,11 @@
       <button type="button" class="filter-chip" data-mode="poule" data-recap-defaut>Par poule</button>
       <button type="button" class="filter-chip" data-mode="general" data-recap="Classement général">Général</button>
     </div>
-    <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (chiffre de droite), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
+    <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (colonne Moy.), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
     </div>
   </div>
 
-  <a class="bilan-lien" href="bilan.html"><span class="bilan-lien-emoji" aria-hidden="true">🏁</span><span class="bilan-lien-texte">Bilan de la phase de poules<small>Chiffres, trophées, résultats et tableau final</small></span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg></a>
+  <a class="bilan-lien" href="bilan.html"><span class="bilan-lien-emoji" aria-hidden="true">🏁</span><span class="bilan-lien-texte">Bilan de la phase de poules</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg></a>
   <div id="banner-slot"></div>
   <div id="sim-slot"></div>
   <div id="results"></div>
@@ -1112,7 +1166,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.07.3</p>
+    <p>Version 2026.11.11</p>
   </footer>
 </main>
 
@@ -1560,17 +1614,73 @@
 
   var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
 
-  // teinte : en classement général, rang de la poule de l'équipe (1 à 4),
-  // qui colore sa pastille « P1 » et le liseré de sa ligne.
-  function buildRankRow(team, rang, teinte) {
-    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (teinte ? " teinte-" + teinte : "") });
-    row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
+  // Tracés Phosphor déjà dans la page : le chevron du bloc Filtres et les
+  // joueurs de l'onglet Mes équipes. Textes fixes, jamais une donnée de l'API.
+  var SVG_CHEVRON = '<svg viewBox="0 0 256 256" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>';
+  var SVG_JOUEURS = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg>';
 
-    var main = el("div", { class: "rank-main" });
-    var nom = el("div", { class: "rank-team" });
+  // Lignes dépliées, par équipe : elles le restent quand le classement est
+  // recalculé (filtre, simulation), le temps de la visite. Rien n'est gardé.
+  var deplies = {};
+  var nbPlus = 0;
+
+  function cleEquipe(t) { return [t.spec, t.cat, t.clubCode, t.numero].join("|"); }
+
+  // « 1 gagnée », « 0 perdue », « 3 gagnées » : le pluriel à partir de deux.
+  function compte(n, mot) { return n + " " + mot + (n > 1 ? "s" : ""); }
+
+  // Une ligne par équipe, en colonnes, et sous elle, au toucher, ses joueurs
+  // puis son détail chiffré. teinte : en classement général, rang de la poule
+  // de l'équipe (1 à 4), qui colore sa pastille « P1 » et le liseré.
+  function buildRankRow(team, rang, teinte) {
+    var item = el("div", { class: "rank-item" });
+    var idPlus = "rank-plus-" + (++nbPlus);
+    var cle = cleEquipe(team);
+    var row = el("button", {
+      type: "button",
+      class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (teinte ? " teinte-" + teinte : ""),
+      "aria-controls": idPlus
+    });
+    row.appendChild(el("span", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
+
+    var nom = el("span", { class: "rank-team" });
     if (teinte) nom.appendChild(el("span", { class: "poule-tag", title: "Poule " + team.poule, text: "P" + team.poule }));
-    nom.appendChild(document.createTextNode(team.label));
-    main.appendChild(nom);
+    // « (éq. 1) » passe à la ligne d'un bloc, jamais coupé après « éq. ».
+    nom.appendChild(document.createTextNode(team.label.replace("(éq. ", "(éq.\u00a0")));
+    row.appendChild(nom);
+
+    // J, G, P et GA. Sans partie jouée, seul J dit quelque chose.
+    var cols = team.jouees
+      ? [String(team.jouees), String(team.gagnees), String(team.perdues), fmtSigne(team.ga)]
+      : ["0", "–", "–", "–"];
+    cols.forEach(function (c) { row.appendChild(el("span", { class: "rank-n", text: c })); });
+    row.appendChild(el("span", {
+      class: "rank-score" + (team.jouees ? "" : " vide"),
+      text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
+    }));
+    // Pour qui écoute la page, la ligne se lit en une phrase : l'en-tête de
+    // colonnes est caché aux lecteurs d'écran, et des nombres seuls ne disent
+    // pas ce qu'ils comptent.
+    row.setAttribute("aria-label", team.jouees
+      ? ["Rang " + rang, team.label, compte(team.jouees, "partie") + " jouée" + (team.jouees > 1 ? "s" : ""),
+         compte(team.gagnees, "gagnée"), compte(team.perdues, "perdue"),
+         "goal average " + fmtSigne(team.ga), "moyenne " + fmtMoyenne(team.moyenne)].join(", ")
+      : team.label + ", aucune partie jouée");
+    var chevron = el("span", { class: "rank-chevron" });
+    chevron.innerHTML = SVG_CHEVRON;
+    row.appendChild(chevron);
+    item.appendChild(row);
+
+    var plus = el("div", { class: "rank-plus" + (teinte ? " teinte-" + teinte : ""), id: idPlus });
+    // Les joueurs de l'équipe, tels que déclarés à la ligue, en premier :
+    // c'est ce qu'on vient chercher en touchant la ligne.
+    if (lastData && lastData.joueurs) {
+      var noms = lastData.joueurs(team.clubCode, team.cat, team.numero);
+      var joueurs = el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus") });
+      joueurs.innerHTML = SVG_JOUEURS;
+      joueurs.appendChild(el("span", { text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
+      plus.appendChild(joueurs);
+    }
     var detail;
     if (team.jouees) {
       detail = team.jouees + " partie" + (team.jouees > 1 ? "s" : "") +
@@ -1581,25 +1691,20 @@
     } else {
       detail = "aucune partie jouée";
     }
-    main.appendChild(el("div", { class: "rank-detail", text: detail }));
-    // Les joueurs de l'équipe, tels que déclarés à la ligue.
-    if (lastData && lastData.joueurs) {
-      var noms = lastData.joueurs(team.clubCode, team.cat, team.numero);
-      main.appendChild(el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus"), text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
+    plus.appendChild(el("div", { class: "rank-detail", text: detail }));
+    item.appendChild(plus);
+
+    function montrer(ouvert) {
+      row.setAttribute("aria-expanded", ouvert ? "true" : "false");
+      plus.hidden = !ouvert;
     }
-    row.appendChild(main);
+    montrer(!!deplies[cle]);
+    row.addEventListener("click", function () {
+      if (deplies[cle]) delete deplies[cle]; else deplies[cle] = true;
+      montrer(!!deplies[cle]);
+    });
 
-    // À droite, le seul critère de classement. Le goal average qui départage
-    // est descendu dans le détail : deux nombres empilés à droite laissaient
-    // croire à deux colonnes de tri.
-    var vals = el("div", { class: "rank-values" });
-    vals.appendChild(el("div", {
-      class: "rank-score" + (team.jouees ? "" : " vide"),
-      text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
-    }));
-    row.appendChild(vals);
-
-    return row;
+    return item;
   }
 
   // Chaque poule d'une série a sa teinte, dans l'ordre des poules, pour voir
@@ -1618,13 +1723,21 @@
   // Une carte par groupe classé : une poule, ou une catégorie entière en mode
   // général. Le titre dit toujours de quoi il s'agit, sans quoi deux tables
   // côte à côte seraient impossibles à distinguer.
-  function buildPouleCard(groupe) {
+  // avecAide : première carte de la page, qui dit qu'on peut toucher une ligne.
+  function buildPouleCard(groupe, avecAide) {
     var carte = el("div", { class: "poule-card" });
     var head = el("div", { class: "poule-head" });
     head.appendChild(el("span", { class: "badge serie-" + groupe.cat, text: groupe.serieLabel }));
     head.appendChild(el("span", { text: groupe.titre }));
     if (groupe.sousTitre) head.appendChild(el("span", { class: "poule-sub", text: groupe.sousTitre }));
     carte.appendChild(head);
+
+    // En-tête de colonnes, pour les yeux : chaque ligne porte sa phrase
+    // complète pour qui écoute la page.
+    var entete = el("div", { class: "rank-head", "aria-hidden": "true" });
+    ["#", "Équipe", "J", "G", "P", "GA", "Moy.", ""].forEach(function (t) { entete.appendChild(el("span", { text: t })); });
+    carte.appendChild(entete);
+    if (avecAide) carte.appendChild(el("div", { class: "rank-aide", text: "👥 Touchez une équipe pour voir ses joueurs" }));
 
     var teintes = filterState.mode === "general" ? teintesPoules(groupe.teams) : {};
 
@@ -2548,7 +2661,7 @@
     var teams = lastTeams.filter(memeSerie(zone.spec, zone.cat));
     // Dans l'ordre de la saison : le classement des poules, les quarts qui en
     // découlent, puis le simulateur, qui ferme la série.
-    grouper(teams).forEach(function (g) { zone.el.appendChild(buildPouleCard(g)); });
+    grouper(teams).forEach(function (g, i) { zone.el.appendChild(buildPouleCard(g, zone === zonesClassement[0] && i === 0)); });
     zone.el.appendChild(buildFinalesCard(zone.spec, zone.cat, teams));
   }
 
@@ -2801,8 +2914,11 @@
   }
   corps.addEventListener("change", majRecap);
 
-  var ouvert = true;   // ouvert par défaut : seul un pli explicite le referme
-  try { if (localStorage.getItem(CLE_PLI) === "0") ouvert = false; } catch (e) { /* stockage indisponible : on reste ouvert */ }
+  // Replié par défaut, pour laisser l'écran aux résultats : seul un geste du
+  // visiteur l'ouvre, et il reste ouvert sur les trois pages tant qu'il ne
+  // l'a pas refermé.
+  var ouvert = false;
+  try { if (localStorage.getItem(CLE_PLI) === "1") ouvert = true; } catch (e) { /* stockage indisponible : on reste replié */ }
   appliquer(ouvert);
 
   bouton.addEventListener("click", function () {

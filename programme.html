@@ -741,8 +741,8 @@
 
 <main id="contenu">
   <div class="recap-card">
-    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="true" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
-    <div class="filters-body" id="filtersBody">
+    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="false" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
+    <div class="filters-body" id="filtersBody" hidden>
     <div class="filter-subtitle">Spécialité</div>
     <div class="filter-group" id="filterSpecs" data-recap-vide="aucune spécialité"></div>
     <div class="filter-subtitle">Série</div>
@@ -768,7 +768,7 @@
     <p>Cette page se contente d'afficher le calendrier communiqué par la ligue, elle n'a aucun effet sur le site de la ligue.</p>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.07.2</p>
+    <p>Version 2026.11.11</p>
   </footer>
 </main>
 
@@ -1814,8 +1814,11 @@
   }
   corps.addEventListener("change", majRecap);
 
-  var ouvert = true;   // ouvert par défaut : seul un pli explicite le referme
-  try { if (localStorage.getItem(CLE_PLI) === "0") ouvert = false; } catch (e) { /* stockage indisponible : on reste ouvert */ }
+  // Replié par défaut, pour laisser l'écran aux résultats : seul un geste du
+  // visiteur l'ouvre, et il reste ouvert sur les trois pages tant qu'il ne
+  // l'a pas refermé.
+  var ouvert = false;
+  try { if (localStorage.getItem(CLE_PLI) === "1") ouvert = true; } catch (e) { /* stockage indisponible : on reste replié */ }
   appliquer(ouvert);
 
   bouton.addEventListener("click", function () {
