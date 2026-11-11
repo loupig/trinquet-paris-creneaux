@@ -845,6 +845,15 @@ async function constante(fichier, nom) {
 test("noms courts et règle de fin de poule identiques d'une page à l'autre, et à la spec", async () => {
   const accueil = await constante("index.html", "CLUBS_ABREGES");
   expect(await constante("classement.html", "CLUBS_ABREGES")).toEqual(accueil);
+  expect(await constante("programme.html", "CLUBS_ABREGES")).toEqual(accueil);
+  // Le lieu court de Parties est celui de l'accueil, au caractère près.
+  const lieuCourt = async (f) => {
+    const html = await readFile(new URL(`../${f}`, import.meta.url), "utf8");
+    const m = html.match(/function lieuCourt\(lieu\) \{[\s\S]*?\n  \}/);
+    expect(m, `lieuCourt dans ${f}`).not.toBeNull();
+    return m[0];
+  };
+  expect(await lieuCourt("programme.html")).toBe(await lieuCourt("index.html"));
   expect(await constante("classement.html", "FIN_DE_POULE")).toEqual(await constante("bilan.html", "FIN_DE_POULE"));
   const spec = await readFile(new URL("../openspec/specs/noms-clubs/spec.md", import.meta.url), "utf8");
   const table = {};
@@ -888,6 +897,127 @@ test("Classement : nom court sur la ligne et aux quarts, nom officiel au toucher
   // Plus de « (éq. N) » sur la page, hors des noms officiels du détail.
   expect(await page.evaluate(() => [...document.querySelectorAll("#results *:not(.rank-nom)")]
     .some((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.includes("(éq."))))).toBe(false);
+});
+
+// Spec programme, « Ligne d'une partie », « Légende des parties » et « Détail
+// d'une partie » : une ligne par partie, le reste au toucher.
+test.describe("Parties : une ligne par partie", () => {
+  const partie = (page, texte) => page.locator(".match-item").filter({ hasText: texte }).first();
+
+  test("heure, pastille de poule, équipes en noms courts, score : rien d'autre sur la ligne", async ({ page }) => {
+    await servirAvecClubDeLaTable(page);
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const item = partie(page, "MPBA 1 vs Bravo 1");
+    const ligne = item.locator(".match-row");
+    // Une espace de chaque côté de « vs », le numéro collé à son nom.
+    expect(await ligne.locator(".match-row-teams").evaluate((e) => e.textContent)).toBe("MPBA\u00a01 vs Bravo\u00a01");
+    await expect(ligne.locator(".poule-tag")).toHaveText("P1");
+    await expect(ligne.locator(".poule-tag")).toHaveClass(/teinte-1/);
+    await expect(ligne.locator(".match-row-score")).toHaveText(/^\d+ - \d+$/);
+    const texte = await ligne.evaluate((e) => e.textContent);
+    for (const absent of ["Série", "Poule", "Trinquet", "[", "Joueur", "(éq."]) expect(texte, absent).not.toContain(absent);
+    // Les deux poules ont deux teintes, et un quart sa pastille de phase.
+    const p2 = page.locator(".match-row .poule-tag", { hasText: "P2" }).first();
+    expect(await p2.evaluate((e) => getComputedStyle(e).color)).not.toBe(await ligne.locator(".poule-tag").evaluate((e) => getComputedStyle(e).color));
+    await expect(page.locator(".match-row .poule-tag", { hasText: /^1\/4$/ }).first()).toBeVisible();
+  });
+
+  test("toucher une partie : chevron, fond teinté, nom officiel, joueurs, série, poule et lieu complet", async ({ page }) => {
+    await servirAvecClubDeLaTable(page);
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const item = partie(page, "MPBA 1 vs Bravo 1");
+    const ligne = item.locator(".match-row");
+    await expect(ligne).toHaveAttribute("aria-expanded", "false");
+    const chevron = () => ligne.locator(".match-chevron svg").evaluate((e) => getComputedStyle(e).transform);
+    const replie = await chevron();
+    expect(replie).not.toBe("none");
+    const fond = () => item.evaluate((e) => getComputedStyle(e).backgroundColor);
+    const fondReplie = await fond();
+    await ligne.click();
+    await expect(ligne).toHaveAttribute("aria-expanded", "true");
+    const detail = item.locator(".match-detail");
+    await expect(detail).toBeVisible();
+    await expect(detail).toContainText("METRO PELOTE BASQUE ANTONY (éq. 1) : Ane Joueur100001, Bixente Joueur100002");
+    await expect(detail).toContainText("Bravo (éq. 1) : Ane Joueur100003, Bixente Joueur100004");
+    await expect(detail.locator(".match-where")).toHaveText("Série 1 · Poule 1 · PARIS (Trinquet Paris - 75016)");
+    await expect.poll(chevron).toBe("none");
+    await expect.poll(fond).not.toBe(fondReplie);
+    await ligne.click();
+    await expect(ligne).toHaveAttribute("aria-expanded", "false");
+    await expect(detail).toBeHidden();
+  });
+
+  test("message WhatsApp inchangé : noms officiels et lieu complet ; compteur en noms courts", async ({ page }) => {
+    await servirAvecClubDeLaTable(page);
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const jouee = partie(page, "MPBA 1 vs Bravo 1");
+    await jouee.locator(".match-row").click();
+    const href = await jouee.locator(".icon-whatsapp").first().getAttribute("href");
+    const message = new URL(href).searchParams.get("text");
+    expect(message).toContain("Votre partie\nMETRO PELOTE BASQUE ANTONY (éq. 1) vs Bravo (éq. 1)");
+    expect(message).toContain("à PARIS (Trinquet Paris - 75016).");
+    expect(message).not.toContain("MPBA");
+    // Une partie à jouer ouvre le compteur avec les noms courts.
+    const aJouer = partie(page, "MPBA 1 vs Delta 1");
+    await aJouer.locator(".match-row").click();
+    const lien = new URL(await aJouer.getByRole("link", { name: "Compter cette partie" }).getAttribute("href"), "http://x/");
+    expect([lien.searchParams.get("e1"), lien.searchParams.get("e2")]).toEqual(["MPBA 1", "Delta 1"]);
+  });
+
+  test("lieu inhabituel : « 📍 » et son nom court sur la ligne, et dans la légende", async ({ page }) => {
+    let change = false;
+    await servirAvecClubDeLaTable(page, (data) => data.map((r) => {
+      if (change || r["Catégorie"] !== "1" || r.club_rec !== codeClub(0) || r.club_vis !== codeClub(1)) return r;
+      change = true;
+      return { ...r, lieu_renc: "PARIS (Trinquet Mail - 75006)" };
+    }));
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    await expect(page.locator(".match-row .match-lieu")).toHaveCount(1);
+    await expect(partie(page, "MPBA 1 vs Bravo 1").locator(".match-lieu")).toHaveText("📍 Trinquet Mail");
+    await expect(page.locator(".legende-parties")).toContainText("📍 lieu inhabituel");
+  });
+
+  test("légende : séries, pastilles, phrase d'aide, et elle suit le filtre Série", async ({ page }) => {
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const legende = page.locator(".legende-parties");
+    await expect(legende).toHaveCount(1);
+    await expect(legende.locator(".serie-cle")).toHaveText(["Série 1", "Série 2"]);
+    await expect(legende.locator(".poule-tag")).toHaveText(["P1", "P2"]);
+    await expect(legende).toContainText("Touchez une partie : joueurs, lieu, contacts");
+    await expect(legende).not.toContainText("📍");
+    // Avant les jours.
+    expect(await page.locator("#results > *").first().evaluate((e) => e.className)).toContain("legende-parties");
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterSeries .filter-chip[data-serie='2']").click();
+    await expect(legende.locator(".serie-cle")).toHaveText(["Série 1"]);
+  });
+
+  test("lecteur d'écran : la ligne dit la série, la poule et le lieu", async ({ page }) => {
+    await servirAvecClubDeLaTable(page);
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    const label = await partie(page, "MPBA 1 vs Bravo 1").locator(".match-row").getAttribute("aria-label");
+    // Le nom accessible reprend le texte visible (« vs »), puis ce que la couleur et la pastille disent.
+    expect(label).toMatch(/^19h30, MPBA 1 vs Bravo 1, /);
+    for (const morceau of ["Série 1", "Poule 1", "Trinquet Paris"]) expect(label).toContain(morceau);
+  });
+});
+
+test.describe("Parties sur iPhone 15 Pro", () => {
+  test.use({ viewport: { width: 393, height: 659 } });
+  test("au moins cinq parties au premier écran", async ({ page }) => {
+    await page.goto("programme.html");
+    await attendreChargement(page);
+    await page.evaluate(() => document.fonts.ready);
+    const haut = await page.locator(".tab-bar").evaluate((e) => e.getBoundingClientRect().top);
+    const visibles = await page.locator(".match-row").evaluateAll((l, h) => l.filter((r) => r.getBoundingClientRect().bottom <= h).length, haut);
+    expect(visibles).toBeGreaterThanOrEqual(5);
+  });
 });
 
 // Spec classement, « Zones de fin de poule » et « Légende du classement ».
@@ -2095,7 +2225,7 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
-  test("Parties : les joueurs entre crochets, rien pour un adversaire à désigner", async ({ page }) => {
+  test("Parties : les joueurs au détail seulement, composition non disponible pour un adversaire à désigner", async ({ page }) => {
     // Un barrage dont l'un des adversaires reste à désigner.
     const barrage = {
       oid: "990", "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "2", "Poule": "",
@@ -2115,13 +2245,19 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     await attendreChargement(page);
 
     await expect(page.getByRole("button", { name: "Joueurs des équipes" })).toHaveCount(0);
-    const equipes = page.locator(".match-item").filter({ hasNotText: "Barrage" }).first().locator(".match-row-teams");
-    await expect(equipes).toHaveText(/^\S+ \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\] vs \S+ \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
-    await expect(equipes.locator(".joueurs")).toHaveText([NOMS, NOMS]);
-    // Alpha garde ses joueurs, l'équipe à désigner n'en a pas.
-    const ligneBarrage = page.locator(".match-item").filter({ hasText: "Barrage" }).locator(".match-row-teams");
-    await expect(ligneBarrage).toHaveCount(1);
-    await expect(ligneBarrage.locator(".joueurs")).toHaveText(["[Ane Joueur100001, Bixente Joueur100002]"]);
+    // Aucun nom de joueur sur les lignes : ils sont au détail.
+    const lignes = await page.locator(".match-row").allTextContents();
+    expect(lignes.some((t) => /Joueur\d/.test(t))).toBe(false);
+    // Le barrage : sa pastille, et au détail les joueurs d'Alpha seuls.
+    const barrageItem = page.locator(".match-item").filter({ has: page.locator(".poule-tag", { hasText: /^Barrage$/ }) });
+    await expect(barrageItem).toHaveCount(1);
+    // L'équipe à désigner n'a pas de numéro, qui ferait croire à une équipe 1
+    // (absente des clubs fictifs, elle s'appelle ici « Club 9998 »).
+    await expect(barrageItem.locator(".match-row-teams")).toHaveText(/^Alpha\s1 vs Club\s9998$/);
+    await barrageItem.locator(".match-row").click();
+    const lignesDetail = barrageItem.locator(".roster-line");
+    await expect(lignesDetail.first()).toContainText("Alpha (éq. 1) : Ane Joueur100001, Bixente Joueur100002");
+    await expect(lignesDetail.nth(1)).toContainText("composition non disponible");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
@@ -2158,8 +2294,10 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
 
     await page.goto("programme.html");
     await attendreChargement(page);
-    const partieAlpha = page.locator(".match-row-teams").filter({ hasText: /^Alpha \(éq\. 1\) vs / }).first();
-    await expect(partieAlpha.locator(".joueurs")).toHaveCount(1);   // l'adversaire seul
+    const partieAlpha = page.locator(".match-item").filter({ has: page.locator(".match-row-teams", { hasText: /^Alpha\s1 vs / }) }).first();
+    await partieAlpha.locator(".match-row").click();
+    await expect(partieAlpha.locator(".roster-line").first()).toContainText("Alpha (éq. 1) : composition non disponible");
+    await expect(partieAlpha.locator(".roster-line").nth(1)).toContainText(/ : Ane Joueur\d+, Bixente Joueur\d+/);   // l'adversaire seul
   });
 });
 

@@ -42,7 +42,7 @@
 Le détail construit ses `sides` avec les libellés officiels. Ainsi `buildWhatsappMessage` reçoit exactement ce qu'il recevait avant, sans être modifié. Le compteur reçoit les noms courts (`lienCompteur(match.labelRec, …)`), plus lisibles sur un tableau de score.
 
 **2. Le lieu au détail, sauf lieu inhabituel.**
-- Au chargement, `lieuHabituel` est le lieu le plus fréquent de toutes les rencontres reçues, avant tout filtre, pour qu'il ne change pas en filtrant. Il est comparé sur le libellé normalisé, comme les doublons de l'accueil : sans casse, accents ni ponctuation.
+- À chaque rendu, `lieuHabituel` est le lieu le plus fréquent de toutes les rencontres reçues, avant tout filtre, pour qu'il ne change pas en filtrant. Le recalcul à chaque filtre coûte peu : quelques centaines de parties. Il est comparé sur le libellé normalisé, comme les doublons de l'accueil : sans casse, accents ni ponctuation.
 - Une partie dont le lieu est connu et diffère du lieu habituel porte sur sa ligne `📍 ` + `lieuCourt(match.lieu)`.
 - `lieuCourt` est recopiée de l'accueil, avec son nom et un commentaire qui y renvoie. Un test compare les deux copies.
 - Le détail donne toujours le lieu complet, ou « Lieu non précisé ».
@@ -51,7 +51,8 @@ Alternative écartée : ne jamais mettre le lieu sur la ligne. Un joueur qui ne 
 
 **2 bis. La poule en pastille, la série par la couleur.**
 - La pastille reprend le style `.poule-tag` du Classement et ses teintes `--poule1-*` à `--poule4-*`, recopiées dans le `:root` de `programme.html` avec leurs valeurs sombres, à l'identique dans les deux blocs sombres (spec `apparence`).
-- La teinte suit le rang de la poule dans sa série (poule 1 → teinte 1), comme `teintesPoules` au Classement.
+- La teinte suit le rang de la poule dans son groupe, spécialité et série (poule 1 → teinte 1), comme `teintesPoules` au Classement. La légende montre une pastille par couple poule et teinte, pour ne jamais contredire les lignes.
+- Un club fictif (« Equipe à désigner ») n'a pas de numéro d'équipe, comme sur Mes équipes.
 - Hors poule, la pastille porte le libellé court de la phase (« 1/4 de finale » → « 1/4 », « Barrage maintien » → « Barrage »), en `--accent` sur `--accent-bg`.
 - La ligne `.match-row-meta` disparaît. Série, poule et lieu passent dans le détail et dans l'`aria-label` de la ligne.
 
