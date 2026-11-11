@@ -740,7 +740,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.07.2</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.11</p>
   </footer>
 </main>
 
@@ -1027,11 +1027,11 @@
     return eq ? (name + " (éq. " + eq + ")") : name;
   }
 
-  // Abréviations d'usage, telles que les clubs se nomment entre eux. Elles ne
-  // servent qu'à l'accueil, où le nom de chaque équipe doit rester court ; le
-  // programme et les équipes gardent les noms complets de la ligue. Un club
-  // absent de cette table garde son nom entier : mieux vaut une ligne tronquée
-  // qu'une abréviation inventée. AAESB et PILOTARI sont déjà courts.
+  // Abréviations d'usage, telles que les clubs se nomment entre eux (spec
+  // noms-clubs, qui fait référence). Même table sur le Classement, à garder
+  // identique ; Parties et Mes équipes gardent les noms complets de la ligue.
+  // Un club absent de cette table garde son nom entier : mieux vaut une ligne
+  // tronquée qu'une abréviation inventée. AAESB et PILOTARI sont déjà courts.
   var CLUBS_ABREGES = {
     "CHAVILLE PELOTE BASQUE": "Chaville",
     "CHATILLON PELOTE BASQUE": "Chatillon",

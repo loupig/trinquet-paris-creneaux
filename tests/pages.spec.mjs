@@ -706,11 +706,11 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
     await attendreChargement(page);
     const carte = page.locator(".zone-classement").first().locator(".poule-card").first();
     await expect(carte.locator(".rank-head > span")).toHaveText(["#", "Équipe", "J", "G", "P", "GA", "Moy.", ""]);
-    const alpha = ligne(page, "Alpha (éq. 1)");
+    const alpha = ligne(page, "Alpha 1");
     expect(await colonnes(alpha)).toEqual(["3", "3", "0", "+51"]);
     await expect(alpha.locator(".rank-score")).toHaveText("3,00");
-    expect(await colonnes(ligne(page, "Bravo (éq. 1)"))).toEqual(["3", "2", "1", "−7"]);
-    await expect(ligne(page, "Bravo (éq. 1)").locator(".rank-score")).toHaveText("2,33");
+    expect(await colonnes(ligne(page, "Bravo 1"))).toEqual(["3", "2", "1", "−7"]);
+    await expect(ligne(page, "Bravo 1").locator(".rank-score")).toHaveText("2,33");
     // Rien d'autre sur la ligne : ni phrase de détail, ni joueurs.
     await expect(page.locator(".rank-joueurs:visible")).toHaveCount(0);
     await expect(page.locator(".rank-detail:visible")).toHaveCount(0);
@@ -719,7 +719,7 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
   test("toucher une ligne montre ses joueurs puis son détail, un second toucher les cache", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
-    const bravo = ligne(page, "Bravo (éq. 1)");
+    const bravo = ligne(page, "Bravo 1");
     await expect(bravo).toHaveAttribute("aria-expanded", "false");
     const chevron = () => bravo.locator(".rank-chevron svg").evaluate((s) => getComputedStyle(s).transform);
     const replie = await chevron();
@@ -740,7 +740,7 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
     await expect.poll(fond).not.toBe(fondReplie);
 
     // Deux lignes ouvertes à la fois.
-    await ligne(page, "Alpha (éq. 1)").click();
+    await ligne(page, "Alpha 1").click();
     await expect(page.locator(".rank-row[aria-expanded='true']")).toHaveCount(2);
 
     await bravo.click();
@@ -752,12 +752,12 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
   test("une ligne ouverte le reste quand la simulation recalcule le classement", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
-    await ligne(page, "Bravo (éq. 1)").click();
+    await ligne(page, "Bravo 1").click();
     const sim = page.locator(".sim-card").first();
     await sim.locator(".sim-toggle").click();
     await sim.locator(".sim-match").first().locator(".sim-pick").first().click();
     await expect(page.locator("#sim-slot")).toContainText("Simulation en cours");
-    await expect(ligne(page, "Bravo (éq. 1)")).toHaveAttribute("aria-expanded", "true");
+    await expect(ligne(page, "Bravo 1")).toHaveAttribute("aria-expanded", "true");
   });
 
   test("la phrase d'aide, sur la première carte seulement", async ({ page }) => {
@@ -789,7 +789,7 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
     });
     await page.goto("classement.html");
     await attendreChargement(page);
-    const foxtrot = ligne(page, "Foxtrot (éq. 1)");
+    const foxtrot = ligne(page, "Foxtrot 1");
     await expect(foxtrot.locator(".rank-pos")).toHaveText("–");
     expect(await colonnes(foxtrot)).toEqual(["0", "–", "–", "–"]);
     await expect(foxtrot.locator(".rank-score")).toHaveText("–");
@@ -818,12 +818,173 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
     await attendreChargement(page);
     const serie1 = page.locator(".zone-classement").first();   // Alpha est aussi en série 2
     await expect(serie1.getByRole("button", {
-      name: "Rang 1, Alpha (éq. 1), 3 parties jouées, 3 gagnées, 0 perdue, goal average +51, moyenne 3,00", exact: true
+      name: "Rang 1, Alpha 1, 3 parties jouées, 3 gagnées, 0 perdue, goal average +51, moyenne 3,00", exact: true
     })).toHaveCount(1);
     await expect(serie1.getByRole("button", {
-      name: "Rang 4, Charlie (éq. 1), 2 parties jouées, 1 gagnée, 1 perdue, goal average −17, moyenne 2,00", exact: true
+      name: "Rang 4, Charlie 1, 2 parties jouées, 1 gagnée, 1 perdue, goal average −17, moyenne 2,00", exact: true
     })).toHaveCount(1);
     await expect(page.locator(".rank-head").first()).toHaveAttribute("aria-hidden", "true");
+  });
+});
+
+// Une constante `var NOM = { … };` d'une page, lue telle qu'écrite.
+async function constante(fichier, nom) {
+  const html = await readFile(new URL(`../${fichier}`, import.meta.url), "utf8");
+  const debut = html.indexOf(`var ${nom} = {`);
+  expect(debut, `${nom} dans ${fichier}`).toBeGreaterThan(-1);
+  let i = html.indexOf("{", debut), prof = 0, fin = i;
+  for (; fin < html.length; fin++) {
+    if (html[fin] === "{") prof++;
+    if (html[fin] === "}" && --prof === 0) break;
+  }
+  return Function(`return ${html.slice(i, fin + 1)};`)();
+}
+
+// Spec noms-clubs : une seule table, recopiée à l'identique, et la spec est la
+// référence. Même chose pour la règle de fin de poule, du Bilan au Classement.
+test("noms courts et règle de fin de poule identiques d'une page à l'autre, et à la spec", async () => {
+  const accueil = await constante("index.html", "CLUBS_ABREGES");
+  expect(await constante("classement.html", "CLUBS_ABREGES")).toEqual(accueil);
+  expect(await constante("classement.html", "FIN_DE_POULE")).toEqual(await constante("bilan.html", "FIN_DE_POULE"));
+  const spec = await readFile(new URL("../openspec/changes/classement-zones-noms-courts/specs/noms-clubs/spec.md", import.meta.url), "utf8");
+  const table = {};
+  for (const l of spec.split("\n")) {
+    const m = l.match(/^\| ([A-Z0-9 ]+) \| (.+) \|$/);
+    if (m) table[m[1]] = m[2];
+  }
+  expect(table).toEqual(accueil);
+});
+
+// Données fictives où Alpha porte un nom de la table des noms courts.
+function servirAvecClubDeLaTable(page, rencontres) {
+  return page.route("**/script.google.com/**", (route) => {
+    const table = new URL(route.request().url()).searchParams.get("table");
+    let data = tables[table] || [];
+    if (table === "clubs") data = data.map((c, i) => i === 0 ? { ...c, "Nom club": "METRO PELOTE BASQUE ANTONY" } : c);
+    if (table === "rencontres" && rencontres) data = rencontres(data);
+    route.fulfill({
+      status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+    });
+  });
+}
+
+// Spec classement, « Ligne d'une équipe » : nom court sur toute la page, nom
+// officiel au toucher.
+test("Classement : nom court sur la ligne et aux quarts, nom officiel au toucher", async ({ page }) => {
+  await servirAvecClubDeLaTable(page);
+  await page.goto("classement.html");
+  await attendreChargement(page);
+  const serie1 = page.locator(".zone-classement").first();
+  const mpba = serie1.locator(".rank-row").first();
+  await expect(mpba.locator(".rank-team")).toHaveText("MPBA 1");
+  await mpba.click();
+  const plus = page.locator("#" + await mpba.getAttribute("aria-controls"));
+  await expect(plus.locator("> *").first()).toHaveClass(/rank-nom/);
+  await expect(plus.locator(".rank-nom")).toHaveText("METRO PELOTE BASQUE ANTONY (éq. 1)");
+  await expect(serie1.locator(".finales-card .quart-side", { hasText: "MPBA 1" })).toHaveCount(1);
+  // Un club hors de la table garde son nom, suivi du numéro.
+  await expect(serie1.locator(".rank-team", { hasText: /^Bravo 1$/ })).toHaveCount(1);
+  // Plus de « (éq. N) » sur la page, hors des noms officiels du détail.
+  expect(await page.evaluate(() => [...document.querySelectorAll("#results *:not(.rank-nom)")]
+    .some((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.includes("(éq."))))).toBe(false);
+});
+
+// Spec classement, « Zones de fin de poule » et « Légende du classement ».
+test.describe("Classement : zones de fin de poule et légende", () => {
+  const zones = (carte) => carte.locator(".rank-row").evaluateAll((l) => l.map((r) =>
+    (r.className.match(/zone-(quarts|barrage|descente)/) || [, ""])[1]));
+
+  test("Série 1 : quarts et descente ; Série 2 : quarts, barrage et descente", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const [s1, s2] = [page.locator(".zone-classement").nth(0), page.locator(".zone-classement").nth(1)];
+    expect(await zones(s1.locator(".poule-card").first())).toEqual(["quarts", "quarts", "quarts", "quarts", "", "descente"]);
+    expect(await zones(s2.locator(".poule-card").first())).toEqual(["quarts", "quarts", "quarts", "quarts", "barrage", "descente"]);
+    // Trois couleurs distinctes, et plus de trait des qualifiés.
+    const liseré = (cls) => s2.locator(".rank-row." + cls).first().evaluate((e) => getComputedStyle(e).boxShadow);
+    expect(new Set([await liseré("zone-quarts"), await liseré("zone-barrage"), await liseré("zone-descente")]).size).toBe(3);
+    await expect(page.locator(".cut-line")).toHaveCount(0);
+  });
+
+  test("légende de chaque série : zones présentes, « à ce jour », colonnes et barème", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const l1 = page.locator(".zone-classement").nth(0).locator(".legende-classement");
+    const l2 = page.locator(".zone-classement").nth(1).locator(".legende-classement");
+    await expect(l1).toHaveCount(1);
+    await expect(l1.locator(".zone-cle")).toHaveText(["1-4 Quarts", "6 Descente en Série 2"]);
+    await expect(l2.locator(".zone-cle")).toHaveText(["1-4 Quarts", "5 Barrage", "6 Descente en Série 3"]);
+    await expect(l1).toContainText("à ce jour");
+    await expect(l1).toContainText("J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1)");
+    // Elle suit les poules et précède les quarts.
+    expect(await page.locator(".zone-classement").first().evaluate((z) =>
+      [...z.children].map((e) => e.classList.contains("legende-classement") ? "L" : e.classList.contains("finales-card") ? "Q" : "P").join("")))
+      .toBe("PPLQ");
+    // La règle a quitté le bloc Filtres.
+    await expect(page.locator("#filtersBody .legende")).toHaveCount(0);
+  });
+
+  test("classement général : pas de zone, une légende des colonnes seule", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterDecoupage .filter-chip[data-mode='general']").click();
+    await expect(page.locator(".rank-row[class*='zone-']")).toHaveCount(0);
+    const l1 = page.locator(".zone-classement").nth(0).locator(".legende-classement");
+    await expect(l1.locator(".zone-cle")).toHaveCount(0);
+    await expect(l1).toContainText("J jouées");
+  });
+
+  test("une équipe sans partie jouée n'a pas de zone", async ({ page }) => {
+    await servirAvecClubDeLaTable(page, (data) => data.map((r) => r["Catégorie"] === "1" && (r.club_rec === codeClub(5) || r.club_vis === codeClub(5)) ? { ...r, score_cr: "", score_cv: "" } : r));
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const foxtrot = page.locator(".zone-classement").first().locator(".rank-row", { hasText: "Foxtrot 1" });
+    await expect(foxtrot).not.toHaveClass(/zone-/);
+  });
+});
+
+// Spec classement, « Lien vers le bilan » : en bas pendant les poules, en haut
+// une fois les poules d'une série finies.
+test.describe("Classement : place du lien Bilan", () => {
+  const place = (page) => page.evaluate(() => {
+    const lien = document.querySelectorAll(".bilan-lien");
+    if (lien.length !== 1) return "liens : " + lien.length;
+    const r = document.getElementById("results");
+    const pos = r.compareDocumentPosition(lien[0]);
+    if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return "bas";
+    if (pos & Node.DOCUMENT_POSITION_PRECEDING) return lien[0].previousElementSibling.classList.contains("recap-card") ? "haut" : "ailleurs";
+    return "dans les résultats";
+  });
+
+  test("poules en cours : en bas de page", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    expect(await place(page)).toBe("bas");
+  });
+
+  test("poules de la série 2 finies : en haut, sous les filtres", async ({ page }) => {
+    await servirAvecClubDeLaTable(page, (data) => data.map((r) => r["Catégorie"] === "2" && r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "20" } : r));
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    expect(await place(page)).toBe("haut");
+    await page.getByRole("link", { name: /Bilan de la phase de poules/ }).click();
+    await expect(page).toHaveURL(/bilan\.html$/);
+  });
+});
+
+// Spec classement, « Ligne d'une équipe » : une poule entière au premier écran
+// d'un iPhone 15 Pro, dans Safari.
+test.describe("Classement sur iPhone 15 Pro", () => {
+  test.use({ viewport: { width: 393, height: 659 } });
+  test("une poule de six entière au premier écran", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.evaluate(() => document.fonts.ready);
+    const haut = await page.locator(".tab-bar").evaluate((e) => e.getBoundingClientRect().top);
+    const lignes = page.locator(".zone-classement").first().locator(".poule-card").first().locator(".rank-row");
+    expect(await lignes.last().evaluate((e) => e.getBoundingClientRect().bottom)).toBeLessThanOrEqual(haut);
   });
 });
 
@@ -968,7 +1129,7 @@ test.describe("Classement : quarts et simulation", () => {
     // Charlie, 4e, a 3 parties à jouer : toutes les issues sont passées en revue.
     const chemin = page.locator(".sim-card").first().locator(".sim-impact .chemin");
     await expect(chemin).toHaveText("Chemin vers les quarts : 🎯 Qualifiée à coup sûr en gagnant vos 3 parties. " +
-      "Avec 1 victoire, ça reste jouable : il faut qu'Alpha (éq. 1) batte Echo (éq. 1) et que Bravo (éq. 1) batte Foxtrot (éq. 1).");
+      "Avec 1 victoire, ça reste jouable : il faut qu'Alpha 1 batte Echo 1 et que Bravo 1 batte Foxtrot 1.");
 
     // Une simulation ne change pas le chemin, tiré des seuls résultats réels.
     const texte = await chemin.textContent();
@@ -986,7 +1147,7 @@ test.describe("Classement : quarts et simulation", () => {
     const sim = page.locator(".sim-card").first();
     await expect(sim.locator(".sim-toggle")).toHaveAttribute("aria-expanded", "true");
     await expect(sim.locator(".sim-compteur")).toHaveText(/^7\//);
-    await expect(sim.locator(".sim-stats-msg")).toContainText("Le scénario qui qualifie Charlie (éq. 1)");
+    await expect(sim.locator(".sim-stats-msg")).toContainText("Le scénario qui qualifie Charlie 1");
     // Le scénario tient : Charlie y est qualifiée.
     await expect(sim.locator(".sim-impact .verdict")).toContainText(" · qualifiée");
     await expect(page.locator("#sim-slot")).toContainText("Simulation en cours");
@@ -1090,7 +1251,10 @@ test.describe("Bilan de la phase de poules", () => {
     const finales = serie.locator(".finales-card");
     await expect(finales.locator(".statut")).toHaveText("Prévision");
     await expect(finales.locator(".quart-nom .joueurs")).toHaveCount(8);
-    const sansJoueurs = (textes) => textes.map((t) => t.replace(/ \[[^\]]*\]/g, ""));
+    // Le Classement nomme les équipes sous leur nom court (« Alpha 1 ») ; le
+    // Bilan garde le nom de la ligue (« Alpha (éq. 1) »), sans abréviation pour
+    // ces clubs fictifs : mêmes équipes, à l'écriture du numéro près.
+    const sansJoueurs = (textes) => textes.map((t) => t.replace(/ \[[^\]]*\]/g, "").replace(/ \(éq\. (\d+)\)/g, " $1"));
     const quartsBilan = sansJoueurs(await finales.locator(".quart-row").allTextContents());
     expect(quartsBilan).toHaveLength(4);
     await page.goto("classement.html");
@@ -1971,11 +2135,11 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     await page.goto("classement.html");
     await attendreChargement(page);
     const ligne = (nom) => page.locator(".rank-item").filter({ hasText: nom }).first().locator(".rank-joueurs");
-    await page.locator(".rank-row").filter({ hasText: "Alpha (éq. 1)" }).first().click();
-    await page.locator(".rank-row").filter({ hasText: "Bravo (éq. 1)" }).first().click();
-    await expect(ligne("Alpha (éq. 1)")).toHaveText("Composition non déclarée à la ligue");
-    await expect(ligne("Alpha (éq. 1)")).toHaveClass(/inconnus/);
-    await expect(ligne("Bravo (éq. 1)")).toHaveText("Ane Joueur100003, Bixente Joueur100004");
+    await page.locator(".rank-row").filter({ hasText: "Alpha 1" }).first().click();
+    await page.locator(".rank-row").filter({ hasText: "Bravo 1" }).first().click();
+    await expect(ligne("Alpha 1")).toHaveText("Composition non déclarée à la ligue");
+    await expect(ligne("Alpha 1")).toHaveClass(/inconnus/);
+    await expect(ligne("Bravo 1")).toHaveText("Ane Joueur100003, Bixente Joueur100004");
 
     await page.goto("programme.html");
     await attendreChargement(page);

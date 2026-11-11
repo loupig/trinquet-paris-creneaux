@@ -194,8 +194,9 @@ principaux :
 | `API_CACHE_PREFIX` | toutes sauf le compteur | Préfixe des clés `localStorage` du cache d'appels API |
 | `SERIE_LABELS` | toutes sauf le compteur | Correspondance Catégorie → Série affichée |
 | `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report, Bilan | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
-| `FIN_DE_POULE` | Bilan | Sort des non-qualifiés par série, pour les messages de fin de poule : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
+| `FIN_DE_POULE` | Bilan, Classement | Sort des non-qualifiés par série, pour les messages de fin de poule et les zones du Classement : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement, Bilan | Barème, phase classée et nombre de qualifiés : à garder identiques dans les quatre pages |
+| `CLUBS_ABREGES` | accueil, Classement | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les deux pages à la fois, un test compare les trois |
 | `QUARTS`, `DEMIES` | Classement, Bilan | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |

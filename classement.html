@@ -753,22 +753,33 @@
   .rank-joueurs svg { flex: none; margin-top: 2px; color: var(--muted); }
   .rank-joueurs.inconnus { font-weight: 600; font-style: italic; color: var(--muted); }
   .rank-detail { font-size: 12px; line-height: 1.4; margin-top: 3px; }
+  .rank-nom { font-size: 12px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; overflow-wrap: anywhere; }
 
-  /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
-     pour une séparation de carte. */
-  .cut-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 14px 5px;
-    border-top: 2px solid var(--accent-border);
-  }
-  .cut-line span {
+  /* Zones de fin de poule : un liseré plus large que celui des poules (3px),
+     aux couleurs des sorts du Bilan. Le rang reste écrit et la légende dit
+     ce que veut dire chaque couleur. */
+  .rank-row.zone-quarts { box-shadow: inset 4px 0 0 var(--win-text); }
+  .rank-row.zone-barrage { box-shadow: inset 4px 0 0 var(--warn-text); }
+  .rank-row.zone-descente { box-shadow: inset 4px 0 0 var(--loss-text); }
+
+  /* Légende d'une série, sous ses poules. */
+  .legende-classement {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg);
     font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
+    line-height: 1.45;
+    color: var(--muted);
   }
-  .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
+  .legende-classement .zones { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 4px; }
+  .zone-cle { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--text); }
+  .zone-cle i { width: 4px; height: 14px; border-radius: 2px; }
+  .zone-cle.zone-quarts i { background: var(--win-text); }
+  .zone-cle.zone-barrage i { background: var(--warn-text); }
+  .zone-cle.zone-descente i { background: var(--loss-text); }
+  .legende-classement p { margin: 0; }
 
   /* --- Phases finales : prévision des quarts et simulation --- */
   .poule-head .statut {
@@ -1035,13 +1046,8 @@
   .bilan-lien .bilan-lien-emoji { flex: none; font-size: 20px; line-height: 1; }
   .bilan-lien .bilan-lien-texte { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.3; }
   .bilan-lien svg { flex: none; }
-
-  .legende {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.45;
-    margin: 10px 0 0;
-  }
+  /* En bas de page, pendant les poules : après le dernier simulateur. */
+  #bilanBas .bilan-lien { margin: 12px 0 0; }
 
   .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
 
@@ -1117,6 +1123,8 @@
     /* Les quarts, plus larges, passent sous les poules quand la ligne est
        trop étroite pour les trois cartes. */
     .zone-classement > .finales-card { flex-basis: 400px; }
+    /* Après les quarts sur grand écran, pour laisser poules et quarts côte à côte. */
+    .zone-classement > .legende-classement { flex: 1 1 100%; margin-bottom: 0; order: 1; }
     .sim-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 12px; align-items: start; }
   }
 </style>
@@ -1154,7 +1162,6 @@
       <button type="button" class="filter-chip" data-mode="poule" data-recap-defaut>Par poule</button>
       <button type="button" class="filter-chip" data-mode="general" data-recap="Classement général">Général</button>
     </div>
-    <p class="legende">Victoire 3 pts, défaite 1 pt. Rang à la moyenne de points par partie (colonne Moy.), puis au goal average moyen. Les 4 premiers de chaque poule vont en quarts.</p>
     </div>
   </div>
 
@@ -1162,11 +1169,12 @@
   <div id="banner-slot"></div>
   <div id="sim-slot"></div>
   <div id="results"></div>
+  <div id="bilanBas"></div>
 
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.11</p>
+    <p>Version 2026.11.11.2</p>
   </footer>
 </main>
 
@@ -1240,6 +1248,29 @@
   var PHASE_POULES = "1";
   // Les quatre premiers de chaque poule vont en quarts de finale.
   var QUALIFIES_PAR_POULE = 4;
+  // Sort des non-qualifiés de chaque poule, par série, fixé par la ligue : le
+  // dernier descend ; en Série 2, l'avant-dernier joue un barrage pour le
+  // maintien contre un demi-finaliste de la Série 3, à la fin de la saison de
+  // celle-ci ; les autres restent. Une série absente d'ici ne dit rien de la
+  // saison suivante. Même règle que le Bilan, à garder identique.
+  var FIN_DE_POULE = {
+    "1": { serie: "Série 1", descente: "Série 2" },
+    "2": { serie: "Série 2", descente: "Série 3", barrage: "un demi-finaliste de la Série 3", phaseBarrage: "6",
+           quandBarrage: "à la fin de la saison de la Série 3, vers juin ou septembre" }
+  };
+
+  // Le sort d'une équipe classée en fin de poule, comme au Bilan : quarts,
+  // puis, selon la règle de sa série, maintien, barrage ou descente.
+  function sortFinDePoule(serie, rang, taille) {
+    if (rang <= QUALIFIES_PAR_POULE) return "quarts";
+    var regle = FIN_DE_POULE[serie.cat];
+    if (!regle) return "hors-quarts";
+    if (rang === taille) return "descente";
+    if (regle.barrage && rang === taille - 1) return "barrage";
+    return "maintien";
+  }
+  // Les sorts qui portent un liseré au classement, dans l'ordre de la légende.
+  var ZONES = ["quarts", "barrage", "descente"];
   // Quarts croisés entre les deux poules d'une série, dans l'ordre Q1 à Q4
   // fixé par la ligue : cet ordre décide des demies. Rangs [poule 1, poule 2].
   var QUARTS = [[1, 4], [3, 2], [2, 3], [4, 1]];
@@ -1443,7 +1474,32 @@
     return map;
   }
 
+  // Noms courts des clubs, tels que les clubs se nomment entre eux (spec
+  // noms-clubs), repérés par le nom de la ligue en majuscules. Même table que
+  // l'accueil, à garder identique : la spec est la référence. Un club absent
+  // garde le nom de la ligue ; on n'invente pas d'abréviation.
+  var CLUBS_ABREGES = {
+    "CHAVILLE PELOTE BASQUE": "Chaville",
+    "CHATILLON PELOTE BASQUE": "Chatillon",
+    "PARIS EUSKAL PILOTA": "PEP",
+    "METRO PELOTE BASQUE ANTONY": "MPBA",
+    "CLUB DE PELOTE BASQUE DE PARIS": "CPBP",
+    "LEVALLOIS SC": "LSC",
+    "PARIS PELOTE BASQUE 13": "PPB13",
+    "PARIS TALDEA": "Taldea"
+  };
+
+  // Une équipe sous son nom court : « MPBA 1 ». C'est ainsi que la page nomme
+  // les équipes partout ; le nom officiel ne vient qu'au détail déplié.
   function clubLabel(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var court = CLUBS_ABREGES[name.toUpperCase().trim()] || name;
+    var eq = String(equipe || "").trim();
+    return eq ? (court + " " + eq) : court;
+  }
+
+  // Le nom officiel, tel que la ligue l'écrit : « METRO PELOTE BASQUE ANTONY (éq. 1) ».
+  function clubLabelOfficiel(clubMap, code, equipe) {
     var name = clubMap[code] || ("Club " + code);
     var eq = String(equipe || "").trim();
     return eq ? (name + " (éq. " + eq + ")") : name;
@@ -1505,6 +1561,7 @@
           clubNom: clubMap[club] || ("Club " + club),
           numero: num,
           label: clubLabel(clubMap, club, num),
+          nomOfficiel: clubLabelOfficiel(clubMap, club, num),
           jouees: 0, gagnees: 0, perdues: 0, nulles: 0,
           points: 0, marques: 0, encaisses: 0
         };
@@ -1545,15 +1602,17 @@
   }
 
   // Tri demandé : moyenne de points, puis goal average moyen. Les équipes sans
-  // partie jouée ferment la marche, dans l'ordre alphabétique.
+  // partie jouée ferment la marche, dans l'ordre alphabétique. L'alphabet est
+  // celui du nom officiel, comme sur les autres pages : le nom court changerait
+  // l'ordre de deux ex aequo d'une page à l'autre.
   function trierClassement(teams) {
     return teams.slice().sort(function (a, b) {
-      if (a.jouees === 0 && b.jouees === 0) return a.label.localeCompare(b.label, "fr");
+      if (a.jouees === 0 && b.jouees === 0) return a.nomOfficiel.localeCompare(b.nomOfficiel, "fr");
       if (a.jouees === 0) return 1;
       if (b.jouees === 0) return -1;
       if (b.moyenne !== a.moyenne) return b.moyenne - a.moyenne;
       if (b.gaMoyen !== a.gaMoyen) return b.gaMoyen - a.gaMoyen;
-      return a.label.localeCompare(b.label, "fr");
+      return a.nomOfficiel.localeCompare(b.nomOfficiel, "fr");
     });
   }
 
@@ -1632,21 +1691,23 @@
   // Une ligne par équipe, en colonnes, et sous elle, au toucher, ses joueurs
   // puis son détail chiffré. teinte : en classement général, rang de la poule
   // de l'équipe (1 à 4), qui colore sa pastille « P1 » et le liseré.
-  function buildRankRow(team, rang, teinte) {
+  // zone : en découpage par poule, le sort du rang à la fin des poules
+  // (« quarts », « barrage », « descente »), qui pose le liseré de la ligne.
+  function buildRankRow(team, rang, teinte, zone) {
     var item = el("div", { class: "rank-item" });
     var idPlus = "rank-plus-" + (++nbPlus);
     var cle = cleEquipe(team);
     var row = el("button", {
       type: "button",
-      class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (teinte ? " teinte-" + teinte : ""),
+      class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (teinte ? " teinte-" + teinte : "") +
+             (zone && ZONES.indexOf(zone) > -1 ? " zone-" + zone : ""),
       "aria-controls": idPlus
     });
     row.appendChild(el("span", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
 
     var nom = el("span", { class: "rank-team" });
     if (teinte) nom.appendChild(el("span", { class: "poule-tag", title: "Poule " + team.poule, text: "P" + team.poule }));
-    // « (éq. 1) » passe à la ligne d'un bloc, jamais coupé après « éq. ».
-    nom.appendChild(document.createTextNode(team.label.replace("(éq. ", "(éq.\u00a0")));
+    nom.appendChild(document.createTextNode(team.label));
     row.appendChild(nom);
 
     // J, G, P et GA. Sans partie jouée, seul J dit quelque chose.
@@ -1672,6 +1733,8 @@
     item.appendChild(row);
 
     var plus = el("div", { class: "rank-plus" + (teinte ? " teinte-" + teinte : ""), id: idPlus });
+    // Le nom officiel d'abord : la ligne ne porte que le nom court.
+    plus.appendChild(el("div", { class: "rank-nom", text: team.nomOfficiel }));
     // Les joueurs de l'équipe, tels que déclarés à la ligue, en premier :
     // c'est ce qu'on vient chercher en touchant la ligne.
     if (lastData && lastData.joueurs) {
@@ -1741,17 +1804,13 @@
 
     var teintes = filterState.mode === "general" ? teintesPoules(groupe.teams) : {};
 
+    // Les zones se lisent poule par poule : elles n'ont aucun sens sur une
+    // table générale, où les poules sont fusionnées. Une équipe qui n'a pas
+    // joué n'en a pas : elle ferme la carte sans être dernière pour autant.
     var classees = trierClassement(groupe.teams);
     classees.forEach(function (t, idx) {
-      carte.appendChild(buildRankRow(t, idx + 1, teintes[t.poule]));
-      // Les quarts se qualifient poule par poule : le trait n'a aucun sens
-      // sur une table générale, où les poules sont fusionnées.
-      if (filterState.mode === "poule" && idx + 1 === QUALIFIES_PAR_POULE && classees.length > QUALIFIES_PAR_POULE) {
-        var trait = el("div", { class: "cut-line" });
-        trait.appendChild(el("span", { text: "Qualifiés pour les quarts" }));
-        trait.appendChild(el("i", {}));
-        carte.appendChild(trait);
-      }
+      var zone = filterState.mode === "poule" && t.jouees ? sortFinDePoule(groupe, idx + 1, classees.length) : null;
+      carte.appendChild(buildRankRow(t, idx + 1, teintes[t.poule], zone));
     });
 
     return carte;
@@ -2656,12 +2715,46 @@
   // chaque résultat simulé.
   var zonesClassement = [];
 
+  var LIBELLES_ZONES = { quarts: "Quarts", barrage: "Barrage" };
+
+  // Sous les poules d'une série : ce que disent les liserés, avec leurs rangs,
+  // puis le sens des colonnes et la règle du classement. Les rangs s'écrivent
+  // en chiffres quand toutes les poules ont la même taille, sinon en mots
+  // (« avant-dernier »), pour rester justes dans chaque poule.
+  function buildLegende(zone, groupes) {
+    var legende = el("div", { class: "legende-classement" });
+    if (filterState.mode === "poule") {
+      var tailles = groupes.map(function (g) { return g.teams.length; });
+      var memes = tailles.every(function (n) { return n === tailles[0]; });
+      var taille = Math.max.apply(null, tailles);
+      var regle = FIN_DE_POULE[zone.cat];
+      var cles = el("div", { class: "zones" });
+      function cle(sort, rangs, texte) {
+        var c = el("span", { class: "zone-cle zone-" + sort });
+        c.appendChild(el("i", { "aria-hidden": "true" }));
+        c.appendChild(document.createTextNode(rangs + " " + texte));
+        cles.appendChild(c);
+      }
+      cle("quarts", "1-" + Math.min(QUALIFIES_PAR_POULE, taille), LIBELLES_ZONES.quarts);
+      if (regle && taille > QUALIFIES_PAR_POULE) {
+        if (regle.barrage && taille - 1 > QUALIFIES_PAR_POULE) cle("barrage", memes ? String(taille - 1) : "Avant-dernier :", LIBELLES_ZONES.barrage);
+        cle("descente", memes ? String(taille) : "Dernier :", "Descente en " + regle.descente);
+      }
+      if (partiesRestantes(zone.spec, zone.cat).length) cles.appendChild(el("span", { class: "zone-quand", text: "à ce jour" }));
+      legende.appendChild(cles);
+    }
+    legende.appendChild(el("p", { text: "J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1), qui fait le rang, puis le goal average moyen." }));
+    return legende;
+  }
+
   function remplirZone(zone) {
     zone.el.innerHTML = "";
     var teams = lastTeams.filter(memeSerie(zone.spec, zone.cat));
     // Dans l'ordre de la saison : le classement des poules, les quarts qui en
     // découlent, puis le simulateur, qui ferme la série.
-    grouper(teams).forEach(function (g, i) { zone.el.appendChild(buildPouleCard(g, zone === zonesClassement[0] && i === 0)); });
+    var groupes = grouper(teams);
+    groupes.forEach(function (g, i) { zone.el.appendChild(buildPouleCard(g, zone === zonesClassement[0] && i === 0)); });
+    zone.el.appendChild(buildLegende(zone, groupes));
     zone.el.appendChild(buildFinalesCard(zone.spec, zone.cat, teams));
   }
 
@@ -2670,6 +2763,19 @@
     zonesClassement.forEach(function (z) { remplirZone(z); majImpact(z); majCompteur(z); });
     renderSimBanner();
     majFabQuarts();
+  }
+
+  // Le lien vers le Bilan : en bas de page tant que les poules sont en cours,
+  // en haut, sous les filtres, dès qu'une série affichée a fini les siennes,
+  // le moment où le Bilan sert le plus. Un seul lien, déplacé, jamais copié.
+  var bilanLien = document.querySelector(".bilan-lien");
+  var bilanHaut = document.createComment(" place du lien Bilan, poules finies ");
+  if (bilanLien) bilanLien.parentNode.insertBefore(bilanHaut, bilanLien);
+
+  function placerBilan(enHaut) {
+    if (!bilanLien) return;
+    if (enHaut) bilanHaut.parentNode.insertBefore(bilanLien, bilanHaut.nextSibling);
+    else document.getElementById("bilanBas").appendChild(bilanLien);
   }
 
   function renderResults(teams) {
@@ -2707,6 +2813,7 @@
         var sim = buildSimulateur(zone);
         if (sim) results.appendChild(sim);
       });
+    placerBilan(zonesClassement.some(function (z) { return partiesRestantes(z.spec, z.cat).length === 0; }));
   }
 
   // ---------------------------------------------------------------
