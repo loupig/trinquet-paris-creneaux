@@ -813,12 +813,16 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
     await expect(page.locator(".bilan-lien small")).toHaveCount(0);
   });
 
-  test("lecteur d'écran : chaque nombre dit ce qu'il compte", async ({ page }) => {
+  test("lecteur d'écran : chaque ligne se lit en une phrase", async ({ page }) => {
     await page.goto("classement.html");
     await attendreChargement(page);
-    const alpha = ligne(page, "Alpha (éq. 1)");
-    expect(await alpha.locator(".rank-n").evaluateAll((l) => l.map((e) => e.getAttribute("aria-label"))))
-      .toEqual(["3 parties jouées", "3 gagnées", "0 perdue", "goal average +51"]);
+    const serie1 = page.locator(".zone-classement").first();   // Alpha est aussi en série 2
+    await expect(serie1.getByRole("button", {
+      name: "Rang 1, Alpha (éq. 1), 3 parties jouées, 3 gagnées, 0 perdue, goal average +51, moyenne 3,00", exact: true
+    })).toHaveCount(1);
+    await expect(serie1.getByRole("button", {
+      name: "Rang 4, Charlie (éq. 1), 2 parties jouées, 1 gagnée, 1 perdue, goal average −17, moyenne 2,00", exact: true
+    })).toHaveCount(1);
     await expect(page.locator(".rank-head").first()).toHaveAttribute("aria-hidden", "true");
   });
 });

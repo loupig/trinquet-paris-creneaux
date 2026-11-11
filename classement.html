@@ -1649,25 +1649,23 @@
     nom.appendChild(document.createTextNode(team.label.replace("(éq. ", "(éq.\u00a0")));
     row.appendChild(nom);
 
-    // J, G, P et GA, chacun avec un libellé pour qui écoute la page. Sans
-    // partie jouée, seul J dit quelque chose.
+    // J, G, P et GA. Sans partie jouée, seul J dit quelque chose.
     var cols = team.jouees
-      ? [[String(team.jouees), compte(team.jouees, "partie") + " jouée" + (team.jouees > 1 ? "s" : "")],
-         [String(team.gagnees), compte(team.gagnees, "gagnée")],
-         [String(team.perdues), compte(team.perdues, "perdue")],
-         [fmtSigne(team.ga), "goal average " + fmtSigne(team.ga)]]
-      : [["0", "0 partie jouée"], ["–"], ["–"], ["–"]];
-    cols.forEach(function (c) {
-      var n = el("span", { class: "rank-n", text: c[0] });
-      if (c[1]) n.setAttribute("aria-label", c[1]); else n.setAttribute("aria-hidden", "true");
-      row.appendChild(n);
-    });
-    var score = el("span", {
+      ? [String(team.jouees), String(team.gagnees), String(team.perdues), fmtSigne(team.ga)]
+      : ["0", "–", "–", "–"];
+    cols.forEach(function (c) { row.appendChild(el("span", { class: "rank-n", text: c })); });
+    row.appendChild(el("span", {
       class: "rank-score" + (team.jouees ? "" : " vide"),
       text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
-    });
-    if (team.jouees) score.setAttribute("aria-label", "moyenne " + fmtMoyenne(team.moyenne));
-    row.appendChild(score);
+    }));
+    // Pour qui écoute la page, la ligne se lit en une phrase : l'en-tête de
+    // colonnes est caché aux lecteurs d'écran, et des nombres seuls ne disent
+    // pas ce qu'ils comptent.
+    row.setAttribute("aria-label", team.jouees
+      ? ["Rang " + rang, team.label, compte(team.jouees, "partie") + " jouée" + (team.jouees > 1 ? "s" : ""),
+         compte(team.gagnees, "gagnée"), compte(team.perdues, "perdue"),
+         "goal average " + fmtSigne(team.ga), "moyenne " + fmtMoyenne(team.moyenne)].join(", ")
+      : team.label + ", aucune partie jouée");
     var chevron = el("span", { class: "rank-chevron" });
     chevron.innerHTML = SVG_CHEVRON;
     row.appendChild(chevron);
@@ -1734,8 +1732,8 @@
     if (groupe.sousTitre) head.appendChild(el("span", { class: "poule-sub", text: groupe.sousTitre }));
     carte.appendChild(head);
 
-    // En-tête de colonnes, pour les yeux : chaque nombre de la ligne porte son
-    // propre libellé pour qui écoute la page.
+    // En-tête de colonnes, pour les yeux : chaque ligne porte sa phrase
+    // complète pour qui écoute la page.
     var entete = el("div", { class: "rank-head", "aria-hidden": "true" });
     ["#", "Équipe", "J", "G", "P", "GA", "Moy.", ""].forEach(function (t) { entete.appendChild(el("span", { text: t })); });
     carte.appendChild(entete);
