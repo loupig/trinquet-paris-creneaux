@@ -42,5 +42,5 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 
 - [x] 4.1 Scénario « poule entière au premier écran » sur iPhone 15 Pro (393 × 659), en plus du Pixel 7. Vérifier : il passe.
 - [x] 4.2 `Version 2026.11.11.2` dans le pied de page de `classement.html` (et de `index.html` si 1.5 touche la page). README : `CLUBS_ABREGES` et `FIN_DE_POULE` dans le tableau des constantes, avec les pages qui les portent. CLAUDE.md : les deux constantes dans la liste des constantes dupliquées. Vérifier : relecture.
-- [ ] 4.3 `npm test` complet, sortie montrée. Captures Pixel 7 et iPhone 15 Pro, clair et sombre : Série 1 et Série 2 avec zones et légende, une ligne dépliée, le général, le lien Bilan en haut quand les poules sont finies. `/code-review` sur le diff, et corriger les constats.
+- [x] 4.3 `npm test` complet, sortie montrée. Captures Pixel 7 et iPhone 15 Pro, clair et sombre : Série 1 et Série 2 avec zones et légende, une ligne dépliée, le général, le lien Bilan en haut quand les poules sont finies. `/code-review` sur le diff, et corriger les constats.
 - [ ] 4.4 Archiver : créer `openspec/specs/noms-clubs/spec.md` et mettre à jour `classement`. Ouvrir la PR sur le modèle du dépôt, sans toucher à la « Décision humaine ».

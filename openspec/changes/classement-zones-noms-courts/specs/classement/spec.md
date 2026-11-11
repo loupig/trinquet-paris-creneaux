@@ -11,7 +11,7 @@ L'en-tête de la page SHALL être celui des pages Parties et Mes équipes : titr
 
 ### Requirement: Lien vers le bilan
 La page SHALL porter un lien « Bilan de la phase de poules », seul accès à la page du bilan (spec `bilan`), qui n'a pas d'onglet. Le lien tient sur une seule ligne, sans sous-titre. Sa place dépend de l'avancement :
-- tant qu'aucune série affichée n'a fini ses poules, il est en bas de page, après le dernier classement et son simulateur ;
+- tant qu'aucune série affichée n'a fini ses poules, ou qu'aucune équipe n'est affichée, il est en bas de page, après le dernier classement et son simulateur, et il y est dès l'ouverture de la page, sans sauter à l'arrivée des données ;
 - dès qu'une série affichée a toutes ses parties de poule avec un score, il est en haut, sous le bloc Filtres.
 
 #### Scenario: Ouvrir le bilan
@@ -82,7 +82,7 @@ En découpage par poule, chaque ligne d'une équipe qui a joué SHALL porter à 
 - en Série 2, orange pour l'avant-dernier : barrage pour le maintien ;
 - rouge pour le dernier : descente (Série 1 vers Série 2, Série 2 vers Série 3).
 
-Les autres rangs n'ont pas de liseré. La règle est celle des messages de fin de poule du Bilan (spec `bilan`), portée par la même constante, identique dans les deux pages. Une série sans règle connue n'a que le vert des quarts. Une équipe sans partie jouée n'a pas de liseré. Le liseré est une couleur d'appoint : la légende dit ce qu'il veut dire, et le rang reste écrit. En classement général, les lignes gardent le liseré de leur poule d'origine et n'ont pas de zone.
+Les autres rangs n'ont pas de liseré. La règle est celle des messages de fin de poule du Bilan (spec `bilan`), portée par la même constante, identique dans les deux pages. Une série sans règle connue n'a que le vert des quarts. Une équipe sans partie jouée n'a pas de liseré tant que sa série a des parties de poule sans score ; poules finies, elle a la zone de son rang, comme au Bilan. Le liseré est une couleur d'appoint : la légende dit ce qu'il veut dire, le rang reste écrit, et la ligne lue par un lecteur d'écran finit par sa zone en mots (« zone des quarts », « zone de barrage », « zone de descente »). En classement général, les lignes gardent le liseré de leur poule d'origine et n'ont pas de zone.
 
 #### Scenario: Poule de six en Série 2
 - **WHEN** le visiteur regarde une poule de six équipes de Série 2
@@ -96,10 +96,14 @@ Les autres rangs n'ont pas de liseré. La règle est celle des messages de fin d
 - **WHEN** le visiteur choisit « Général »
 - **THEN** les lignes portent le liseré de leur poule, et aucun liseré de zone
 
+#### Scenario: Que des forfaits, poules finies
+- **WHEN** les poules de la Série 1 sont finies et une équipe n'y a aucun score chiffré
+- **THEN** elle ferme sa poule avec le liseré rouge de la descente
+
 ### Requirement: Légende du classement
-Sous les cartes de classement de chaque série, et avant ses phases finales, la page SHALL afficher une légende :
+Sous les cartes de classement de chaque série, et avant ses phases finales, la page SHALL afficher une légende. Sur grand écran, où les poules et les quarts sont côte à côte, elle passe sous eux, sur toute la largeur. Elle donne :
 - en découpage par poule, une pastille par zone présente dans la série, avec ses rangs et son sens (« 1-4 Quarts », « 5 Barrage », « 6 Descente en Série 3 »), suivie de « à ce jour » tant que la série a des parties de poule sans score ;
-- dans les deux découpages, le sens des colonnes et la règle : « J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1), qui fait le rang, puis le goal average moyen ».
+- dans les deux découpages, le sens des colonnes et la règle : « J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1), qui fait le rang, puis le goal average moyen », complétée en classement général, sans zones, par « Les 4 premiers de chaque poule vont en quarts. ».
 
 Les couleurs des zones ont leur version sombre (spec `apparence`).
 
@@ -109,7 +113,7 @@ Les couleurs des zones ont leur version sombre (spec `apparence`).
 
 #### Scenario: Légende en classement général
 - **WHEN** le visiteur choisit « Général »
-- **THEN** la légende ne porte que le sens des colonnes et la règle
+- **THEN** la légende ne porte que le sens des colonnes, la règle et « Les 4 premiers de chaque poule vont en quarts. »
 
 ## REMOVED Requirements
 

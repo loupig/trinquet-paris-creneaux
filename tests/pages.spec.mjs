@@ -818,10 +818,10 @@ test.describe("Classement : une ligne par équipe, en colonnes", () => {
     await attendreChargement(page);
     const serie1 = page.locator(".zone-classement").first();   // Alpha est aussi en série 2
     await expect(serie1.getByRole("button", {
-      name: "Rang 1, Alpha 1, 3 parties jouées, 3 gagnées, 0 perdue, goal average +51, moyenne 3,00", exact: true
+      name: "Rang 1, Alpha 1, 3 parties jouées, 3 gagnées, 0 perdue, goal average +51, moyenne 3,00, zone des quarts", exact: true
     })).toHaveCount(1);
     await expect(serie1.getByRole("button", {
-      name: "Rang 4, Charlie 1, 2 parties jouées, 1 gagnée, 1 perdue, goal average −17, moyenne 2,00", exact: true
+      name: "Rang 4, Charlie 1, 2 parties jouées, 1 gagnée, 1 perdue, goal average −17, moyenne 2,00, zone des quarts", exact: true
     })).toHaveCount(1);
     await expect(page.locator(".rank-head").first()).toHaveAttribute("aria-hidden", "true");
   });
@@ -884,7 +884,7 @@ test("Classement : nom court sur la ligne et aux quarts, nom officiel au toucher
   await expect(plus.locator(".rank-nom")).toHaveText("METRO PELOTE BASQUE ANTONY (éq. 1)");
   await expect(serie1.locator(".finales-card .quart-side", { hasText: "MPBA 1" })).toHaveCount(1);
   // Un club hors de la table garde son nom, suivi du numéro.
-  await expect(serie1.locator(".rank-team", { hasText: /^Bravo 1$/ })).toHaveCount(1);
+  await expect(serie1.locator(".rank-team", { hasText: /^Bravo\s1$/ })).toHaveCount(1);
   // Plus de « (éq. N) » sur la page, hors des noms officiels du détail.
   expect(await page.evaluate(() => [...document.querySelectorAll("#results *:not(.rank-nom)")]
     .some((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.includes("(éq."))))).toBe(false);
@@ -934,6 +934,21 @@ test.describe("Classement : zones de fin de poule et légende", () => {
     const l1 = page.locator(".zone-classement").nth(0).locator(".legende-classement");
     await expect(l1.locator(".zone-cle")).toHaveCount(0);
     await expect(l1).toContainText("J jouées");
+    await expect(l1).toContainText("Les 4 premiers de chaque poule vont en quarts.");
+  });
+
+  test("poules finies : une équipe qui n'a que des forfaits ferme la poule et descend, comme au Bilan", async ({ page }) => {
+    // Série 1 finie, Foxtrot sans aucun score chiffré.
+    await servirAvecClubDeLaTable(page, (data) => data.map((r) => {
+      if (r["Catégorie"] !== "1" || r.Phase !== "1") return r;
+      if (r.club_rec === codeClub(5) || r.club_vis === codeClub(5)) return { ...r, score_cr: "F", score_cv: "F" };
+      return r.score_cr ? r : { ...r, score_cr: "40", score_cv: "20" };
+    }));
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const carte = page.locator(".zone-classement").first().locator(".poule-card").first();
+    await expect(carte.locator(".rank-row").last()).toContainText("Foxtrot 1");
+    await expect(carte.locator(".rank-row").last()).toHaveClass(/zone-descente/);
   });
 
   test("une équipe sans partie jouée n'a pas de zone", async ({ page }) => {
@@ -951,11 +966,11 @@ test.describe("Classement : place du lien Bilan", () => {
   const place = (page) => page.evaluate(() => {
     const lien = document.querySelectorAll(".bilan-lien");
     if (lien.length !== 1) return "liens : " + lien.length;
-    const r = document.getElementById("results");
-    const pos = r.compareDocumentPosition(lien[0]);
-    if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return "bas";
-    if (pos & Node.DOCUMENT_POSITION_PRECEDING) return lien[0].previousElementSibling.classList.contains("recap-card") ? "haut" : "ailleurs";
-    return "dans les résultats";
+    // En haut : juste sous le bloc Filtres. En bas : après les résultats.
+    const parent = lien[0].parentElement;
+    if (parent.id === "bilanHaut" && parent.previousElementSibling.classList.contains("recap-card")) return "haut";
+    if (parent.id === "bilanBas" && document.getElementById("results").compareDocumentPosition(parent) & Node.DOCUMENT_POSITION_FOLLOWING) return "bas";
+    return "ailleurs : " + parent.id;
   });
 
   test("poules en cours : en bas de page", async ({ page }) => {

@@ -1165,11 +1165,13 @@
     </div>
   </div>
 
-  <a class="bilan-lien" href="bilan.html"><span class="bilan-lien-emoji" aria-hidden="true">🏁</span><span class="bilan-lien-texte">Bilan de la phase de poules</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg></a>
+  <div id="bilanHaut"></div>
   <div id="banner-slot"></div>
   <div id="sim-slot"></div>
   <div id="results"></div>
-  <div id="bilanBas"></div>
+  <div id="bilanBas">
+  <a class="bilan-lien" href="bilan.html"><span class="bilan-lien-emoji" aria-hidden="true">🏁</span><span class="bilan-lien-texte">Bilan de la phase de poules</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg></a>
+  </div>
 
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
@@ -1269,8 +1271,10 @@
     if (regle.barrage && rang === taille - 1) return "barrage";
     return "maintien";
   }
-  // Les sorts qui portent un liseré au classement, dans l'ordre de la légende.
+  // Les sorts qui portent un liseré au classement, dans l'ordre de la légende,
+  // et ce qu'en dit le lecteur d'écran.
   var ZONES = ["quarts", "barrage", "descente"];
+  var ZONES_DITES = { quarts: "zone des quarts", barrage: "zone de barrage", descente: "zone de descente" };
   // Quarts croisés entre les deux poules d'une série, dans l'ordre Q1 à Q4
   // fixé par la ligue : cet ordre décide des demies. Rangs [poule 1, poule 2].
   var QUARTS = [[1, 4], [3, 2], [2, 3], [4, 1]];
@@ -1707,7 +1711,8 @@
 
     var nom = el("span", { class: "rank-team" });
     if (teinte) nom.appendChild(el("span", { class: "poule-tag", title: "Poule " + team.poule, text: "P" + team.poule }));
-    nom.appendChild(document.createTextNode(team.label));
+    // Le numéro d'équipe ne passe jamais seul à la ligne.
+    nom.appendChild(document.createTextNode(team.label.replace(/ (\d+)$/, "\u00a0$1")));
     row.appendChild(nom);
 
     // J, G, P et GA. Sans partie jouée, seul J dit quelque chose.
@@ -1722,11 +1727,13 @@
     // Pour qui écoute la page, la ligne se lit en une phrase : l'en-tête de
     // colonnes est caché aux lecteurs d'écran, et des nombres seuls ne disent
     // pas ce qu'ils comptent.
-    row.setAttribute("aria-label", team.jouees
+    // La zone y est dite en mots : le liseré n'est qu'une couleur.
+    var zoneDite = zone && ZONES_DITES[zone] ? ", " + ZONES_DITES[zone] : "";
+    row.setAttribute("aria-label", (team.jouees
       ? ["Rang " + rang, team.label, compte(team.jouees, "partie") + " jouée" + (team.jouees > 1 ? "s" : ""),
          compte(team.gagnees, "gagnée"), compte(team.perdues, "perdue"),
          "goal average " + fmtSigne(team.ga), "moyenne " + fmtMoyenne(team.moyenne)].join(", ")
-      : team.label + ", aucune partie jouée");
+      : team.label + ", aucune partie jouée") + zoneDite);
     var chevron = el("span", { class: "rank-chevron" });
     chevron.innerHTML = SVG_CHEVRON;
     row.appendChild(chevron);
@@ -1806,10 +1813,13 @@
 
     // Les zones se lisent poule par poule : elles n'ont aucun sens sur une
     // table générale, où les poules sont fusionnées. Une équipe qui n'a pas
-    // joué n'en a pas : elle ferme la carte sans être dernière pour autant.
+    // encore joué n'en a pas : elle ferme la carte sans être dernière pour
+    // autant. Les poules finies, elle a la sienne, comme au Bilan (que des
+    // forfaits : elle ferme le classement).
     var classees = trierClassement(groupe.teams);
+    var finies = classees.length > 0 && partiesRestantes(classees[0].spec, classees[0].cat).length === 0;
     classees.forEach(function (t, idx) {
-      var zone = filterState.mode === "poule" && t.jouees ? sortFinDePoule(groupe, idx + 1, classees.length) : null;
+      var zone = filterState.mode === "poule" && (t.jouees || finies) ? sortFinDePoule(groupe, idx + 1, classees.length) : null;
       carte.appendChild(buildRankRow(t, idx + 1, teintes[t.poule], zone));
     });
 
@@ -2743,7 +2753,8 @@
       if (partiesRestantes(zone.spec, zone.cat).length) cles.appendChild(el("span", { class: "zone-quand", text: "à ce jour" }));
       legende.appendChild(cles);
     }
-    legende.appendChild(el("p", { text: "J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1), qui fait le rang, puis le goal average moyen." }));
+    legende.appendChild(el("p", { text: "J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1), qui fait le rang, puis le goal average moyen." +
+      (filterState.mode === "poule" ? "" : " Les " + QUALIFIES_PAR_POULE + " premiers de chaque poule vont en quarts.") }));
     return legende;
   }
 
@@ -2768,14 +2779,12 @@
   // Le lien vers le Bilan : en bas de page tant que les poules sont en cours,
   // en haut, sous les filtres, dès qu'une série affichée a fini les siennes,
   // le moment où le Bilan sert le plus. Un seul lien, déplacé, jamais copié.
+  // Il part du bas dans le HTML : pendant la saison, il ne bouge pas à
+  // l'arrivée des données.
   var bilanLien = document.querySelector(".bilan-lien");
-  var bilanHaut = document.createComment(" place du lien Bilan, poules finies ");
-  if (bilanLien) bilanLien.parentNode.insertBefore(bilanHaut, bilanLien);
 
   function placerBilan(enHaut) {
-    if (!bilanLien) return;
-    if (enHaut) bilanHaut.parentNode.insertBefore(bilanLien, bilanHaut.nextSibling);
-    else document.getElementById("bilanBas").appendChild(bilanLien);
+    if (bilanLien) document.getElementById(enHaut ? "bilanHaut" : "bilanBas").appendChild(bilanLien);
   }
 
   function renderResults(teams) {
@@ -2793,6 +2802,7 @@
         class: "empty-state",
         text: "Aucune équipe ne correspond aux filtres."
       }));
+      placerBilan(false);
       return;
     }
 
