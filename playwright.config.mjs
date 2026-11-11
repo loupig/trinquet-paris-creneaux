@@ -16,7 +16,10 @@ export default defineConfig({
     timezoneId: "Europe/Paris",
     trace: "retain-on-failure"
   },
-  projects: [{ name: "mobile", use: { browserName: "chromium" } }],
+  // En CI, le Google Chrome déjà installé sur la machine de GitHub : rien à
+  // télécharger, alors que le téléchargement de Chromium à chaque exécution
+  // a bloqué la CI jusqu'à son délai. En local, le Chromium de Playwright.
+  projects: [{ name: "mobile", use: { browserName: "chromium", ...(process.env.CI ? { channel: "chrome" } : {}) } }],
   webServer: {
     command: "python3 -m http.server 8123 --bind 127.0.0.1",
     url: "http://127.0.0.1:8123/index.html",
