@@ -196,7 +196,7 @@ principaux :
 | `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report, Bilan | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
 | `FIN_DE_POULE` | Bilan, Classement | Sort des non-qualifiés par série, pour les messages de fin de poule et les zones du Classement : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement, Bilan | Barème, phase classée et nombre de qualifiés : à garder identiques dans les quatre pages |
-| `CLUBS_ABREGES` | accueil, Classement | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les deux pages à la fois, un test compare les trois |
+| `CLUBS_ABREGES` | accueil, Classement, Parties | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les trois pages à la fois, un test compare les quatre |
 | `QUARTS`, `DEMIES` | Classement, Bilan | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
@@ -239,10 +239,10 @@ uniquement pour les clubs du comité et pour les joueurs d'autres clubs
 déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
-- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil,
-  Parties et le Bilan, sous chaque équipe sur Mes équipes, au toucher de la
-  ligne d'une équipe sur le Classement, et au détail d'une partie sur Parties
-  et Créneaux ; jamais dans le texte ni
+- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil
+  et le Bilan, sous chaque équipe sur Mes équipes, au toucher de la ligne
+  d'une équipe sur le Classement, et au détail d'une partie sur Parties et
+  Créneaux ; jamais dans le texte ni
   l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
   numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,

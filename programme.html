@@ -111,6 +111,16 @@
     --serie2-text: #b45309;
     --serie2-border: #f6d9a8;
     --accent-bg: #eef1fb;
+    /* Teintes des poules, celles du Classement (linge basque : bordeaux, bleu
+       marine, vert sapin, ocre), pour la pastille « P1 » d'une partie. */
+    --poule1-text: #9b1c31;
+    --poule1-bg: #f8e6ea;
+    --poule2-text: #1d4e89;
+    --poule2-bg: #e4ecf7;
+    --poule3-text: #2d5e3e;
+    --poule3-bg: #e8f0e9;
+    --poule4-text: #8a6212;
+    --poule4-bg: #f6eedb;
     --accent-border: #cdd6f7;
     --warn-bg: #fff3cd;
     --warn-text: #7a5b00;
@@ -149,6 +159,14 @@
       --serie2-text: #fbbf6a;
       --serie2-border: #57401c;
       --accent-bg: #1c2440;
+      --poule1-text: #f4a3b1;
+      --poule1-bg: #3a1820;
+      --poule2-text: #9cc0f0;
+      --poule2-bg: #152a45;
+      --poule3-text: #8fd1a6;
+      --poule3-bg: #15291c;
+      --poule4-text: #e8c27a;
+      --poule4-bg: #33270f;
       --accent-border: #34407a;
       --warn-bg: #2e2610;
       --warn-text: #f3d27a;
@@ -185,6 +203,14 @@
     --serie2-text: #fbbf6a;
     --serie2-border: #57401c;
     --accent-bg: #1c2440;
+    --poule1-text: #f4a3b1;
+    --poule1-bg: #3a1820;
+    --poule2-text: #9cc0f0;
+    --poule2-bg: #152a45;
+    --poule3-text: #8fd1a6;
+    --poule3-bg: #15291c;
+    --poule4-text: #e8c27a;
+    --poule4-bg: #33270f;
     --accent-border: #34407a;
     --warn-bg: #2e2610;
     --warn-text: #f3d27a;
@@ -561,34 +587,84 @@
   .match-item:last-child { border-bottom: none; }
   .match-item.serie-1 { border-left-color: var(--serie1-text); background: color-mix(in srgb, var(--serie1-text) 6%, var(--card-bg)); }
   .match-item.serie-2 { border-left-color: var(--serie2-text); background: color-mix(in srgb, var(--serie2-text) 6%, var(--card-bg)); }
+  /* Une partie, une ligne : heure, pastille de poule, équipes en noms
+     courts, score, chevron. La série est la couleur de la ligne ; joueurs,
+     série, poule et lieu sont au détail. Un bouton, remis à plat. */
   .match-row {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
-    padding: 10px 14px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px 7px 12px;
+    font: inherit;
     font-size: 14px;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
     cursor: pointer;
   }
+  .match-row:focus-visible { outline-offset: -2px; }
   .match-row-time {
-    flex: 0 0 34px;
+    flex: 0 0 40px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
   .match-row-main { flex: 1 1 auto; min-width: 0; }
-  .match-row-teams { font-weight: 600; }
-  .match-row-meta {
-    margin-top: 2px;
+  .match-row-teams { font-weight: 600; overflow-wrap: anywhere; }
+  /* Pastille de poule, celle du Classement en classement général. */
+  .poule-tag {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 6px;
+    border-radius: 9999px;
     font-size: 12px;
-    color: var(--muted);
+    font-weight: 700;
+    line-height: 18px;
+    vertical-align: 1px;
+    color: var(--teinte, var(--accent));
+    background: var(--teinte-bg, var(--accent-bg));
   }
-  /* Joueurs entre crochets après chaque équipe, en retrait et sans gras. */
-  .match-row-teams .joueurs { font-weight: 400; color: var(--muted); }
-  .match-row-meta .serie-1 { color: var(--serie1-text); font-weight: 700; }
-  .match-row-meta .serie-2 { color: var(--serie2-text); font-weight: 700; }
+  .teinte-1 { --teinte: var(--poule1-text); --teinte-bg: var(--poule1-bg); }
+  .teinte-2 { --teinte: var(--poule2-text); --teinte-bg: var(--poule2-bg); }
+  .teinte-3 { --teinte: var(--poule3-text); --teinte-bg: var(--poule3-bg); }
+  .teinte-4 { --teinte: var(--poule4-text); --teinte-bg: var(--poule4-bg); }
+  /* Une partie hors du lieu habituel le dit sur sa ligne. */
+  .match-lieu { display: block; margin-top: 1px; font-size: 12px; font-weight: 600; color: var(--warn-text); }
   .match-row-score {
     flex: 0 0 auto;
     font-weight: 700;
     color: var(--played-text);
+    font-variant-numeric: tabular-nums;
   }
+  /* Le chevron du bloc Filtres : « › » replié, « ⌄ » déplié. */
+  .match-chevron { flex: none; display: flex; color: var(--muted); }
+  .match-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
+  .match-row[aria-expanded="true"] .match-chevron { color: var(--accent); }
+  .match-row[aria-expanded="true"] .match-chevron svg { transform: none; }
+  /* Ouverte, la partie et son détail partagent un fond teinté ; le liseré
+     de série reste. */
+  .match-item.ouverte { background: var(--accent-bg); }
+  .match-where { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+  /* Légende, au-dessus des jours. */
+  .legende-parties {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .legende-parties .cles { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-bottom: 4px; }
+  .legende-parties p { margin: 0; }
+  .serie-cle { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--text); }
+  .serie-cle i { width: 4px; height: 14px; border-radius: 2px; }
+  .serie-cle.serie-1 i { background: var(--serie1-text); }
+  .serie-cle.serie-2 i { background: var(--serie2-text); }
+  .poules-cle .poule-tag { margin-right: 4px; }
 
   .match-detail {
     padding: 0 14px 12px;
@@ -718,7 +794,7 @@
     /* Une journée par case, de gauche à droite puis à la ligne. */
     #results { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; align-items: start; }
     #results > * { margin-bottom: 0; }
-    #results > .empty-state { grid-column: 1 / -1; }
+    #results > .empty-state, #results > .legende-parties { grid-column: 1 / -1; }
   }
 </style>
 </head>
@@ -768,7 +844,7 @@
     <p>Cette page se contente d'afficher le calendrier communiqué par la ligue, elle n'a aucun effet sur le site de la ligue.</p>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.11</p>
+    <p>Version 2026.11.11.2</p>
   </footer>
 </main>
 
@@ -1095,10 +1171,54 @@
     return map;
   }
 
+  // Noms courts des clubs, tels que les clubs se nomment entre eux (spec
+  // noms-clubs, qui fait référence). Même table que l'accueil et le
+  // Classement, à garder identique. Un club absent garde le nom de la ligue.
+  var CLUBS_ABREGES = {
+    "CHAVILLE PELOTE BASQUE": "Chaville",
+    "CHATILLON PELOTE BASQUE": "Chatillon",
+    "PARIS EUSKAL PILOTA": "PEP",
+    "METRO PELOTE BASQUE ANTONY": "MPBA",
+    "CLUB DE PELOTE BASQUE DE PARIS": "CPBP",
+    "LEVALLOIS SC": "LSC",
+    "PARIS PELOTE BASQUE 13": "PPB13",
+    "PARIS TALDEA": "Taldea"
+  };
+
+  // Une équipe sous son nom court, « MPBA 1 » : c'est ainsi que la ligne
+  // d'une partie la nomme. Le détail et le message WhatsApp gardent le nom
+  // officiel (clubLabelOfficiel).
   function clubLabel(clubMap, code, equipe) {
     var name = clubMap[code] || ("Club " + code);
-    var eq = String(equipe || "").trim();
+    var court = CLUBS_ABREGES[name.toUpperCase().trim()] || name;
+    var eq = clubFictif(code) ? "" : String(equipe || "").trim();
+    return eq ? (court + " " + eq) : court;
+  }
+
+  function clubLabelOfficiel(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var eq = clubFictif(code) ? "" : String(equipe || "").trim();
     return eq ? (name + " (éq. " + eq + ")") : name;
+  }
+
+  // Les clubs fictifs de la ligue (« Equipe à désigner », CLUB_A_DESIGNER, et
+  // les autres codes en 999…), même règle que dans index.html et
+  // classement.html : sans numéro d'équipe, qui ferait croire à une équipe 1.
+  function clubFictif(code) {
+    return /^9{3,}/.test(String(code || "").trim());
+  }
+
+  // Le nom court d'un lieu, comme à l'accueil (même fonction, à garder
+  // identique) : la salle entre parenthèses, sans le code postal.
+  function lieuCourt(lieu) {
+    var m = /\(([^)]+)\)/.exec(lieu || "");
+    return m ? m[1].split(" - ")[0].trim() : (lieu || "");
+  }
+
+  // Deux libellés d'un même lieu se comparent sans casse, accents ni
+  // ponctuation.
+  function cleLieu(lieu) {
+    return String(lieu || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   }
 
   function hasScore(row) {
@@ -1215,7 +1335,8 @@
       var competRaw = String(row["Compétition"] || "").trim();
       var specRaw = String(row["Spécialité"] || "").trim();
       var phaseRaw = String(row.Phase || "").trim();
-      var meta = row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || "");
+      var poule = String(row.Poule == null ? "" : row.Poule).trim();
+      var meta = poule ? ("Poule " + poule) : (PHASE_LABELS[phaseRaw] || "");
 
       var labelRec = clubLabel(clubMap, row.club_rec, row.equip_rec);
       var labelVis = clubLabel(clubMap, row.club_vis, row.equip_vis);
@@ -1232,6 +1353,9 @@
         teams: labelRec + " vs " + labelVis,
         labelRec: labelRec,
         labelVis: labelVis,
+        officielRec: clubLabelOfficiel(clubMap, row.club_rec, row.equip_rec),
+        officielVis: clubLabelOfficiel(clubMap, row.club_vis, row.equip_vis),
+        poule: poule,
         rosterRec: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
         rosterVis: getRoster(joinCtx.engagementsIndex, joinCtx.licenceMap, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
         clubRec: String(row.club_rec || "").trim(),
@@ -1435,9 +1559,11 @@
     var detail = el("div", { class: "match-detail" });
     detail.hidden = true;
 
+    // Le détail nomme les équipes comme la ligue : le message WhatsApp, qui
+    // en part, reste celui d'avant les noms courts.
     var sides = [
-      { label: match.labelRec, roster: match.rosterRec, contact: match.contactRec },
-      { label: match.labelVis, roster: match.rosterVis, contact: match.contactVis }
+      { label: match.officielRec, roster: match.rosterRec, contact: match.contactRec },
+      { label: match.officielVis, roster: match.rosterVis, contact: match.contactVis }
     ];
     sides.forEach(function (side, idx) {
       var other = sides[1 - idx];
@@ -1447,6 +1573,9 @@
       line.appendChild(document.createTextNode(side.label + " : " + (hasRoster ? side.roster.join(", ") : "composition non disponible")));
       detail.appendChild(line);
     });
+    // Ce que la ligne ne dit plus en mots : la série, la poule ou la phase,
+    // et le lieu en entier.
+    detail.appendChild(el("div", { class: "match-where", text: [match.serieLabel, match.meta, match.lieu].filter(Boolean).join(" · ") }));
 
     // Le détail est un frère de la ligne cliquable (cf. buildMatchRow), pas
     // un enfant : un clic ici ne déclenche donc pas le repli de la ligne.
@@ -1475,62 +1604,121 @@
   // ---------------------------------------------------------------
   // Joueurs des équipes
   // ---------------------------------------------------------------
-  // Chaque équipe porte entre crochets ses joueurs déclarés à la ligue, comme
-  // sur l'accueil ; le détail au toucher les redonne avec les contacts.
+  // Les joueurs de chaque équipe sont au détail d'une partie, avec les
+  // contacts ; la ligne ne porte que les noms courts.
 
-  // Les clubs fictifs de la ligue (« Equipe à désigner », CLUB_A_DESIGNER, et
-  // les autres codes en 999…), même règle que dans index.html et classement.html.
-  function clubFictif(code) {
-    return /^9{3,}/.test(String(code || "").trim());
-  }
-
-  // Les joueurs d'une équipe entre crochets, à la suite de son nom : rien
-  // pour une équipe sans composition connue ou encore à désigner.
-  function crochets(roster, club) {
-    if (clubFictif(club) || !roster || !roster.length) return null;
-    return el("span", { class: "joueurs", text: " [" + roster.join(", ") + "]" });
-  }
-
+  // Les deux équipes sous leur nom court, le numéro collé à son nom : il ne
+  // passe jamais seul à la ligne. Les joueurs sont au détail.
   function equipesDe(match) {
-    var equipes = el("div", { class: "match-row-teams" });
-    equipes.appendChild(document.createTextNode(match.labelRec));
-    var rec = crochets(match.rosterRec, match.clubRec);
-    if (rec) equipes.appendChild(rec);
-    equipes.appendChild(document.createTextNode(" vs " + match.labelVis));
-    var vis = crochets(match.rosterVis, match.clubVis);
-    if (vis) equipes.appendChild(vis);
-    return equipes;
+    var colle = function (l) { return l.replace(/ (\d+)$/, " $1"); };
+    return el("span", { class: "match-row-teams", text: colle(match.labelRec) + " vs " + colle(match.labelVis) });
   }
 
-  function buildMatchRow(match) {
-    var item = el("div", { class: "match-item serie-" + match.serie });
-    var row = el("div", { class: "match-row" });
-    row.appendChild(el("div", { class: "match-row-time", text: formatHour(match.hour, match.minute) }));
+  // Le libellé court d'une phase hors poule, pour la pastille : « 1/4 de
+  // finale » → « 1/4 », « Barrage maintien » → « Barrage ».
+  function phaseCourte(match) {
+    var l = PHASE_LABELS[match.phaseRaw] || match.meta || "";
+    if (/^Barrage/.test(l)) return "Barrage";
+    return l.replace(/ de finale$/, "").replace(/ finale$/, "");
+  }
 
-    var main = el("div", { class: "match-row-main" });
+  // Le chevron du bloc Filtres : « › » replié, « ⌄ » déplié.
+  var SVG_CHEVRON = '<svg viewBox="0 0 256 256" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>';
+
+  var nbDetails = 0;
+
+  // La teinte d'une poule, rangée dans son groupe (spécialité et série), comme
+  // les poules d'un même classement au Classement.
+  function teintePoule(match, ctx) {
+    return ctx.teintes[match.spec + "|" + match.serie + "|" + match.poule] || 1;
+  }
+
+  // Une partie joue hors de l'habitude quand son lieu est connu et n'est pas
+  // le plus fréquent du calendrier.
+  function lieuInhabituel(match, ctx) {
+    return match.lieu !== LIEU_INCONNU && cleLieu(match.lieu) !== ctx.lieuHabituel;
+  }
+
+  // ctx : { teintes: { "série|poule": 1 à 4 }, lieuHabituel: clé du lieu le
+  // plus fréquent }, calculés sur tout le calendrier par renderResults.
+  function buildMatchRow(match, ctx) {
+    var item = el("div", { class: "match-item serie-" + match.serie });
+    var idDetail = "match-detail-" + (++nbDetails);
+    var row = el("button", { type: "button", class: "match-row", "aria-expanded": "false", "aria-controls": idDetail });
+    row.appendChild(el("span", { class: "match-row-time", text: formatHour(match.hour, match.minute) }));
+
+    var main = el("span", { class: "match-row-main" });
+    // La poule en pastille, à la teinte de sa poule ; hors poule, la phase.
+    var phase = match.poule ? "" : phaseCourte(match);
+    if (match.poule) {
+      main.appendChild(el("span", { class: "poule-tag teinte-" + teintePoule(match, ctx), text: "P" + match.poule }));
+    } else if (phase) {
+      main.appendChild(el("span", { class: "poule-tag phase", text: phase }));
+    }
     main.appendChild(equipesDe(match));
-    var metaParts = [];
-    metaParts.push({ text: match.serieLabel, cls: "serie-" + match.serie });
-    if (match.meta) metaParts.push({ text: match.meta, cls: null });
-    if (match.lieu) metaParts.push({ text: match.lieu, cls: null });
-    var meta = el("div", { class: "match-row-meta" });
-    metaParts.forEach(function (part, idx) {
-      if (idx > 0) meta.appendChild(document.createTextNode(" · "));
-      meta.appendChild(el("span", { class: part.cls || "", text: part.text }));
-    });
-    main.appendChild(meta);
+    // Le lieu n'est sur la ligne que s'il sort de l'habitude.
+    if (lieuInhabituel(match, ctx)) main.appendChild(el("span", { class: "match-lieu", text: "📍 " + lieuCourt(match.lieu) }));
     row.appendChild(main);
 
-    if (match.score) row.appendChild(el("div", { class: "match-row-score", text: match.score }));
+    if (match.score) row.appendChild(el("span", { class: "match-row-score", text: match.score }));
+    var chevron = el("span", { class: "match-chevron" });
+    chevron.innerHTML = SVG_CHEVRON;
+    row.appendChild(chevron);
+
+    // Pour qui écoute la page : ce que la couleur et la pastille disent.
+    row.setAttribute("aria-label", [
+      formatHour(match.hour, match.minute),
+      match.labelRec + " vs " + match.labelVis,
+      match.serieLabel,
+      match.meta,
+      match.lieu === LIEU_INCONNU ? LIEU_INCONNU : lieuCourt(match.lieu),
+      match.score ? "score " + match.score : "à jouer"
+    ].filter(Boolean).join(", "));
 
     var detail = buildMatchDetail(match);
+    detail.id = idDetail;
     row.addEventListener("click", function () {
       detail.hidden = !detail.hidden;
+      row.setAttribute("aria-expanded", detail.hidden ? "false" : "true");
+      item.classList.toggle("ouverte", !detail.hidden);
     });
 
     item.appendChild(row);
     item.appendChild(detail);
     return item;
+  }
+
+  // Au-dessus des jours : la couleur de chaque série, les pastilles de poule,
+  // le 📍 s'il sert, et ce que fait un toucher. Tout est lu sur les parties
+  // affichées.
+  function buildLegende(filtered, ctx) {
+    var legende = el("div", { class: "legende-parties" });
+    var series = {}, poules = {}, ailleurs = false;
+    filtered.forEach(function (m) {
+      series[m.serie] = m.serieLabel;
+      // Une même poule peut avoir deux teintes dans deux séries : une
+      // pastille par couple nom et teinte, pour ne jamais contredire les lignes.
+      if (m.poule) poules["P" + m.poule + "|" + teintePoule(m, ctx)] = { nom: "P" + m.poule, teinte: teintePoule(m, ctx) };
+      if (lieuInhabituel(m, ctx)) ailleurs = true;
+    });
+    var cles = el("div", { class: "cles" });
+    Object.keys(series).sort().forEach(function (k) {
+      var c = el("span", { class: "serie-cle serie-" + k });
+      c.appendChild(el("i", { "aria-hidden": "true" }));
+      c.appendChild(document.createTextNode(series[k]));
+      cles.appendChild(c);
+    });
+    var nomsPoules = Object.keys(poules).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); });
+    if (nomsPoules.length) {
+      var p = el("span", { class: "poules-cle" });
+      nomsPoules.forEach(function (k) { p.appendChild(el("span", { class: "poule-tag teinte-" + poules[k].teinte, text: poules[k].nom })); });
+      p.appendChild(document.createTextNode("poule"));
+      cles.appendChild(p);
+    }
+    if (ailleurs) cles.appendChild(el("span", { text: "📍 lieu inhabituel" }));
+    legende.appendChild(cles);
+    legende.appendChild(el("p", { text: "Touchez une partie : joueurs, lieu, contacts" }));
+    return legende;
   }
 
   // (Re)construit les chips d'un filtre dont les valeurs possibles dépendent
@@ -1594,6 +1782,25 @@
       return;
     }
 
+    // Calculés sur tout le calendrier, pour ne pas changer en filtrant : la
+    // teinte de chaque poule dans sa série (dans l'ordre des poules, comme au
+    // Classement), et le lieu où se joue le plus de parties.
+    var ctx = { teintes: {}, lieuHabituel: null };
+    var poulesParSerie = {}, compteLieux = {};
+    matches.forEach(function (m) {
+      if (m.poule) (poulesParSerie[m.spec + "|" + m.serie] = poulesParSerie[m.spec + "|" + m.serie] || {})[m.poule] = true;
+      if (m.lieu !== LIEU_INCONNU) compteLieux[cleLieu(m.lieu)] = (compteLieux[cleLieu(m.lieu)] || 0) + 1;
+    });
+    Object.keys(poulesParSerie).forEach(function (serie) {
+      Object.keys(poulesParSerie[serie]).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+        .forEach(function (poule, i) { ctx.teintes[serie + "|" + poule] = (i % 4) + 1; });
+    });
+    Object.keys(compteLieux).forEach(function (k) {
+      if (ctx.lieuHabituel === null || compteLieux[k] > compteLieux[ctx.lieuHabituel]) ctx.lieuHabituel = k;
+    });
+
+    results.appendChild(buildLegende(filtered, ctx));
+
     var todayKey = dateKey(today);
     var currentGroup = null;
     var currentKey = null;
@@ -1607,7 +1814,7 @@
         currentGroup.appendChild(el("div", { class: "day-card-head", text: formatDate(match.date) }));
         results.appendChild(currentGroup);
       }
-      currentGroup.appendChild(buildMatchRow(match));
+      currentGroup.appendChild(buildMatchRow(match, ctx));
     });
   }
 

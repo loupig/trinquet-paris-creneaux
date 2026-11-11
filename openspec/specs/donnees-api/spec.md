@@ -54,7 +54,7 @@ Les compositions d'équipe et les contacts des responsables SHALL être des donn
 
 ### Requirement: Noms de joueurs seuls
 Les noms de joueurs SHALL n'apparaître qu'aux endroits suivants, sous la forme « Prénom Nom » :
-- sur l'accueil, Parties et le Bilan, entre crochets après chaque équipe ;
+- sur l'accueil et le Bilan, entre crochets après chaque équipe ;
 - sur Mes équipes, sous chaque équipe ;
 - sur le Classement, au toucher de la ligne d'une équipe ;
 - sur Parties et Créneaux, au détail d'une partie.
