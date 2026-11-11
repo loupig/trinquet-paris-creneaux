@@ -37,5 +37,5 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 ## 3. Finitions
 
 - [x] 3.1 `Version 2026.11.11.2` dans le pied de page de `programme.html`. README : `CLUBS_ABREGES` porté aussi par Parties, et les noms de joueurs sur Parties au détail seulement. Vérifier : relecture.
-- [ ] 3.2 `npm test` complet, sortie montrée. Captures iPhone 15 Pro et Pixel 7, clair et sombre : premier écran, une partie dépliée avec ses contacts. `/code-review` sur le diff, et corriger les constats. `/security-review`, puisque le changement touche à des données de l'API affichées et au message WhatsApp.
-- [ ] 3.3 Archiver dans la même PR (specs `programme` et `donnees-api`), ouvrir la PR sur le modèle du dépôt, et laisser la « Décision humaine » au demandeur.
+- [x] 3.2 `npm test` complet, sortie montrée. Captures iPhone 15 Pro et Pixel 7, clair et sombre : premier écran, une partie dépliée avec ses contacts. `/code-review` sur le diff, et corriger les constats. `/security-review`, puisque le changement touche à des données de l'API affichées et au message WhatsApp.
+- [x] 3.3 Archiver dans la même PR (specs `programme` et `donnees-api`), ouvrir la PR sur le modèle du dépôt, et laisser la « Décision humaine » au demandeur.

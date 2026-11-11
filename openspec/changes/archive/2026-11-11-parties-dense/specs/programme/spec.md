@@ -33,17 +33,6 @@ La série ne s'écrit plus en toutes lettres : sa couleur suffit, expliquée par
 - **WHEN** un visiteur ouvre Parties sur un iPhone 15 Pro, le bloc Filtres replié
 - **THEN** au moins cinq parties sont visibles sans défiler
 
-### Requirement: Légende des parties
-Au-dessus des cartes de jour, la page SHALL afficher une légende sur une ou deux lignes : la couleur de chaque série affichée (« Série 1 », « Série 2 »), les pastilles de poule présentes (« P1 », « P2 » : poule), « 📍 lieu inhabituel » quand une partie affichée en porte un, et « Touchez une partie : joueurs, lieu, contacts ». Elle suit les filtres : une série masquée n'y figure plus. Quand aucune partie ne correspond aux filtres, elle n'est pas affichée. Les couleurs ont leur version sombre (spec `apparence`).
-
-#### Scenario: Légende par défaut
-- **WHEN** un visiteur ouvre Parties avec toutes les séries
-- **THEN** la légende donne la couleur de la Série 1 et de la Série 2, les pastilles « P1 » et « P2 », et dit qu'on touche une partie pour voir joueurs, lieu et contacts
-
-#### Scenario: Série masquée
-- **WHEN** le visiteur masque la Série 2
-- **THEN** la légende ne cite plus la Série 2
-
 ### Requirement: Détail d'une partie
 Toucher la ligne d'une partie SHALL déplier son détail, et la toucher à nouveau le replier. Le détail donne :
 - pour l'équipe qui reçoit, puis pour l'équipe visiteuse, son nom officiel tel que la ligue l'écrit (« METRO PELOTE BASQUE ANTONY (éq. 1) ») et les noms des joueurs déclarés à la ligue, sous la forme « Prénom Nom », ou « composition non disponible » quand aucun joueur n'est connu ;
@@ -63,6 +52,19 @@ C'est le seul endroit de la page où figurent les joueurs. Si les compositions n
 #### Scenario: Message aux responsables inchangé
 - **WHEN** le visiteur touche l'icône WhatsApp d'une équipe dans le détail
 - **THEN** le message prérempli nomme les équipes par leur nom officiel et le lieu en entier, comme avant ce changement
+
+## ADDED Requirements
+
+### Requirement: Légende des parties
+Au-dessus des cartes de jour, la page SHALL afficher une légende sur une ou deux lignes : la couleur de chaque série affichée (« Série 1 », « Série 2 »), les pastilles de poule présentes (« P1 », « P2 » : poule), « 📍 lieu inhabituel » quand une partie affichée en porte un, et « Touchez une partie : joueurs, lieu, contacts ». Elle suit les filtres : une série masquée n'y figure plus. Quand aucune partie ne correspond aux filtres, elle n'est pas affichée. Les couleurs ont leur version sombre (spec `apparence`).
+
+#### Scenario: Légende par défaut
+- **WHEN** un visiteur ouvre Parties avec toutes les séries
+- **THEN** la légende donne la couleur de la Série 1 et de la Série 2, les pastilles « P1 » et « P2 », et dit qu'on touche une partie pour voir joueurs, lieu et contacts
+
+#### Scenario: Série masquée
+- **WHEN** le visiteur masque la Série 2
+- **THEN** la légende ne cite plus la Série 2
 
 ## REMOVED Requirements
 
