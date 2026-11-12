@@ -548,20 +548,44 @@
   .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 12px; }
 
   /* --- Une ligne de classement ---
-     Deux lignes par équipe plutôt qu'un tableau à huit colonnes : sur 390px un
-     tableau obligerait à défiler horizontalement, ou à des colonnes de 22px
-     illisibles. Le critère de tri est à droite, en gros ; le détail qui le
-     compose est sur la ligne du dessous. */
-  .rank-row {
-    display: flex;
+     Une ligne par équipe, en colonnes, pour comparer d'un coup d'œil comme
+     sur le site de la ligue : rang, équipe, J, G, P, GA et la moyenne, critère
+     de tri, en gras. Huit colonnes tiennent sur 320px sans défiler : le nom
+     prend la place qui reste et passe à la ligne. Les joueurs et le détail
+     chiffré se déplient au toucher, sous la ligne. */
+  .rank-head, .rank-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) 20px 20px 20px 36px 40px 14px;
+    column-gap: 6px;
     align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    border-top: 1px solid var(--border);
+    padding: 6px 10px 6px 12px;
   }
-  .rank-row:first-of-type { border-top: none; }
+  /* Sous 360px, les écarts se resserrent pour laisser au nom de quoi lire. */
+  @media (max-width: 359px) {
+    .rank-head, .rank-row { column-gap: 4px; padding-left: 10px; padding-right: 8px; }
+  }
+  .rank-head {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .rank-head span:nth-child(n+3) { text-align: right; }
+  .rank-item + .rank-item { border-top: 1px solid var(--border); }
+  .rank-row {
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .rank-row:focus-visible { outline-offset: -2px; }
   .rank-pos {
-    flex: 0 0 22px;
+    width: 22px;
     height: 22px;
     display: flex;
     align-items: center;
@@ -578,8 +602,7 @@
   .rank-row.or .rank-pos { color: var(--or-text); background: var(--or-bg); }
   .rank-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
   .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
-  .rank-main { flex: 1 1 auto; min-width: 0; }
-  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
   /* Classement général : pastille et liseré de la poule d'origine. */
   .poule-tag {
     display: inline-block;
@@ -598,34 +621,70 @@
   .teinte-4 { --teinte: var(--poule4-text); --teinte-bg: var(--poule4-bg); }
   .rank-row[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
   .rank-row[class*="teinte-"] .poule-tag { color: var(--teinte); background: var(--teinte-bg); }
-  .rank-detail { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
-  /* Joueurs de l'équipe, à la demande : sous le détail, même taille. */
-  .rank-joueurs { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
-  .rank-joueurs.inconnus { font-style: italic; }
-  .rank-values { flex: 0 0 auto; text-align: right; }
+  .rank-n {
+    text-align: right;
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
   .rank-score {
+    text-align: right;
     font-size: 16px;
     font-weight: 700;
-    line-height: 1.1;
     font-variant-numeric: tabular-nums;
   }
   .rank-score.vide { font-size: 14px; color: var(--muted); }
-
-  /* Trait de qualification : sans libellé, une ligne plus épaisse passerait
-     pour une séparation de carte. */
-  .cut-line {
+  /* Le chevron du Classement : « › » replié, « ⌄ » déplié. */
+  .rank-chevron { display: flex; justify-content: center; color: var(--muted); }
+  .rank-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
+  /* Ouverte, la ligne et son détail partagent un fond teinté : on voit ce qui
+     est ouvert, et à quelle équipe le détail appartient. Le gris y passe au
+     texte courant, plus lisible sur ce fond. */
+  .rank-row[aria-expanded="true"], .rank-plus { background: var(--accent-bg); }
+  .rank-row[aria-expanded="true"] .rank-n { color: var(--text); }
+  .rank-row[aria-expanded="true"] .rank-chevron { color: var(--accent); }
+  .rank-row[aria-expanded="true"] .rank-chevron svg { transform: none; }
+  /* Sous la colonne du nom : 12px de marge, 22px de rang, 6px d'écart. */
+  .rank-plus { padding: 0 10px 9px 40px; }
+  .rank-joueurs {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 14px 5px;
-    border-top: 2px solid var(--accent-border);
-  }
-  .cut-line span {
-    font-size: 12px;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--accent);
+    line-height: 1.35;
   }
-  .cut-line i { flex: 1 1 auto; height: 1px; background: var(--accent-border); }
+  .rank-joueurs svg { flex: none; margin-top: 2px; color: var(--muted); }
+  .rank-joueurs.inconnus { font-weight: 600; font-style: italic; color: var(--muted); }
+  .rank-detail { font-size: 12px; line-height: 1.4; margin-top: 3px; }
+  .rank-nom { font-size: 12px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; overflow-wrap: anywhere; }
+
+  /* Zones de fin de poule : un liseré plus large que celui des poules (3px),
+     aux couleurs des sorts du Bilan. Le rang reste écrit et la légende dit
+     ce que veut dire chaque couleur. */
+  .rank-row.zone-quarts { box-shadow: inset 4px 0 0 var(--win-text); }
+  .rank-row.zone-barrage { box-shadow: inset 4px 0 0 var(--warn-text); }
+  .rank-row.zone-descente { box-shadow: inset 4px 0 0 var(--loss-text); }
+
+  /* Légende d'une série, sous ses poules. */
+  .legende-classement {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .legende-classement .zones { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 4px; }
+  .zone-cle { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--text); }
+  .zone-cle i { width: 4px; height: 14px; border-radius: 2px; }
+  .zone-cle.zone-quarts i { background: var(--win-text); }
+  .zone-cle.zone-barrage i { background: var(--warn-text); }
+  .zone-cle.zone-descente i { background: var(--loss-text); }
+  .legende-classement p { margin: 0; }
 
   /* --- Phases finales : prévision des quarts et simulation --- */
   .poule-head .statut {
@@ -702,6 +761,30 @@
     white-space: nowrap;
   }
   .quart-seed[class*="teinte-"] { color: var(--teinte); background: var(--teinte-bg); }
+  /* Partie jouée : le score à la place des chances, le vainqueur coché,
+     le battu grisé. */
+  .quart-score {
+    margin-left: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .quart-side.gagne .quart-score { color: var(--win-text); }
+  .quart-side.battu { color: var(--muted); font-weight: 600; }
+  .quart-side.battu .quart-seed { opacity: 0.6; }
+  /* Demies et finale, sous les quarts, une fois les phases finales lancées. */
+  .tableau-suite { border-top: 2px solid var(--fort-bord); }
+  .tableau-titre {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 6px 12px 0;
+  }
+  .tableau-titre + .quart-row { border-top: none; }
+  .tableau-champion { margin: 0; padding: 8px 12px; font-size: 14px; font-weight: 700; color: var(--win-text); border-top: 1px solid var(--border); }
   .tableau-arbre { position: relative; border-left: 1px solid var(--border); }
   .tableau-arbre svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .tableau-arbre path { fill: none; stroke: var(--muted); stroke-width: 1.5; }
@@ -902,11 +985,7 @@
   .zone-bilan .poule-head { flex-wrap: wrap; }
   .zone-bilan .poule-head > span { white-space: nowrap; }
 
-  /* Joueurs entre crochets après le nom de l'équipe, comme à l'accueil : en
-     retrait, sans gras. */
-  .joueurs { font-weight: 400; color: var(--muted); }
   .trophee-serie { font-weight: 600; color: var(--muted); }
-  .quart-side.suivie .joueurs, .rank-row.suivie .joueurs { color: inherit; opacity: 0.8; }
 
   /* Chiffres d'une série : les tuiles de l'affiche, en clair. */
   .bilan-tuiles.clair { margin: 0 0 12px; }
@@ -938,8 +1017,8 @@
   .rank-row.suivie { background: var(--accent-bg); }
   .rank-row.suivie .rank-team { color: var(--accent); }
 
-  /* Résultats d'une poule : dépliés à la demande, une partie par ligne, le
-     vainqueur en gras, le perdant en retrait. */
+  /* Résultats d'une poule : dépliés à la demande, une partie par ligne à la
+     manière de Parties (« A vs B », score à droite), le vainqueur en gras. */
   .resultats { border-top: 1px solid var(--border); }
   .resultats summary {
     padding: 10px 14px;
@@ -951,7 +1030,7 @@
   }
   .resultat {
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr) auto;
     gap: 6px;
     align-items: center;
     padding: 6px 14px;
@@ -960,10 +1039,9 @@
     line-height: 1.3;
   }
   .resultat-date { font-size: 12px; color: var(--muted); }
-  .resultat-eq { min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
-  .resultat-eq.rec { text-align: right; }
-  .resultat-eq.gagne { color: var(--text); font-weight: 700; }
-  .resultat-score { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: center; }
+  .resultat-eq { min-width: 0; overflow-wrap: anywhere; color: var(--muted); font-weight: 600; }
+  .resultat-eq b { color: var(--text); font-weight: 700; }
+  .resultat-score { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
   .resultat-score.a-jouer { font-size: 12px; font-weight: 600; color: var(--warn-text); background: var(--warn-bg); border-radius: 9999px; padding: 1px 7px; }
   .resultat.suivie { box-shadow: inset 3px 0 0 var(--accent); }
 
@@ -1031,6 +1109,8 @@
     .zone-bilan { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
     .zone-bilan > * { flex: 1 1 300px; min-width: 0; margin-bottom: 0; }
     .zone-bilan > .finales-card { flex-basis: 400px; }
+    /* La légende passe sous les poules et le tableau, sur toute la largeur. */
+    .zone-bilan > .legende-classement { flex: 1 1 100%; order: 1; }
     /* Bilan global : mon équipe et les trophées toutes séries côte à côte. */
     .zone-globale { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
     .zone-globale > * { flex: 1 1 400px; min-width: 0; margin-bottom: 0; }
@@ -1063,7 +1143,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.10</p>
+    <p>Version 2026.11.12</p>
   </footer>
 </main>
 
@@ -1112,7 +1192,7 @@
     "6": "Barrage maintien", "7": "1/32e de finale", "8": "1/16e de finale", "9": "1/8e de finale",
     "10": "1/4 de finale", "11": "1/2 finale", "12": "Finale"
   };
-  var PHASE_QUARTS = "10";
+  var PHASE_QUARTS = "10", PHASE_DEMIES = "11", PHASE_FINALE = "12";
   // Sort des non-qualifiés de chaque poule, par série, fixé par la ligue : le
   // dernier descend ; en Série 2, l'avant-dernier joue un barrage pour le
   // maintien contre un demi-finaliste de la Série 3, à la fin de la saison de
@@ -1330,7 +1410,32 @@
     return map;
   }
 
+  // Noms courts des clubs, tels que les fixe la spec noms-clubs : recopiés à
+  // l'identique de l'accueil, du Classement et de Parties (un test compare).
+  var CLUBS_ABREGES = {
+    "CHAVILLE PELOTE BASQUE": "Chaville",
+    "CHATILLON PELOTE BASQUE": "Chatillon",
+    "PARIS EUSKAL PILOTA": "PEP",
+    "METRO PELOTE BASQUE ANTONY": "MPBA",
+    "CLUB DE PELOTE BASQUE DE PARIS": "CPBP",
+    "LEVALLOIS SC": "LSC",
+    "PARIS PELOTE BASQUE 13": "PPB13",
+    "PARIS TALDEA": "Taldea"
+  };
+
+  // Une équipe sous son nom court : « MPBA 1 ». C'est ainsi que la page nomme
+  // les équipes partout ; le nom officiel ne vient qu'au détail déplié.
   function clubLabel(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var court = CLUBS_ABREGES[name.toUpperCase().trim()] || name;
+    var eq = String(equipe || "").trim();
+    return eq ? (court + " " + eq) : court;
+  }
+
+  // Le nom officiel, tel que la ligue l'écrit : « METRO PELOTE BASQUE ANTONY (éq. 1) ».
+  // Il ne sert qu'au détail déplié d'une ligne de classement et aux messages
+  // de fin de poule, comme sur Parties.
+  function clubLabelOfficiel(clubMap, code, equipe) {
     var name = clubMap[code] || ("Club " + code);
     var eq = String(equipe || "").trim();
     return eq ? (name + " (éq. " + eq + ")") : name;
@@ -1378,6 +1483,7 @@
           clubNom: clubMap[club] || ("Club " + club),
           numero: num,
           label: clubLabel(clubMap, club, num),
+          nomOfficiel: clubLabelOfficiel(clubMap, club, num),
           jouees: 0, gagnees: 0, perdues: 0, nulles: 0,
           points: 0, marques: 0, encaisses: 0
         };
@@ -1417,12 +1523,12 @@
 
   function trierClassement(teams) {
     return teams.slice().sort(function (a, b) {
-      if (a.jouees === 0 && b.jouees === 0) return a.label.localeCompare(b.label, "fr");
+      if (a.jouees === 0 && b.jouees === 0) return a.nomOfficiel.localeCompare(b.nomOfficiel, "fr");
       if (a.jouees === 0) return 1;
       if (b.jouees === 0) return -1;
       if (b.moyenne !== a.moyenne) return b.moyenne - a.moyenne;
       if (b.gaMoyen !== a.gaMoyen) return b.gaMoyen - a.gaMoyen;
-      return a.label.localeCompare(b.label, "fr");
+      return a.nomOfficiel.localeCompare(b.nomOfficiel, "fr");
     });
   }
 
@@ -1549,15 +1655,12 @@
   // forme, null sans engagements chargés.
   var contactsDe = null;
 
-  // Le nom d'une équipe suivi, entre crochets, de ses joueurs déclarés à la
-  // ligue, comme à l'accueil : rien pour une équipe sans composition connue.
-  // Jamais dans l'image ni le texte partagés.
-  // suffixe : écrit juste après le nom, avant les joueurs (la série, au bilan global).
+  // Le nom court d'une équipe, comme au Classement : ses joueurs ne sont qu'au
+  // toucher de sa ligne de classement, jamais dans l'image ni le texte partagés.
+  // suffixe : écrit juste après le nom (la série, au bilan global).
   function nomEquipe(parent, t, suffixe) {
     parent.appendChild(document.createTextNode(t.label));
     if (suffixe) parent.appendChild(el("span", { class: "trophee-serie", text: suffixe }));
-    var noms = joueursDe ? joueursDe(t.clubCode, t.cat, t.numero) : null;
-    if (noms) parent.appendChild(el("span", { class: "joueurs", text: " [" + noms.join(", ") + "]" }));
     return parent;
   }
 
@@ -1636,6 +1739,50 @@
   // ---------------------------------------------------------------
   // Mes équipes : le verdict des poules pour chaque équipe suivie
   // ---------------------------------------------------------------
+  // Le parcours d'une équipe une fois les phases finales commencées, lu au
+  // seul tableau final (là où la ligue a placé les équipes, pas au rang de
+  // poule). null avant : le bloc dit alors son rang, son quart et son
+  // adversaire, d'après la prévision.
+  function parcoursFinales(tableau, t) {
+    if (!tableau.commence || !tableau.quarts) return null;
+    // Côté de l'équipe dans un duel, et son issue : gagné, perdu, joué sans
+    // vainqueur chiffré (forfait publié tel quel), ou à jouer.
+    function issue(duel) {
+      var k = duel.cotes[0].team === t ? 0 : (duel.cotes[1].team === t ? 1 : -1);
+      if (k === -1) return null;
+      var p = duel.partie;
+      var publie = !!(p && p.scores);
+      var tranche = publie && p.vainqueur !== null;
+      return {
+        adv: duel.cotes[1 - k], gagne: tranche && p.vainqueur === k, perdu: tranche && p.vainqueur !== k,
+        sansVainqueur: publie && !tranche, score: publie ? p.scores[k] + "–" + p.scores[1 - k] : ""
+      };
+    }
+    function contre(adv) {
+      if (adv.team) return " contre " + adv.team.label;
+      return " contre le vainqueur " + (adv.etiquette.charAt(2) === "Q" ? "du quart Q" : "de la demie D") + adv.etiquette.slice(3);
+    }
+    var q = null, iq = null;
+    tableau.quarts.forEach(function (x) { if (!iq) { var r = issue(x); if (r) { q = x; iq = r; } } });
+    if (!iq) return { texte: "pas de quart cette saison", genre: "ko" };
+    if (iq.sansVainqueur) return { texte: "quart Q" + q.num + " joué (" + iq.score + "), vainqueur à confirmer", genre: "attente" };
+    if (iq.perdu) return { texte: "battue en quart (Q" + q.num + ", " + iq.score + ")", genre: "ko" };
+    if (!iq.gagne) return { texte: "en quart (Q" + q.num + ")" + contre(iq.adv), genre: "ok" };
+    var demie = tableau.demies[DEMIES[0].indexOf(q.num) !== -1 ? 0 : 1];
+    var id = issue(demie);
+    // La ligue a inscrit d'autres équipes en demie : on s'en tient au quart gagné.
+    if (!id) return { texte: "quart Q" + q.num + " gagné (" + iq.score + ")", genre: "ok" };
+    if (id.sansVainqueur) return { texte: "demie D" + demie.num + " jouée (" + id.score + "), vainqueur à confirmer", genre: "attente" };
+    if (id.perdu) return { texte: "battue en demie (" + id.score + ")", genre: "ko" };
+    if (!id.gagne) return { texte: "en demie (D" + demie.num + ")" + contre(id.adv), genre: "ok" };
+    var f = issue(tableau.finale);
+    if (!f) return { texte: "demie D" + demie.num + " gagnée (" + id.score + ")", genre: "ok" };
+    if (f.sansVainqueur) return { texte: "finale jouée (" + f.score + "), vainqueur à confirmer", genre: "attente" };
+    if (f.gagne) return { texte: "championne 🏆", genre: "ok" };
+    if (f.perdu) return { texte: "battue en finale (" + f.score + ")", genre: "ko" };
+    return { texte: "en finale" + contre(f.adv), genre: "ok" };
+  }
+
   function buildMesEquipes(ctx) {
     var suivies = mesEquipes();
     var miennes = ctx.teams.filter(function (t) { return estSuivie(suivies, t); });
@@ -1656,10 +1803,15 @@
       } else {
         detail = t.gagnees + " victoire" + (t.gagnees > 1 ? "s" : "") + ", " + t.perdues + " défaite" + (t.perdues > 1 ? "s" : "") +
                  " · " + fmtMoyenne(t.moyenne) + " pts par partie · GA " + fmtSigne(t.ga);
+        // Les phases finales ont commencé : son parcours, lu au tableau.
+        var parcours = serie.tableau.quarts ? parcoursFinales(serie.tableau, t) : null;
         if (!serie.tableau.quarts) {
           // Pas deux poules : pas de tableau des quarts, donc pas de verdict.
           verdict = ordinal(rang) + " de la poule " + t.poule;
           genre = "attente";
+        } else if (parcours) {
+          verdict = ordinal(rang) + " de la poule " + t.poule + " · " + parcours.texte;
+          genre = parcours.genre;
         } else if (rang > QUALIFIES_PAR_POULE) {
           verdict = ordinal(rang) + " de la poule " + t.poule + " · " + (provisoire ? "hors des quarts pour l'instant" : "pas de quart cette saison");
           genre = "ko";
@@ -1800,13 +1952,68 @@
   // Une poule : classement final et résultats
   // ---------------------------------------------------------------
   var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
+  // Les sorts qui portent un liseré au classement, comme au Classement, et ce
+  // qu'en dit le lecteur d'écran et la légende.
+  var ZONES = ["quarts", "barrage", "descente"];
+  var ZONES_DITES = { quarts: "zone des quarts", barrage: "zone de barrage", descente: "zone de descente" };
+  var LIBELLES_ZONES = { quarts: "Quarts", barrage: "Barrage" };
 
-  function buildRankRow(team, rang, suivie) {
-    var row = el("div", { class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (suivie ? " suivie" : "") });
-    row.appendChild(el("div", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
-    var main = el("div", { class: "rank-main" });
-    main.appendChild(nomEquipe(el("div", { class: "rank-team" }), team));
-    main.appendChild(el("div", {
+  // Tracés Phosphor, comme au Classement. Textes fixes, jamais une donnée de l'API.
+  var SVG_CHEVRON = '<svg viewBox="0 0 256 256" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>';
+  var SVG_JOUEURS = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg>';
+
+  var nbPlus = 0;
+
+  // « 1 gagnée », « 0 perdue », « 3 gagnées » : le pluriel à partir de deux.
+  function compte(n, mot) { return n + " " + mot + (n > 1 ? "s" : ""); }
+
+  // Une ligne par équipe, en colonnes, comme au Classement, et sous elle, au
+  // toucher, son nom officiel, ses joueurs puis son détail chiffré. zone : le
+  // sort du rang à la fin des poules, qui pose le liseré de la ligne. Le
+  // Bilan y ajoute la médaille des trois premiers et l'équipe suivie.
+  function buildRankRow(team, rang, suivie, zone) {
+    var item = el("div", { class: "rank-item" });
+    var idPlus = "rank-plus-" + (++nbPlus);
+    var row = el("button", {
+      type: "button",
+      class: "rank-row" + (team.jouees ? (PODIUM[rang] || "") : "") + (suivie ? " suivie" : "") +
+             (zone && ZONES.indexOf(zone) > -1 ? " zone-" + zone : ""),
+      "aria-controls": idPlus
+    });
+    row.appendChild(el("span", { class: "rank-pos", text: team.jouees ? String(rang) : "–" }));
+    // Le numéro d'équipe ne passe jamais seul à la ligne.
+    row.appendChild(el("span", { class: "rank-team", text: team.label.replace(/ (\d+)$/, "\u00a0$1") }));
+    var cols = team.jouees
+      ? [String(team.jouees), String(team.gagnees), String(team.perdues), fmtSigne(team.ga)]
+      : ["0", "–", "–", "–"];
+    cols.forEach(function (v) { row.appendChild(el("span", { class: "rank-n", text: v })); });
+    row.appendChild(el("span", {
+      class: "rank-score" + (team.jouees ? "" : " vide"),
+      text: team.jouees ? fmtMoyenne(team.moyenne) : "–"
+    }));
+    // La ligne se lit en une phrase : l'en-tête de colonnes est caché aux
+    // lecteurs d'écran, et la zone y est dite en mots.
+    var zoneDite = zone && ZONES_DITES[zone] ? ", " + ZONES_DITES[zone] : "";
+    row.setAttribute("aria-label", (team.jouees
+      ? ["Rang " + rang, team.label, compte(team.jouees, "partie") + " jouée" + (team.jouees > 1 ? "s" : ""),
+         compte(team.gagnees, "gagnée"), compte(team.perdues, "perdue"),
+         "goal average " + fmtSigne(team.ga), "moyenne " + fmtMoyenne(team.moyenne)].join(", ")
+      : team.label + ", aucune partie jouée") + zoneDite);
+    var chevron = el("span", { class: "rank-chevron" });
+    chevron.innerHTML = SVG_CHEVRON;
+    row.appendChild(chevron);
+    item.appendChild(row);
+
+    var plus = el("div", { class: "rank-plus", id: idPlus });
+    plus.appendChild(el("div", { class: "rank-nom", text: team.nomOfficiel }));
+    if (joueursDe) {
+      var noms = joueursDe(team.clubCode, team.cat, team.numero);
+      var joueurs = el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus") });
+      joueurs.innerHTML = SVG_JOUEURS;
+      joueurs.appendChild(el("span", { text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
+      plus.appendChild(joueurs);
+    }
+    plus.appendChild(el("div", {
       class: "rank-detail",
       text: team.jouees
         ? team.jouees + " partie" + (team.jouees > 1 ? "s" : "") + " · " + team.gagnees + " G · " + team.perdues + " P" +
@@ -1814,11 +2021,43 @@
           " · GA " + fmtSigne(team.ga) + " (" + fmtSigneMoyen(team.gaMoyen) + ")"
         : "aucune partie jouée"
     }));
-    row.appendChild(main);
-    var vals = el("div", { class: "rank-values" });
-    vals.appendChild(el("div", { class: "rank-score" + (team.jouees ? "" : " vide"), text: team.jouees ? fmtMoyenne(team.moyenne) : "–" }));
-    row.appendChild(vals);
-    return row;
+    item.appendChild(plus);
+
+    function montrer(ouvert) {
+      row.setAttribute("aria-expanded", ouvert ? "true" : "false");
+      plus.hidden = !ouvert;
+    }
+    montrer(false);
+    row.addEventListener("click", function () { montrer(plus.hidden); });
+    return item;
+  }
+
+  // Sous les poules d'une série, comme au Classement : ce que disent les
+  // liserés, avec leurs rangs, puis le sens des colonnes et la règle.
+  function buildLegende(serie) {
+    var legende = el("div", { class: "legende-classement" });
+    var parPoule = {};
+    serie.teams.forEach(function (t) { parPoule[t.poule] = (parPoule[t.poule] || 0) + 1; });
+    var tailles = Object.keys(parPoule).map(function (k) { return parPoule[k]; });
+    var memes = tailles.every(function (n) { return n === tailles[0]; });
+    var taille = Math.max.apply(null, tailles);
+    var regle = FIN_DE_POULE[serie.cat];
+    var cles = el("div", { class: "zones" });
+    function cle(sort, rangs, texte) {
+      var c = el("span", { class: "zone-cle zone-" + sort });
+      c.appendChild(el("i", { "aria-hidden": "true" }));
+      c.appendChild(document.createTextNode(rangs + " " + texte));
+      cles.appendChild(c);
+    }
+    cle("quarts", "1-" + Math.min(QUALIFIES_PAR_POULE, taille), LIBELLES_ZONES.quarts);
+    if (regle && taille > QUALIFIES_PAR_POULE) {
+      if (regle.barrage && taille - 1 > QUALIFIES_PAR_POULE) cle("barrage", memes ? String(taille - 1) : "Avant-dernier :", LIBELLES_ZONES.barrage);
+      cle("descente", memes ? String(taille) : "Dernier :", "Descente en " + regle.descente);
+    }
+    if (serie.restantes.length) cles.appendChild(el("span", { class: "zone-quand", text: "à ce jour" }));
+    legende.appendChild(cles);
+    legende.appendChild(el("p", { text: "J jouées · G gagnées · P perdues · GA goal average · Moy. points par partie (victoire 3, défaite 1), qui fait le rang, puis le goal average moyen." }));
+    return legende;
   }
 
   function buildPouleCard(serie, poule, suivies, ctx) {
@@ -1840,14 +2079,19 @@
     }));
     carte.appendChild(head);
 
+    // En-tête de colonnes, pour les yeux : chaque ligne porte sa phrase
+    // complète pour qui écoute la page.
+    var entete = el("div", { class: "rank-head", "aria-hidden": "true" });
+    ["#", "Équipe", "J", "G", "P", "GA", "Moy.", ""].forEach(function (t) { entete.appendChild(el("span", { text: t })); });
+    carte.appendChild(entete);
+
+    // Le sort de chaque rang au liseré, comme au Classement : une équipe qui
+    // n'a pas joué n'en a pas tant que la série a des parties de poule sans
+    // score ; poules finies, elle a la zone de son rang.
+    var finies = serie.restantes.length === 0;
     teams.forEach(function (t, idx) {
-      carte.appendChild(buildRankRow(t, idx + 1, mesCles[cleEquipe(t)]));
-      if (idx + 1 === QUALIFIES_PAR_POULE && teams.length > QUALIFIES_PAR_POULE) {
-        var trait = el("div", { class: "cut-line" });
-        trait.appendChild(el("span", { text: restantes.length ? "En quarts pour l'instant" : "Qualifiés pour les quarts" }));
-        trait.appendChild(el("i", {}));
-        carte.appendChild(trait);
-      }
+      var zone = (t.jouees || finies) ? sortFinDePoule(serie, idx + 1, teams.length) : null;
+      carte.appendChild(buildRankRow(t, idx + 1, mesCles[cleEquipe(t)], zone));
     });
 
     // Les résultats, repliés : la poule se lit d'abord au classement.
@@ -1862,9 +2106,16 @@
       var attente = !joue && !p.brut && p.date && p.date < aujourdhui;
       var ligne = el("div", { class: "resultat" + (mesCles[p.a] || mesCles[p.b] ? " suivie" : "") });
       ligne.appendChild(el("span", { class: "resultat-date", text: fmtJour(p.date) }));
-      ligne.appendChild(el("span", { class: "resultat-eq rec" + (joue && p.sa > p.sb ? " gagne" : ""), text: p.nomA }));
+      // « MPBA 1 vs Bravo 1 », comme sur Parties : l'équipe qui reçoit en
+      // premier, le vainqueur en gras, un numéro jamais seul à la ligne.
+      var eq = el("span", { class: "resultat-eq" });
+      [[p.nomA, joue && p.sa > p.sb], [p.nomB, joue && p.sb > p.sa]].forEach(function (c, i) {
+        if (i) eq.appendChild(document.createTextNode(" vs "));
+        var nom = c[0].replace(/ (\d+)$/, "\u00a0$1");
+        eq.appendChild(c[1] ? el("b", { text: nom }) : document.createTextNode(nom));
+      });
+      ligne.appendChild(eq);
       ligne.appendChild(el("span", { class: "resultat-score" + (joue || p.brut ? "" : " a-jouer"), text: joue ? p.sa + "–" + p.sb : (p.brut || (attente ? "sans score" : "à jouer")) }));
-      ligne.appendChild(el("span", { class: "resultat-eq" + (joue && p.sb > p.sa ? " gagne" : ""), text: p.nomB }));
       details.appendChild(ligne);
     });
     carte.appendChild(details);
@@ -1917,7 +2168,7 @@
         if (parEquipe[id] && parEquipe[id].quand <= quand) return;
         parEquipe[id] = {
           quand: quand, date: date, heure: heure, phase: phase,
-          adversaire: clubFictif(c[2]) ? null : clubLabel(clubMap, String(c[2] || "").trim(), c[3]),
+          adversaire: clubFictif(c[2]) ? null : clubLabelOfficiel(clubMap, String(c[2] || "").trim(), c[3]),
           advClub: clubFictif(c[2]) ? null : String(c[2] || "").trim(), advEquipe: String(c[3] || "").trim(),
           lieu: String(row.lieu_renc || "").trim()
         };
@@ -2033,7 +2284,7 @@
           var i = q.cotes[0].team === t ? 0 : (q.cotes[1].team === t ? 1 : -1);
           if (i === -1) return;
           var adv = q.cotes[1 - i];
-          ligne += "\nQ" + q.num + " contre " + (adv.team ? adv.team.label : "un adversaire à déterminer") + ", d'après le classement des poules";
+          ligne += "\nQ" + q.num + " contre " + (adv.team ? adv.team.nomOfficiel : "un adversaire à déterminer") + ", d'après le classement des poules";
           if (adv.team) contactAdv = responsableAdverse(adv.team.clubCode, adv.team.cat, adv.team.numero);
         });
       }
@@ -2138,18 +2389,31 @@
     return teintes;
   }
 
+  // Tableau des quarts d'une série, à partir du classement de ses deux
+  // poules. null quand la série n'a pas exactement deux poules. Une place
+  // n'est occupée que par une équipe qui a joué : pas de qualifiée au seul
+  // ordre alphabétique.
   function tableauQuarts(teams) {
     var parPoule = {};
     teams.forEach(function (t) { (parPoule[t.poule] = parPoule[t.poule] || []).push(t); });
     var poules = Object.keys(parPoule).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); });
     if (poules.length !== 2) return { nbPoules: poules.length, quarts: null };
     var classees = poules.map(function (p) { return trierClassement(parPoule[p]); });
+    // Poule et rang de chaque équipe classée, pour placer au tableau une
+    // équipe que la ligue a mise dans un autre quart que la prévision.
+    var places = {};
+    classees.forEach(function (liste, p) {
+      liste.forEach(function (t, k) { if (t.jouees) places[idClubEquipe(t.clubCode, t.numero)] = { poule: poules[p], rang: k + 1, team: t }; });
+    });
     return {
       nbPoules: 2,
+      places: places,
       quarts: QUARTS.map(function (q, i) {
+        // Poule 1 au-dessus, poule 2 en dessous, comme le tableau de la ligue.
+        var cotes = [[0, q[0]], [1, q[1]]];
         return {
           num: i + 1,
-          cotes: [[0, q[0]], [1, q[1]]].map(function (c) {
+          cotes: cotes.map(function (c) {
             var t = classees[c[0]][c[1] - 1];
             return { poule: poules[c[0]], rang: c[1], team: (t && t.jouees) ? t : null };
           })
@@ -2158,9 +2422,158 @@
     };
   }
 
-  // Chances de chaque côté d'un quart, comme au Classement : écart moyen par
-  // partie de poule, tiré vers zéro, puis courbe logistique.
-  function chancesQuart(q) {
+  function idClubEquipe(club, equipe) {
+    return String(club || "").trim() + "|" + String(equipe || "").trim();
+  }
+
+  // Parties réelles des phases finales d'une série (quarts, demies, finale),
+  // jamais simulées. Une partie sans score ne compte que poules finies
+  // ("poulesFinies") : la ligue inscrit parfois des équipes d'avance, à tort
+  // (voir Parties). Le vainqueur se lit aux scores chiffrés ; un forfait
+  // garde son score publié, sans vainqueur déduit.
+  function partiesFinales(rencontres, spec, cat, poulesFinies) {
+    var res = {};
+    res[PHASE_QUARTS] = []; res[PHASE_DEMIES] = []; res[PHASE_FINALE] = [];
+    rencontres.forEach(function (row) {
+      var liste = res[String(row.Phase || "").trim()];
+      if (!liste || String(row["Spécialité"] || "").trim() !== spec || String(row["Catégorie"] || "").trim() !== cat) return;
+      if (clubFictif(row.club_rec) || clubFictif(row.club_vis)) return;
+      var joue = hasScore(row);
+      if (!joue && !poulesFinies) return;
+      var scores = joue ? [String(row.score_cr).trim(), String(row.score_cv).trim()] : null;
+      var vainqueur = null;
+      if (scores && /^\d+$/.test(scores[0]) && /^\d+$/.test(scores[1]) && +scores[0] !== +scores[1]) {
+        vainqueur = +scores[0] > +scores[1] ? 0 : 1;
+      }
+      liste.push({ ids: [idClubEquipe(row.club_rec, row.equip_rec), idClubEquipe(row.club_vis, row.equip_vis)], scores: scores, vainqueur: vainqueur });
+    });
+    return res;
+  }
+
+  // Le tableau des quarts, complété des parties réelles des phases finales :
+  // équipes que la ligue a placées, scores, vainqueurs portés en demie puis
+  // en finale. Chaque duel (quart, demie, finale) a deux côtés et, une fois
+  // la partie connue, sa partie orientée comme ses côtés. "restantes" : les
+  // parties de poule de la série encore sans score. Recopiée à l'identique
+  // dans bilan.html, comme partiesFinales, tableauQuarts, buildDuel et
+  // buildArbre : un test compare les deux copies.
+  function tableauFinal(rencontres, spec, cat, teams, restantes) {
+    var tableau = tableauQuarts(teams);
+    if (!tableau.quarts) return tableau;
+    var finales = partiesFinales(rencontres, spec, cat, restantes.length === 0);
+    var places = tableau.places;
+    function idDe(t) { return t ? idClubEquipe(t.clubCode, t.numero) : null; }
+    function partieOrientee(p, ordre) {
+      return {
+        scores: p.scores && [p.scores[ordre[0]], p.scores[ordre[1]]],
+        vainqueur: p.vainqueur === null ? null : ordre.indexOf(p.vainqueur)
+      };
+    }
+    function gagnant(duel) {
+      return duel.partie && duel.partie.vainqueur !== null ? duel.cotes[duel.partie.vainqueur].team : null;
+    }
+    function cote(id) { var x = places[id]; return { poule: x.poule, rang: x.rang, team: x.team }; }
+
+    // Les phases finales ont commencé dès qu'un de leurs scores est publié.
+    // Avant, une demie ou une finale inscrite sans score est ignorée : la
+    // ligue ne peut pas encore en connaître les équipes.
+    var commence = [PHASE_QUARTS, PHASE_DEMIES, PHASE_FINALE].some(function (ph) {
+      return finales[ph].some(function (p) { return p.scores; });
+    });
+    if (!commence) { finales[PHASE_DEMIES] = []; finales[PHASE_FINALE] = []; }
+
+    // Quarts : une partie réelle se range au quart où la prévision place
+    // l'une de ses équipes. Si la ligue a croisé autrement, l'autre équipe y
+    // prend sa place et celle qu'elle remplace prend la sienne, pour que
+    // chaque équipe reste une seule fois au tableau.
+    var pris = {};
+    function placeAuQuart(id) {
+      for (var i = 0; i < tableau.quarts.length; i++) {
+        for (var k = 0; k < 2; k++) if (idDe(tableau.quarts[i].cotes[k].team) === id) return { q: tableau.quarts[i], k: k };
+      }
+      return null;
+    }
+    finales[PHASE_QUARTS].forEach(function (p) {
+      var a = placeAuQuart(p.ids[0]), b = placeAuQuart(p.ids[1]);
+      var ordre;
+      if (a && b && a.q === b.q) {
+        if (pris[a.q.num]) return;
+        pris[a.q.num] = true;
+        a.q.partie = partieOrientee(p, a.k === 0 ? [0, 1] : [1, 0]);
+        return;
+      }
+      var ancre = [a, b].map(function (x, j) { return x && !pris[x.q.num] ? { q: x.q, k: x.k, j: j } : null; })
+        .filter(Boolean)[0];
+      var idAutre = ancre && p.ids[1 - ancre.j];
+      if (!ancre || !places[idAutre]) return;
+      var ailleurs = placeAuQuart(idAutre);
+      if (ailleurs && pris[ailleurs.q.num]) return;
+      var remplacee = ancre.q.cotes[1 - ancre.k];
+      ancre.q.cotes[1 - ancre.k] = cote(idAutre);
+      if (ailleurs) {
+        var idRemplacee = idDe(remplacee.team);
+        ailleurs.q.cotes[ailleurs.k] = idRemplacee && places[idRemplacee] ? cote(idRemplacee) : remplacee;
+      }
+      pris[ancre.q.num] = true;
+      ordre = [];
+      ordre[ancre.k] = ancre.j; ordre[1 - ancre.k] = 1 - ancre.j;
+      ancre.q.partie = partieOrientee(p, ordre);
+    });
+
+    // Quart (1 à 4) d'une équipe, pour ranger une demie ou la finale.
+    function quartDe(id) { var x = placeAuQuart(id); return x ? x.q.num : null; }
+
+    tableau.demies = DEMIES.map(function (d, i) {
+      return {
+        num: i + 1,
+        cotes: d.map(function (n) {
+          return { etiquette: "V.Q" + n, titre: "Vainqueur du quart Q" + n, team: gagnant(tableau.quarts[n - 1]) };
+        })
+      };
+    });
+    // Une demie ou la finale réelle nomme ses équipes : elles prennent leur
+    // côté, même là où les quarts disaient autre chose, pour que le score
+    // publié soit en face de la bonne équipe.
+    function placerPartie(duel, p, k0) {
+      [0, 1].forEach(function (j) {
+        if (places[p.ids[j]]) duel.cotes[j === 0 ? k0 : 1 - k0].team = places[p.ids[j]].team;
+      });
+      duel.partie = partieOrientee(p, k0 === 0 ? [0, 1] : [1, 0]);
+    }
+    finales[PHASE_DEMIES].forEach(function (p) {
+      var qs = p.ids.map(quartDe);
+      var demie = null;
+      tableau.demies.forEach(function (dm, i) {
+        if (!demie && !dm.partie && qs.some(function (n) { return n !== null && DEMIES[i].indexOf(n) !== -1; })) demie = dm;
+      });
+      if (!demie) return;
+      var d = DEMIES[demie.num - 1];
+      // Côté de la demie de la première équipe de la partie.
+      placerPartie(demie, p, d.indexOf(qs[0]) !== -1 ? d.indexOf(qs[0]) : 1 - d.indexOf(qs[1]));
+    });
+
+    tableau.finale = {
+      cotes: tableau.demies.map(function (dm) {
+        return { etiquette: "V.D" + dm.num, titre: "Vainqueur de la demie D" + dm.num, team: gagnant(dm) };
+      })
+    };
+    var p = finales[PHASE_FINALE][0];
+    if (p) {
+      // Moitié haute (Q1, Q2) ou basse (Q3, Q4) de chaque finaliste.
+      var moities = p.ids.map(function (id) { var n = quartDe(id); return n === null ? null : (DEMIES[0].indexOf(n) !== -1 ? 0 : 1); });
+      var k0 = moities[0] !== null ? moities[0] : (moities[1] !== null ? 1 - moities[1] : -1);
+      if (k0 !== -1) placerPartie(tableau.finale, p, k0);
+    }
+    tableau.champion = gagnant(tableau.finale);
+    tableau.commence = commence;
+    return tableau;
+  }
+
+  // Chances de chaque côté d'un duel, comme au Classement : écart moyen par
+  // partie de poule, tiré vers zéro, puis courbe logistique. Le Bilan n'a
+  // pas de simulation : la forme d'une équipe est l'équipe elle-même, et
+  // "forme" n'est là que pour la signature commune de buildDuel.
+  function chancesQuart(q, forme) {
     var a = q.cotes[0].team, b = q.cotes[1].team;
     if (!a || !b || !a.jouees || !b.jouees) return null;
     function force(t) { return t.ga / (t.jouees + PROBA_PARTIES_FICTIVES); }
@@ -2169,32 +2582,74 @@
     return [haut, 100 - haut];
   }
 
-  function buildSlot(cote, suivies, chances, teinte) {
+  // Un côté d'un duel, comme au Classement : son étiquette (rang de poule au
+  // quart, « V.Q1 » en demie), l'équipe, puis son score si la partie est
+  // jouée, sinon ses chances. Le vainqueur est marqué, le battu grisé.
+  function buildSlot(cote, suivies, chances, teinte, score) {
     var t = cote.team;
     var suivie = t && estSuivie(suivies, t);
-    var side = el("div", { class: "quart-side" + (t ? "" : " vide") + (suivie ? " suivie" : "") });
-    side.appendChild(el("span", { class: "quart-seed" + (teinte ? " teinte-" + teinte : ""), text: ordinal(cote.rang) + " P" + cote.poule, title: ordinal(cote.rang) + " de la poule " + cote.poule }));
-    side.appendChild(t ? nomEquipe(el("span", { class: "quart-nom" }), t) : el("span", { class: "quart-nom", text: "À déterminer" }));
-    if (chances) {
+    var issue = score && score.vainqueur !== null ? (score.gagne ? " gagne" : " battu") : "";
+    var side = el("div", { class: "quart-side" + (t ? "" : " vide") + (suivie ? " suivie" : "") + issue });
+    var etiquette = cote.etiquette || (ordinal(cote.rang) + " P" + cote.poule);
+    var titre = cote.titre || (ordinal(cote.rang) + " de la poule " + cote.poule);
+    side.appendChild(el("span", { class: "quart-seed" + (teinte ? " teinte-" + teinte : ""), text: etiquette, title: titre }));
+    side.appendChild(el("span", { class: "quart-nom", text: t ? t.label : "À déterminer" }));
+    if (score) {
+      side.appendChild(el("span", {
+        class: "quart-score",
+        text: (score.gagne ? "✓ " : "") + score.texte,
+        title: score.gagne ? "Vainqueur" : (score.vainqueur !== null ? "Éliminé" : "Score publié")
+      }));
+    } else if (chances) {
       side.appendChild(el("span", {
         class: "quart-proba" + (chances[0] > chances[1] ? " favori" : ""),
         text: chances[0] + " %",
-        title: chances[0] + " % de chances de gagner ce quart, d'après les résultats de poule"
+        title: chances[0] + " % de chances de gagner cette partie, d'après les résultats de poule"
       }));
     }
     return side;
   }
 
+  // Une rangée du tableau : numéro du duel (Q1, D1, F) et ses deux côtés.
+  // Rend vrai si des chances y sont affichées.
+  function buildDuel(duel, numero, classe, suivies, forme, teintes) {
+    var joue = duel.partie && duel.partie.scores;
+    var chances = joue ? null : chancesQuart(duel, forme);
+    var row = el("div", { class: "quart-row" + (classe ? " " + classe : "") });
+    row.appendChild(el("span", { class: "quart-num", text: numero }));
+    var duo = el("div", {});
+    duel.cotes.forEach(function (c, i) {
+      var score = joue ? {
+        texte: duel.partie.scores[i],
+        vainqueur: duel.partie.vainqueur,
+        gagne: duel.partie.vainqueur === i
+      } : null;
+      var teinte = c.poule ? teintes[c.poule] : (c.team ? teintes[c.team.poule] : null);
+      duo.appendChild(buildSlot(c, suivies, chances && [chances[i], chances[1 - i]], teinte, score));
+    });
+    row.appendChild(duo);
+    return { row: row, chances: !!chances };
+  }
+
+  // Le tableau final, tel que le Classement le montre sans simulation : la
+  // prévision des quarts, puis, une fois les phases finales commencées, leurs
+  // scores réels, les demies, la finale et le champion. Le Bilan y ajoute le
+  // quart le plus indécis.
   function buildFinalesCard(serie, suivies) {
+    var tableau = serie.tableau;
+    var commence = !!tableau.commence;
     var carte = el("div", { class: "poule-card finales-card" });
     var head = el("div", { class: "poule-head" });
     head.appendChild(el("span", { class: "badge serie-" + serie.cat, text: serie.label }));
     head.appendChild(el("span", { text: "Tableau final" }));
-    head.appendChild(el("span", { class: "poule-sub", text: "1/4 de finale" }));
-    head.appendChild(el("span", { class: "statut" + (serie.restantes.length ? "" : " final"), text: serie.restantes.length ? "Prévision" : "Poules terminées" }));
+    head.appendChild(el("span", { class: "poule-sub", text: commence ? "Phases finales" : "1/4 de finale" }));
+    var statut, fini;
+    if (tableau.champion) { statut = "Terminées"; fini = true; }
+    else if (commence) { statut = "En cours"; fini = false; }
+    else { statut = serie.restantes.length ? "Prévision" : "Poules terminées"; fini = !serie.restantes.length; }
+    head.appendChild(el("span", { class: "statut" + (fini ? " final" : ""), text: statut }));
     carte.appendChild(head);
 
-    var tableau = serie.tableau;
     var notes = [];
     if (!tableau.quarts) {
       notes.push("Les quarts croisent les deux poules d'une série ; celle-ci en compte " + tableau.nbPoules + ", le tableau n'est pas prévu.");
@@ -2205,31 +2660,61 @@
       var rangees = [];
       var mienQ = null;
       var indecis = null;
+      var avecChances = false;
       tableau.quarts.forEach(function (q) {
-        var chances = chancesQuart(q);
-        if (chances && (!indecis || Math.abs(chances[0] - 50) < Math.abs(indecis.chances[0] - 50))) indecis = { q: q, chances: chances };
-        var row = el("div", { class: "quart-row" + (q.num === DEMIES[1][0] ? " moitie" : "") });
-        row.appendChild(el("span", { class: "quart-num", text: "Q" + q.num }));
-        var duo = el("div", {});
+        var duel = buildDuel(q, "Q" + q.num, q.num === DEMIES[1][0] ? "moitie" : "", suivies, null, teintes);
+        if (duel.chances) {
+          avecChances = true;
+          var chances = chancesQuart(q);
+          if (!indecis || Math.abs(chances[0] - 50) < Math.abs(indecis.chances[0] - 50)) indecis = { q: q, chances: chances };
+        }
+        // Le chemin d'une équipe suivie s'arrête quand elle perd son quart.
         q.cotes.forEach(function (c, i) {
-          duo.appendChild(buildSlot(c, suivies, chances && [chances[i], chances[1 - i]], teintes[c.poule]));
-          if (mienQ === null && c.team && estSuivie(suivies, c.team)) mienQ = q.num;
+          var battue = q.partie && q.partie.scores && q.partie.vainqueur !== null && q.partie.vainqueur !== i;
+          if (mienQ === null && !battue && c.team && estSuivie(suivies, c.team)) mienQ = q.num;
         });
-        row.appendChild(duo);
-        colonne.appendChild(row);
-        rangees.push(row);
+        colonne.appendChild(duel.row);
+        rangees.push(duel.row);
       });
       grille.appendChild(colonne);
-      grille.appendChild(buildArbre(colonne, rangees, mienQ));
+      // Ni quand elle perd sa demie : le trait vers la finale n'est plus le sien.
+      var battueEnDemie = false;
+      if (mienQ !== null) {
+        var dm = tableau.demies[DEMIES[0].indexOf(mienQ) !== -1 ? 0 : 1];
+        var battu = dm.partie && dm.partie.vainqueur !== null && dm.cotes[1 - dm.partie.vainqueur].team;
+        var vainqueur = battu && dm.cotes[dm.partie.vainqueur].team;
+        // Deux équipes suivies l'une contre l'autre : le chemin reste celui du vainqueur.
+        battueEnDemie = !!(battu && estSuivie(suivies, battu) && !(vainqueur && estSuivie(suivies, vainqueur)));
+      }
+      grille.appendChild(buildArbre(colonne, rangees, mienQ, battueEnDemie));
       carte.appendChild(grille);
+      if (commence) {
+        var suite = el("div", { class: "tableau-suite" });
+        suite.appendChild(el("div", { class: "tableau-titre", text: "1/2 finales" }));
+        tableau.demies.forEach(function (d) {
+          var duel = buildDuel(d, "D" + d.num, "", suivies, null, teintes);
+          if (duel.chances) avecChances = true;
+          suite.appendChild(duel.row);
+        });
+        suite.appendChild(el("div", { class: "tableau-titre", text: "Finale" }));
+        var duelF = buildDuel(tableau.finale, "F", "", suivies, null, teintes);
+        if (duelF.chances) avecChances = true;
+        suite.appendChild(duelF.row);
+        if (tableau.champion) {
+          suite.appendChild(el("p", { class: "tableau-champion", text: "🏆 Champion de " + serie.label + " : " + tableau.champion.label }));
+        }
+        carte.appendChild(suite);
+      }
       if (indecis) {
         notes.push("🔮 Le quart le plus indécis : Q" + indecis.q.num + ", " + indecis.q.cotes[0].team.label + " contre " +
                    indecis.q.cotes[1].team.label + " (" + indecis.chances[0] + " % – " + indecis.chances[1] + " %).");
       }
-      notes.push(serie.restantes.length
-        ? "Selon le classement actuel, " + pluriel(serie.restantes.length, "partie") + " de poule à jouer : le tableau peut encore changer."
-        : "D'après le classement final des poules. Le tableau officiel reste celui de la ligue.");
-      if (indecis) notes.push("Les % : chances de gagner le quart, d'après l'écart moyen par partie en poule.");
+      notes.push(commence
+        ? "Scores des phases finales d'après le site de la ligue, qui fait foi."
+        : (serie.restantes.length
+          ? "Selon le classement actuel, " + pluriel(serie.restantes.length, "partie") + " de poule à jouer : le tableau peut encore changer."
+          : "D'après le classement final des poules. Le tableau officiel reste celui de la ligue."));
+      if (avecChances) notes.push("Les % : chances de gagner la partie, d'après l'écart moyen par partie en poule.");
     }
     notes.forEach(function (n) { carte.appendChild(el("p", { class: "finales-note", text: n })); });
     return carte;
@@ -2239,7 +2724,7 @@
   // le milieu réel de chaque quart, retracé quand la carte change de taille.
   var SVG_NS = "http://www.w3.org/2000/svg";
 
-  function buildArbre(colonne, rangees, mienQ) {
+  function buildArbre(colonne, rangees, mienQ, battueEnDemie) {
     var arbre = el("div", { class: "tableau-arbre", "aria-hidden": "true" });
     var svg = document.createElementNS(SVG_NS, "svg");
     arbre.appendChild(svg);
@@ -2276,7 +2761,7 @@
       });
       var yFinale = (yDemies[0] + yDemies[1]) / 2;
       etapes.forEach(function (e, i) {
-        trait("M" + (X_DEMIE + 2 + e.el.offsetWidth) + " " + yDemies[i] + "H" + X_FINALE + "V" + yFinale, e.mien);
+        trait("M" + (X_DEMIE + 2 + e.el.offsetWidth) + " " + yDemies[i] + "H" + X_FINALE + "V" + yFinale, e.mien && !battueEnDemie);
       });
       finale.style.left = (X_FINALE + 2) + "px";
       finale.style.top = yFinale + "px";
@@ -2377,12 +2862,16 @@
         texte.push("Pas de tableau des quarts pour cette série.");
         return;
       }
-      texte.push("*" + nomSerie(ctx, serie) + " · 1/4 de finale" + (serie.restantes.length ? " (prévision)" : "") + "*");
+      texte.push("*" + nomSerie(ctx, serie) + " · 1/4 de finale" + (serie.restantes.length && !serie.tableau.commence ? " (prévision)" : "") + "*");
       serie.tableau.quarts.forEach(function (q) {
-        texte.push("Q" + q.num + " " + q.cotes.map(function (c) {
-          return ordinal(c.rang) + " P" + c.poule + " " + (c.team ? c.team.label : "à déterminer");
+        // Un quart joué porte son score, le vainqueur coché, comme à l'écran.
+        var sc = q.partie && q.partie.scores;
+        texte.push("Q" + q.num + " " + q.cotes.map(function (c, k) {
+          return ordinal(c.rang) + " P" + c.poule + " " + (c.team ? c.team.label : "à déterminer") +
+                 (sc ? " " + (q.partie.vainqueur === k ? "✓ " : "") + sc[k] : "");
         }).join(" – "));
       });
+      if (serie.tableau.champion) texte.push("🏆 Champion : " + serie.tableau.champion.label);
     });
     texte.push("");
     texte.push("Tout le bilan : " + lienBilan());
@@ -2508,8 +2997,20 @@
           // Les noms alignés, quelle que soit la largeur de l'étiquette.
           var xNom = M + 74 + 116;
           g.textBaseline = "middle";
+          // Un quart joué : le score à droite, le vainqueur coché.
+          var sc = q.partie && q.partie.scores;
+          var largeurScore = 0;
+          if (sc) {
+            var gagne = q.partie.vainqueur === k;
+            g.font = police(32, 800);
+            g.fillStyle = gagne ? c.accent : c.muted;
+            g.textAlign = "right";
+            g.fillText((gagne ? "✓ " : "") + sc[k], W - M, ym + 1);
+            g.textAlign = "left";
+            largeurScore = 110;
+          }
           g.fillStyle = cote.team ? c.text : c.muted; g.font = police(32, cote.team ? 700 : 600);
-          g.fillText(tronquer(g, cote.team ? cote.team.label : "À déterminer", W - M - xNom), xNom, ym + 1);
+          g.fillText(tronquer(g, cote.team ? cote.team.label : "À déterminer", W - M - xNom - largeurScore), xNom, ym + 1);
         });
         y += 116;
         if (i % 2 === 0) { g.fillStyle = c.border; g.fillRect(M + 74, y - 8, W - 2 * M - 74, 2); }
@@ -2620,7 +3121,7 @@
         var classees = trierClassement(s.teams.filter(function (t) { return t.poule === pl; }));
         classees.forEach(function (t, i) { s.rangs[cleEquipe(t)] = i + 1; });
       });
-      s.tableau = tableauQuarts(s.teams);
+      s.tableau = tableauFinal(data.rencontres, s.spec, s.cat, s.teams, s.restantes);
       // Qualifiées : les places occupées du tableau des quarts, s'il existe.
       (s.tableau.quarts || []).forEach(function (q) { q.cotes.forEach(function (c) { if (c.team) qualifies++; }); });
     });
@@ -2682,6 +3183,7 @@
       zone.appendChild(trophees(serie, suivies));
       Object.keys(serie.poules).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
         .forEach(function (pl) { zone.appendChild(buildPouleCard(serie, pl, suivies, ctx)); });
+      zone.appendChild(buildLegende(serie));
       zone.appendChild(buildFinalesCard(serie, suivies));
       section.appendChild(zone);
       results.appendChild(section);

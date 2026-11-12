@@ -846,6 +846,7 @@ test("noms courts et règle de fin de poule identiques d'une page à l'autre, et
   const accueil = await constante("index.html", "CLUBS_ABREGES");
   expect(await constante("classement.html", "CLUBS_ABREGES")).toEqual(accueil);
   expect(await constante("programme.html", "CLUBS_ABREGES")).toEqual(accueil);
+  expect(await constante("bilan.html", "CLUBS_ABREGES")).toEqual(accueil);
   // Le lieu court de Parties est celui de l'accueil, au caractère près.
   const lieuCourt = async (f) => {
     const html = await readFile(new URL(`../${f}`, import.meta.url), "utf8");
@@ -1320,6 +1321,24 @@ test.describe("Classement : phases finales jouées", () => {
     await expect(arbre.locator("path.mien")).toHaveCount(1);
   });
 
+  test("deux équipes suivies l'une contre l'autre en demie : le chemin du vainqueur reste surligné", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    const charlie = codeClub(2);
+    const q = quarts.findIndex((x) => x.includes(charlie));
+    const autre = q % 2 === 0 ? q + 1 : q - 1;
+    const adversaire = quarts[autre][0];
+    // On suit aussi l'adversaire de demie de Charlie, qui gagne.
+    const idx = Number(adversaire.slice(-3)) - 1;
+    await page.addInitScript((c) => localStorage.setItem("lidfpb_mes_equipes_v1", JSON.stringify(["2|1|3750003|1", c])), "2|1|" + codeClub(idx) + "|1");
+    const scores = [];
+    scores[q] = quarts[q].indexOf(charlie) === 0 ? ["40", "30"] : ["30", "40"];
+    scores[autre] = ["40", "30"];
+    await servir(page, avecFinales(quarts, scores, [partie("1", "11", charlie, adversaire, "35", "40")]));
+    await page.reload();
+    await attendreChargement(page);
+    await expect(page.locator(".finales-card").first().locator(".tableau-arbre path.mien")).toHaveCount(2);
+  });
+
   test("tout joué : demies, finale et champion", async ({ page }) => {
     const quarts = await quartsPrevus(page);
     const [v1, v2, v3, v4] = [quarts[0][0], quarts[1][1], quarts[2][0], quarts[3][1]];
@@ -1522,17 +1541,17 @@ test.describe("Bilan de la phase de poules", () => {
     // Charlie, suivie : 4e de sa poule pour l'instant, en Q4 contre le 1er de la poule 2.
     const mien = page.locator(".mien-ligne");
     await expect(mien).toHaveCount(1);
-    await expect(mien).toContainText("Charlie (éq. 1)");
     await expect(mien.locator(".mien-verdict")).toHaveText("4e de la poule 1 · en quarts pour l'instant");
-    await expect(mien).toContainText("Quart Q4 contre Golf (éq. 1)");
-    // Les joueurs entre crochets, à côté du nom de l'équipe.
-    await expect(mien.locator("b")).toHaveText(/^Charlie \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
+    await expect(mien).toContainText("Quart Q4 contre Golf 1");
+    // Nom court, sans joueurs : ils sont au toucher de la ligne de poule.
+    await expect(mien.locator("b")).toHaveText("Charlie 1");
+    expect(await page.locator("#results").innerText()).not.toContain("Joueur");
 
     // D'abord le bilan global : trophées toutes séries, la série dite après l'équipe.
     const global = page.locator(".bilan-global");
     await expect(global.locator(".trophees .bilan-carte-titre")).toHaveText("Les trophées · toutes séries");
     await expect(global.locator(".trophee").first()).toContainText("Meilleur bilan, toutes séries");
-    await expect(global.locator(".trophee").first().locator(".trophee-nom")).toContainText(/Alpha \(éq\. 1\) · Série \d \[Ane/);
+    await expect(global.locator(".trophee").first().locator(".trophee-nom")).toHaveText(/^Alpha 1 · Série \d$/);
     // Puis chaque série, ses propres chiffres en tête.
     await expect(page.locator(".serie-bloc").first().locator(".bilan-tuiles.clair .bilan-tuile")).toHaveCount(4);
 
@@ -1540,7 +1559,7 @@ test.describe("Bilan de la phase de poules", () => {
     const serie = page.locator(".serie-bloc").first();
     await expect(page.locator(".serie-bloc")).toHaveCount(2);
     await expect(serie.locator(".trophee").first()).toContainText("Meilleur bilan de la série");
-    await expect(serie.locator(".trophee").first()).toContainText("Alpha (éq. 1)");
+    await expect(serie.locator(".trophee").first()).toContainText("Alpha 1");
     await expect(serie.locator(".trophee", { hasText: "Plus large victoire" })).toContainText("40–18");
     // Meilleure attaque : le plus gros goal average cumulé (Alpha, +51).
     await expect(serie.locator(".trophee", { hasText: "Meilleure attaque" }).locator(".trophee-valeur"))
@@ -1548,8 +1567,11 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(serie.locator(".poule-card:not(.finales-card)")).toHaveCount(2);
     const poule1 = serie.locator(".poule-card").first();
     await expect(poule1.locator(".rank-row")).toHaveCount(6);
-    await expect(poule1.locator(".rank-row.suivie .rank-team")).toHaveText(/^Charlie \(éq\. 1\) \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
-    await expect(poule1.locator(".cut-line")).toHaveText("En quarts pour l'instant");
+    await expect(poule1.locator(".rank-row.suivie .rank-team")).toHaveText("Charlie 1");
+    // Le sort au liseré, comme au Classement : plus de trait des qualifiés.
+    await expect(poule1.locator(".cut-line")).toHaveCount(0);
+    await expect(poule1.locator(".rank-row.zone-quarts")).toHaveCount(4);
+    await expect(poule1.locator(".rank-row").last()).toHaveClass(/zone-descente/);
     // Les 15 parties de la poule, repliées puis dépliées.
     const resultats = poule1.locator("details.resultats");
     await expect(resultats.locator("summary")).toHaveText("Les 15 parties de la poule");
@@ -1558,20 +1580,191 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(resultats.locator(".resultat")).toHaveCount(15);
     await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "à jouer" })).not.toHaveCount(0);
     await expect(resultats.locator(".resultat-score.a-jouer", { hasText: "sans score" })).toHaveCount(2);
+    // Une partie par ligne, à la manière de Parties : « A vs B », vainqueur en gras.
+    await expect(resultats.locator(".resultat-eq").first()).toHaveText(/^\S+\s1 vs \S+\s1$/);
+    await expect(resultats.locator(".resultat-eq b")).not.toHaveCount(0);
 
-    // Le tableau final est celui du Classement, les joueurs en plus.
+    // Le tableau final est celui du Classement, au caractère près.
     const finales = serie.locator(".finales-card");
     await expect(finales.locator(".statut")).toHaveText("Prévision");
-    await expect(finales.locator(".quart-nom .joueurs")).toHaveCount(8);
-    // Le Classement nomme les équipes sous leur nom court (« Alpha 1 ») ; le
-    // Bilan garde le nom de la ligue (« Alpha (éq. 1) »), sans abréviation pour
-    // ces clubs fictifs : mêmes équipes, à l'écriture du numéro près.
-    const sansJoueurs = (textes) => textes.map((t) => t.replace(/ \[[^\]]*\]/g, "").replace(/ \(éq\. (\d+)\)/g, " $1"));
-    const quartsBilan = sansJoueurs(await finales.locator(".quart-row").allTextContents());
+    await expect(finales.locator(".joueurs")).toHaveCount(0);
+    const quartsBilan = await finales.locator(".quart-row").allTextContents();
     expect(quartsBilan).toHaveLength(4);
     await page.goto("classement.html");
     await attendreChargement(page);
     expect(await page.locator(".finales-card").first().locator(".quart-row").allTextContents()).toEqual(quartsBilan);
+  });
+
+  // Spec bilan, « Poules et résultats » : les poules au format du Classement.
+  test("poules en colonnes, médailles, joueurs et nom officiel au toucher", async ({ page }) => {
+    await servirAvecClubDeLaTable(page);
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    const poule1 = page.locator(".serie-bloc").first().locator(".poule-card").first();
+    await expect(poule1.locator(".rank-head > span")).toHaveText(["#", "Équipe", "J", "G", "P", "GA", "Moy.", ""]);
+    const mpba = poule1.locator(".rank-row").first();
+    await expect(mpba.locator(".rank-team")).toHaveText("MPBA 1");
+    expect(await mpba.locator(".rank-n").allTextContents()).toEqual(["3", "3", "0", "+51"]);
+    await expect(mpba.locator(".rank-score")).toHaveText("3,00");
+    await expect(mpba).toHaveClass(/\bor\b/);
+    await expect(poule1.locator(".rank-row").nth(1)).toHaveClass(/\bargent\b/);
+    // Rien d'autre sur la ligne tant qu'on n'a pas touché.
+    await expect(page.locator(".rank-joueurs:visible, .rank-detail:visible")).toHaveCount(0);
+    await expect(mpba).toHaveAttribute("aria-expanded", "false");
+    await mpba.click();
+    await expect(mpba).toHaveAttribute("aria-expanded", "true");
+    const plus = page.locator("#" + await mpba.getAttribute("aria-controls"));
+    await expect(plus.locator(".rank-nom")).toHaveText("METRO PELOTE BASQUE ANTONY (éq. 1)");
+    await expect(plus.locator(".rank-joueurs")).toHaveText("Ane Joueur100001, Bixente Joueur100002");
+    await expect(plus.locator(".rank-detail")).toHaveText(/^3 parties · 3 G · 0 P · 9 pts · /);
+    await mpba.click();
+    await expect(plus).toBeHidden();
+    // Le nom court partout ailleurs : parties, tableau (et trophées, par le
+    // contrôle des « (éq. N) » plus bas : Golf y égale MPBA sur tout).
+    const serie1 = page.locator(".serie-bloc").first();
+    await expect(serie1.locator(".finales-card .quart-nom", { hasText: "MPBA 1" })).toHaveCount(1);
+    await poule1.locator("details.resultats summary").click();
+    await expect(poule1.locator(".resultat-eq", { hasText: "MPBA 1 vs Bravo 1" })).toHaveCount(1);
+    // Plus de « (éq. N) » à l'écran, hors des noms officiels du détail.
+    expect(await page.evaluate(() => [...document.querySelectorAll("#results *:not(.rank-nom)")]
+      .some((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.includes("(éq."))))).toBe(false);
+  });
+
+  test("zones de fin de poule et légende de chaque série, comme au Classement", async ({ page }) => {
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    const zones = (carte) => carte.locator(".rank-row").evaluateAll((l) => l.map((r) =>
+      (r.className.match(/zone-(quarts|barrage|descente)/) || [, ""])[1]));
+    const [s1, s2] = [page.locator(".serie-bloc").nth(0), page.locator(".serie-bloc").nth(1)];
+    expect(await zones(s1.locator(".poule-card").first())).toEqual(["quarts", "quarts", "quarts", "quarts", "", "descente"]);
+    expect(await zones(s2.locator(".poule-card").first())).toEqual(["quarts", "quarts", "quarts", "quarts", "barrage", "descente"]);
+    await expect(page.locator(".cut-line")).toHaveCount(0);
+    await expect(s1.locator(".legende-classement .zone-cle")).toHaveText(["1-4 Quarts", "6 Descente en Série 2"]);
+    await expect(s2.locator(".legende-classement .zone-cle")).toHaveText(["1-4 Quarts", "5 Barrage", "6 Descente en Série 3"]);
+    await expect(s1.locator(".legende-classement")).toContainText("à ce jour");
+    await expect(s1.locator(".legende-classement")).toContainText("J jouées · G gagnées · P perdues · GA goal average");
+    // La légende suit les poules et précède le tableau final.
+    const ordre = await s1.evaluate((b) => [...b.querySelectorAll(".poule-card, .legende-classement")]
+      .map((e) => e.classList.contains("legende-classement") ? "L" : e.classList.contains("finales-card") ? "Q" : "P").join(""));
+    expect(ordre).toBe("PPLQ");
+  });
+
+  test("une poule de six entière au premier écran, une fois qu'on y est", async ({ page }) => {
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await page.evaluate(() => document.fonts.ready);
+    const carte = page.locator(".serie-bloc").first().locator(".poule-card").first();
+    await carte.evaluate((e) => window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY));
+    const haut = await page.locator(".tab-bar").evaluate((e) => e.getBoundingClientRect().top);
+    const bas = await carte.locator(".rank-row").last().evaluate((e) => e.getBoundingClientRect().bottom);
+    expect(bas, "la 6e équipe passe sous la barre d'onglets").toBeLessThanOrEqual(haut);
+  });
+
+  // Spec bilan, « Tableau final » et « Mes équipes au bilan » : les phases
+  // finales jouées, comme au Classement.
+  test("un quart joué : même tableau qu'au Classement, et l'équipe suivie en demie", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files);
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    const poulesFinies = (data) => data.map((r) => r["Catégorie"] === "1" && r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "20" } : r);
+    const servir = (rencontres) => page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? rencontres(tables.rencontres) : (tables[table] || []), lastSync: new Date().toISOString() })
+      });
+    });
+    await servir(poulesFinies);
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const code = (nom) => codeClub(tables.clubs.findIndex((c) => c["Nom club"] + " 1" === nom));
+    const rangees = page.locator(".finales-card").first().locator(".tableau-quarts .quart-row");
+    const quarts = [];
+    for (let i = 0; i < 4; i++) quarts.push((await rangees.nth(i).locator(".quart-nom").allTextContents()).map(code));
+    await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("lidfpb_api_v1:")).forEach((k) => localStorage.removeItem(k)));
+    // Charlie, suivie, gagne son quart ; Q1 est joué aussi.
+    const charlie = codeClub(2);
+    const qc = quarts.findIndex((x) => x.includes(charlie));
+    await servir((data) => {
+      let q = 0;
+      return poulesFinies(data).map((r) => {
+        if (r["Catégorie"] !== "1" || r.Phase !== "10") return r;
+        const [a, b] = quarts[q];
+        const joue = q === qc ? (a === charlie ? ["40", "30"] : ["30", "40"]) : (q === 0 ? ["40", "25"] : ["", ""]);
+        q++;
+        return { ...r, club_rec: a, club_vis: b, score_cr: joue[0], score_cv: joue[1] };
+      });
+    });
+    const tableau = () => page.locator(".finales-card").first().locator(".tableau-quarts, .tableau-suite, .statut").allTextContents();
+    await page.reload();
+    await attendreChargement(page);
+    const auClassement = await tableau();
+    expect(auClassement.join(" ")).toContain("✓ 40");
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    expect(await tableau()).toEqual(auClassement);
+    await expect(page.locator(".finales-card").first().locator(".tableau-suite .quart-nom", { hasText: "Charlie 1" })).toHaveCount(1);
+    await expect(page.locator(".mien-verdict")).toContainText("en demie");
+    // Le texte partagé porte les scores des quarts joués, sans « prévision ».
+    await expect.poll(async () => {
+      await page.getByRole("button", { name: "Partager le bilan" }).click();
+      return page.evaluate(() => (window.__partage && window.__partage.files || []).length);
+    }).toBe(1);
+    const texte = await page.evaluate(() => window.__partage.text);
+    expect(texte).toContain("*Série 1 · 1/4 de finale*");
+    expect(texte).toMatch(/Q1 1er P1 \S+ 1 ✓ 40 – 4e P2 \S+ 1 25/);
+  });
+
+  test("Mes équipes : un quart joué par forfait attend son vainqueur, une équipe hors du tableau n'a pas de quart", async ({ page }) => {
+    const poulesFinies = (data) => data.map((r) => r["Catégorie"] === "1" && r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "20" } : r);
+    let rencontres = poulesFinies;
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? rencontres(tables.rencontres) : (tables[table] || []), lastSync: new Date().toISOString() })
+      });
+    });
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const code = (nom) => codeClub(tables.clubs.findIndex((c) => c["Nom club"] + " 1" === nom));
+    const rangees = page.locator(".finales-card").first().locator(".tableau-quarts .quart-row");
+    const quarts = [];
+    for (let i = 0; i < 4; i++) quarts.push((await rangees.nth(i).locator(".quart-nom").allTextContents()).map(code));
+    const charlie = codeClub(2);
+    const qc = quarts.findIndex((x) => x.includes(charlie));
+    const sansCache = () => page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("lidfpb_api_v1:")).forEach((k) => localStorage.removeItem(k)));
+    const avecQuarts = (pour) => (data) => { let q = 0; return poulesFinies(data).map((r) => {
+      if (r["Catégorie"] !== "1" || r.Phase !== "10") return r;
+      const [a, b] = pour(quarts[q], q); q++;
+      return { ...r, ...a, ...b };
+    }); };
+    // Le quart de Charlie publié « F–40 » : score montré, vainqueur à confirmer.
+    rencontres = avecQuarts(([a, b], q) => [{ club_rec: a, club_vis: b }, q === qc ? { score_cr: "F", score_cv: "40" } : (q === 0 ? { score_cr: "40", score_cv: "30" } : {})]);
+    await sansCache();
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await expect(page.locator(".mien-verdict")).toContainText("vainqueur à confirmer");
+    // La ligue a mis une autre équipe à la place de Charlie : plus de quart pour elle.
+    const remplacante = codeClub(4);   // Echo, 5e de la poule 1
+    rencontres = avecQuarts(([a, b], q) => [{ club_rec: a === charlie ? remplacante : a, club_vis: b === charlie ? remplacante : b }, q === 0 ? { score_cr: "40", score_cv: "30" } : {}]);
+    await sansCache();
+    await page.reload();
+    await attendreChargement(page);
+    await expect(page.locator(".mien-verdict")).toContainText("pas de quart cette saison");
+  });
+
+  test("le tableau final est le même code dans le Classement et le Bilan", async () => {
+    const source = async (fichier, nom) => {
+      const html = await readFile(new URL(`../${fichier}`, import.meta.url), "utf8");
+      const m = html.match(new RegExp(`\\n  function ${nom}\\([^)]*\\) \\{[\\s\\S]*?\\n  \\}\\n`));
+      expect(m, `${nom} dans ${fichier}`).not.toBeNull();
+      return m[0];
+    };
+    for (const nom of ["idClubEquipe", "partiesFinales", "tableauQuarts", "tableauFinal", "buildDuel", "buildArbre"]) {
+      expect(await source("bilan.html", nom), nom).toBe(await source("classement.html", nom));
+    }
   });
 
   test("Partager le bilan : une image PNG et un texte pour WhatsApp, sans nom de joueur", async ({ page }) => {
@@ -1581,7 +1774,7 @@ test.describe("Bilan de la phase de poules", () => {
     });
     await page.goto("bilan.html");
     await attendreChargement(page);
-    await expect(page.locator(".joueurs").first()).toBeVisible();
+    await expect(page.locator(".rank-row").first()).toBeVisible();
     // L'image se dessine juste après l'affichage ; un toucher trop tôt
     // enverrait le texte seul.
     await expect.poll(async () => {
@@ -1597,7 +1790,7 @@ test.describe("Bilan de la phase de poules", () => {
     expect(p.hauteur).toBeGreaterThan(1200);
     expect(p.texte).toMatch(/^\*🏁 Bilan de la phase de poules/);
     expect(p.texte).toContain("*Série 1 · 1/4 de finale (prévision)*");
-    expect(p.texte).toContain("Q1 1er P1 Alpha (éq. 1) – 4e P2 India (éq. 1)");
+    expect(p.texte).toContain("Q1 1er P1 Alpha 1 – 4e P2 India 1");
     expect(p.texte).toMatch(/Tout le bilan : http.*\/bilan\.html$/);
     expect(p.texte).not.toContain("Joueur");
 
@@ -1653,7 +1846,8 @@ test.describe("Bilan de la phase de poules", () => {
     await expect(resultats.locator(".resultat-score", { hasText: "F–40" })).toHaveCount(1);
     await expect(page.locator(".finales-card .statut")).toHaveText(["Poules terminées", "Poules terminées"]);
     await expect(page.locator(".poule-card:not(.finales-card) .statut").first()).toHaveText("Terminée");
-    await expect(page.locator(".cut-line").first()).toHaveText("Qualifiés pour les quarts");
+    // Poules finies : la légende ne dit plus « à ce jour ».
+    await expect(page.locator(".legende-classement").first()).not.toContainText("à ce jour");
     await expect(page.locator(".mien-verdict")).toContainText(/qualifiée pour les quarts|pas de quart cette saison/);
   });
 
@@ -1818,7 +2012,8 @@ test.describe("Bilan de la phase de poules", () => {
       await messages.locator("summary").click();
       const lignes = messages.locator(".message-eq");
       await expect(lignes.locator(".message-sort")).toHaveText(["Quarts", "Quarts", "Quarts", "Quarts", "Maintien", "Barrage", "Descente"]);
-      await expect(lignes.last()).toContainText("Mike (éq. 1)");
+      // À l'écran, le nom court, comme partout sur la page ; le message garde le nom officiel.
+      await expect(lignes.last()).toContainText("Mike 1");
       // Sans numéro de responsable : WhatsApp s'ouvre sans destinataire.
       await expect(lignes.last()).toContainText("responsable sans numéro");
       const mikeMsg = await texteDe(lignes.last());
