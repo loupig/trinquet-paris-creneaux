@@ -53,4 +53,4 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 - [x] 6.1 Pieds de page `Version AAAA.MM.JJ` de `bilan.html` et `classement.html`.
 - [x] 6.2 README : `CLUBS_ABREGES` (ajouter Bilan), `PHASE_QUARTS` et la ligne sur les fonctions du tableau final recopiées, la liste des endroits où s'affichent les noms de joueurs.
 - [x] 6.3 `npm test` complet ; captures Pixel 7 du Bilan en clair et en sombre (une poule, le tableau avec un quart joué, Mes équipes) ; hauteur de page avant et après.
-- [ ] 6.4 `/code-review` sur le diff, `/security-review` (données de l'API, partage), puis PR.
+- [x] 6.4 `/code-review` sur le diff, `/security-review` (données de l'API, partage), puis PR.
