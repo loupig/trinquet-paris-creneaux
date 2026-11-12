@@ -1200,7 +1200,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.12</p>
+    <p>Version 2026.11.12.2</p>
   </footer>
 </main>
 
@@ -2294,10 +2294,10 @@
   // ("poulesFinies") : la ligue inscrit parfois des équipes d'avance, à tort
   // (voir Parties). Le vainqueur se lit aux scores chiffrés ; un forfait
   // garde son score publié, sans vainqueur déduit.
-  function partiesFinales(spec, cat, poulesFinies) {
+  function partiesFinales(rencontres, spec, cat, poulesFinies) {
     var res = {};
     res[PHASE_QUARTS] = []; res[PHASE_DEMIES] = []; res[PHASE_FINALE] = [];
-    lastData.rencontres.forEach(function (row) {
+    rencontres.forEach(function (row) {
       var liste = res[String(row.Phase || "").trim()];
       if (!liste || String(row["Spécialité"] || "").trim() !== spec || String(row["Catégorie"] || "").trim() !== cat) return;
       if (clubFictif(row.club_rec) || clubFictif(row.club_vis)) return;
@@ -2317,11 +2317,13 @@
   // équipes que la ligue a placées, scores, vainqueurs portés en demie puis
   // en finale. Chaque duel (quart, demie, finale) a deux côtés et, une fois
   // la partie connue, sa partie orientée comme ses côtés. "restantes" : les
-  // parties de poule de la série encore sans score.
-  function tableauFinal(spec, cat, teams, restantes) {
+  // parties de poule de la série encore sans score. Recopiée à l'identique
+  // dans bilan.html, comme partiesFinales, tableauQuarts, buildDuel et
+  // buildArbre : un test compare les deux copies.
+  function tableauFinal(rencontres, spec, cat, teams, restantes) {
     var tableau = tableauQuarts(teams);
     if (!tableau.quarts) return tableau;
-    var finales = partiesFinales(spec, cat, restantes.length === 0);
+    var finales = partiesFinales(rencontres, spec, cat, restantes.length === 0);
     var places = tableau.places;
     function idDe(t) { return t ? idClubEquipe(t.clubCode, t.numero) : null; }
     function partieOrientee(p, ordre) {
@@ -2501,7 +2503,7 @@
     var restantes = partiesRestantes(spec, cat);
     var simulees = restantes.filter(function (r) { return simValide(simulation[r.oid]); }).length;
     var suivies = mesEquipes();
-    var tableau = tableauFinal(spec, cat, teams, restantes);
+    var tableau = tableauFinal(lastData.rencontres, spec, cat, teams, restantes);
     var commence = !!tableau.commence;
 
     var carte = el("div", { class: "poule-card finales-card" });

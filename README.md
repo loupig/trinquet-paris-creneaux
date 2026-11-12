@@ -196,8 +196,9 @@ principaux :
 | `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report, Bilan | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
 | `FIN_DE_POULE` | Bilan, Classement | Sort des non-qualifiés par série, pour les messages de fin de poule et les zones du Classement : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement, Bilan | Barème, phase classée et nombre de qualifiés : à garder identiques dans les quatre pages |
-| `CLUBS_ABREGES` | accueil, Classement, Parties | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les trois pages à la fois, un test compare les quatre |
-| `PHASE_QUARTS` | Classement, Bilan | Numéro de phase des 1/4 de finale (« 10 »), comme dans `PHASE_LABELS` ; le Classement y ajoute `PHASE_DEMIES` (« 11 ») et `PHASE_FINALE` (« 12 ») pour le tableau final |
+| `CLUBS_ABREGES` | accueil, Classement, Parties, Bilan | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les quatre pages à la fois, un test compare les cinq |
+| `PHASE_QUARTS`, `PHASE_DEMIES`, `PHASE_FINALE` | Classement, Bilan | Numéros de phase des 1/4, 1/2 et de la finale (« 10 », « 11 », « 12 »), comme dans `PHASE_LABELS`, pour le tableau final |
+| `idClubEquipe()`, `partiesFinales()`, `tableauQuarts()`, `tableauFinal()`, `buildDuel()`, `buildArbre()` | Classement, Bilan | Le tableau final, recopié au caractère près : un test compare les deux copies. Le changer dans les deux pages à la fois |
 | `QUARTS`, `DEMIES` | Classement, Bilan | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
@@ -240,9 +241,9 @@ uniquement pour les clubs du comité et pour les joueurs d'autres clubs
 déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
-- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil
-  et le Bilan, sous chaque équipe sur Mes équipes, au toucher de la ligne
-  d'une équipe sur le Classement, et au détail d'une partie sur Parties et
+- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil,
+  sous chaque équipe sur Mes équipes, au toucher de la ligne
+  d'une équipe sur le Classement et le Bilan, et au détail d'une partie sur Parties et
   Créneaux ; jamais dans le texte ni
   l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
