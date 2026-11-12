@@ -7,7 +7,7 @@ Afficher le classement de chaque poule des championnats, ou un classement géné
 ## Requirements
 
 ### Requirement: Règle rappelée sous les filtres
-L'en-tête de la page SHALL être celui des pages Parties et Mes équipes : titre, ligue, source et dernière synchro. Le barème (victoire 3 points, défaite 1 point), le critère (points par partie jouée, puis goal average moyen) et les quatre qualifiés par poule sont rappelés dans la légende de chaque série (« Légende du classement »), et non plus dans le bloc Filtres. Le classement suit la spec `calcul-classement`. Les résultats des phases finales n'apparaissent pas sur la page : seule la prévision des quarts, déduite du classement des poules, y figure.
+L'en-tête de la page SHALL être celui des pages Parties et Mes équipes : titre, ligue, source et dernière synchro. Le barème (victoire 3 points, défaite 1 point), le critère (points par partie jouée, puis goal average moyen) et les quatre qualifiés par poule sont rappelés dans la légende de chaque série (« Légende du classement »), et non plus dans le bloc Filtres. Le classement suit la spec `calcul-classement`. Les parties des phases finales ne comptent pas au classement : elles n'apparaissent qu'au tableau final (« Prévision des quarts de finale »), avec leurs scores.
 
 #### Scenario: Ouverture de la page
 - **WHEN** un visiteur ouvre la page Classement
@@ -172,9 +172,20 @@ La page SHALL proposer, dans un bloc repliable, un filtre par spécialité et un
 ### Requirement: Prévision des quarts de finale
 Après les cartes de classement de chaque série, et avant son simulateur, la page SHALL afficher une carte « Phases finales · 1/4 de finale », habillée autrement que les classements (cadre et en-tête pleins, foncés), qui déduit les quarts du classement des poules, réel ou simulé : Q1, le 1er de la poule 1 contre le 4e de la poule 2 ; Q2, le 3e de la poule 1 contre le 2e de la poule 2 ; Q3, le 2e de la poule 1 contre le 3e de la poule 2 ; Q4, le 4e de la poule 1 contre le 1er de la poule 2. À droite des quarts, un arbre relie Q1 et Q2 à la demie D1, Q3 et Q4 à la demie D2, puis D1 et D2 à la finale ; ses traits partent du milieu de chaque quart, et le chemin d'une équipe suivie jusqu'à sa demie est surligné. Un trait plus marqué sépare les deux moitiés du tableau. Chaque quart porte son numéro et ses deux équipes l'une sous l'autre, celle de la poule 1 au-dessus, chacune précédée de son rang de poule en étiquette, ou « À déterminer » quand ce rang n'est occupé par aucune équipe ayant joué. La carte porte « Prévision » tant qu'une partie de poule de la série reste sans score, « Simulation » quand toutes les parties restantes sont simulées, et « Poules terminées » sinon, en rappelant que le tableau officiel reste celui de la ligue. Une équipe suivie y est mise en évidence sur fond coloré. En face de chaque équipe d'un quart dont les deux côtés ont joué en poule, la carte donne ses chances de le gagner, en pourcentage arrondi à 5 %, entre 5 et 95 %, les deux faisant 100 % ; elles se tirent des seuls résultats réels de poule (les simulations n'y changent rien), d'après l'écart moyen par partie de chaque équipe, ramené vers zéro en début de saison, et une note en rappelle l'origine. Une série qui n'a pas exactement deux poules n'a pas de tableau, seulement une note qui le dit.
 
+Dès que les phases finales d'une série ont commencé (un score de 1/4, de 1/2 ou de finale publié, ou une demie inscrite par la ligue), la carte SHALL montrer leurs parties réelles, jamais simulées, et porter « Tableau final » au lieu de « 1/4 de finale », « En cours » puis « Terminées » une fois la finale jouée. Une partie réelle de quart prend la place du quart où la prévision met l'une de ses équipes ; si la ligue a croisé autrement, l'autre équipe y prend sa place, avec son propre rang de poule en étiquette. Une partie sans score ne compte que poules finies, la ligue inscrivant parfois des équipes d'avance. Une partie jouée montre, en face de chaque équipe, son score à la place de ses chances : le vainqueur coché (« ✓ 40 »), le battu grisé, et le chemin d'une équipe suivie battue n'est plus surligné ; un score non chiffré (forfait) est montré tel que publié, sans vainqueur déduit. Sous les quarts, après un trait plus marqué, viennent « 1/2 finales » (D1 : vainqueurs de Q1 et Q2 ; D2 : vainqueurs de Q3 et Q4) puis « Finale » (vainqueurs de D1 et D2), chaque côté étiqueté « V.Q1 », « V.D1 »… et teinté de la poule de son équipe, « À déterminer » tant que son vainqueur n'est pas connu ; une demie ou une finale inscrite par la ligue nomme aussi les équipes dont le quart n'a pas de score publié. Une demie ou une finale aux deux équipes connues et pas encore jouée a leurs chances, calculées comme aux quarts. La finale jouée, une ligne « 🏆 Champion de Série 1 : … » ferme la carte. La note dit alors que les scores viennent du site de la ligue, qui fait foi.
+
 #### Scenario: Poules en cours
 - **WHEN** la série 1 a deux poules et des parties de poule sans score
 - **THEN** sa carte des quarts, marquée « Prévision », oppose le 1er de la poule 1 au 4e de la poule 2 selon le classement actuel, et dit combien de parties restent
+
+#### Scenario: Un quart joué
+- **WHEN** les poules de la série 1 sont finies et le Q1 est joué 40–31
+- **THEN** la carte, marquée « En cours » et « Tableau final », montre « ✓ 40 » en face du vainqueur et « 31 » en face du battu, grisé
+- **AND** sous les quarts, la demie D1 nomme ce vainqueur face au vainqueur de Q2, ou « À déterminer » tant que Q2 n'a pas de score
+
+#### Scenario: Finale jouée
+- **WHEN** les quarts, les demies et la finale de la série 1 ont un score
+- **THEN** la carte, marquée « Terminées », montre les demies et la finale avec leurs scores, et « 🏆 Champion de Série 1 : » suivi du vainqueur de la finale
 
 #### Scenario: Chances de victoire d'un quart
 - **WHEN** les deux équipes d'un quart ont joué en poule, la première avec un meilleur écart moyen par partie
