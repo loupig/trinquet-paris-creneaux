@@ -30,9 +30,9 @@ Aujourd'hui, les phases finales ont commencé : un visiteur qui passe du Classem
   - le statut « En cours » puis « Terminées ».
 
   Le Bilan garde « le quart le plus indécis », tant qu'un quart reste à jouer.
-- **Trophées et Mes équipes** : les équipes y sont nommées par leur nom court, sans crochets de joueurs. *À valider par le demandeur* : les joueurs aidaient à chambrer au comptoir.
+- **Trophées et Mes équipes** : les équipes y sont nommées par leur nom court, sans crochets de joueurs. Validé par le demandeur : les joueurs restent à un toucher dans la poule.
 - **Mes équipes, pendant les phases finales** : le sort donne le résultat du quart (« battue en quart », « en demie contre … »), lu dans le tableau.
-- **Image et texte partagés** : noms courts, plus lisibles sur une image de 1080 px. Ils ne contiennent toujours aucun nom de joueur. *À valider par le demandeur.*
+- **Image et texte partagés** : noms courts, plus lisibles sur une image de 1080 px. Ils ne contiennent toujours aucun nom de joueur. Validé par le demandeur.
 - **Ce qui ne change pas** :
   - les messages WhatsApp de fin de poule gardent les noms officiels, comme ceux de Parties ;
   - l'affiche, les chiffres et le calcul des trophées.
@@ -74,6 +74,6 @@ La spec `noms-clubs` ne change pas, car elle ne liste pas les pages qui portent 
 
 ## Hypothèses à valider
 
-1. **On peut retirer les joueurs des trophées.** Le nom court suffit à reconnaître l'équipe, et les joueurs restent à un toucher dans la poule. Si on nous les redemande, on pourra les remettre au seul trophée, en petit.
-2. **Les noms courts suffisent sur l'image partagée.** Le groupe WhatsApp de la ligue connaît les abréviations des clubs.
+1. **On peut retirer les joueurs des trophées** (choix validé par le demandeur). Le nom court suffit à reconnaître l'équipe, et les joueurs restent à un toucher dans la poule. Si on nous les redemande, on pourra les remettre au seul trophée, en petit.
+2. **Les noms courts suffisent sur l'image partagée** (choix validé par le demandeur). Le groupe WhatsApp de la ligue connaît les abréviations des clubs.
 3. **Un Bilan plus court se lit jusqu'au bout.** Mesure simple : la hauteur de la page sur Pixel 7 passe d'environ 8 000 px à moins de 5 000 px, sur les données fictives.

@@ -72,9 +72,9 @@
 ## Risks / Trade-offs
 
 - **[Page plus longue à relire pour la revue]** : environ 300 lignes recopiées depuis le Classement. → Le test des copies identiques porte la charge de la cohérence. La revue se concentre sur ce qui est propre au Bilan.
-- **[Les joueurs disparaissent des trophées]** : c'était le sel du comptoir. → Ils restent à un toucher dans la poule. C'est l'hypothèse 1 de la proposition, à valider par le demandeur avant de construire.
+- **[Les joueurs disparaissent des trophées]** : c'était le sel du comptoir. → Ils restent à un toucher dans la poule. Choix validé par le demandeur.
 - **[Remaniement de `classement.html`]** : il est en ligne et validé sur les vraies données depuis ce matin. → Le changement n'est qu'un passage de paramètres. Les 168 tests existants le couvrent, et une capture sera faite avant et après sur les mêmes données.
-- **[Noms courts dans l'image]** : un groupe hors ligue ne reconnaîtrait pas « PEP ». → C'est l'hypothèse 2, à valider.
+- **[Noms courts dans l'image]** : un groupe hors ligue ne reconnaîtrait pas « PEP ». → Choix validé par le demandeur.
 
 ## Migration Plan
 
@@ -83,5 +83,6 @@
 
 ## Open Questions
 
-- Garde-t-on les joueurs aux trophées, en petit ? (Hypothèse 1, au demandeur.)
-- Noms courts ou officiels dans l'image partagée ? (Hypothèse 2, au demandeur.)
+Aucune. Le demandeur a tranché les deux questions ouvertes :
+- les joueurs sont retirés des trophées ;
+- l'image partagée utilise les noms courts.
