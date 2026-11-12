@@ -197,6 +197,7 @@ principaux :
 | `FIN_DE_POULE` | Bilan, Classement | Sort des non-qualifiés par série, pour les messages de fin de poule et les zones du Classement : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement, Bilan | Barème, phase classée et nombre de qualifiés : à garder identiques dans les quatre pages |
 | `CLUBS_ABREGES` | accueil, Classement, Parties | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les trois pages à la fois, un test compare les quatre |
+| `PHASE_QUARTS` | Classement, Bilan | Numéro de phase des 1/4 de finale (« 10 »), comme dans `PHASE_LABELS` ; le Classement y ajoute `PHASE_DEMIES` (« 11 ») et `PHASE_FINALE` (« 12 ») pour le tableau final |
 | `QUARTS`, `DEMIES` | Classement, Bilan | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |

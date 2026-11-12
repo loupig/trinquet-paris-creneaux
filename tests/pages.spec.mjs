@@ -1270,6 +1270,56 @@ test.describe("Classement : phases finales jouées", () => {
     await expect(page.locator(".finales-card").nth(1).locator(".tableau-suite")).toHaveCount(0);
   });
 
+  test("croisement de la ligue autre que la prévision : chaque équipe une seule fois", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    // La ligue oppose le haut de Q1 au bas de Q2 : le bas de Q1 passe en Q2.
+    const croises = [[quarts[0][0], quarts[1][1]], [quarts[1][0], quarts[0][1]], quarts[2], quarts[3]];
+    await servir(page, avecFinales(croises, [["40", "30"]]));
+    await page.reload();
+    await attendreChargement(page);
+    const carte = page.locator(".finales-card").first();
+    const noms = await carte.locator(".tableau-quarts .quart-nom").allTextContents();
+    expect(new Set(noms).size).toBe(8);
+    const q1 = carte.locator(".tableau-quarts .quart-row").nth(0);
+    await expect(q1.locator(".quart-score")).toHaveText(["✓ 40", "30"]);
+    const code = (nom) => codeClub(tables.clubs.findIndex((c) => c["Nom club"] + " 1" === nom));
+    expect((await q1.locator(".quart-nom").allTextContents()).map(code)).toEqual(croises[0]);
+    expect((await carte.locator(".tableau-quarts .quart-row").nth(1).locator(".quart-nom").allTextContents()).map(code))
+      .toEqual(croises[1]);
+  });
+
+  test("une demie inscrite sans aucun score : toujours une prévision", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    await servir(page, avecFinales(quarts, [], [partie("1", "11", quarts[0][0], quarts[1][0], "", "")]));
+    await page.reload();
+    await attendreChargement(page);
+    const carte = page.locator(".finales-card").first();
+    await expect(carte.locator(".statut")).toHaveText("Poules terminées");
+    await expect(carte.locator(".tableau-suite")).toHaveCount(0);
+  });
+
+  test("équipe suivie battue en demie : plus de trait surligné vers la finale", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    const charlie = codeClub(2);
+    const q = quarts.findIndex((x) => x.includes(charlie));
+    const k = quarts[q].indexOf(charlie);
+    const scores = [];
+    scores[q] = k === 0 ? ["40", "30"] : ["30", "40"];
+    // Charlie gagne son quart : son chemin est surligné jusqu'à la finale.
+    await servir(page, avecFinales(quarts, scores));
+    await page.reload();
+    await attendreChargement(page);
+    const arbre = page.locator(".finales-card").first().locator(".tableau-arbre");
+    await expect(arbre.locator("path.mien")).toHaveCount(2);
+    // Puis perd sa demie, contre une équipe de l'autre quart de sa moitié.
+    const autre = q % 2 === 0 ? q + 1 : q - 1;
+    await page.evaluate(() => Object.keys(localStorage).filter((c) => c.startsWith("lidfpb_api_v1:")).forEach((c) => localStorage.removeItem(c)));
+    await servir(page, avecFinales(quarts, scores, [partie("1", "11", charlie, quarts[autre][0], "35", "40")]));
+    await page.reload();
+    await attendreChargement(page);
+    await expect(arbre.locator("path.mien")).toHaveCount(1);
+  });
+
   test("tout joué : demies, finale et champion", async ({ page }) => {
     const quarts = await quartsPrevus(page);
     const [v1, v2, v3, v4] = [quarts[0][0], quarts[1][1], quarts[2][0], quarts[3][1]];

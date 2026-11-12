@@ -2290,12 +2290,11 @@
   }
 
   // Parties réelles des phases finales d'une série (quarts, demies, finale),
-  // jamais simulées. Une partie sans score ne compte que poules finies : la
-  // ligue inscrit parfois des équipes d'avance, à tort (voir Parties). Le
-  // vainqueur se lit aux scores chiffrés ; un forfait garde son score publié,
-  // sans vainqueur déduit.
-  function partiesFinales(spec, cat) {
-    var poulesFinies = partiesRestantes(spec, cat).length === 0;
+  // jamais simulées. Une partie sans score ne compte que poules finies
+  // ("poulesFinies") : la ligue inscrit parfois des équipes d'avance, à tort
+  // (voir Parties). Le vainqueur se lit aux scores chiffrés ; un forfait
+  // garde son score publié, sans vainqueur déduit.
+  function partiesFinales(spec, cat, poulesFinies) {
     var res = {};
     res[PHASE_QUARTS] = []; res[PHASE_DEMIES] = []; res[PHASE_FINALE] = [];
     lastData.rencontres.forEach(function (row) {
@@ -2317,11 +2316,12 @@
   // Le tableau des quarts, complété des parties réelles des phases finales :
   // équipes que la ligue a placées, scores, vainqueurs portés en demie puis
   // en finale. Chaque duel (quart, demie, finale) a deux côtés et, une fois
-  // la partie connue, sa partie orientée comme ses côtés.
-  function tableauFinal(spec, cat, teams) {
+  // la partie connue, sa partie orientée comme ses côtés. "restantes" : les
+  // parties de poule de la série encore sans score.
+  function tableauFinal(spec, cat, teams, restantes) {
     var tableau = tableauQuarts(teams);
     if (!tableau.quarts) return tableau;
-    var finales = partiesFinales(spec, cat);
+    var finales = partiesFinales(spec, cat, restantes.length === 0);
     var places = tableau.places;
     function idDe(t) { return t ? idClubEquipe(t.clubCode, t.numero) : null; }
     function partieOrientee(p, ordre) {
@@ -2333,10 +2333,20 @@
     function gagnant(duel) {
       return duel.partie && duel.partie.vainqueur !== null ? duel.cotes[duel.partie.vainqueur].team : null;
     }
+    function cote(id) { var x = places[id]; return { poule: x.poule, rang: x.rang, team: x.team }; }
+
+    // Les phases finales ont commencé dès qu'un de leurs scores est publié.
+    // Avant, une demie ou une finale inscrite sans score est ignorée : la
+    // ligue ne peut pas encore en connaître les équipes.
+    var commence = [PHASE_QUARTS, PHASE_DEMIES, PHASE_FINALE].some(function (ph) {
+      return finales[ph].some(function (p) { return p.scores; });
+    });
+    if (!commence) { finales[PHASE_DEMIES] = []; finales[PHASE_FINALE] = []; }
 
     // Quarts : une partie réelle se range au quart où la prévision place
-    // l'une de ses équipes ; l'autre équipe y prend sa place si la ligue ne
-    // l'a pas croisée comme la prévision.
+    // l'une de ses équipes. Si la ligue a croisé autrement, l'autre équipe y
+    // prend sa place et celle qu'elle remplace prend la sienne, pour que
+    // chaque équipe reste une seule fois au tableau.
     var pris = {};
     function placeAuQuart(id) {
       for (var i = 0; i < tableau.quarts.length; i++) {
@@ -2350,17 +2360,22 @@
       if (a && b && a.q === b.q) {
         if (pris[a.q.num]) return;
         pris[a.q.num] = true;
-        ordre = a.k === 0 ? [0, 1] : [1, 0];
-        a.q.partie = partieOrientee(p, ordre);
+        a.q.partie = partieOrientee(p, a.k === 0 ? [0, 1] : [1, 0]);
         return;
       }
       var ancre = [a, b].map(function (x, j) { return x && !pris[x.q.num] ? { q: x.q, k: x.k, j: j } : null; })
         .filter(Boolean)[0];
-      if (!ancre) return;
-      var autre = places[p.ids[1 - ancre.j]];
-      if (!autre) return;
+      var idAutre = ancre && p.ids[1 - ancre.j];
+      if (!ancre || !places[idAutre]) return;
+      var ailleurs = placeAuQuart(idAutre);
+      if (ailleurs && pris[ailleurs.q.num]) return;
+      var remplacee = ancre.q.cotes[1 - ancre.k];
+      ancre.q.cotes[1 - ancre.k] = cote(idAutre);
+      if (ailleurs) {
+        var idRemplacee = idDe(remplacee.team);
+        ailleurs.q.cotes[ailleurs.k] = idRemplacee && places[idRemplacee] ? cote(idRemplacee) : remplacee;
+      }
       pris[ancre.q.num] = true;
-      ancre.q.cotes[1 - ancre.k] = { poule: autre.poule, rang: autre.rang, team: autre.team };
       ordre = [];
       ordre[ancre.k] = ancre.j; ordre[1 - ancre.k] = 1 - ancre.j;
       ancre.q.partie = partieOrientee(p, ordre);
@@ -2377,24 +2392,25 @@
         })
       };
     });
-    // Demies : la partie réelle dit aussi qui est sorti d'un quart sans score
-    // publié.
+    // Une demie ou la finale réelle nomme ses équipes : elles prennent leur
+    // côté, même là où les quarts disaient autre chose, pour que le score
+    // publié soit en face de la bonne équipe.
+    function placerPartie(duel, p, k0) {
+      [0, 1].forEach(function (j) {
+        if (places[p.ids[j]]) duel.cotes[j === 0 ? k0 : 1 - k0].team = places[p.ids[j]].team;
+      });
+      duel.partie = partieOrientee(p, k0 === 0 ? [0, 1] : [1, 0]);
+    }
     finales[PHASE_DEMIES].forEach(function (p) {
       var qs = p.ids.map(quartDe);
       var demie = null;
       tableau.demies.forEach(function (dm, i) {
-        if (qs.some(function (n) { return n !== null && DEMIES[i].indexOf(n) !== -1; })) demie = demie || dm;
+        if (!demie && !dm.partie && qs.some(function (n) { return n !== null && DEMIES[i].indexOf(n) !== -1; })) demie = dm;
       });
-      if (!demie || demie.partie) return;
+      if (!demie) return;
       var d = DEMIES[demie.num - 1];
       // Côté de la demie de la première équipe de la partie.
-      var k0 = d.indexOf(qs[0]) !== -1 ? d.indexOf(qs[0]) : 1 - d.indexOf(qs[1]);
-      var ordre = k0 === 0 ? [0, 1] : [1, 0];
-      [0, 1].forEach(function (j) {
-        var cote = demie.cotes[j === 0 ? k0 : 1 - k0];
-        if (!cote.team && places[p.ids[j]]) cote.team = places[p.ids[j]].team;
-      });
-      demie.partie = partieOrientee(p, ordre);
+      placerPartie(demie, p, d.indexOf(qs[0]) !== -1 ? d.indexOf(qs[0]) : 1 - d.indexOf(qs[1]));
     });
 
     tableau.finale = {
@@ -2407,20 +2423,10 @@
       // Moitié haute (Q1, Q2) ou basse (Q3, Q4) de chaque finaliste.
       var moities = p.ids.map(function (id) { var n = quartDe(id); return n === null ? null : (DEMIES[0].indexOf(n) !== -1 ? 0 : 1); });
       var k0 = moities[0] !== null ? moities[0] : (moities[1] !== null ? 1 - moities[1] : -1);
-      if (k0 !== -1) {
-        [0, 1].forEach(function (j) {
-          var cote = tableau.finale.cotes[j === 0 ? k0 : 1 - k0];
-          if (!cote.team && places[p.ids[j]]) cote.team = places[p.ids[j]].team;
-        });
-        tableau.finale.partie = partieOrientee(p, k0 === 0 ? [0, 1] : [1, 0]);
-      }
+      if (k0 !== -1) placerPartie(tableau.finale, p, k0);
     }
     tableau.champion = gagnant(tableau.finale);
-    // Les phases finales ont commencé dès qu'un score est publié, ou qu'une
-    // demie est connue.
-    tableau.commence = tableau.quarts.concat(tableau.demies, [tableau.finale]).some(function (duel) {
-      return duel.partie && duel.partie.scores;
-    }) || tableau.demies.some(function (dm) { return dm.partie || dm.cotes.some(function (c) { return c.team; }); });
+    tableau.commence = commence;
     return tableau;
   }
 
@@ -2495,7 +2501,7 @@
     var restantes = partiesRestantes(spec, cat);
     var simulees = restantes.filter(function (r) { return simValide(simulation[r.oid]); }).length;
     var suivies = mesEquipes();
-    var tableau = tableauFinal(spec, cat, teams);
+    var tableau = tableauFinal(spec, cat, teams, restantes);
     var commence = !!tableau.commence;
 
     var carte = el("div", { class: "poule-card finales-card" });
@@ -2539,7 +2545,14 @@
         rangees.push(duel.row);
       });
       grille.appendChild(colonne);
-      grille.appendChild(buildArbre(colonne, rangees, mienQ));
+      // Ni quand elle perd sa demie : le trait vers la finale n'est plus le sien.
+      var battueEnDemie = false;
+      if (mienQ !== null) {
+        var dm = tableau.demies[DEMIES[0].indexOf(mienQ) !== -1 ? 0 : 1];
+        var battu = dm.partie && dm.partie.vainqueur !== null && dm.cotes[1 - dm.partie.vainqueur].team;
+        battueEnDemie = !!(battu && estSuivie(suivies, battu.spec, battu.cat, battu.clubCode, battu.numero));
+      }
+      grille.appendChild(buildArbre(colonne, rangees, mienQ, battueEnDemie));
       carte.appendChild(grille);
       if (commence) {
         // Demies puis finale, sous les quarts : les vainqueurs y montent au
@@ -2578,7 +2591,7 @@
   // retracés quand la carte change de taille (nom long, rotation d'écran).
   var SVG_NS = "http://www.w3.org/2000/svg";
 
-  function buildArbre(colonne, rangees, mienQ) {
+  function buildArbre(colonne, rangees, mienQ, battueEnDemie) {
     var arbre = el("div", { class: "tableau-arbre", "aria-hidden": "true" });
     var svg = document.createElementNS(SVG_NS, "svg");
     arbre.appendChild(svg);
@@ -2615,7 +2628,7 @@
       });
       var yFinale = (yDemies[0] + yDemies[1]) / 2;
       etapes.forEach(function (e, i) {
-        trait("M" + (X_DEMIE + 2 + e.el.offsetWidth) + " " + yDemies[i] + "H" + X_FINALE + "V" + yFinale, e.mien);
+        trait("M" + (X_DEMIE + 2 + e.el.offsetWidth) + " " + yDemies[i] + "H" + X_FINALE + "V" + yFinale, e.mien && !battueEnDemie);
       });
       finale.style.left = (X_FINALE + 2) + "px";
       finale.style.top = yFinale + "px";
