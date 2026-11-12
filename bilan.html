@@ -573,13 +573,6 @@
     color: var(--muted);
   }
   .rank-head span:nth-child(n+3) { text-align: right; }
-  /* Dite une fois par page, sur la première carte : toucher une ligne. */
-  .rank-aide {
-    padding: 5px 12px;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--muted);
-  }
   .rank-item + .rank-item { border-top: 1px solid var(--border); }
   .rank-row {
     width: 100%;
@@ -626,7 +619,7 @@
   .teinte-2 { --teinte: var(--poule2-text); --teinte-bg: var(--poule2-bg); }
   .teinte-3 { --teinte: var(--poule3-text); --teinte-bg: var(--poule3-bg); }
   .teinte-4 { --teinte: var(--poule4-text); --teinte-bg: var(--poule4-bg); }
-  .rank-row[class*="teinte-"], .rank-plus[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
+  .rank-row[class*="teinte-"] { box-shadow: inset 3px 0 0 var(--teinte); }
   .rank-row[class*="teinte-"] .poule-tag { color: var(--teinte); background: var(--teinte-bg); }
   .rank-n {
     text-align: right;
@@ -642,7 +635,7 @@
     font-variant-numeric: tabular-nums;
   }
   .rank-score.vide { font-size: 14px; color: var(--muted); }
-  /* Le chevron du bloc Filtres : « › » replié, « ⌄ » déplié. */
+  /* Le chevron du Classement : « › » replié, « ⌄ » déplié. */
   .rank-chevron { display: flex; justify-content: center; color: var(--muted); }
   .rank-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
   /* Ouverte, la ligne et son détail partagent un fond teinté : on voit ce qui
@@ -1746,32 +1739,47 @@
   // ---------------------------------------------------------------
   // Mes équipes : le verdict des poules pour chaque équipe suivie
   // ---------------------------------------------------------------
-  // Le parcours d'une équipe dans les phases finales, d'après le tableau
-  // final : null tant qu'elles n'ont pas commencé, ou que son quart n'est pas
-  // joué (le bloc dit alors son quart et son adversaire, comme avant).
+  // Le parcours d'une équipe une fois les phases finales commencées, lu au
+  // seul tableau final (là où la ligue a placé les équipes, pas au rang de
+  // poule). null avant : le bloc dit alors son rang, son quart et son
+  // adversaire, d'après la prévision.
   function parcoursFinales(tableau, t) {
     if (!tableau.commence || !tableau.quarts) return null;
+    // Côté de l'équipe dans un duel, et son issue : gagné, perdu, joué sans
+    // vainqueur chiffré (forfait publié tel quel), ou à jouer.
     function issue(duel) {
       var k = duel.cotes[0].team === t ? 0 : (duel.cotes[1].team === t ? 1 : -1);
       if (k === -1) return null;
-      var adv = duel.cotes[1 - k];
-      var joue = duel.partie && duel.partie.vainqueur !== null;
-      return { gagne: joue && duel.partie.vainqueur === k, perdu: joue && duel.partie.vainqueur !== k, adv: adv };
+      var p = duel.partie;
+      var publie = !!(p && p.scores);
+      var tranche = publie && p.vainqueur !== null;
+      return {
+        adv: duel.cotes[1 - k], gagne: tranche && p.vainqueur === k, perdu: tranche && p.vainqueur !== k,
+        sansVainqueur: publie && !tranche, score: publie ? p.scores[k] + "–" + p.scores[1 - k] : ""
+      };
     }
-    function contre(adv) { return " contre " + (adv.team ? adv.team.label : "le vainqueur " + (adv.etiquette.charAt(2) === "Q" ? "du quart Q" : "de la demie D") + adv.etiquette.slice(3)); }
+    function contre(adv) {
+      if (adv.team) return " contre " + adv.team.label;
+      return " contre le vainqueur " + (adv.etiquette.charAt(2) === "Q" ? "du quart Q" : "de la demie D") + adv.etiquette.slice(3);
+    }
     var q = null, iq = null;
     tableau.quarts.forEach(function (x) { if (!iq) { var r = issue(x); if (r) { q = x; iq = r; } } });
-    if (!iq || (!iq.gagne && !iq.perdu)) return null;
-    if (iq.perdu) return { texte: "battue en quart (Q" + q.num + ")", genre: "ko" };
+    if (!iq) return { texte: "pas de quart cette saison", genre: "ko" };
+    if (iq.sansVainqueur) return { texte: "quart Q" + q.num + " joué (" + iq.score + "), vainqueur à confirmer", genre: "attente" };
+    if (iq.perdu) return { texte: "battue en quart (Q" + q.num + ", " + iq.score + ")", genre: "ko" };
+    if (!iq.gagne) return { texte: "en quart (Q" + q.num + ")" + contre(iq.adv), genre: "ok" };
     var demie = tableau.demies[DEMIES[0].indexOf(q.num) !== -1 ? 0 : 1];
     var id = issue(demie);
-    if (!id) return null;
-    if (id.perdu) return { texte: "battue en demie", genre: "ko" };
+    // La ligue a inscrit d'autres équipes en demie : on s'en tient au quart gagné.
+    if (!id) return { texte: "quart Q" + q.num + " gagné (" + iq.score + ")", genre: "ok" };
+    if (id.sansVainqueur) return { texte: "demie D" + demie.num + " jouée (" + id.score + "), vainqueur à confirmer", genre: "attente" };
+    if (id.perdu) return { texte: "battue en demie (" + id.score + ")", genre: "ko" };
     if (!id.gagne) return { texte: "en demie (D" + demie.num + ")" + contre(id.adv), genre: "ok" };
     var f = issue(tableau.finale);
-    if (!f) return null;
+    if (!f) return { texte: "demie D" + demie.num + " gagnée (" + id.score + ")", genre: "ok" };
+    if (f.sansVainqueur) return { texte: "finale jouée (" + f.score + "), vainqueur à confirmer", genre: "attente" };
     if (f.gagne) return { texte: "championne 🏆", genre: "ok" };
-    if (f.perdu) return { texte: "battue en finale", genre: "ko" };
+    if (f.perdu) return { texte: "battue en finale (" + f.score + ")", genre: "ko" };
     return { texte: "en finale" + contre(f.adv), genre: "ok" };
   }
 
@@ -1795,18 +1803,18 @@
       } else {
         detail = t.gagnees + " victoire" + (t.gagnees > 1 ? "s" : "") + ", " + t.perdues + " défaite" + (t.perdues > 1 ? "s" : "") +
                  " · " + fmtMoyenne(t.moyenne) + " pts par partie · GA " + fmtSigne(t.ga);
+        // Les phases finales ont commencé : son parcours, lu au tableau.
+        var parcours = serie.tableau.quarts ? parcoursFinales(serie.tableau, t) : null;
         if (!serie.tableau.quarts) {
           // Pas deux poules : pas de tableau des quarts, donc pas de verdict.
           verdict = ordinal(rang) + " de la poule " + t.poule;
           genre = "attente";
+        } else if (parcours) {
+          verdict = ordinal(rang) + " de la poule " + t.poule + " · " + parcours.texte;
+          genre = parcours.genre;
         } else if (rang > QUALIFIES_PAR_POULE) {
           verdict = ordinal(rang) + " de la poule " + t.poule + " · " + (provisoire ? "hors des quarts pour l'instant" : "pas de quart cette saison");
           genre = "ko";
-        } else if (parcoursFinales(serie.tableau, t)) {
-          // Les phases finales ont commencé : son parcours, lu au tableau.
-          var parcours = parcoursFinales(serie.tableau, t);
-          verdict = ordinal(rang) + " de la poule " + t.poule + " · " + parcours.texte;
-          genre = parcours.genre;
         } else {
           verdict = ordinal(rang) + " de la poule " + t.poule + " · " + (provisoire ? "en quarts pour l'instant" : "qualifiée pour les quarts");
           genre = "ok";
@@ -2381,8 +2389,6 @@
     return teintes;
   }
 
-  // Une équipe qui n'a pas joué n'a pas de rang : elle ne prend pas une place
-  // de qualifiée au seul ordre alphabétique.
   // Tableau des quarts d'une série, à partir du classement de ses deux
   // poules. null quand la série n'a pas exactement deux poules. Une place
   // n'est occupée que par une équipe qui a joué : pas de qualifiée au seul
@@ -2676,7 +2682,9 @@
       if (mienQ !== null) {
         var dm = tableau.demies[DEMIES[0].indexOf(mienQ) !== -1 ? 0 : 1];
         var battu = dm.partie && dm.partie.vainqueur !== null && dm.cotes[1 - dm.partie.vainqueur].team;
-        battueEnDemie = !!(battu && estSuivie(suivies, battu));
+        var vainqueur = battu && dm.cotes[dm.partie.vainqueur].team;
+        // Deux équipes suivies l'une contre l'autre : le chemin reste celui du vainqueur.
+        battueEnDemie = !!(battu && estSuivie(suivies, battu) && !(vainqueur && estSuivie(suivies, vainqueur)));
       }
       grille.appendChild(buildArbre(colonne, rangees, mienQ, battueEnDemie));
       carte.appendChild(grille);

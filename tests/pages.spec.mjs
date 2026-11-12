@@ -1321,6 +1321,24 @@ test.describe("Classement : phases finales jouées", () => {
     await expect(arbre.locator("path.mien")).toHaveCount(1);
   });
 
+  test("deux équipes suivies l'une contre l'autre en demie : le chemin du vainqueur reste surligné", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    const charlie = codeClub(2);
+    const q = quarts.findIndex((x) => x.includes(charlie));
+    const autre = q % 2 === 0 ? q + 1 : q - 1;
+    const adversaire = quarts[autre][0];
+    // On suit aussi l'adversaire de demie de Charlie, qui gagne.
+    const idx = Number(adversaire.slice(-3)) - 1;
+    await page.addInitScript((c) => localStorage.setItem("lidfpb_mes_equipes_v1", JSON.stringify(["2|1|3750003|1", c])), "2|1|" + codeClub(idx) + "|1");
+    const scores = [];
+    scores[q] = quarts[q].indexOf(charlie) === 0 ? ["40", "30"] : ["30", "40"];
+    scores[autre] = ["40", "30"];
+    await servir(page, avecFinales(quarts, scores, [partie("1", "11", charlie, adversaire, "35", "40")]));
+    await page.reload();
+    await attendreChargement(page);
+    await expect(page.locator(".finales-card").first().locator(".tableau-arbre path.mien")).toHaveCount(2);
+  });
+
   test("tout joué : demies, finale et champion", async ({ page }) => {
     const quarts = await quartsPrevus(page);
     const [v1, v2, v3, v4] = [quarts[0][0], quarts[1][1], quarts[2][0], quarts[3][1]];
@@ -1696,6 +1714,45 @@ test.describe("Bilan de la phase de poules", () => {
     const texte = await page.evaluate(() => window.__partage.text);
     expect(texte).toContain("*Série 1 · 1/4 de finale*");
     expect(texte).toMatch(/Q1 1er P1 \S+ 1 ✓ 40 – 4e P2 \S+ 1 25/);
+  });
+
+  test("Mes équipes : un quart joué par forfait attend son vainqueur, une équipe hors du tableau n'a pas de quart", async ({ page }) => {
+    const poulesFinies = (data) => data.map((r) => r["Catégorie"] === "1" && r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "20" } : r);
+    let rencontres = poulesFinies;
+    await page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data: table === "rencontres" ? rencontres(tables.rencontres) : (tables[table] || []), lastSync: new Date().toISOString() })
+      });
+    });
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const code = (nom) => codeClub(tables.clubs.findIndex((c) => c["Nom club"] + " 1" === nom));
+    const rangees = page.locator(".finales-card").first().locator(".tableau-quarts .quart-row");
+    const quarts = [];
+    for (let i = 0; i < 4; i++) quarts.push((await rangees.nth(i).locator(".quart-nom").allTextContents()).map(code));
+    const charlie = codeClub(2);
+    const qc = quarts.findIndex((x) => x.includes(charlie));
+    const sansCache = () => page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("lidfpb_api_v1:")).forEach((k) => localStorage.removeItem(k)));
+    const avecQuarts = (pour) => (data) => { let q = 0; return poulesFinies(data).map((r) => {
+      if (r["Catégorie"] !== "1" || r.Phase !== "10") return r;
+      const [a, b] = pour(quarts[q], q); q++;
+      return { ...r, ...a, ...b };
+    }); };
+    // Le quart de Charlie publié « F–40 » : score montré, vainqueur à confirmer.
+    rencontres = avecQuarts(([a, b], q) => [{ club_rec: a, club_vis: b }, q === qc ? { score_cr: "F", score_cv: "40" } : (q === 0 ? { score_cr: "40", score_cv: "30" } : {})]);
+    await sansCache();
+    await page.goto("bilan.html");
+    await attendreChargement(page);
+    await expect(page.locator(".mien-verdict")).toContainText("vainqueur à confirmer");
+    // La ligue a mis une autre équipe à la place de Charlie : plus de quart pour elle.
+    const remplacante = codeClub(4);   // Echo, 5e de la poule 1
+    rencontres = avecQuarts(([a, b], q) => [{ club_rec: a === charlie ? remplacante : a, club_vis: b === charlie ? remplacante : b }, q === 0 ? { score_cr: "40", score_cv: "30" } : {}]);
+    await sansCache();
+    await page.reload();
+    await attendreChargement(page);
+    await expect(page.locator(".mien-verdict")).toContainText("pas de quart cette saison");
   });
 
   test("le tableau final est le même code dans le Classement et le Bilan", async () => {
