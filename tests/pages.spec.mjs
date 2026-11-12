@@ -1178,6 +1178,173 @@ test("Classement : chaque équipe montre sa poule, d'une teinte par poule, jusqu
   await expect(page.locator(".finales-card .quart-seed.teinte-1").first()).toBeVisible();
 });
 
+// Spec classement, « Prévision des quarts de finale » : une fois les phases
+// finales lancées, leurs scores réels, et les vainqueurs portés en demie puis
+// en finale.
+test.describe("Classement : phases finales jouées", () => {
+  // Série 1, poules finies.
+  const poulesFinies = (data) => data.map((r) => r["Catégorie"] === "1" && r.Phase === "1" && !r.score_cr ? { ...r, score_cr: "40", score_cv: "20" } : r);
+  function servir(page, rencontres) {
+    return page.route("**/script.google.com/**", (route) => {
+      const table = new URL(route.request().url()).searchParams.get("table");
+      let data = tables[table] || [];
+      if (table === "rencontres") data = rencontres(data);
+      route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+      });
+    });
+  }
+  // Les quarts que le tableau prévoit, en codes de club, Q1 à Q4.
+  async function quartsPrevus(page) {
+    await servir(page, poulesFinies);
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const code = (nom) => codeClub(tables.clubs.findIndex((c) => c["Nom club"] + " 1" === nom));
+    const rangees = page.locator(".finales-card").first().locator(".quart-row");
+    const quarts = [];
+    for (let i = 0; i < 4; i++) quarts.push((await rangees.nth(i).locator(".quart-nom").allTextContents()).map(code));
+    // Les réponses de l'API sont gardées en cache : sans lui, le rechargement
+    // relit les rencontres.
+    await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("lidfpb_api_v1:")).forEach((k) => localStorage.removeItem(k)));
+    return quarts;
+  }
+  const partie = (cat, phase, rec, vis, cr, cv) => ({
+    oid: "f" + phase + rec + vis, "Compétition": "20270301", "Spécialité": "2", "Catégorie": cat, "Phase": phase, "Poule": "",
+    club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
+    lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: "01012027", heure_renc: "2000", report: "", date_rep: "",
+    score_cr: cr, score_cv: cv
+  });
+  // Les quarts de la série 1 remplacés par ceux du tableau, avec leurs
+  // scores ; Q2 reçu par l'équipe du bas, pour vérifier le sens.
+  function avecFinales(quarts, scores, suite) {
+    return (data) => {
+      let q = 0;
+      const sortie = poulesFinies(data).map((r) => {
+        if (r["Catégorie"] !== "1" || r.Phase !== "10") return r;
+        const [a, b] = quarts[q], [sa, sb] = scores[q++] || ["", ""];
+        return q === 2 ? { ...r, club_rec: b, club_vis: a, score_cr: sb, score_cv: sa } : { ...r, club_rec: a, club_vis: b, score_cr: sa, score_cv: sb };
+      });
+      return sortie.concat(suite || []);
+    };
+  }
+
+  test("un quart joué : score, vainqueur coché, et le voilà en demie", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    await servir(page, avecFinales(quarts, [["40", "31"], ["22", "40"]]));
+    await page.reload();
+    await attendreChargement(page);
+    const carte = page.locator(".finales-card").first();
+    await expect(carte.locator(".statut")).toHaveText("En cours");
+    await expect(carte.locator(".poule-sub")).toHaveText("Tableau final");
+    const q1 = carte.locator(".tableau-quarts .quart-row").nth(0).locator(".quart-side");
+    await expect(q1.nth(0)).toHaveClass(/gagne/);
+    await expect(q1.nth(0).locator(".quart-score")).toHaveText("✓ 40");
+    await expect(q1.nth(1)).toHaveClass(/battu/);
+    await expect(q1.nth(1).locator(".quart-score")).toHaveText("31");
+    // Q2 reçu par l'équipe du bas : le score suit l'équipe, pas le côté.
+    const q2 = carte.locator(".tableau-quarts .quart-row").nth(1).locator(".quart-side");
+    await expect(q2.nth(1)).toHaveClass(/gagne/);
+    await expect(q2.nth(0).locator(".quart-score")).toHaveText("22");
+    // Charlie, suivie, a perdu Q2 : son chemin n'est plus surligné.
+    await expect(carte.locator(".arbre-etape.mien")).toHaveCount(0);
+    // Q3 et Q4 pas encore joués : toujours leurs chances.
+    await expect(carte.locator(".tableau-quarts .quart-row").nth(2).locator(".quart-proba")).toHaveCount(2);
+    // D1 : les vainqueurs de Q1 et Q2, avec leurs chances ; D2 et finale à déterminer.
+    const suite = carte.locator(".tableau-suite");
+    await expect(suite.locator(".tableau-titre")).toHaveText(["1/2 finales", "Finale"]);
+    const d1 = suite.locator(".quart-row").nth(0);
+    await expect(d1.locator(".quart-num")).toHaveText("D1");
+    await expect(d1.locator(".quart-seed")).toHaveText(["V.Q1", "V.Q2"]);
+    await expect(d1.locator(".quart-nom")).toHaveText([
+      await q1.nth(0).locator(".quart-nom").textContent(),
+      await q2.nth(1).locator(".quart-nom").textContent()
+    ]);
+    await expect(d1.locator(".quart-proba")).toHaveCount(2);
+    await expect(suite.locator(".quart-row").nth(1).locator(".quart-nom")).toHaveText(["À déterminer", "À déterminer"]);
+    await expect(suite.locator(".quart-row").nth(2).locator(".quart-nom")).toHaveText(["À déterminer", "À déterminer"]);
+    await expect(carte.locator(".tableau-champion")).toHaveCount(0);
+    await expect(carte.locator(".finales-note")).toContainText("Scores des phases finales d'après le site de la ligue");
+    // La série 2, poules en cours, reste une prévision.
+    await expect(page.locator(".finales-card").nth(1).locator(".statut")).toHaveText("Prévision");
+    await expect(page.locator(".finales-card").nth(1).locator(".tableau-suite")).toHaveCount(0);
+  });
+
+  test("croisement de la ligue autre que la prévision : chaque équipe une seule fois", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    // La ligue oppose le haut de Q1 au bas de Q2 : le bas de Q1 passe en Q2.
+    const croises = [[quarts[0][0], quarts[1][1]], [quarts[1][0], quarts[0][1]], quarts[2], quarts[3]];
+    await servir(page, avecFinales(croises, [["40", "30"]]));
+    await page.reload();
+    await attendreChargement(page);
+    const carte = page.locator(".finales-card").first();
+    const noms = await carte.locator(".tableau-quarts .quart-nom").allTextContents();
+    expect(new Set(noms).size).toBe(8);
+    const q1 = carte.locator(".tableau-quarts .quart-row").nth(0);
+    await expect(q1.locator(".quart-score")).toHaveText(["✓ 40", "30"]);
+    const code = (nom) => codeClub(tables.clubs.findIndex((c) => c["Nom club"] + " 1" === nom));
+    expect((await q1.locator(".quart-nom").allTextContents()).map(code)).toEqual(croises[0]);
+    expect((await carte.locator(".tableau-quarts .quart-row").nth(1).locator(".quart-nom").allTextContents()).map(code))
+      .toEqual(croises[1]);
+  });
+
+  test("une demie inscrite sans aucun score : toujours une prévision", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    await servir(page, avecFinales(quarts, [], [partie("1", "11", quarts[0][0], quarts[1][0], "", "")]));
+    await page.reload();
+    await attendreChargement(page);
+    const carte = page.locator(".finales-card").first();
+    await expect(carte.locator(".statut")).toHaveText("Poules terminées");
+    await expect(carte.locator(".tableau-suite")).toHaveCount(0);
+  });
+
+  test("équipe suivie battue en demie : plus de trait surligné vers la finale", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    const charlie = codeClub(2);
+    const q = quarts.findIndex((x) => x.includes(charlie));
+    const k = quarts[q].indexOf(charlie);
+    const scores = [];
+    scores[q] = k === 0 ? ["40", "30"] : ["30", "40"];
+    // Charlie gagne son quart : son chemin est surligné jusqu'à la finale.
+    await servir(page, avecFinales(quarts, scores));
+    await page.reload();
+    await attendreChargement(page);
+    const arbre = page.locator(".finales-card").first().locator(".tableau-arbre");
+    await expect(arbre.locator("path.mien")).toHaveCount(2);
+    // Puis perd sa demie, contre une équipe de l'autre quart de sa moitié.
+    const autre = q % 2 === 0 ? q + 1 : q - 1;
+    await page.evaluate(() => Object.keys(localStorage).filter((c) => c.startsWith("lidfpb_api_v1:")).forEach((c) => localStorage.removeItem(c)));
+    await servir(page, avecFinales(quarts, scores, [partie("1", "11", charlie, quarts[autre][0], "35", "40")]));
+    await page.reload();
+    await attendreChargement(page);
+    await expect(arbre.locator("path.mien")).toHaveCount(1);
+  });
+
+  test("tout joué : demies, finale et champion", async ({ page }) => {
+    const quarts = await quartsPrevus(page);
+    const [v1, v2, v3, v4] = [quarts[0][0], quarts[1][1], quarts[2][0], quarts[3][1]];
+    await servir(page, avecFinales(quarts, [["40", "31"], ["22", "40"], ["40", "35"], ["38", "40"]], [
+      partie("1", "11", v2, v1, "40", "36"),   // D1 reçue par le vainqueur de Q2
+      partie("1", "11", v3, v4, "30", "40"),
+      partie("1", "12", v4, v2, "33", "40")    // finale reçue par le finaliste du bas
+    ]));
+    await page.reload();
+    await attendreChargement(page);
+    const carte = page.locator(".finales-card").first();
+    await expect(carte.locator(".statut")).toHaveText("Terminées");
+    const suite = carte.locator(".tableau-suite .quart-row");
+    const nomDe = async (rangee, cote) => carte.locator(".tableau-quarts .quart-row").nth(rangee).locator(".quart-nom").nth(cote).textContent();
+    // D1 : V.Q1 en haut, V.Q2 en bas, qui l'a gagnée 40–36.
+    await expect(suite.nth(0).locator(".quart-nom")).toHaveText([await nomDe(0, 0), await nomDe(1, 1)]);
+    await expect(suite.nth(0).locator(".quart-score")).toHaveText(["36", "✓ 40"]);
+    await expect(suite.nth(1).locator(".quart-score")).toHaveText(["30", "✓ 40"]);
+    // Finale : V.D1 (vainqueur de Q2) en haut, V.D2 (vainqueur de Q4) en bas.
+    await expect(suite.nth(2).locator(".quart-nom")).toHaveText([await nomDe(1, 1), await nomDe(3, 1)]);
+    await expect(suite.nth(2).locator(".quart-score")).toHaveText(["✓ 40", "33"]);
+    await expect(carte.locator(".tableau-champion")).toHaveText("🏆 Champion de Série 1 : " + await nomDe(1, 1));
+  });
+});
+
 test.describe("Classement : quarts et simulation", () => {
   test("ordre poules, quarts, simulateur, et quarts croisés", async ({ page }) => {
     await page.goto("classement.html");
@@ -1232,7 +1399,7 @@ test.describe("Classement : quarts et simulation", () => {
     }
     // Q1 oppose le 1er de la poule 1 au 4e de la poule 2 : le 1er est favori.
     await expect(quarts.nth(0).locator(".quart-proba").first()).toHaveClass(/favori/);
-    await expect(page.locator(".finales-card .finales-note").first()).toContainText("chances de gagner le quart");
+    await expect(page.locator(".finales-card .finales-note").first()).toContainText("chances de gagner la partie");
   });
 
   test("une simulation recalcule, se signale et s'efface", async ({ page }) => {
