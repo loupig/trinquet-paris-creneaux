@@ -23,6 +23,8 @@ test.beforeEach(async ({ page }) => {
   });
   await page.addInitScript((cle) => {
     localStorage.setItem("lidfpb_mes_equipes_v1", JSON.stringify([cle]));
+    // La carte d'avis de l'accueil a ses propres scénarios : déjà vue ailleurs.
+    localStorage.setItem("lidfpb_avis_vu_v1", "1");
   }, EQUIPE_SUIVIE);
 });
 
@@ -556,18 +558,32 @@ test("Tout lien partagé montre l'aperçu de Découvrir et ouvre sa propre page"
 });
 
 // Spec accueil, « Avis sur la saison » : une carte le temps de la campagne,
-// fermée pour de bon sur l'appareil. Le lien du questionnaire est servi à la
-// place de celui de la page, vide tant que le formulaire n'existe pas.
+// fermée pour de bon sur l'appareil. La constante AVIS de la page est
+// remplacée, pour ne dépendre ni du vrai lien ni de la date du jour.
 test.describe("Accueil : avis sur la saison", () => {
   const FORMULAIRE = "https://forms.gle/exemple";
-  const avecAvis = (page, jusquAu = "2099-12-31") => page.route("**/index.html", async (route) => {
+  const avecAvis = (page, jusquAu = "2099-12-31", url = FORMULAIRE) => page.route("**/index.html", async (route) => {
     const reponse = await route.fetch();
-    const html = (await reponse.text()).replace('var AVIS = { url: "", jusquAu: "2026-12-31" };',
-      `var AVIS = { url: "${FORMULAIRE}", jusquAu: "${jusquAu}" };`);
+    const html = (await reponse.text()).replace(/var AVIS = \{[^}]*\};/, `var AVIS = { url: "${url}", jusquAu: "${jusquAu}" };`);
     route.fulfill({ response: reponse, body: html });
+  });
+  // Pas encore vue sur cet appareil, au premier chargement seulement : un
+  // rechargement garde ce que la page a retenu.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem("test_avis")) return;
+      sessionStorage.setItem("test_avis", "1");
+      localStorage.removeItem("lidfpb_avis_vu_v1");
+    });
+  });
+
+  test("la page porte un lien https et une date de fin", async () => {
+    const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+    expect(html).toMatch(/var AVIS = \{ url: "https:\/\/[^"]+", jusquAu: "\d{4}-\d{2}-\d{2}" \};/);
   });
 
   test("sans lien de questionnaire, rien ne s'affiche", async ({ page }) => {
+    await avecAvis(page, "2099-12-31", "");
     await page.goto("index.html");
     await attendreChargement(page);
     await expect(page.locator(".avis")).toHaveCount(0);
@@ -585,10 +601,10 @@ test.describe("Accueil : avis sur la saison", () => {
     await expect(lien).toHaveAttribute("target", "_blank");
     await carte.getByRole("button", { name: "Ne plus afficher" }).click();
     await expect(page.locator(".avis")).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_avis_vu_v1"))).toBe("1");
     await page.reload();
     await attendreChargement(page);
     await expect(page.locator(".avis")).toHaveCount(0);
-    expect(await page.evaluate(() => localStorage.getItem("lidfpb_avis_vu_v1"))).toBe("1");
   });
 
   test("répondre suffit à la faire disparaître", async ({ page, context }) => {
