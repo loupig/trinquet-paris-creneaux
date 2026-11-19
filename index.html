@@ -242,8 +242,8 @@
      bouton sans changer son dessin, comme les pastilles du compteur. Pas
      dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
      sur le voisin. */
-  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager { position: relative; }
-  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager)::after {
+  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .avis-go { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .avis-go)::after {
     content: "";
     position: absolute;
     top: min(0px, (100% - 44px) / 2);
@@ -454,7 +454,7 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 14px;
-    padding: 10px 40px 10px 12px;
+    padding: 10px 44px 10px 12px;
     border-radius: 12px;
     border: 1px solid var(--accent-border);
     background: var(--accent-bg);
@@ -462,6 +462,9 @@
     font-size: 14px;
     line-height: 1.4;
   }
+  /* Après la fermeture de la carte, le focus passe aux blocs : sans cadre
+     autour de toute la page. */
+  #tiles:focus { outline: none; }
   .avis-emoji { flex: none; font-size: 20px; line-height: 1; }
   .avis-texte { flex: 1 1 auto; min-width: 0; }
   .avis-texte strong { display: block; }
@@ -479,10 +482,10 @@
   }
   .avis-fermer {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 36px;
-    height: 36px;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2372,7 +2375,15 @@
     try { if (localStorage.getItem(AVIS_KEY) === "1") return; } catch (e) {}
     function vu() {
       try { localStorage.setItem(AVIS_KEY, "1"); } catch (e) {}
+      // Le bouton touché disparaît : le focus passe aux blocs qui suivent,
+      // pour qu'un lecteur d'écran ne reparte pas du haut de la page.
+      var avaitFocus = slot.contains(document.activeElement);
       slot.innerHTML = "";
+      if (avaitFocus) {
+        var suite = document.getElementById("tiles");
+        suite.setAttribute("tabindex", "-1");
+        suite.focus({ preventScroll: true });
+      }
     }
     var carte = el("section", { class: "avis", "aria-label": "Votre avis sur la saison" });
     carte.appendChild(el("span", { class: "avis-emoji", "aria-hidden": "true", text: "💬" }));
@@ -2383,7 +2394,10 @@
     var lien = el("a", { class: "avis-go", href: AVIS.url, target: "_blank", rel: "noopener", text: "Répondre" });
     // Le questionnaire s'ouvre dans un nouvel onglet ; la carte disparaît
     // juste après, pour ne pas le redemander.
-    lien.addEventListener("click", function () { setTimeout(vu, 0); });
+    // Clic du milieu ou « Ouvrir dans un nouvel onglet » compris.
+    ["click", "auxclick", "contextmenu"].forEach(function (evt) {
+      lien.addEventListener(evt, function () { setTimeout(vu, 0); });
+    });
     carte.appendChild(lien);
     var fermer = el("button", { type: "button", class: "avis-fermer", "aria-label": "Ne plus afficher", title: "Ne plus afficher", text: "×" });
     fermer.addEventListener("click", vu);

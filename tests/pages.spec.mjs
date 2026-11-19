@@ -617,6 +617,28 @@ test.describe("Accueil : avis sur la saison", () => {
     await expect(page.locator(".avis")).toHaveCount(0);
   });
 
+  test("carte affichée : cibles de 44 px, rien sous 12 px, focus gardé à la fermeture", async ({ page }) => {
+    await avecAvis(page);
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const carte = page.locator(".avis");
+    for (const cible of [carte.getByRole("link", { name: "Répondre" }), carte.getByRole("button", { name: "Ne plus afficher" })]) {
+      const zone = await cible.evaluate((e) => {
+        const r = e.getBoundingClientRect(), a = getComputedStyle(e, "::after");
+        const deborde = a.content !== "none" && a.position === "absolute";
+        return { h: deborde ? Math.max(r.height, 44) : r.height, w: deborde ? Math.max(r.width, 44) : r.width };
+      });
+      expect(zone.h).toBeGreaterThanOrEqual(44);
+      expect(zone.w).toBeGreaterThanOrEqual(44);
+    }
+    const tailles = await carte.evaluate((c) => [...c.querySelectorAll("*")].filter((e) => e.textContent.trim()).map((e) => parseFloat(getComputedStyle(e).fontSize)));
+    expect(Math.min(...tailles)).toBeGreaterThanOrEqual(12);
+    await carte.getByRole("button", { name: "Ne plus afficher" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".avis")).toHaveCount(0);
+    expect(await page.evaluate(() => document.activeElement.id)).toBe("tiles");
+  });
+
   test("la campagne finie, la carte ne s'affiche plus", async ({ page }) => {
     await avecAvis(page, "2020-01-31");
     await page.goto("index.html");
