@@ -2394,8 +2394,9 @@
     var lien = el("a", { class: "avis-go", href: AVIS.url, target: "_blank", rel: "noopener", text: "Répondre" });
     // Le questionnaire s'ouvre dans un nouvel onglet ; la carte disparaît
     // juste après, pour ne pas le redemander.
-    // Clic du milieu ou « Ouvrir dans un nouvel onglet » compris.
-    ["click", "auxclick", "contextmenu"].forEach(function (evt) {
+    // Clic du milieu compris. Pas l'appui long (menu contextuel) : refermé
+    // sans rien choisir, il ferait perdre la carte, et donc une réponse.
+    ["click", "auxclick"].forEach(function (evt) {
       lien.addEventListener(evt, function () { setTimeout(vu, 0); });
     });
     carte.appendChild(lien);
