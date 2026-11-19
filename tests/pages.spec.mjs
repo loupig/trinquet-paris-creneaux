@@ -23,6 +23,8 @@ test.beforeEach(async ({ page }) => {
   });
   await page.addInitScript((cle) => {
     localStorage.setItem("lidfpb_mes_equipes_v1", JSON.stringify([cle]));
+    // La carte d'avis de l'accueil a ses propres scénarios : déjà vue ailleurs.
+    localStorage.setItem("lidfpb_avis_vu_v1", "1");
   }, EQUIPE_SUIVIE);
 });
 
@@ -553,6 +555,96 @@ test("Tout lien partagé montre l'aperçu de Découvrir et ouvre sa propre page"
     expect(balises(html), p).toEqual(reference);
     expect(html, p + " ne doit pas renvoyer l'aperçu vers Découvrir").not.toContain('property="og:url"');
   }
+});
+
+// Spec accueil, « Avis sur la saison » : une carte le temps de la campagne,
+// fermée pour de bon sur l'appareil. La constante AVIS de la page est
+// remplacée, pour ne dépendre ni du vrai lien ni de la date du jour.
+test.describe("Accueil : avis sur la saison", () => {
+  const FORMULAIRE = "https://forms.gle/exemple";
+  const avecAvis = (page, jusquAu = "2099-12-31", url = FORMULAIRE) => page.route("**/index.html", async (route) => {
+    const reponse = await route.fetch();
+    const html = (await reponse.text()).replace(/var AVIS = \{[^}]*\};/, `var AVIS = { url: "${url}", jusquAu: "${jusquAu}" };`);
+    route.fulfill({ response: reponse, body: html });
+  });
+  // Pas encore vue sur cet appareil, au premier chargement seulement : un
+  // rechargement garde ce que la page a retenu.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem("test_avis")) return;
+      sessionStorage.setItem("test_avis", "1");
+      localStorage.removeItem("lidfpb_avis_vu_v1");
+    });
+  });
+
+  test("la page porte un lien https et une date de fin", async () => {
+    const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+    expect(html).toMatch(/var AVIS = \{ url: "https:\/\/[^"]+", jusquAu: "\d{4}-\d{2}-\d{2}" \};/);
+  });
+
+  test("sans lien de questionnaire, rien ne s'affiche", async ({ page }) => {
+    await avecAvis(page, "2099-12-31", "");
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
+
+  test("la carte mène au questionnaire, et une fois fermée ne revient plus", async ({ page }) => {
+    await avecAvis(page);
+    await page.goto("index.html");
+    const carte = page.getByRole("region", { name: "Votre avis sur la saison" });
+    await expect(carte).toBeVisible();
+    // Avant les blocs de l'accueil.
+    expect(await page.evaluate(() => document.getElementById("avis-slot").nextElementSibling.id)).toBe("banner-slot");
+    const lien = carte.getByRole("link", { name: "Répondre" });
+    await expect(lien).toHaveAttribute("href", FORMULAIRE);
+    await expect(lien).toHaveAttribute("target", "_blank");
+    await carte.getByRole("button", { name: "Ne plus afficher" }).click();
+    await expect(page.locator(".avis")).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_avis_vu_v1"))).toBe("1");
+    await page.reload();
+    await attendreChargement(page);
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
+
+  test("répondre suffit à la faire disparaître", async ({ page, context }) => {
+    await avecAvis(page);
+    await context.route(FORMULAIRE, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<title>Formulaire</title>" }));
+    await page.goto("index.html");
+    const onglet = context.waitForEvent("page");
+    await page.getByRole("link", { name: "Répondre" }).click();
+    await (await onglet).close();
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
+
+  test("carte affichée : cibles de 44 px, rien sous 12 px, focus gardé à la fermeture", async ({ page }) => {
+    await avecAvis(page);
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const carte = page.locator(".avis");
+    for (const cible of [carte.getByRole("link", { name: "Répondre" }), carte.getByRole("button", { name: "Ne plus afficher" })]) {
+      const zone = await cible.evaluate((e) => {
+        const r = e.getBoundingClientRect(), a = getComputedStyle(e, "::after");
+        const deborde = a.content !== "none" && a.position === "absolute";
+        return { h: deborde ? Math.max(r.height, 44) : r.height, w: deborde ? Math.max(r.width, 44) : r.width };
+      });
+      expect(zone.h).toBeGreaterThanOrEqual(44);
+      expect(zone.w).toBeGreaterThanOrEqual(44);
+    }
+    const tailles = await carte.evaluate((c) => [...c.querySelectorAll("*")].filter((e) => e.textContent.trim()).map((e) => parseFloat(getComputedStyle(e).fontSize)));
+    expect(Math.min(...tailles)).toBeGreaterThanOrEqual(12);
+    await carte.getByRole("button", { name: "Ne plus afficher" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".avis")).toHaveCount(0);
+    expect(await page.evaluate(() => document.activeElement.id)).toBe("tiles");
+  });
+
+  test("la campagne finie, la carte ne s'affiche plus", async ({ page }) => {
+    await avecAvis(page, "2020-01-31");
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
 });
 
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {

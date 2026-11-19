@@ -192,6 +192,7 @@ principaux :
 | `CLUBS_ABREGES` | accueil, Classement, Parties | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les trois pages à la fois, un test compare les quatre |
 | `PHASE_QUARTS`, `PHASE_DEMIES`, `PHASE_FINALE` | Classement | Numéros de phase des 1/4, 1/2 et de la finale (« 10 », « 11 », « 12 »), comme dans `PHASE_LABELS`, pour le tableau final |
 | `QUARTS`, `DEMIES` | Classement | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
+| `AVIS` | accueil | Lien du questionnaire d'avis (`url`, une adresse `https://`) et dernier jour de la campagne (`jusquAu`, `AAAA-MM-JJ`). Lien vide ou date passée : la carte « Votre avis sur la saison » ne s'affiche pas |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
 | `LIEU_VARIANTS` | Créneaux | Libellés `lieu_renc` interrogés côté API pour ce trinquet. L'API ne filtre que par égalité exacte : un nouveau libellé est à ajouter ici |
@@ -212,6 +213,7 @@ Clés `localStorage` :
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages : `1` ouvert à la main, `0` replié à la main ; absente, le bloc est replié |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
+| `lidfpb_avis_vu_v1` | Accueil | Carte « Votre avis sur la saison » fermée ou suivie : elle ne revient plus |
 | `lidfpb_theme_v1` | toutes (bouton sur les six pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
 
 ## Temps de chargement

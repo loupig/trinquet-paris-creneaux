@@ -7,11 +7,26 @@ Fixer ce que montre la page d'accueil : les blocs présents, leur ordre, et ce q
 ## Requirements
 
 ### Requirement: Composition de l'accueil
-L'accueil SHALL présenter, dans cet ordre, le bloc « Mes équipes », le bloc de la semaine puis le bloc « Championnats » (avancement de la saison), et aucun autre bloc de contenu. Seuls des bandeaux peuvent les précéder : échec des données (spec `donnees-api`) et parties en double (ci-dessous). Le bloc de la semaine réunit, sous deux onglets, les résultats depuis vendredi (spec `derniers-resultats`) et les parties d'ici dimanche (spec `affiche-week-end`).
+L'accueil SHALL présenter, dans cet ordre, le bloc « Mes équipes », le bloc de la semaine puis le bloc « Championnats » (avancement de la saison), et aucun autre bloc de contenu. Seuls des bandeaux peuvent les précéder : l'appel à donner son avis, le temps d'une campagne, puis l'échec des données (spec `donnees-api`) et les parties en double (ci-dessous). Le bloc de la semaine réunit, sous deux onglets, les résultats depuis vendredi (spec `derniers-resultats`) et les parties d'ici dimanche (spec `affiche-week-end`).
 
 #### Scenario: Ouverture de l'accueil
 - **WHEN** un visiteur ouvre l'accueil et que les données sont chargées
 - **THEN** il voit « Mes équipes », le bloc de la semaine puis « Championnats », et rien d'autre entre l'en-tête et le pied de page
+
+### Requirement: Avis sur la saison
+Le temps d'une campagne de recueil d'avis, l'accueil SHALL afficher en tête, avant tout autre bandeau, une carte « Votre avis sur la saison » : « 2 min, anonyme : le championnat et ce site. », un bouton « Répondre » qui ouvre le questionnaire dans un nouvel onglet, et un bouton « × » (« Ne plus afficher »). Toucher l'un ou l'autre fait disparaître la carte, qui ne revient plus sur cet appareil. La carte ne dépend pas des données de la ligue : elle s'affiche même si elles ne répondent pas. Elle n'apparaît que si la page connaît le lien du questionnaire (une adresse `https://`) et jusqu'au jour de fin de la campagne inclus. Ce n'est pas une fenêtre surgissante : elle prend sa place dans la page, sans masquer le reste. Le questionnaire, hors du site, ne demande ni nom ni coordonnées.
+
+#### Scenario: Campagne en cours
+- **WHEN** un visiteur ouvre l'accueil pendant la campagne, sans avoir déjà fermé la carte
+- **THEN** la carte « Votre avis sur la saison » est en tête de page, et « Répondre » ouvre le questionnaire dans un nouvel onglet
+
+#### Scenario: Carte fermée
+- **WHEN** le visiteur touche « × » ou « Répondre »
+- **THEN** la carte disparaît, et elle ne revient pas aux visites suivantes sur cet appareil
+
+#### Scenario: Hors campagne
+- **WHEN** la page ne connaît pas de lien de questionnaire, ou que le jour de fin est passé
+- **THEN** l'accueil n'affiche pas la carte
 
 ### Requirement: Alerte des parties en double
 Quand deux parties à venir (sans score, du jour ou après) sont programmées au même lieu, le même jour et à la même heure, l'accueil SHALL afficher, au-dessus des blocs, un bandeau d'alerte « Deux parties au même endroit à la même heure ». Chaque case en double y tient une ligne : le jour, l'heure, le lieu en nom court, puis les parties concernées, et le bandeau rappelle qu'une seule pourra se jouer et qu'il faut le signaler à la ligue. L'heure s'entend comme la case de la grille des Créneaux : 21h et 21h30 sont la même heure, 20h et 21h non. Le lieu se compare sans tenir compte de la casse, des accents, de la ponctuation ni des petits mots (« Trinquet Paris » et « Trinquet de Paris » sont le même lieu) ; seuls comptent la ville et le nom de la salle, sans le code postal, pour qu'un libellé tronqué (« PARIS (Trinquet de Paris - 750 ») rejoigne le libellé complet. Une partie sans lieu n'est jamais en double. Le titre compte les parties d'une case (« Trois parties… ») ; avec plusieurs cases en double, il devient « Plusieurs parties au même endroit à la même heure ». Sans partie en double, pas de bandeau.

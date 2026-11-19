@@ -136,6 +136,7 @@
     --error-text: #8a1c16;
     --error-border: #f5c2c0;
     --accent: #2f5ce0;
+    --sur-accent: #fff;
     --surface-2: #f6f6f8;
     --surface-3: #ececef;
     --verre: rgba(255, 255, 255, 0.55);
@@ -171,6 +172,7 @@
       --error-text: #ff9a94;
       --error-border: #6a2a2a;
       --accent: #8ba6ff;
+      --sur-accent: #181818;
       --surface-2: #272727;
       --surface-3: #313131;
       --verre: rgba(39, 39, 39, 0.6);
@@ -204,6 +206,7 @@
     --error-text: #ff9a94;
     --error-border: #6a2a2a;
     --accent: #8ba6ff;
+    --sur-accent: #181818;
     --surface-2: #272727;
     --surface-3: #313131;
     --verre: rgba(39, 39, 39, 0.6);
@@ -239,8 +242,8 @@
      bouton sans changer son dessin, comme les pastilles du compteur. Pas
      dans les groupes serrés (puces, icônes de contact) : la zone y mordrait
      sur le voisin. */
-  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager { position: relative; }
-  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager)::after {
+  .ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .avis-go { position: relative; }
+  :is(.ligue-btn, .pill-btn, .icon-btn, .tile-go, .partager, .avis-go)::after {
     content: "";
     position: absolute;
     top: min(0px, (100% - 44px) / 2);
@@ -442,6 +445,59 @@
   .banner strong { display: block; margin-bottom: 4px; }
   .banner.doublons ul { margin: 0 0 6px; padding-left: 18px; }
   .banner.doublons li + li { margin-top: 4px; }
+
+  /* Appel à donner son avis, le temps de la campagne : une carte qu'on
+     ferme, pas une fenêtre surgissante. */
+  .avis {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 44px 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--accent-border);
+    background: var(--accent-bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  /* Après la fermeture de la carte, le focus passe aux blocs : sans cadre
+     autour de toute la page. */
+  #tiles:focus { outline: none; }
+  .avis-emoji { flex: none; font-size: 20px; line-height: 1; }
+  .avis-texte { flex: 1 1 auto; min-width: 0; }
+  .avis-texte strong { display: block; }
+  .avis-texte span { color: var(--muted); font-size: 12px; }
+  .avis-go {
+    flex: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sur-accent);
+    background: var(--accent);
+    border-radius: 9999px;
+    padding: 7px 14px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .avis-fermer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    border-radius: 9999px;
+    cursor: pointer;
+  }
 
   /* --- Bloc de tableau de bord --- */
   .tile {
@@ -735,12 +791,13 @@
 </header>
 
 <main id="contenu">
+  <div id="avis-slot"></div>
   <div id="banner-slot"></div>
   <div id="tiles"></div>
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.11</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.19</p>
   </footer>
 </main>
 
@@ -2301,6 +2358,55 @@
     });
   }
 
+  // ---------------------------------------------------------------
+  // Avis sur la saison (spec accueil) : le lien du questionnaire et la date
+  // de fin de la campagne. Sans lien, ou la date passée, rien ne s'affiche.
+  // ---------------------------------------------------------------
+  var AVIS = { url: "https://forms.gle/8z2xRRQsG6ahpDm58", jusquAu: "2026-12-31" };
+  var AVIS_KEY = "lidfpb_avis_vu_v1";
+
+  // L'appel ne passe pas par les données de la ligue : il s'affiche même si
+  // elles ne répondent pas. Fermé ou suivi, il ne revient plus sur cet appareil.
+  function renderAvis(today) {
+    var slot = document.getElementById("avis-slot");
+    if (!slot || !/^https:\/\//.test(AVIS.url)) return;
+    var fin = new Date(AVIS.jusquAu + "T23:59:59");
+    if (!(today <= fin)) return;
+    try { if (localStorage.getItem(AVIS_KEY) === "1") return; } catch (e) {}
+    function vu() {
+      try { localStorage.setItem(AVIS_KEY, "1"); } catch (e) {}
+      // Le bouton touché disparaît : le focus passe aux blocs qui suivent,
+      // pour qu'un lecteur d'écran ne reparte pas du haut de la page.
+      var avaitFocus = slot.contains(document.activeElement);
+      slot.innerHTML = "";
+      if (avaitFocus) {
+        var suite = document.getElementById("tiles");
+        suite.setAttribute("tabindex", "-1");
+        suite.focus({ preventScroll: true });
+      }
+    }
+    var carte = el("section", { class: "avis", "aria-label": "Votre avis sur la saison" });
+    carte.appendChild(el("span", { class: "avis-emoji", "aria-hidden": "true", text: "💬" }));
+    carte.appendChild(el("div", { class: "avis-texte" }, [
+      el("strong", { text: "Votre avis sur la saison" }),
+      el("span", { text: "2 min, anonyme : le championnat et ce site." })
+    ]));
+    var lien = el("a", { class: "avis-go", href: AVIS.url, target: "_blank", rel: "noopener", text: "Répondre" });
+    // Le questionnaire s'ouvre dans un nouvel onglet ; la carte disparaît
+    // juste après, pour ne pas le redemander.
+    // Clic du milieu compris. Pas l'appui long (menu contextuel) : refermé
+    // sans rien choisir, il ferait perdre la carte, et donc une réponse.
+    ["click", "auxclick"].forEach(function (evt) {
+      lien.addEventListener(evt, function () { setTimeout(vu, 0); });
+    });
+    carte.appendChild(lien);
+    var fermer = el("button", { type: "button", class: "avis-fermer", "aria-label": "Ne plus afficher", title: "Ne plus afficher", text: "×" });
+    fermer.addEventListener("click", vu);
+    carte.appendChild(fermer);
+    slot.appendChild(carte);
+  }
+
+  renderAvis(new Date());
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
   run(false);
 })();
