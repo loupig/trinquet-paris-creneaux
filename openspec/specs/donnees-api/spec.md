@@ -7,7 +7,7 @@ Fixer comment les pages obtiennent les données de la ligue, comment elles réag
 ## Requirements
 
 ### Requirement: Source des données
-Les pages Accueil, Mes équipes, Parties, Classement, Créneaux, Report et Bilan SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
+Les pages Accueil, Mes équipes, Parties, Classement, Créneaux et Report SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
 
 #### Scenario: Date de synchronisation
 - **WHEN** un visiteur ouvre la page Classement et que les données sont chargées
@@ -56,10 +56,10 @@ Les compositions d'équipe et les contacts des responsables SHALL être des donn
 Les noms de joueurs SHALL n'apparaître qu'aux endroits suivants, sous la forme « Prénom Nom » :
 - sur l'accueil, entre crochets après chaque équipe ;
 - sur Mes équipes, sous chaque équipe ;
-- sur le Classement et le Bilan, au toucher de la ligne d'une équipe dans le classement d'une poule ;
+- sur le Classement, au toucher de la ligne d'une équipe ;
 - sur Parties et Créneaux, au détail d'une partie.
 
-Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report, et dans le message WhatsApp prérempli de Parties et du Bilan ; ces deux messages donnent aussi le nom et le numéro du responsable adverse.
+Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report, et dans le message WhatsApp prérempli de Parties ; ce message donne aussi le nom et le numéro du responsable adverse.
 
 #### Scenario: Détail d'une partie
 - **WHEN** un visiteur déplie une partie dont les équipes ont déclaré leurs joueurs
@@ -68,10 +68,6 @@ Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT af
 #### Scenario: Pages sans joueurs
 - **WHEN** un visiteur consulte le Report ou le Compteur, ou partage les parties de l'accueil
 - **THEN** aucun nom de joueur issu des données de la ligue n'y apparaît
-
-#### Scenario: Bilan sans crochets
-- **WHEN** un visiteur ouvre le Bilan
-- **THEN** aucun nom de joueur ne s'affiche, ni aux trophées, ni au bloc Mes équipes, ni au tableau final, tant qu'il n'a pas touché une ligne de classement
 
 ### Requirement: Numéro des responsables jamais écrit
 Les pages qui permettent de joindre le responsable d'une équipe SHALL le faire par des boutons ou icônes (Appeler, SMS, WhatsApp) qui ouvrent l'application correspondante. Le numéro du responsable MUST NOT être écrit dans le texte d'aucune page. Sans numéro exploitable, la page ne propose pas ces boutons.

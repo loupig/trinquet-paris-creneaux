@@ -13,27 +13,6 @@ L'en-tête de la page SHALL être celui des pages Parties et Mes équipes : titr
 - **WHEN** un visiteur ouvre la page Classement
 - **THEN** l'en-tête ne donne que la source et la synchro, et la légende sous les poules rappelle le barème et le critère de classement, sans ouvrir le bloc Filtres
 
-### Requirement: Lien vers le bilan
-La page SHALL porter un lien « Bilan de la phase de poules », seul accès à la page du bilan (spec `bilan`), qui n'a pas d'onglet. Le lien tient sur une seule ligne, sans sous-titre. Sa place dépend de l'avancement :
-- tant qu'aucune série affichée n'a fini ses poules, ou qu'aucune équipe n'est affichée, il est en bas de page, après le dernier classement et son simulateur, et il y est dès l'ouverture de la page, sans sauter à l'arrivée des données ;
-- dès qu'une série affichée a toutes ses parties de poule avec un score, il est en haut, sous le bloc Filtres.
-
-#### Scenario: Ouvrir le bilan
-- **WHEN** un visiteur touche « Bilan de la phase de poules »
-- **THEN** la page du bilan s'ouvre
-
-#### Scenario: Poules en cours
-- **WHEN** chaque série affichée a encore des parties de poule sans score
-- **THEN** le lien est en bas de page, après le dernier simulateur
-
-#### Scenario: Poules terminées
-- **WHEN** toutes les parties de poule de la série 2 ont un score
-- **THEN** le lien est en haut de page, sous le bloc Filtres
-
-#### Scenario: Lien sur une ligne
-- **WHEN** un visiteur ouvre le Classement sur un téléphone de 412 px de large
-- **THEN** le lien « Bilan de la phase de poules » tient sur une ligne
-
 ### Requirement: Découpage par poule ou général
 La page SHALL proposer deux découpages exclusifs : « Par poule », par défaut, avec une carte par poule, et « Général », qui fusionne en une seule carte les poules d'une même spécialité et d'une même série et les classe selon la même règle. Les cartes sont rangées par spécialité, puis par série, puis par poule. Chaque carte porte la série, son titre (« Poule N » ou « Classement général ») et son nombre d'équipes.
 
@@ -106,7 +85,7 @@ En découpage par poule, chaque ligne d'une équipe qui a joué SHALL porter à 
 - en Série 2, orange pour l'avant-dernier : barrage pour le maintien ;
 - rouge pour le dernier : descente (Série 1 vers Série 2, Série 2 vers Série 3).
 
-Les autres rangs n'ont pas de liseré. La règle est celle des messages de fin de poule du Bilan (spec `bilan`), portée par la même constante, identique dans les deux pages. Une série sans règle connue n'a que le vert des quarts. Une équipe sans partie jouée n'a pas de liseré tant que sa série a des parties de poule sans score ; poules finies, elle a la zone de son rang, comme au Bilan. Le liseré est une couleur d'appoint : la légende dit ce qu'il veut dire, le rang reste écrit, et la ligne lue par un lecteur d'écran finit par sa zone en mots (« zone des quarts », « zone de barrage », « zone de descente »). En classement général, les lignes gardent le liseré de leur poule d'origine et n'ont pas de zone.
+Les autres rangs n'ont pas de liseré. La règle de fin de poule est fixée par la ligue, par série. Une série sans règle connue n'a que le vert des quarts. Une équipe sans partie jouée n'a pas de liseré tant que sa série a des parties de poule sans score ; poules finies, elle a la zone de son rang. Le liseré est une couleur d'appoint : la légende dit ce qu'il veut dire, le rang reste écrit, et la ligne lue par un lecteur d'écran finit par sa zone en mots (« zone des quarts », « zone de barrage », « zone de descente »). En classement général, les lignes gardent le liseré de leur poule d'origine et n'ont pas de zone.
 
 #### Scenario: Poule de six en Série 2
 - **WHEN** le visiteur regarde une poule de six équipes de Série 2

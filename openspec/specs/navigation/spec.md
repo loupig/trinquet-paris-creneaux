@@ -7,7 +7,7 @@ Fixer ce qui est commun à toutes les pages pour se déplacer dans le site, comm
 ## Requirements
 
 ### Requirement: Barre d'onglets
-La barre d'onglets SHALL compter cinq entrées sur les huit pages du site (la page de redirection `equipes.html` exceptée), dans cet ordre : Accueil, Mes équipes, Parties, Classement, Créneaux, chacune avec une icône et un libellé. L'onglet de la page consultée apparaît comme onglet courant. Les pages Report et Compteur, qui ne sont pas des onglets, n'ont pas d'onglet courant ; le Bilan, ouvert depuis le Classement, a Classement pour onglet courant. Sur un écran de 390 px de large, les cinq libellés MUST tenir sans être coupés et sans défilement horizontal, ce qui exclut d'ajouter une sixième entrée.
+La barre d'onglets SHALL compter cinq entrées sur les sept pages du site (la page de redirection `equipes.html` exceptée), dans cet ordre : Accueil, Mes équipes, Parties, Classement, Créneaux, chacune avec une icône et un libellé. L'onglet de la page consultée apparaît comme onglet courant. Les pages Report et Compteur, qui ne sont pas des onglets, n'ont pas d'onglet courant. Sur un écran de 390 px de large, les cinq libellés MUST tenir sans être coupés et sans défilement horizontal, ce qui exclut d'ajouter une sixième entrée.
 
 #### Scenario: Aller sur la page Mes équipes depuis une autre page
 - **WHEN** un visiteur sur la page Classement touche l'onglet « Mes équipes »
@@ -40,7 +40,7 @@ Sur toute page autre que l'accueil, le titre de l'en-tête SHALL être un lien v
 - **THEN** l'accueil s'ouvre
 
 ### Requirement: Retour en haut de page
-Les pages Mes équipes, Parties, Classement, Créneaux, Report et Bilan SHALL porter un bouton flottant « ↑ » qui ramène en haut de la page.
+Les pages Mes équipes, Parties, Classement, Créneaux et Report SHALL porter un bouton flottant « ↑ » qui ramène en haut de la page.
 
 #### Scenario: Longue liste
 - **WHEN** un visiteur a fait défiler la page Parties puis touche « ↑ »
