@@ -22,7 +22,7 @@ La barre d'onglets SHALL compter cinq entrées sur les sept pages du site (la pa
 - **THEN** les cinq onglets sont visibles, libellés entiers, sans défilement horizontal
 
 ### Requirement: Boutons flottants du haut
-Chacune des huit pages SHALL porter en haut à gauche un lien « Site de la ligue », qui ouvre le site de la ligue dans un nouvel onglet, et en haut à droite le bouton du compteur de points. Les pages qui chargent les données de la ligue portent aussi, à gauche du compteur, le bouton « Rafraîchir ». Le compteur n'est pas un onglet : sur sa propre page, son bouton apparaît en vert plein, et la page n'a pas de bouton « Rafraîchir ».
+Chacune des sept pages SHALL porter en haut à gauche un lien « Site de la ligue », qui ouvre le site de la ligue dans un nouvel onglet, et en haut à droite le bouton du compteur de points. Les pages qui chargent les données de la ligue portent aussi, à gauche du compteur, le bouton « Rafraîchir ». Le compteur n'est pas un onglet : sur sa propre page, son bouton apparaît en vert plein, et la page n'a pas de bouton « Rafraîchir ».
 
 #### Scenario: Ouvrir le compteur
 - **WHEN** un visiteur touche le bouton calculette depuis n'importe quelle page
@@ -72,7 +72,7 @@ L'adresse `equipes.html`, ancienne vue « Parties par équipe » retirée, SHALL
 - **THEN** la page Mes équipes s'ouvre, et le bouton Retour ne ramène pas à `equipes.html`
 
 ### Requirement: Version en pied de page
-Chacune des huit pages SHALL indiquer en pied de page sa version, sous la forme « Version AAAA.MM.JJ », ainsi qu'un lien pour signaler un problème.
+Chacune des sept pages SHALL indiquer en pied de page sa version, sous la forme « Version AAAA.MM.JJ », ainsi qu'un lien pour signaler un problème.
 
 #### Scenario: Pied de page
 - **WHEN** un visiteur fait défiler une page jusqu'en bas

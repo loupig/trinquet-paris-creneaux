@@ -9,7 +9,7 @@ compteur de points.
 
 ## Pages
 
-Huit pages statiques indépendantes, plus une page de présentation et une
+Sept pages statiques indépendantes, plus une page de présentation et une
 redirection, sans build ni
 dépendance, chacune avec son CSS et son JS inline. La navigation est celle
 d'une application mobile plutôt que celle d'un site : une barre d'onglets en
@@ -109,7 +109,7 @@ Une couleur nouvelle passe par une variable du `:root` de la page, avec sa
 valeur sombre dans le bloc `@media (prefers-color-scheme: dark)` qui le
 suit, recopiée dans le bloc `:root[data-theme="dark"]` d'après (thème
 sombre choisi sur le site). Une variable sombre garde la même valeur dans chaque page qui la
-porte : le test « même palette sombre » le vérifie pour les huit pages de
+porte : le test « même palette sombre » le vérifie pour les sept pages de
 l'application.
 
 ## Tests
@@ -212,7 +212,7 @@ Clés `localStorage` :
 | `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages : `1` ouvert à la main, `0` replié à la main ; absente, le bloc est replié |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
-| `lidfpb_theme_v1` | toutes (bouton sur les sept pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
+| `lidfpb_theme_v1` | toutes (bouton sur les six pages qui ont Rafraîchir) | Thème choisi, `clair` ou `sombre` ; absente, le téléphone décide |
 
 ## Temps de chargement
 
