@@ -555,6 +555,60 @@ test("Tout lien partagé montre l'aperçu de Découvrir et ouvre sa propre page"
   }
 });
 
+// Spec accueil, « Avis sur la saison » : une carte le temps de la campagne,
+// fermée pour de bon sur l'appareil. Le lien du questionnaire est servi à la
+// place de celui de la page, vide tant que le formulaire n'existe pas.
+test.describe("Accueil : avis sur la saison", () => {
+  const FORMULAIRE = "https://forms.gle/exemple";
+  const avecAvis = (page, jusquAu = "2099-12-31") => page.route("**/index.html", async (route) => {
+    const reponse = await route.fetch();
+    const html = (await reponse.text()).replace('var AVIS = { url: "", jusquAu: "2026-12-31" };',
+      `var AVIS = { url: "${FORMULAIRE}", jusquAu: "${jusquAu}" };`);
+    route.fulfill({ response: reponse, body: html });
+  });
+
+  test("sans lien de questionnaire, rien ne s'affiche", async ({ page }) => {
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
+
+  test("la carte mène au questionnaire, et une fois fermée ne revient plus", async ({ page }) => {
+    await avecAvis(page);
+    await page.goto("index.html");
+    const carte = page.getByRole("region", { name: "Votre avis sur la saison" });
+    await expect(carte).toBeVisible();
+    // Avant les blocs de l'accueil.
+    expect(await page.evaluate(() => document.getElementById("avis-slot").nextElementSibling.id)).toBe("banner-slot");
+    const lien = carte.getByRole("link", { name: "Répondre" });
+    await expect(lien).toHaveAttribute("href", FORMULAIRE);
+    await expect(lien).toHaveAttribute("target", "_blank");
+    await carte.getByRole("button", { name: "Ne plus afficher" }).click();
+    await expect(page.locator(".avis")).toHaveCount(0);
+    await page.reload();
+    await attendreChargement(page);
+    await expect(page.locator(".avis")).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_avis_vu_v1"))).toBe("1");
+  });
+
+  test("répondre suffit à la faire disparaître", async ({ page, context }) => {
+    await avecAvis(page);
+    await context.route(FORMULAIRE, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<title>Formulaire</title>" }));
+    await page.goto("index.html");
+    const onglet = context.waitForEvent("page");
+    await page.getByRole("link", { name: "Répondre" }).click();
+    await (await onglet).close();
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
+
+  test("la campagne finie, la carte ne s'affiche plus", async ({ page }) => {
+    await avecAvis(page, "2020-01-31");
+    await page.goto("index.html");
+    await attendreChargement(page);
+    await expect(page.locator(".avis")).toHaveCount(0);
+  });
+});
+
 test("Accueil : le pied de page mène à la présentation", async ({ page }) => {
   await page.goto("index.html");
   await page.getByRole("link", { name: "Présenter le site à un joueur" }).click();
