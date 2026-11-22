@@ -1,0 +1,115 @@
+# Spec Delta
+
+## Purpose
+
+Montrer d'un coup toutes les équipes engagées, sur la page Équipes, avec de quoi joindre le responsable de chacune et le message des phases finales à leur envoyer, pour que prévenir tout le championnat tienne en quelques minutes.
+
+## ADDED Requirements
+
+### Requirement: Liste de toutes les équipes
+Ouverte sans équipe dans l'adresse, la page Équipes SHALL montrer toutes les équipes engagées, hors clubs fictifs de la ligue (dont « Equipe à désigner »), en une carte par série et par poule, dans l'ordre des séries puis des poules. L'en-tête de chaque carte porte la pastille de la série et le numéro de la poule, comme au Classement. Une équipe sans partie de poule figure dans une carte « Hors poule » de sa série.
+
+#### Scenario: Ouvrir l'onglet
+- **WHEN** un visiteur touche l'onglet « Équipes »
+- **THEN** la page montre une carte par poule de chaque série, avec toutes les équipes engagées
+
+#### Scenario: Pas d'équipe fictive
+- **WHEN** le visiteur parcourt la liste
+- **THEN** « Equipe à désigner » n'y figure pas
+
+### Requirement: Ligne d'une équipe dans la liste
+Chaque équipe SHALL tenir sur une ligne, dans l'ordre du classement de sa poule (spec `calcul-classement`) : son rang (« – » si elle n'a pas joué), les trois premiers colorés or, argent et bronze comme au Classement, puis son nom court suivi de son numéro (spec `noms-clubs`), jamais tronqué, et un chevron. Au toucher, la ligne déplie son nom officiel, ses joueurs, et un lien « Voir l'équipe → ».
+
+#### Scenario: Ligne repliée
+- **WHEN** l'équipe 2 de « PARIS EUSKAL PILOTA » est 3e de sa poule
+- **THEN** sa ligne montre « 3 » sur fond bronze et « PEP 2 », sans nom de joueur
+
+#### Scenario: Déplier la ligne
+- **WHEN** le visiteur touche cette ligne
+- **THEN** son chevron passe de « › » à « ⌄ », et dessous apparaissent « PARIS EUSKAL PILOTA (éq. 2) », ses joueurs et « Voir l'équipe → »
+- **AND** un second toucher la replie
+
+#### Scenario: Composition non déclarée
+- **WHEN** une équipe n'a pas déclaré sa composition et que le visiteur touche sa ligne
+- **THEN** le dépli porte « Composition non déclarée à la ligue »
+
+### Requirement: Ouvrir une équipe depuis la liste
+« Voir l'équipe → » SHALL afficher la page de cette équipe (spec `mon-equipe`), sans recharger les données, et mettre l'adresse à jour pour qu'elle se partage telle quelle. Le bouton Retour du navigateur ramène alors à la liste.
+
+#### Scenario: Voir une équipe puis revenir
+- **WHEN** le visiteur touche « Voir l'équipe → » sous PEP 2, puis le bouton Retour du navigateur
+- **THEN** la page de PEP 2 s'affiche avec son adresse, sans appel réseau, puis Retour ramène à la liste
+
+### Requirement: Joindre le responsable depuis la liste
+Quand la ligue a un numéro exploitable pour le responsable d'une équipe, sa ligne SHALL porter une icône WhatsApp, qui ouvre une conversation vide vers ce numéro, et une icône SMS. Chaque icône dit, pour qui écoute la page, ce qu'elle fait et pour quelle équipe. Le numéro et le nom du responsable MUST NOT apparaître dans la page. Sans numéro exploitable, la ligne n'a pas d'icônes, sans message.
+
+#### Scenario: Responsable joignable
+- **WHEN** le responsable de PEP 2 a un numéro déclaré à la ligue
+- **THEN** la ligne de PEP 2 porte une icône WhatsApp vers ce numéro, sans texte, et une icône SMS, et aucun numéro n'est lisible dans la page
+
+#### Scenario: Pas de numéro
+- **WHEN** une équipe n'a pas de numéro de responsable exploitable
+- **THEN** sa ligne n'a ni icône WhatsApp, ni icône SMS, ni icône d'envoi du message
+
+### Requirement: Message des phases finales
+Tant qu'au moins une partie de phase finale reste à jouer, aujourd'hui ou plus tard, dans une série dont les poules sont finies, la liste SHALL être précédée d'un bouton « Message aux équipes ». Il déplie dans la page, sans fenêtre surgissante, le message des phases finales et un bouton qui le confie à la feuille de partage de l'appareil, ou le copie quand il n'y en a pas. Sinon, ni le bouton ni le message n'apparaissent.
+
+#### Scenario: Poules finies, demies à venir
+- **WHEN** les poules des deux séries sont finies et que les demies se jouent dimanche
+- **THEN** la page porte « Message aux équipes », qui déplie le message et un bouton Partager
+
+#### Scenario: Poules en cours
+- **WHEN** une partie de poule de chaque série reste sans score
+- **THEN** la page ne porte pas « Message aux équipes »
+
+#### Scenario: Saison finie
+- **WHEN** toutes les parties de phase finale ont un score ou une date passée
+- **THEN** la page ne porte pas « Message aux équipes »
+
+### Requirement: Contenu du message des phases finales
+Le message SHALL donner, mis en forme pour WhatsApp, dans cet ordre : un remerciement pour le championnat ; les parties de phase finale à venir, par phase et par jour, chacune avec son heure, sa série et ses deux équipes en noms courts suivies de leurs joueurs ; le lieu ; le lien du questionnaire d'avis tant que sa campagne dure (spec `accueil`) ; le lien de la page Découvrir, présentée comme non officielle, en bêta, en complément du site de la ligue.
+
+#### Scenario: Demie désignée
+- **WHEN** PEP 2, avec Ane Etxeberri et Peio Larralde, reçoit Chatillon 3 en 1/2 finale de Série 2, dimanche 29 novembre à 14h, au Trinquet Paris
+- **THEN** le message porte « *1/2 finales, dimanche 29 novembre* », puis « *14h · Série 2* », « PEP 2 (Ane Etxeberri & Peio Larralde) » et « vs Chatillon 3 (… & …) »
+
+#### Scenario: Finale à désigner
+- **WHEN** la finale de Série 1 se joue le 6 décembre à 17h entre deux équipes à désigner
+- **THEN** le message porte « *Finales, dimanche 6 décembre* » et « • 17h : finale Série 1 », sans nom d'équipe
+
+#### Scenario: Liens du message
+- **WHEN** la campagne du questionnaire d'avis dure encore
+- **THEN** le message porte le lien du questionnaire, puis celui de la page Découvrir du site, précédé de « site non officiel, en bêta, en complément de celui de la ligue »
+
+#### Scenario: Campagne d'avis finie
+- **WHEN** la date de fin de la campagne du questionnaire est passée
+- **THEN** le message ne porte pas son lien, et garde celui du site
+
+### Requirement: Écriture des noms dans le message
+Dans le message, les joueurs SHALL être écrits « Prénom Nom » avec une majuscule au début de chaque mot et de chaque partie d'un nom composé, le reste en minuscules, tels que la ligue les orthographie par ailleurs ; deux joueurs sont reliés par « & », plus de deux par des virgules puis « & ». Une équipe sans composition déclarée est nommée sans parenthèses.
+
+#### Scenario: Nom en capitales à la ligue
+- **WHEN** la ligue déclare « Maite BIDART-ELIZALDE » et « Xabi BIDART-ELIZALDE » pour CPBP 1
+- **THEN** le message porte « CPBP 1 (Maite Bidart-Elizalde & Xabi Bidart-Elizalde) »
+
+#### Scenario: Composition non déclarée
+- **WHEN** une équipe d'une demie n'a pas déclaré sa composition
+- **THEN** le message la nomme par son nom court seul
+
+### Requirement: Lieu dans le message
+Quand toutes les parties du message se jouent au même lieu, le message SHALL le donner une seule fois, après les parties (« 📍 Trinquet Paris (75016) »). Sinon, chaque partie porte son lieu sur sa ligne d'heure.
+
+#### Scenario: Toutes au Trinquet Paris
+- **WHEN** les demies et les finales se jouent toutes à « PARIS (Trinquet Paris - 75016) »
+- **THEN** le message porte une seule fois « 📍 Trinquet Paris (75016) »
+
+### Requirement: Envoyer le message à une équipe
+Tant que le message des phases finales existe, chaque ligne dont le responsable a un numéro exploitable SHALL porter une troisième icône, qui ouvre WhatsApp vers ce numéro avec le message prérempli. Rien n'est envoyé par le site lui-même : le visiteur valide l'envoi dans WhatsApp.
+
+#### Scenario: Envoyer à PEP 2
+- **WHEN** le visiteur touche l'icône d'envoi du message sur la ligne de PEP 2
+- **THEN** WhatsApp s'ouvre vers le responsable de PEP 2 avec le message des phases finales prérempli
+
+#### Scenario: Pas de message
+- **WHEN** les poules sont en cours
+- **THEN** aucune ligne ne porte l'icône d'envoi du message
