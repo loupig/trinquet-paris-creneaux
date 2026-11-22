@@ -90,5 +90,5 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
   - l'endroit où paraissent les noms de joueurs.
 - [x] 5.4 `npm test` complet, sortie montrée.
 - [x] 5.5 Captures Pixel 7, en clair et en sombre : la liste, une ligne dépliée, le message déplié, la page d'une équipe avec « ← Toutes les équipes ».
-- [ ] 5.6 `/code-review` sur le diff, puis `/security-review` (données de l'API, noms de joueurs dans un texte partagé, `localStorage`). Corriger les constats.
+- [x] 5.6 `/code-review` sur le diff, puis `/security-review` (données de l'API, noms de joueurs dans un texte partagé, `localStorage`). Corriger les constats.
 - [ ] 5.7 À l'archivage, passe de vocabulaire dans les specs principales : « page Mes équipes » devient « page Équipes », et l'onglet « Mes équipes » devient « Équipes ». Le bloc de l'accueil n'est pas touché.
