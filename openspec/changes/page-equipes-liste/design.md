@@ -38,7 +38,7 @@ Contraintes du dépôt :
 `?equipe=` présent et connu : la vue équipe. Sinon : la vue liste. Une fonction `afficherSelonAdresse()` lit l'adresse et rend la bonne vue. Elle sert au chargement, au rafraîchissement et à `popstate`.
 
 - **Liste → équipe** (« Voir l'équipe → », ou une pastille au-dessus de la liste) : `history.pushState({ depuisListe: true }, "", "?equipe=…")`. Retour ramène alors à la liste, ce qu'attend un visiteur qui vient de la parcourir.
-- **Équipe → équipe** (pastille sur la page d'une équipe) : `replaceState`, comme aujourd'hui.
+- **Équipe → équipe** (pastille sur la page d'une équipe) : `replaceState`, qui garde l'état `depuisListe`.
 - **« ← Toutes les équipes »** : un vrai lien `equipe.html`, intercepté au clic. Si l'état dit `depuisListe`, on fait `history.back()`. Sinon (arrivée par un lien partagé), on fait `pushState` vers `equipe.html` et on rend la liste. Sans JavaScript, le lien marche tout de même.
 
 *Écarté* : deux pages (`equipes.html` pour la liste), qui dupliquerait tout le chargement des données ; une navigation par lien plein, qui relit le cache à chaque passage et perd la position dans la liste.
@@ -73,9 +73,9 @@ On recopie la table et la fonction de nom court du Classement à l'identique. Le
 
 `messagePhasesFinales(rencontres, ctx, aujourdHui, liens)` renvoie le texte, ou `null` :
 
-- **Parties retenues** : phase 7 à 12, sans score, datées d'aujourd'hui ou plus tard (date de report comprise, `effectiveDate`). Leur série (spécialité et catégorie) n'a plus aucune partie de poule sans score. Rien de retenu : `null`.
-- **Ordre** : par date, puis par heure.
-- **Groupes** : par phase et par jour, avec un en-tête `🏟️ *1/2 finales, dimanche 29 novembre*`, ou `🏆 *Finales, …*` pour la phase 12. Les libellés au pluriel sont dans une table `PHASES_AU_PLURIEL` (« 1/4 de finale », « 1/2 finales », « Finales »…). La date s'écrit avec `toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })`.
+- **Parties retenues** : phase 7 à 12, sans score, datées d'aujourd'hui ou plus tard (date de report comprise, `effectiveDate`). Leur série (compétition, spécialité et catégorie, la clé de `masquerFinalesPrematurees`) n'a plus aucune partie de poule sans score. Rien de retenu : `null`.
+- **Ordre** : par date, puis par phase, puis par heure : un seul en-tête par phase et par jour, même quand les séries s'entrecroisent.
+- **Groupes** : par phase et par jour, avec un en-tête `🏟️ *1/2 finales, dimanche 29 novembre*`, ou `🏆 *Finales, …*` pour la phase 12. Les libellés au pluriel sont dans une table `PHASES_AU_PLURIEL` (« Quarts de finale », « 1/2 finales », « Finales »…). La date s'écrit avec `toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })`.
 - **Une partie dont au moins une équipe est désignée** :
 
   ```

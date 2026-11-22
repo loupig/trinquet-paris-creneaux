@@ -41,7 +41,7 @@ async function attendreChargement(page) {
 
 const PAGES = [
   { nom: "Accueil", url: "index.html", contenu: "#tiles" },
-  { nom: "Mes équipes", url: "equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE), contenu: "#results" },
+  { nom: "Équipes", url: "equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE), contenu: "#results" },
   { nom: "Parties", url: "programme.html", contenu: "#results" },
   { nom: "Classement", url: "classement.html", contenu: "#results" },
   { nom: "Créneaux", url: "creneaux.html", contenu: "#results" },
@@ -76,7 +76,7 @@ for (const largeur of [320, 390]) test.describe(`Barre d'onglets à ${largeur} p
         const tient = r.getBoundingClientRect().width <= s.parentElement.clientWidth;
         return s.textContent + " : " + r.getClientRects().length + (tient ? "" : " (déborde)");
       }));
-      expect(lignes).toEqual(["Accueil : 1", "Mes équipes : 1", "Parties : 1", "Classement : 1", "Créneaux : 1"]);
+      expect(lignes).toEqual(["Accueil : 1", "Équipes : 1", "Parties : 1", "Classement : 1", "Créneaux : 1"]);
       // L'en-tête aussi tient sur une ligne : « Site de la ligue » ne se replie pas.
       const ligue = page.locator(".header-bar .ligue-btn");
       if (await ligue.count()) {
@@ -699,7 +699,7 @@ test("Page 404 propose de revenir à l'accueil", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Revenir à l'accueil" })).toHaveAttribute("href", "/trinquet-paris-creneaux/index.html");
 });
 
-test("Ancienne adresse equipes.html redirige vers Mes équipes", async ({ page }) => {
+test("Ancienne adresse equipes.html redirige vers la page Équipes", async ({ page }) => {
   await page.goto("equipes.html");
   await expect(page).toHaveURL(/equipe\.html/);
 });
@@ -932,6 +932,10 @@ test("noms courts identiques d'une page à l'autre, et à la spec", async () => 
   const accueil = await constante("index.html", "CLUBS_ABREGES");
   expect(await constante("classement.html", "CLUBS_ABREGES")).toEqual(accueil);
   expect(await constante("programme.html", "CLUBS_ABREGES")).toEqual(accueil);
+  expect(await constante("equipe.html", "CLUBS_ABREGES")).toEqual(accueil);
+  // Le lien du questionnaire d'avis : celui de l'accueil, dans le message des
+  // phases finales de la page Équipes.
+  expect(await constante("equipe.html", "AVIS")).toEqual(await constante("index.html", "AVIS"));
   // Le lieu court de Parties est celui de l'accueil, au caractère près.
   const lieuCourt = async (f) => {
     const html = await readFile(new URL(`../${f}`, import.meta.url), "utf8");
@@ -1625,7 +1629,7 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
     await expect(invite).toHaveAttribute("href", "equipe.html");
     // L'onglet renommé tient en entier dans la barre.
     const onglet = page.locator('.tab-bar a[href="equipe.html"] span');
-    await expect(onglet).toHaveText("Mes équipes");
+    await expect(onglet).toHaveText("Équipes");
     expect(await onglet.evaluate((e) => e.scrollWidth <= e.parentElement.clientWidth)).toBe(true);
   });
 });
@@ -2393,6 +2397,341 @@ async function auditSombre(page, exceptionsBlanc = []) {
     return { fond, contrastesFaibles, fondsBlancs };
   }, exceptionsBlanc);
 }
+
+// Spec liste-equipes et mon-equipe : la page Équipes s'ouvre sur toutes les
+// équipes, au format du Classement, avec de quoi joindre chaque responsable.
+// Données servies par scénario : chaque table peut être retouchée.
+function servirTables(page, retouches = {}) {
+  return page.route("**/script.google.com/**", (route) => {
+    const table = new URL(route.request().url()).searchParams.get("table");
+    let data = tables[table] || [];
+    if (retouches[table]) data = retouches[table](data);
+    route.fulfill({
+      status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ table, data, lastSync: new Date().toISOString() })
+    });
+  });
+}
+
+// Les appels à l'API émis après le chargement : il n'y en a aucun quand on
+// passe de la liste à une équipe.
+function compterAppels(page) {
+  const appels = { n: 0 };
+  page.on("request", (r) => { if (r.url().includes("script.google.com")) appels.n++; });
+  return appels;
+}
+
+test.describe("Équipes : liste de toutes les équipes", () => {
+  const ALPHA = "2|1|3750001|1";
+  const carte = (page, n) => page.locator(".liste-equipes .poule-card").nth(n);
+  const ligne = (page, nom) => page.locator(".liste-equipes .rank-item").filter({ has: page.locator(".rank-team", { hasText: new RegExp("^" + nom + "$") }) }).first();
+
+  test("l'onglet ouvre la liste : une carte par poule, dans l'ordre du classement", async ({ page }) => {
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await expect(page.locator(".liste-equipes .poule-card")).toHaveCount(4);
+    await expect(page.locator(".liste-equipes .rank-item")).toHaveCount(24);
+    await expect(page.locator(".liste-equipes")).not.toContainText("Equipe à désigner");
+    // Plus de liste déroulante.
+    await expect(page.locator("#choixEquipe")).toHaveCount(0);
+    const premiere = carte(page, 0);
+    await expect(premiere.locator(".poule-head")).toContainText("Série 1");
+    await expect(premiere.locator(".poule-head")).toContainText("Poule 1");
+    // Même ordre que le Classement : Alpha en tête de la poule 1 de la série 1.
+    await expect(premiere.locator(".rank-team").first()).toHaveText("Alpha 1");
+    await expect(premiere.locator(".rank-row").first()).toHaveClass(/\bor\b/);
+    await expect(premiere.locator(".rank-pos").first()).toHaveText("1");
+    // Aucun nom de joueur tant qu'on n'a rien touché.
+    await expect(page.locator(".liste-equipes")).not.toContainText("Joueur");
+    // L'équipe suivie a sa pastille au-dessus de la liste.
+    await expect(page.locator(".mes-chip")).toHaveText(["Charlie (éq. 1) · Série 1"]);
+  });
+
+  test("nom court sur la ligne, nom officiel et joueurs au toucher", async ({ page }) => {
+    await servirAvecClubDeLaTable(page);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const mpba = ligne(page, "MPBA 1");
+    const bouton = mpba.locator(".rank-row");
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    const plus = mpba.locator(".rank-plus");
+    await expect(plus.locator(".rank-nom")).toHaveText("METRO PELOTE BASQUE ANTONY (éq. 1)");
+    await expect(plus.locator(".rank-joueurs")).toContainText("Ane Joueur");
+    await expect(plus.getByRole("link", { name: "Voir l'équipe →" })).toBeVisible();
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    await expect(plus).toBeHidden();
+  });
+
+  test("composition non déclarée au dépli", async ({ page }) => {
+    await servirTables(page, { engagements: (d) => d.filter((e) => !(e["Numéro club"] === "03-750-002" && e["Catégorie"] === "1")) });
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const bravo = carte(page, 0).locator(".rank-item").filter({ hasText: "Bravo" });
+    await bravo.locator(".rank-row").click();
+    await expect(bravo.locator(".rank-joueurs")).toHaveText("Composition non déclarée à la ligue");
+  });
+
+  test("voir une équipe sans recharger, puis Retour ramène à la liste", async ({ page }) => {
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const appels = compterAppels(page);
+    const alpha = carte(page, 0).locator(".rank-item").first();
+    await alpha.locator(".rank-row").click();
+    await alpha.getByRole("link", { name: "Voir l'équipe →" }).click();
+    await expect(page).toHaveURL(new RegExp("equipe=" + encodeURIComponent(ALPHA).replace(/\|/g, "\\|")));
+    await expect(page.locator(".suivre-btn")).toBeVisible();
+    await expect(page.locator(".liste-equipes")).toHaveCount(0);
+    await page.goBack();
+    await expect(page.locator(".liste-equipes .rank-item")).toHaveCount(24);
+    await expect(page).toHaveURL(/equipe\.html$/);
+    expect(appels.n).toBe(0);
+  });
+
+  test("« ← Toutes les équipes » depuis un lien partagé", async ({ page }) => {
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(ALPHA));
+    await attendreChargement(page);
+    const appels = compterAppels(page);
+    await page.getByRole("link", { name: "← Toutes les équipes" }).click();
+    await expect(page.locator(".liste-equipes .rank-item")).toHaveCount(24);
+    await expect(page).toHaveURL(/equipe\.html$/);
+    expect(appels.n).toBe(0);
+  });
+
+  test("la pastille d'une équipe suivie ouvre son équipe, Retour ramène à la liste", async ({ page }) => {
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await page.locator(".mes-chip").click();
+    await expect(page.locator(".suivre-btn")).toHaveText("★ Suivie");
+    await page.goBack();
+    await expect(page.locator(".liste-equipes")).toBeVisible();
+  });
+
+  test("d'une équipe à l'autre par les pastilles, Retour ramène toujours à la liste", async ({ page }) => {
+    await page.addInitScript((cles) => localStorage.setItem("lidfpb_mes_equipes_v1", JSON.stringify(cles)), [EQUIPE_SUIVIE, ALPHA]);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await page.locator(".mes-chip").first().click();
+    await page.locator(".mes-chip").nth(1).click();
+    await expect(page).toHaveURL(new RegExp("equipe=" + encodeURIComponent(ALPHA).replace(/\|/g, "\\|")));
+    await page.getByRole("link", { name: "← Toutes les équipes" }).click();
+    await expect(page.locator(".liste-equipes")).toBeVisible();
+    await expect(page).toHaveURL(/equipe\.html$/);
+    // La liste est revenue par l'historique, sans entrée en trop : Avancer
+    // rouvre la dernière équipe vue, et non une page de liste ajoutée.
+    await page.goForward();
+    await expect(page).toHaveURL(new RegExp("equipe=" + encodeURIComponent(ALPHA).replace(/\|/g, "\\|")));
+    await expect(page.locator(".suivre-btn")).toBeVisible();
+  });
+
+  test("équipe inconnue ou dernière équipe vue : la liste", async ({ page }) => {
+    await page.addInitScript((cle) => localStorage.setItem("lidfpb_equipe_vue_v1", cle), ALPHA);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await expect(page.locator(".liste-equipes")).toBeVisible();
+    await expect(page.locator(".suivre-btn")).toHaveCount(0);
+    await page.goto("equipe.html?equipe=" + encodeURIComponent("2|1|9999999|1"));
+    await attendreChargement(page);
+    await expect(page.locator(".liste-equipes")).toBeVisible();
+    await expect(page.locator(".banner")).toHaveCount(0);
+  });
+
+  test("WhatsApp et SMS vers le responsable, sans numéro ni nom affiché", async ({ page }) => {
+    await servirTables(page, { engagements: (d) => d.map((e) => e["Numéro club"] === "03-750-002" ? { ...e, "Tél1. Resp.": "" } : e) });
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const alpha = carte(page, 0).locator(".rank-item").first();
+    const wa = alpha.getByRole("link", { name: "Écrire sur WhatsApp au responsable de Alpha 1" });
+    await expect(wa).toHaveAttribute("href", "https://wa.me/33600000100");
+    await expect(wa).toHaveAttribute("target", "_blank");
+    await expect(alpha.getByRole("link", { name: "Envoyer un SMS au responsable de Alpha 1" })).toHaveAttribute("href", "sms:+33600000100");
+    // Poules en cours : pas de message à envoyer.
+    await expect(page.locator(".contact-message")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Message aux équipes/ })).toHaveCount(0);
+    // Bravo n'a pas de numéro : aucune icône.
+    await expect(carte(page, 0).locator(".rank-item").filter({ hasText: "Bravo" }).locator(".rank-actions a")).toHaveCount(0);
+    const texte = await page.locator("main").innerText();
+    expect(texte).not.toMatch(/06\s?00|0600000|Responsable Alpha/);
+  });
+});
+
+// Spec liste-equipes, « Message des phases finales » : poules finies, demies
+// désignées, finales à désigner. Dates fixées pour un texte exact : le mardi
+// 1er décembre 2026, demies le dimanche 6, finales le dimanche 13.
+test.describe("Équipes : message des phases finales", () => {
+  function dateDepuis(base, jours) {
+    const d = new Date(base);
+    d.setDate(d.getDate() + jours);
+    return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0") + d.getFullYear();
+  }
+  const partie = (base, cat, phase, jours, heure, rec, vis) => ({
+    oid: "pf" + cat + phase + heure, "Compétition": "20270301", "Spécialité": "2", "Catégorie": cat, "Phase": phase, "Poule": "",
+    club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
+    lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: dateDepuis(base, jours), heure_renc: heure, report: "", date_rep: "",
+    score_cr: "", score_cv: ""
+  });
+  // Toutes les poules jouées, plus de quarts ; quatre demies et deux finales.
+  // Alpha devient « PARIS EUSKAL PILOTA » ; sa première joueuse de série 2 a
+  // un nom composé, en capitales comme à la ligue.
+  function finDePoules(page, base) {
+    const lic = tables.engagements.find((e) => e["Numéro club"] === "03-750-001" && e["Catégorie"] === "2")["Licence&nbsp;1"];
+    return servirTables(page, {
+      clubs: (d) => d.map((c, i) => i === 0 ? { ...c, "Nom club": "PARIS EUSKAL PILOTA" } : c),
+      licencies: (d) => d.map((l) => l.Licence === lic ? { ...l, prenom: "MAITE", nom: "BIDART-ELIZALDE" } : l),
+      rencontres: (d) => d.filter((r) => r.Phase === "1")
+        .map((r) => r.score_cr ? r : { ...r, score_cr: "40", score_cv: "20" })
+        .concat([
+          partie(base, "2", "11", 5, "1400", codeClub(0), codeClub(1)),
+          partie(base, "2", "11", 5, "1500", codeClub(2), codeClub(3)),
+          partie(base, "1", "11", 5, "1600", codeClub(4), codeClub(8)),
+          partie(base, "1", "11", 5, "1700", codeClub(5), codeClub(9)),
+          partie(base, "2", "12", 12, "1600", "9998", "9998"),
+          partie(base, "1", "12", 12, "1700", "9998", "9998")
+        ])
+    });
+  }
+  // Les joueurs d'une équipe, tels que le message les écrit.
+  function joueurs(i, cat) {
+    const e = tables.engagements.find((x) => x["Numéro club"] === "03-750-" + String(i + 1).padStart(3, "0") && x["Catégorie"] === cat);
+    return [e["Licence&nbsp;1"], e["Licence&nbsp;2"]].map((l, k) => {
+      if (i === 0 && cat === "2" && k === 0) return "Maite Bidart-Elizalde";
+      const p = tables.licencies.find((x) => x.Licence === l);
+      return p.prenom + " " + p.nom;
+    }).join(" & ");
+  }
+  const MARDI = new Date(2026, 11, 1, 10, 0);
+  const attendu = (avecAvis) => [
+    "🙏 *Merci à toutes et à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
+    "",
+    "La saison touche à sa fin et il reste deux rendez-vous à ne pas manquer. Venez nombreux encourager les équipes 👏",
+    "",
+    "🏟️ *1/2 finales, dimanche 6 décembre*",
+    "",
+    "*14h · Série 2*",
+    "PEP 1 (" + joueurs(0, "2") + ")",
+    "vs Bravo 1 (" + joueurs(1, "2") + ")",
+    "",
+    "*15h · Série 2*",
+    "Charlie 1 (" + joueurs(2, "2") + ")",
+    "vs Delta 1 (" + joueurs(3, "2") + ")",
+    "",
+    "*16h · Série 1*",
+    "Echo 1 (" + joueurs(4, "1") + ")",
+    "vs India 1 (" + joueurs(8, "1") + ")",
+    "",
+    "*17h · Série 1*",
+    "Foxtrot 1 (" + joueurs(5, "1") + ")",
+    "vs Juliet 1 (" + joueurs(9, "1") + ")",
+    "",
+    "🏆 *Finales, dimanche 13 décembre*",
+    "• 16h : finale Série 2",
+    "• 17h : finale Série 1",
+    "",
+    "📍 Trinquet Paris (75016)",
+    "",
+    ...(avecAvis ? [
+      "💬 *Votre avis compte* : 2 minutes pour préparer la prochaine saison",
+      "https://forms.gle/8z2xRRQsG6ahpDm58",
+      ""
+    ] : []),
+    "📱 *Résultats, classements et parties sur téléphone* (site non officiel, en bêta, en complément de celui de la ligue) :",
+    "http://127.0.0.1:8123/decouvrir.html",
+    "",
+    "À très vite au bord du trinquet ! 💪"
+  ].join("\n");
+
+  test("le bouton déplie le message construit, prêt à partager", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    await page.addInitScript(() => {
+      navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
+    });
+    await finDePoules(page, MARDI);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+
+    const bloc = page.locator(".message-equipes");
+    await expect(bloc).toContainText("dim. 6 déc.");
+    const bouton = bloc.getByRole("button", { name: /Message aux équipes/ });
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    await expect(bloc.locator(".message-apercu")).toBeHidden();
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    const texte = await bloc.locator(".message-apercu").textContent();
+    expect(texte).toBe(attendu(true));
+    // Ni numéro ni nom de responsable dans le message.
+    expect(texte).not.toMatch(/Responsable|0600000|06 00/);
+
+    await bloc.getByRole("button", { name: "Partager" }).click();
+    expect(await page.evaluate(() => window.__partage.text)).toBe(attendu(true));
+  });
+
+  test("chaque ligne envoie le message à son responsable sur WhatsApp", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    await finDePoules(page, MARDI);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const pep = page.locator(".liste-equipes .rank-item").filter({ has: page.locator(".rank-team", { hasText: /^PEP\s1$/ }) }).first();
+    const envoi = pep.getByRole("link", { name: "Envoyer le message des phases finales au responsable de PEP 1" });
+    await expect(envoi).toHaveAttribute("href", "https://wa.me/33600000100?text=" + encodeURIComponent(attendu(true)));
+    await expect(envoi).toHaveAttribute("target", "_blank");
+    await expect(page.locator(".contact-message")).toHaveCount(24);
+    // Rien n'est déplié : aucun joueur à l'écran.
+    await expect(page.locator(".liste-equipes")).not.toContainText("Joueur");
+  });
+
+  test("campagne d'avis finie : plus de lien du questionnaire, le site reste", async ({ page }) => {
+    const JANVIER = new Date(2027, 0, 5, 10, 0);
+    await page.clock.setFixedTime(JANVIER);
+    await finDePoules(page, JANVIER);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    const texte = await bloc.locator(".message-apercu").textContent();
+    expect(texte).not.toContain("forms.gle");
+    expect(texte).toContain("http://127.0.0.1:8123/decouvrir.html");
+    expect(texte).toContain("*1/2 finales, dimanche 10 janvier*");
+  });
+
+  test("un seul en-tête par phase et par jour, même quand les séries s'entrecroisent", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    await servirTables(page, {
+      rencontres: (d) => d.filter((r) => r.Phase === "1")
+        .map((r) => r.score_cr ? r : { ...r, score_cr: "40", score_cv: "20" })
+        .concat([
+          partie(MARDI, "2", "11", 5, "1000", codeClub(0), codeClub(1)),
+          partie(MARDI, "1", "12", 5, "1200", "9998", "9998"),
+          partie(MARDI, "2", "11", 5, "1400", codeClub(2), codeClub(3))
+        ])
+    });
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    const texte = await bloc.locator(".message-apercu").textContent();
+    expect(texte.match(/\*1\/2 finales, dimanche 6 décembre\*/g)).toHaveLength(1);
+    expect(texte.indexOf("*10h · Série 2*")).toBeLessThan(texte.indexOf("*14h · Série 2*"));
+    expect(texte.indexOf("*14h · Série 2*")).toBeLessThan(texte.indexOf("*Finales, dimanche 6 décembre*"));
+    expect(texte).toContain("il reste un dernier rendez-vous");
+    // Le message reste ouvert quand la liste est redessinée (Rafraîchir).
+    await page.locator("#refreshBtn").click();
+    await attendreChargement(page);
+    await expect(bloc.locator(".message-apercu")).toBeVisible();
+  });
+
+  test("saison finie : ni bouton ni icône d'envoi", async ({ page }) => {
+    const APRES = new Date(2026, 11, 20, 10, 0);
+    await page.clock.setFixedTime(APRES);
+    await finDePoules(page, MARDI);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await expect(page.locator(".liste-equipes .rank-item")).toHaveCount(24);
+    await expect(page.locator(".message-equipes")).toHaveCount(0);
+    await expect(page.locator(".contact-message")).toHaveCount(0);
+  });
+});
 
 test.describe("Thème choisi sur le site", () => {
   const PAGES_THEME = ["index", "equipe", "programme", "classement", "creneaux", "report", "compteur", "decouvrir", "404"];
