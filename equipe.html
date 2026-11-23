@@ -894,7 +894,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.22</p>
+    <p>Version 2026.11.23</p>
   </footer>
 </main>
 
@@ -1236,6 +1236,14 @@
     if (digits.length === 10 && digits[0] === "0") return "33" + digits.slice(1);
     if (digits.length === 9) return "33" + digits;
     return digits.length >= 8 ? digits : null;
+  }
+
+  // Lien WhatsApp avec un message prérempli. Pas wa.me : sa redirection vers
+  // api.whatsapp.com remplace les emojis par « � » dans WhatsApp sur
+  // ordinateur (Web, Windows, Mac), alors que le mobile les garde. Le lien
+  // direct les garde partout.
+  function lienWhatsappAvecTexte(numero, texte) {
+    return "https://api.whatsapp.com/send?phone=" + numero + "&text=" + encodeURIComponent(texte);
   }
 
   function hasScore(row) {
@@ -2287,7 +2295,7 @@
     if (numero) {
       var wa = el("a", {
         class: "prevenir-btn wa",
-        href: "https://wa.me/" + numero + "?text=" + encodeURIComponent(texte),
+        href: lienWhatsappAvecTexte(numero, texte),
         target: "_blank",
         rel: "noopener"
       });
@@ -2415,7 +2423,7 @@
       ["sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS" + qui]
     ];
     if (message) {
-      liens.push(["message contact-message", SVG_ENVOI, "https://wa.me/" + numero + "?text=" + encodeURIComponent(message),
+      liens.push(["message contact-message", SVG_ENVOI, lienWhatsappAvecTexte(numero, message),
                   "Envoyer le message des phases finales" + qui]);
     }
     liens.forEach(function (c) {

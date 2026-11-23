@@ -109,7 +109,7 @@ On calcule `normalizePhoneForWhatsapp(team.contact.tel)` une fois par ligne. San
 
 - **WhatsApp** : `https://wa.me/<n>`, sans texte (comme la fiche de l'adversaire).
 - **SMS** : `sms:+<n>`.
-- **Message** : `https://wa.me/<n>?text=<message encodé>`, avec l'icône Phosphor « paper-plane-tilt », seulement si le message existe.
+- **Message** : `https://api.whatsapp.com/send?phone=<n>&text=<message encodé>`, avec l'icône Phosphor « paper-plane-tilt », seulement si le message existe. Pas `wa.me` : sa redirection vers `api.whatsapp.com` remplace les emojis par « � » dans WhatsApp sur ordinateur (constaté le 23 novembre sur PC, alors que l'iPhone les gardait). « Prévenir l'équipe » passe par le même lien.
 
 Chaque icône a un `aria-label` et un `title` qui nomment l'équipe par son nom court (« Envoyer le message des phases finales au responsable de PEP 2 »), jamais le responsable. Les liens WhatsApp s'ouvrent avec `target="_blank" rel="noopener"`.
 

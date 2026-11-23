@@ -2303,7 +2303,7 @@ test.describe("Mes équipes : prévenir l'équipe de ses parties à jouer", () =
 
     // WhatsApp vers le responsable, message prérempli, sans numéro affiché.
     const wa = bloc.locator("a.prevenir-btn.wa");
-    await expect(wa).toHaveAttribute("href", /^https:\/\/wa\.me\/33\d+\?text=/);
+    await expect(wa).toHaveAttribute("href", /^https:\/\/api\.whatsapp\.com\/send\?phone=33\d+&text=/);
     await expect(page.locator("body")).not.toContainText("0600000");
 
     await bloc.getByRole("button", { name: "Partager" }).click();
@@ -2674,7 +2674,9 @@ test.describe("Équipes : message des phases finales", () => {
     await attendreChargement(page);
     const pep = page.locator(".liste-equipes .rank-item").filter({ has: page.locator(".rank-team", { hasText: /^PEP\s1$/ }) }).first();
     const envoi = pep.getByRole("link", { name: "Envoyer le message des phases finales au responsable de PEP 1" });
-    await expect(envoi).toHaveAttribute("href", "https://wa.me/33600000100?text=" + encodeURIComponent(attendu(true)));
+    // api.whatsapp.com et non wa.me, dont la redirection perd les emojis sur
+    // ordinateur.
+    await expect(envoi).toHaveAttribute("href", "https://api.whatsapp.com/send?phone=33600000100&text=" + encodeURIComponent(attendu(true)));
     await expect(envoi).toHaveAttribute("target", "_blank");
     await expect(page.locator(".contact-message")).toHaveCount(24);
     // Rien n'est déplié : aucun joueur à l'écran.
