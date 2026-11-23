@@ -722,7 +722,7 @@
   .recap-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
 
   /* Le bloc Filtres se replie : on ne le règle qu'une fois, alors qu'il pousse
-     la liste hors de l'écran à chaque chargement. Ouvert par défaut, l'état
+     la liste hors de l'écran à chaque chargement. Replié par défaut, l'état
      est retenu et commun à toutes les pages. */
   .filters-toggle {
     display: flex;
@@ -771,20 +771,6 @@
   }
   .filter-subtitle:first-of-type { margin-top: 0; }
   .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
-  /* Onze clubs aux noms longs : en pastilles ils rempliraient cinq lignes.
-     Une liste déroulante native tient sur une ligne et se manipule mieux au
-     pouce, et un club à la fois est le besoin réel. */
-  .filter-select {
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    width: 100%;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 10px;
-  }
   .filter-chip {
     font: inherit;
     font-size: 14px;
@@ -2570,8 +2556,14 @@
   function loadFilterState() {
     try {
       var saved = JSON.parse(localStorage.getItem(FILTER_CACHE_KEY));
-      if (saved && saved.specs) filterState.specs = saved.specs;
-      if (saved && saved.series) filterState.series = saved.series;
+      // Seuls des booléens sont repris : un état abîmé laisse les valeurs par défaut.
+      ["specs", "series"].forEach(function (champ) {
+        var v = saved && saved[champ];
+        if (!v || typeof v !== "object" || Array.isArray(v)) return;
+        Object.keys(v).forEach(function (k) {
+          if (typeof v[k] === "boolean" && k !== "__proto__") filterState[champ][k] = v[k];
+        });
+      });
     } catch (e) { /* stockage indisponible ou corrompu : valeurs par défaut */ }
   }
 
@@ -3069,6 +3061,7 @@
         var n = Object.keys(etat.index).filter(function (k) {
           return equipeAffichee(etat.index[k]) && !!prochainePartie(etat.index[k], ctx.aujourdHui);
         }).length;
+        if (!n) return "Aucune équipe affichée n'a de partie à venir : changez les filtres pour en voir.";
         return pluriel(n, "équipe") + " " + (n > 1 ? "ont" : "a") + " une partie à venir : chacune reçoit la sienne, avec son adversaire et le responsable adverse.";
       }
     },
@@ -3240,9 +3233,12 @@
     majApercu();
     corps.appendChild(apercu);
     var btns = el("div", { class: "prevenir-btns" });
-    var partage = boutonPartager(function () { return texteApercu(false); });
-    btns.appendChild(partage.bouton);
-    btns.appendChild(partage.info);
+    // Sans équipe affichée concernée, rien à partager : pas de bouton.
+    if (equipes.length) {
+      var partage = boutonPartager(function () { return texteApercu(false); });
+      btns.appendChild(partage.bouton);
+      btns.appendChild(partage.info);
+    }
     corps.appendChild(btns);
     bloc.appendChild(corps);
 

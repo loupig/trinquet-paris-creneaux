@@ -39,8 +39,16 @@ La liste de toutes les équipes SHALL être précédée d'un bloc Filtres, celui
 - **THEN** la page n'a pas de bloc Filtres
 
 ### Requirement: Communications limitées aux équipes affichées
-En mode organisateur (spec `communications-equipes`), une communication SHALL ne viser que les équipes que les filtres laissent affichées : une équipe masquée n'a pas d'icône d'envoi visible, ne figure pas dans la liste « Aperçu pour », et n'est pas comptée dans la note du bloc. Quand les données comptent plus d'une spécialité, la liste « Aperçu pour » nomme la spécialité de chaque équipe.
+En mode organisateur (spec `communications-equipes`), une communication SHALL ne viser que les équipes que les filtres laissent affichées : une équipe masquée n'a pas d'icône d'envoi visible, ne figure pas dans la liste « Aperçu pour » et n'est pas comptée dans la note du bloc. Le contenu de « Phases finales » reste celui de toute la ligue : seuls ses destinataires suivent les filtres.
 
 #### Scenario: Communication à une seule série
 - **WHEN** l'organisateur désactive « Série 1 » et choisit « Prochaine partie »
 - **THEN** seules les équipes de série 2 ont un avion en papier, la liste « Aperçu pour » ne propose qu'elles, et la note ne compte qu'elles
+
+#### Scenario: Aucune équipe affichée concernée
+- **WHEN** les filtres ne laissent aucune équipe concernée par la communication choisie
+- **THEN** la note et l'aperçu le disent, et le bloc ne propose pas de partage
+
+#### Scenario: Plusieurs spécialités
+- **WHEN** les données comptent plus d'une spécialité
+- **THEN** la liste « Aperçu pour » nomme la spécialité de chaque équipe

@@ -936,7 +936,7 @@ test("noms courts identiques d'une page à l'autre, et à la spec", async () => 
   // Le lien du questionnaire d'avis : celui de l'accueil, dans le message des
   // phases finales de la page Équipes.
   expect(await constante("equipe.html", "AVIS")).toEqual(await constante("index.html", "AVIS"));
-  // Les libellés des spécialités, identiques dans les quatre pages qui filtrent.
+  // Les libellés des spécialités, identiques dans les quatre pages qui les portent.
   for (const f of ["equipe.html", "classement.html", "programme.html"]) {
     expect(await constante(f, "SPEC_LABELS"), f).toEqual(await constante("index.html", "SPEC_LABELS"));
   }
@@ -3027,6 +3027,19 @@ test.describe("Équipes : filtres de la liste", () => {
     const options = await bloc.locator("#apercu-equipe option").allTextContents();
     expect(options).toHaveLength(12);
     expect(options.every((o) => o.includes("Série 2"))).toBe(true);
+  });
+
+  test("organisateur, aucune équipe affichée : pas de partage d'un message vide", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("lidfpb_equipes_filters_v1", JSON.stringify({ specs: "abîmé", series: { "1": false, "2": false } })));
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    // L'état abîmé (spécialités) est ignoré, les séries sont reprises.
+    await expect(page.locator("#filterSpecs .filter-chip.active")).toHaveCount(1);
+    const bloc = page.locator(".message-equipes");
+    await expect(bloc).toContainText("Aucune équipe affichée n'a de partie à venir");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await expect(bloc.locator(".message-apercu")).toHaveText("Aucune équipe affichée n'est concernée.");
+    await expect(bloc.getByRole("button", { name: /Partager|Copier/ })).toHaveCount(0);
   });
 });
 
