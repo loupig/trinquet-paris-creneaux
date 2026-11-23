@@ -253,8 +253,8 @@ uniquement pour les clubs du comité et pour les joueurs d'autres clubs
 déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
-- **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil,
-  sous chaque équipe sur la page d'une équipe, au toucher de la ligne
+- **Noms de joueurs** : au toucher d'une partie ou d'une équipe suivie sur
+  l'accueil, sous chaque équipe sur la page d'une équipe, au toucher de la ligne
   d'une équipe sur la liste des équipes et sur le Classement, et au détail
   d'une partie sur Parties et Créneaux. Jamais dans un texte ou une image
   partagés, sauf les communications du mode organisateur de la page
