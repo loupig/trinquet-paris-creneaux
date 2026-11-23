@@ -7,7 +7,7 @@ Permettre à l'organisateur de choisir, sur la page Équipes, la communication �
 ## Requirements
 
 ### Requirement: Mode organisateur
-La page Équipes SHALL passer en mode organisateur quand son adresse porte le paramètre `orga`, avec ou sans valeur, ou quand le visiteur touche « Mode organisateur » dans son pied de page (un lien vers `equipe.html?orga`). Le mode est alors gardé dans le navigateur (clé `lidfpb_orga_v1`) : les visites suivantes de la page Équipes, même par l'onglet, sont en mode organisateur, et `orga` quitte l'adresse, pour qu'un lien copié n'y emmène pas un joueur. En mode organisateur, le pied de page porte « Quitter le mode organisateur » à la place du lien : le toucher oublie le mode et rouvre la vue affichée sans lui. Quand le navigateur refuse le stockage, le mode vaut pour la visite : passer de la liste à une équipe, ou d'une équipe à l'autre, MUST alors garder `orga` dans l'adresse. Ce mode seul montre le bloc des communications et l'icône d'envoi des lignes. Hors de ce mode, la page n'a ni bloc des communications ni icône d'envoi. Ce n'est pas une protection : aucun code n'est demandé.
+La page Équipes SHALL passer en mode organisateur quand son adresse porte le paramètre `orga`, avec ou sans valeur, ou quand le visiteur touche « Mode organisateur » dans son pied de page (un lien vers `equipe.html?orga`). Le mode est alors gardé dans le navigateur (clé `lidfpb_orga_v1`) : les visites suivantes de la page Équipes, même par l'onglet, sont en mode organisateur, et `orga` quitte l'adresse, pour qu'un lien copié n'y emmène pas un joueur. En mode organisateur, le pied de page porte « Quitter le mode organisateur » à la place du lien : le toucher oublie le mode et rouvre la vue affichée sans lui. Quand le navigateur refuse le stockage, le mode vaut pour la visite : passer de la liste à une équipe, ou d'une équipe à l'autre, MUST alors garder `orga` dans l'adresse. Ce mode seul montre le bloc des communications et l'icône d'envoi des lignes. Hors de ce mode, la page n'a ni bloc des communications ni icône d'envoi. Le mode est le même sur Parties (spec `programme`), qui a le même lien et le même bouton dans son pied de page : entré ou quitté sur l'une des deux pages, il l'est sur l'autre. Ce n'est pas une protection : aucun code n'est demandé.
 
 #### Scenario: Ouvrir en organisateur
 - **WHEN** l'organisateur ouvre `equipe.html?orga`
@@ -24,6 +24,10 @@ La page Équipes SHALL passer en mode organisateur quand son adresse porte le pa
 #### Scenario: Quitter
 - **WHEN** l'organisateur touche « Quitter le mode organisateur »
 - **THEN** la page n'a plus de bloc des communications, ni à cette visite ni aux suivantes, et le pied de page propose à nouveau « Mode organisateur »
+
+#### Scenario: Même mode sur Parties
+- **WHEN** l'organisateur passe en mode organisateur sur la page Équipes, puis ouvre Parties
+- **THEN** Parties est en mode organisateur : ses icônes WhatsApp et SMS portent le message de vérification de la partie
 
 #### Scenario: Visiteur ordinaire
 - **WHEN** un joueur ouvre `equipe.html` par l'onglet, sans être jamais passé en mode organisateur
@@ -56,7 +60,7 @@ En mode organisateur, la ligne d'une équipe dont le responsable a un numéro ex
 - **THEN** sa ligne n'a pas d'icône d'envoi, mais garde WhatsApp et SMS
 
 ### Requirement: Communication « Prochaine partie »
-La communication « Prochaine partie » SHALL concerner les équipes qui ont une partie à venir, et leur envoyer le message de vérification de cette partie, celui qu'envoyait la page Parties avant de renvoyer vers la page de chaque équipe, mis en forme pour WhatsApp, dans cet ordre :
+La communication « Prochaine partie » SHALL concerner les équipes qui ont une partie à venir, et leur envoyer le message de vérification de cette partie, le même que celui des icônes de Parties en mode organisateur (spec `programme`), mis en forme pour WhatsApp, dans cet ordre :
 - « Bonjour » et le prénom du responsable quand il peut être isolé ;
 - « Votre partie », l'équipe et son adversaire en noms officiels (« Charlie (éq. 1) vs Foxtrot (éq. 1) »), « est prévue le » avec le jour, la date et l'année et l'heure en gras, puis « à » et le lieu tel que la ligue l'écrit, s'il est connu ; le point ferme la dernière ligne écrite ;
 - « Tout est bon de votre côté ? » ;

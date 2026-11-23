@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Donner le calendrier complet des championnats, tous lieux et toutes séries, parties passées et à venir, avec pour chaque partie la composition des deux équipes, le chemin vers la page de chacune (où l'on joint son responsable) et l'accès à l'aide au report.
+Donner le calendrier complet des championnats, tous lieux et toutes séries, parties passées et à venir, avec pour chaque partie la composition des deux équipes, de quoi écrire à leurs responsables, le chemin vers la page de chacune et l'accès à l'aide au report.
 
 ## Requirements
 
@@ -148,19 +148,34 @@ C'est le seul endroit de la page où figurent les joueurs. Si les compositions n
 - **THEN** sa ligne de détail indique son nom officiel et « composition non disponible »
 
 ### Requirement: Aller à la page d'une équipe
-Dans le détail d'une partie, le nom officiel de chaque équipe SHALL être un lien vers sa page (`equipe.html?equipe=…`), où l'on trouve ses parties et de quoi joindre son responsable (spec `mon-equipe`). Une équipe à désigner (club fictif) n'a pas de lien. Parties MUST NOT porter elle-même d'icône WhatsApp, SMS ou Appeler, ni de message prérempli : le message de vérification d'une partie est la communication « Prochaine partie » de l'organisateur (spec `communications-equipes`).
+Dans le détail d'une partie, le nom officiel de chaque équipe SHALL être un lien vers sa page (`equipe.html?equipe=…`), où l'on trouve ses parties et de quoi joindre son responsable, appel compris (spec `mon-equipe`). Une équipe à désigner (club fictif) n'a pas de lien.
 
 #### Scenario: Aller à l'équipe qui reçoit
 - **WHEN** le visiteur déplie une partie et touche le nom de l'équipe qui reçoit
 - **THEN** la page de cette équipe s'ouvre, avec les boutons pour joindre son responsable
 
-#### Scenario: Pas de contact sur Parties
-- **WHEN** le visiteur déplie une partie
-- **THEN** le détail n'a ni icône WhatsApp, ni SMS, ni Appeler
-
 #### Scenario: Adversaire à désigner
 - **WHEN** une partie oppose une équipe à une équipe encore à désigner
 - **THEN** seul le nom de l'équipe connue est un lien
+
+### Requirement: Écrire aux responsables d'équipe
+Dans le détail d'une partie, chaque équipe dont le responsable a un numéro exploitable SHALL porter, devant son nom, deux icônes : WhatsApp et SMS, vers le numéro de son responsable. Pour tout visiteur, elles ouvrent une conversation vierge. En mode organisateur (spec `communications-equipes`, le même mode que la page Équipes), pour une partie sans score, elles ouvrent la conversation avec le message de vérification de la partie prérempli, adressé au responsable de cette équipe : le même texte que la communication « Prochaine partie » de la page Équipes, en SMS sans le gras ni l'italique de WhatsApp. Pas d'icône Appeler : l'appel est sur la page de l'équipe. Le numéro et le nom du responsable MUST NOT apparaître dans le texte de la page. Sans numéro exploitable, l'équipe n'a pas d'icônes. Le pied de page porte le lien « Mode organisateur », ou « Quitter le mode organisateur », comme celui de la page Équipes.
+
+#### Scenario: Visiteur ordinaire
+- **WHEN** un joueur déplie une partie dont le responsable de l'équipe visiteuse a un numéro exploitable
+- **THEN** cette équipe porte les icônes WhatsApp et SMS, qui ouvrent une conversation sans texte, et aucun numéro n'est écrit dans la page
+
+#### Scenario: Organisateur
+- **WHEN** l'organisateur, en mode organisateur, déplie la partie à venir Charlie 1 – Foxtrot 1 et touche l'icône WhatsApp de Charlie 1
+- **THEN** WhatsApp s'ouvre vers le responsable de Charlie 1 avec le même message que « Prochaine partie » pour Charlie 1 sur la page Équipes
+
+#### Scenario: Partie jouée
+- **WHEN** l'organisateur déplie une partie qui a un score
+- **THEN** les icônes ouvrent une conversation sans texte
+
+#### Scenario: Pas de numéro
+- **WHEN** le responsable d'une équipe n'a pas de numéro exploitable
+- **THEN** cette équipe n'a pas d'icônes de contact
 
 ### Requirement: Compter une partie
 Le détail d'une partie sans score SHALL porter le bouton « Compter cette partie », quel que soit son lieu, qui ouvre le compteur de points avec les deux équipes déjà nommées, l'équipe qui reçoit en premier, en 40 points, et la série avec la poule ou la phase. Une partie déjà jouée n'a pas le bouton.

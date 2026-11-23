@@ -2967,10 +2967,9 @@
     "lien site", "lien questionnaire", "phases finales"
   ];
 
-  // Le message « Prochaine partie » : celui qu'envoyait la page Parties,
-  // adressé au responsable de l'équipe pour vérifier sa prochaine partie.
-  // Chaque élément absent des données de la ligue est omis plutôt qu'écrit à
-  // vide. masque : numéro adverse masqué, pour l'aperçu seulement.
+  // Le message « Prochaine partie » : le message de vérification de la
+  // prochaine partie de l'équipe, comme sur Parties. masque : numéro adverse
+  // masqué, pour l'aperçu seulement.
   var DAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   var MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
@@ -2978,48 +2977,57 @@
     return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
   }
 
+  // Le message de vérification d'une partie, adressé au responsable d'une
+  // équipe. Même fonction, au caractère près, dans programme.html et
+  // equipe.html (un test le vérifie) : le message est le même sur Parties et
+  // dans « Prochaine partie ». p : responsable (prénom ou ""), equipe et
+  // adversaire (noms officiels), quand (« jeudi 3 décembre 2026 à 19h30 »),
+  // lieu, respAdv et telAdv (ou ""), finales (rappel ou null), contexte.
+  // Chaque élément absent est omis plutôt qu'écrit à vide.
+  function messageVerification(p) {
+    var rencontre = ["Votre partie", p.equipe + " vs " + p.adversaire];
+    // Le point ferme la phrase sur la dernière ligne réellement écrite :
+    // sans lieu connu, c'est la ligne date/heure.
+    rencontre.push("est prévue le *" + p.quand + "*" + (p.lieu ? "" : "."));
+    if (p.lieu) rencontre.push("à " + p.lieu + ".");
+    var blocs = [
+      "Bonjour" + (p.responsable ? " " + p.responsable : "") + ",",
+      rencontre.join("\n"),
+      "Tout est bon de votre côté ?"
+    ];
+    if (p.respAdv || p.telAdv) {
+      blocs.push("Responsable adverse : " + (p.respAdv && p.telAdv ? p.respAdv + " (" + p.telAdv + ")" : (p.respAdv || p.telAdv)) + ".");
+    }
+    if (p.finales) blocs.push(p.finales);
+    // Rappel de contexte en italique WhatsApp (_.._), en fin de message.
+    if (p.contexte) blocs.push("_" + p.contexte + "_");
+    blocs.push("Merci.");
+    return blocs.join("\n\n");
+  }
+
   function messageProchainePartie(team, ctx, masque) {
     var m = prochainePartie(team, ctx.aujourdHui);
     if (!m) return "";
     var adv = etat.index[teamKey(team.spec, team.cat, m.clubAdv, m.numAdv)];
-    var resp = team.contact ? prenomDuResponsable(team.contact.responsable) : "";
-    var quand = "est prévue le *" + formatDateLongue(m.date) + " à " + formatHour(m.hour, m.minute) + "*";
-
-    // Un adversaire pas encore désigné se nomme comme sur Parties, sans numéro.
-    var nomAdv = clubFictif(m.clubAdv) ? (etat.clubMap[m.clubAdv] || "Equipe à désigner") : m.adversaire;
-    var rencontre = ["Votre partie", clubLabel(etat.clubMap, team.clubCode, team.numero) + " vs " + nomAdv];
-    // Le point ferme la phrase sur la dernière ligne réellement écrite :
-    // sans lieu connu, c'est la ligne date/heure.
-    rencontre.push(quand + (m.lieu ? "" : "."));
-    if (m.lieu) rencontre.push("à " + m.lieu + ".");
-
-    var blocs = [
-      "Bonjour" + (resp ? " " + resp : "") + ",",
-      rencontre.join("\n"),
-      "Tout est bon de votre côté ?"
-    ];
-
-    var autreResp = adv && adv.contact ? String(adv.contact.responsable || "").trim() : "";
-    var autreTel = adv && adv.contact ? (telLisible(adv.contact.tel) || "") : "";
+    var telAdv = adv && adv.contact ? (telLisible(adv.contact.tel) || "") : "";
     // Masqué, en espaces insécables : le numéro ne se coupe pas en fin de ligne.
-    if (autreTel && masque) autreTel = masquerTel(autreTel).replace(/ /g, "\u00a0");
-    if (autreResp || autreTel) {
-      blocs.push("Responsable adverse : " + (autreResp && autreTel ? autreResp + " (" + autreTel + ")" : (autreResp || autreTel)) + ".");
-    }
-
-    var finales = rappelPhasesFinales(team, m);
-    if (finales) blocs.push(finales);
-
-    // Rappel de contexte en italique WhatsApp (_.._), en fin de message.
-    var contexte = [
-      COMPET_LABELS[m.competRaw] || "",
-      SPEC_LABELS[team.spec] || "",
-      team.serieLabel + (m.meta ? " - " + m.meta : "")
-    ].filter(function (part) { return !!part; }).join(", ");
-    if (contexte) blocs.push("_" + contexte + "_");
-
-    blocs.push("Merci.");
-    return blocs.join("\n\n");
+    if (telAdv && masque) telAdv = masquerTel(telAdv).replace(/ /g, "\u00a0");
+    return messageVerification({
+      responsable: team.contact ? prenomDuResponsable(team.contact.responsable) : "",
+      equipe: clubLabel(etat.clubMap, team.clubCode, team.numero),
+      // Un adversaire pas encore désigné se nomme comme sur Parties, sans numéro.
+      adversaire: clubFictif(m.clubAdv) ? (etat.clubMap[m.clubAdv] || ("Club " + m.clubAdv)) : m.adversaire,
+      quand: formatDateLongue(m.date) + " à " + formatHour(m.hour, m.minute),
+      lieu: m.lieu,
+      respAdv: adv && adv.contact ? String(adv.contact.responsable || "").trim() : "",
+      telAdv: telAdv,
+      finales: rappelPhasesFinales(team, m),
+      contexte: [
+        COMPET_LABELS[m.competRaw] || "",
+        SPEC_LABELS[team.spec] || "",
+        team.serieLabel + (m.meta ? " - " + m.meta : "")
+      ].filter(function (part) { return !!part; }).join(", ")
+    });
   }
 
   // Pendant la phase de poules, on prévient que les phases finales ne se

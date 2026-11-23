@@ -678,7 +678,19 @@
     margin-bottom: 4px;
   }
   .match-detail .roster-empty { color: var(--muted); }
-  /* Le nom d'une équipe mène à sa page, où sont les contacts de son responsable. */
+  /* WhatsApp et SMS devant le nom d'une équipe : conversation vierge, ou message
+     de vérification de la partie en mode organisateur. */
+  .wa-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .wa-icon svg { display: block; }
+  .wa-icon.icon-whatsapp { color: #25D366; }
+  .wa-icon.icon-sms { color: var(--accent); }
+  /* Le nom d'une équipe mène à sa page. */
   .lien-equipe { color: var(--accent); font-weight: 600; text-decoration: none; }
   .lien-equipe:hover { text-decoration: underline; }
 
@@ -773,6 +785,16 @@
     color: var(--muted);
   }
   footer a { color: var(--muted); }
+  /* « Quitter le mode organisateur » : un bouton, habillé comme les liens du pied. */
+  .pied-orga button {
+    font: inherit;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
 
   /* --- Grand écran (spec apparence) ---
      Sous 1000 px, téléphone même à l'horizontale ou tablette en portrait :
@@ -836,6 +858,7 @@
     <p>Cette page se contente d'afficher le calendrier communiqué par la ligue, elle n'a aucun effet sur le site de la ligue.</p>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
+    <p class="pied-orga" id="piedOrga"><a href="programme.html?orga">Mode organisateur</a></p>
     <p>Version 2026.11.23.2</p>
   </footer>
 </main>
@@ -1261,9 +1284,8 @@
   var NBSP_ENTITY = String.fromCharCode(38, 110, 98, 115, 112, 59);
   var LICENCE_COLUMNS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return "Licence" + NBSP_ENTITY + n; });
 
-  // Clé : "NuméroClub|Catégorie|Equipe" -> composition (licences) déclarée à
-  // la ligue pour cette équipe. Les contacts des responsables ne servent pas
-  // ici : ils sont sur la page de chaque équipe.
+  // Clé : "NuméroClub|Catégorie|Equipe" -> composition (licences) + contact
+  // du responsable déclarés à la ligue pour cette équipe.
   function buildEngagementsIndex(engagementsData) {
     var index = {};
     (engagementsData || []).forEach(function (e) {
@@ -1271,7 +1293,11 @@
       var licences = LICENCE_COLUMNS
         .map(function (col) { return normalizeLicence(e[col]); })
         .filter(function (v) { return v; });
-      if (licences.length) index[key] = { licences: licences };
+      var responsable = String(e["Responsable"] || "").trim();
+      var tel = String(e["Tél1. Resp."] || "").trim() || String(e["Tél2. Resp."] || "").trim();
+      if (licences.length || responsable || tel) {
+        index[key] = { licences: licences, responsable: responsable, tel: tel };
+      }
     });
     return index;
   }
@@ -1285,6 +1311,35 @@
     return entry.licences
       .map(function (lic) { return licenceMap[lic]; })
       .filter(function (nom) { return !!nom; });
+  }
+
+  function getContact(engagementsIndex, numeroClubMap, clubCode, categorie, equipe) {
+    var numeroClub = numeroClubMap[clubCode];
+    if (!numeroClub) return null;
+    var key = [numeroClub, String(categorie || "").trim(), String(equipe || "").trim()].join("|");
+    var entry = engagementsIndex[key];
+    if (!entry || !entry.tel) return null;
+    return { responsable: entry.responsable, tel: entry.tel };
+  }
+
+  // Numéros saisis dans des formats variés ("06 12 34 56 78", "06.12.34.56.78",
+  // parfois avec indicatif). wa.me exige un format international sans "0"
+  // initial ni séparateurs.
+  function normalizePhoneForWhatsapp(raw) {
+    var digits = String(raw || "").replace(/\D/g, "");
+    if (!digits) return null;
+    if (digits.slice(0, 2) === "33") return digits;
+    if (digits.length === 10 && digits[0] === "0") return "33" + digits.slice(1);
+    if (digits.length === 9) return "33" + digits;
+    return digits.length >= 8 ? digits : null;
+  }
+
+  // Numéro lisible au téléphone ("06 12 34 56 78"), comme dans equipe.html.
+  function telLisible(raw) {
+    var n = normalizePhoneForWhatsapp(raw);
+    if (!n) return null;
+    if (n.slice(0, 2) === "33" && n.length === 11) return ("0" + n.slice(2)).replace(/(\d\d)(?=\d)/g, "$1 ");
+    return "+" + n;
   }
 
   // Construit la liste des rencontres exploitables (date/heure valides),
@@ -1328,6 +1383,9 @@
         clubVis: String(row.club_vis || "").trim(),
         equipRec: String(row.equip_rec || "").trim(),
         equipVis: String(row.equip_vis || "").trim(),
+        competRaw: competRaw,
+        contactRec: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_rec, catRaw, row.equip_rec),
+        contactVis: getContact(joinCtx.engagementsIndex, joinCtx.numeroClubMap, row.club_vis, catRaw, row.equip_vis),
         lieu: String(row.lieu_renc || "").trim() || LIEU_INCONNU,
         phaseRaw: phaseRaw || "?",
         meta: meta,
@@ -1396,6 +1454,150 @@
     container.appendChild(b);
   }
 
+  // ---------------------------------------------------------------
+  // Mode organisateur (spec communications-equipes) : le même que sur la page
+  // Équipes, gardé dans le navigateur (clé partagée). Ce n'est pas une
+  // protection : il évite seulement de mettre sous les yeux des joueurs un
+  // message qui ne leur est pas destiné.
+  // ---------------------------------------------------------------
+  var ORGA_KEY = "lidfpb_orga_v1";
+  var ORGA_MEMORISE = false;
+  var ORGA = (function () {
+    var demande = false;
+    try { demande = new URLSearchParams(window.location.search).has("orga"); } catch (e) { /* adresse illisible */ }
+    try {
+      if (demande) localStorage.setItem(ORGA_KEY, "1");
+      ORGA_MEMORISE = localStorage.getItem(ORGA_KEY) === "1";
+    } catch (e) { ORGA_MEMORISE = false; }
+    return demande || ORGA_MEMORISE;
+  })();
+
+  // Pictogrammes SVG inline (pas de dépendance externe, cf. philosophie du site).
+  var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M187.58,144.84l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88,40,40,0,0,0,40-40A8,8,0,0,0,187.58,144.84ZM152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155l14.61-9.74,23,11.48A24,24,0,0,1,152,176ZM128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"/></svg>';
+  var ICON_SVG_SMS = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M216,48H40A16,16,0,0,0,24,64V224a15.85,15.85,0,0,0,9.24,14.5A16.13,16.13,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l.09-.07L83,208H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,224h0ZM216,192H80a8,8,0,0,0-5.23,1.95L40,224V64H216ZM88,112a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H96A8,8,0,0,1,88,112Zm0,32a8,8,0,0,1,8-8h64a8,8,0,1,1,0,16H96A8,8,0,0,1,88,144Z"/></svg>';
+
+  // Copie de programme.html, à garder identique (un test les compare).
+  // "Responsable" est saisi librement par les clubs, sous trois formes
+  // observées : "NOM Prénom" (nom en capitales), "Prénom Nom" en casse
+  // normale, ou le nom seul. On isole le prénom pour un "Bonjour" moins
+  // administratif, en retombant sur la valeur brute dès qu'elle est
+  // ambiguë — mieux vaut un bonjour trop formel qu'un mauvais prénom.
+  function prenomDuResponsable(raw) {
+    var tokens = String(raw || "").trim().split(/\s+/).filter(function (t) { return !!t; });
+    if (!tokens.length) return "";
+    var capitales = tokens.filter(function (t) { return t === t.toUpperCase(); });
+    if (capitales.length === tokens.length) return tokens.join(" ");
+    if (capitales.length === 0) return tokens[0];
+    return tokens.filter(function (t) { return t !== t.toUpperCase(); }).join(" ");
+  }
+
+  // Le message de vérification d'une partie, adressé au responsable d'une
+  // équipe. Même fonction, au caractère près, dans programme.html et
+  // equipe.html (un test le vérifie) : le message est le même sur Parties et
+  // dans « Prochaine partie ». p : responsable (prénom ou ""), equipe et
+  // adversaire (noms officiels), quand (« jeudi 3 décembre 2026 à 19h30 »),
+  // lieu, respAdv et telAdv (ou ""), finales (rappel ou null), contexte.
+  // Chaque élément absent est omis plutôt qu'écrit à vide.
+  function messageVerification(p) {
+    var rencontre = ["Votre partie", p.equipe + " vs " + p.adversaire];
+    // Le point ferme la phrase sur la dernière ligne réellement écrite :
+    // sans lieu connu, c'est la ligne date/heure.
+    rencontre.push("est prévue le *" + p.quand + "*" + (p.lieu ? "" : "."));
+    if (p.lieu) rencontre.push("à " + p.lieu + ".");
+    var blocs = [
+      "Bonjour" + (p.responsable ? " " + p.responsable : "") + ",",
+      rencontre.join("\n"),
+      "Tout est bon de votre côté ?"
+    ];
+    if (p.respAdv || p.telAdv) {
+      blocs.push("Responsable adverse : " + (p.respAdv && p.telAdv ? p.respAdv + " (" + p.telAdv + ")" : (p.respAdv || p.telAdv)) + ".");
+    }
+    if (p.finales) blocs.push(p.finales);
+    // Rappel de contexte en italique WhatsApp (_.._), en fin de message.
+    if (p.contexte) blocs.push("_" + p.contexte + "_");
+    blocs.push("Merci.");
+    return blocs.join("\n\n");
+  }
+
+  // Lien WhatsApp avec un message prérempli. Pas wa.me : sa redirection vers
+  // api.whatsapp.com remplace les emojis par « � » dans WhatsApp sur
+  // ordinateur (Web, Windows, Mac), alors que le mobile les garde. Le lien
+  // direct les garde partout.
+  function lienWhatsappAvecTexte(numero, texte) {
+    return "https://api.whatsapp.com/send?phone=" + numero + "&text=" + encodeURIComponent(texte);
+  }
+
+  // Le même message en SMS, qui n'a ni gras ni italique : sans * ni _.._.
+  function texteSms(message) {
+    return message.replace(/\*/g, "").replace(/(^|\n)_([^\n]*)_(?=\n|$)/g, "$1$2");
+  }
+
+  // Pendant la phase de poules, on prévient que les phases finales ne se
+  // reportent pas, avec leurs dates (sans les créneaux), lues dans les
+  // parties de 1/4, 1/2 et finale de la même compétition, spécialité et
+  // série. Une phase sans partie datée est omise ; sans aucune, pas de rappel.
+  // Même règle que dans equipe.html.
+  var RAPPEL_FINALES = [["10", "1/4"], ["11", "1/2"], ["12", "finales"]];
+
+  function rappelPhasesFinales(match) {
+    if (match.phaseRaw !== "1" || !lastMatches) return null;
+    var parties = RAPPEL_FINALES.map(function (phase) {
+      var jours = [];
+      lastMatches.forEach(function (m) {
+        if (m.phaseRaw !== phase[0] || m.serie !== match.serie || m.spec !== match.spec || m.competRaw !== match.competRaw) return;
+        var jour = DAY_NAMES[m.date.getDay()].slice(0, 3) + ". " + m.date.getDate() + "/" + (m.date.getMonth() + 1);
+        if (jours.indexOf(jour) === -1) jours.push(jour);
+      });
+      return jours.length ? phase[1] + " : " + jours.join(" et ") : null;
+    }).filter(function (partie) { return !!partie; });
+    if (!parties.length) return null;
+    var liste = parties.length > 1 ? parties.slice(0, -1).join(", ") + " et " + parties[parties.length - 1] : parties[0];
+    return "Noter qu'il n'est pas possible de reporter les phases finales.\n" + liste + ".";
+  }
+
+  // Le message de vérification de la partie, adressé au responsable de side.
+  function messageDeLaPartie(match, side, other) {
+    return messageVerification({
+      responsable: side.contact ? prenomDuResponsable(side.contact.responsable) : "",
+      equipe: side.label,
+      adversaire: other.label,
+      quand: formatDate(match.date) + " à " + formatHour(match.hour, match.minute),
+      lieu: match.lieu === LIEU_INCONNU ? "" : match.lieu,
+      respAdv: other.contact ? String(other.contact.responsable || "").trim() : "",
+      telAdv: other.contact ? (telLisible(other.contact.tel) || "") : "",
+      finales: rappelPhasesFinales(match),
+      contexte: [
+        match.competLabel,
+        match.specLabel,
+        match.serieLabel + (match.meta ? " - " + match.meta : "")
+      ].filter(function (part) { return !!part; }).join(", ")
+    });
+  }
+
+  // WhatsApp et SMS vers le responsable d'une équipe, devant son nom, quand
+  // la ligue a un numéro exploitable. Pour tous : une conversation vierge. En
+  // mode organisateur, pour une partie à jouer : le message de vérification
+  // prérempli, le même que « Prochaine partie » sur la page Équipes. Ni le nom
+  // ni le numéro du responsable ne sont écrits dans la page.
+  function buildContactIcons(match, side, other) {
+    var numero = side.contact ? normalizePhoneForWhatsapp(side.contact.tel) : null;
+    if (!numero) return [];
+    var message = ORGA && !match.score ? messageDeLaPartie(match, side, other) : null;
+    var qui = " au responsable de " + side.court;
+    var icones = [
+      ["icon-whatsapp", ICON_SVG_WHATSAPP, message ? lienWhatsappAvecTexte(numero, message) : "https://wa.me/" + numero,
+       (message ? "Envoyer le message de la partie sur WhatsApp" : "Écrire sur WhatsApp") + qui],
+      ["icon-sms", ICON_SVG_SMS, "sms:+" + numero + (message ? "?&body=" + encodeURIComponent(texteSms(message)) : ""),
+       (message ? "Envoyer le message de la partie par SMS" : "Envoyer un SMS") + qui]
+    ];
+    return icones.map(function (c) {
+      var a = el("a", { class: "wa-icon " + c[0], href: c[2], title: c[3], "aria-label": c[3] });
+      if (c[0] === "icon-whatsapp") { a.target = "_blank"; a.rel = "noopener"; }
+      a.innerHTML = c[1];
+      return a;
+    });
+  }
+
   // L'adresse de la page d'une équipe, même clé que equipe.html
   // (spécialité|série|club|numéro). Un club fictif (« Equipe à désigner »)
   // n'a pas de page : null.
@@ -1420,16 +1622,16 @@
     var detail = el("div", { class: "match-detail" });
     detail.hidden = true;
 
-    // Le détail nomme les équipes comme la ligue. Chaque nom mène à la page
-    // de l'équipe : c'est là qu'on joint son responsable (WhatsApp, SMS,
-    // appel), plus ici.
+    // Le détail nomme les équipes comme la ligue. WhatsApp et SMS devant le
+    // nom ; le nom mène à la page de l'équipe (appel, parties, fiche).
     var sides = [
-      { label: match.officielRec, court: match.labelRec, roster: match.rosterRec, href: lienEquipe(match.spec, match.serie, match.clubRec, match.equipRec) },
-      { label: match.officielVis, court: match.labelVis, roster: match.rosterVis, href: lienEquipe(match.spec, match.serie, match.clubVis, match.equipVis) }
+      { label: match.officielRec, court: match.labelRec, roster: match.rosterRec, contact: match.contactRec, href: lienEquipe(match.spec, match.serie, match.clubRec, match.equipRec) },
+      { label: match.officielVis, court: match.labelVis, roster: match.rosterVis, contact: match.contactVis, href: lienEquipe(match.spec, match.serie, match.clubVis, match.equipVis) }
     ];
-    sides.forEach(function (side) {
+    sides.forEach(function (side, idx) {
       var hasRoster = side.roster && side.roster.length;
       var line = el("div", { class: "roster-line" + (hasRoster ? "" : " roster-empty") });
+      buildContactIcons(match, side, sides[1 - idx]).forEach(function (icone) { line.appendChild(icone); });
       var texte = el("span");
       texte.appendChild(side.href
         ? el("a", { class: "lien-equipe", href: side.href, title: "Voir l'équipe " + side.court + " : parties, contact du responsable", text: side.label })
@@ -1805,6 +2007,22 @@
 
   }
 
+  // Pied de page : le lien d'entrée en mode organisateur, ou, une fois dedans,
+  // le bouton pour en sortir. Gardé, « orga » quitte l'adresse : un lien
+  // copié n'y emmène pas un joueur.
+  if (ORGA) {
+    if (ORGA_MEMORISE && /[?&]orga(=|&|$)/.test(window.location.search)) {
+      try { history.replaceState(history.state, "", window.location.pathname + window.location.hash); } catch (e) { /* pas bloquant */ }
+    }
+    var piedOrga = document.getElementById("piedOrga");
+    piedOrga.innerHTML = "";
+    var quitter = el("button", { type: "button", text: "Quitter le mode organisateur" });
+    quitter.addEventListener("click", function () {
+      try { localStorage.removeItem(ORGA_KEY); } catch (e) { /* pas bloquant */ }
+      window.location.replace(window.location.pathname + window.location.hash);
+    });
+    piedOrga.appendChild(quitter);
+  }
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
   document.getElementById("backToTopBtn").addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
