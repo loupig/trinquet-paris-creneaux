@@ -535,6 +535,8 @@
   }
   .team-roster b { font-weight: 700; color: var(--muted); font-size: 12px; }
   .team-roster.absente { font-size: 12px; color: var(--muted); font-style: italic; }
+  /* Le responsable de l'équipe : ses boutons, ni nom ni numéro. */
+  .team-contact { padding: 0 14px 10px; font-size: 12px; font-weight: 700; color: var(--muted); }
 
   /* --- Une partie --- */
   .match-row {
@@ -982,6 +984,16 @@
   footer { text-align: center; padding: 20px 4px 10px; }
   footer p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
   footer a { color: var(--muted); }
+  /* « Quitter le mode organisateur » : un bouton, habillé comme les liens du pied. */
+  .pied-orga button {
+    font: inherit;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
 
   /* --- Grand écran (spec apparence) ---
      Sous 1000 px, téléphone même à l'horizontale ou tablette en portrait :
@@ -1035,7 +1047,8 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.23.4</p>
+    <p class="pied-orga" id="piedOrga"><a href="equipe.html?orga">Mode organisateur</a></p>
+    <p>Version 2026.11.23.5</p>
   </footer>
 </main>
 
@@ -1068,6 +1081,8 @@
   var FORME_NB = 5;
 
   var SERIE_LABELS = { "1": "Série 1", "2": "Série 2" };
+  // Le rappel de contexte du message « Prochaine partie », comme sur Parties.
+  var COMPET_LABELS = { "20270301": "Championnat 2026-2027" };
 
   var PHASE_LABELS = {
     "1": "Poules",
@@ -1475,6 +1490,9 @@
         oid: String(row.oid || "").trim(),
         lieu: String(row.lieu_renc || "").trim(),
         meta: row.Poule ? ("Poule " + row.Poule) : (PHASE_LABELS[phaseRaw] || ""),
+        // Pour le message « Prochaine partie » : contexte et rappel des finales.
+        competRaw: String(row["Compétition"] || "").trim(),
+        phaseRaw: phaseRaw,
         scoreSoi: scoreSoi,
         scoreAdv: scoreAdv
       });
@@ -1794,19 +1812,38 @@
   // L'adresse désigne toujours l'équipe affichée : elle se partage telle quelle.
   // replaceState plutôt que pushState : Retour ramène à la page d'où l'on vient,
   // pas à l'équipe consultée juste avant.
-  // Mode organisateur (spec communications-equipes) : « orga » dans l'adresse.
-  // Ce n'est pas une protection : il évite seulement d'encombrer la page des
-  // joueurs avec l'outil de l'organisateur.
+  // Mode organisateur (spec communications-equipes) : ouvert par « orga » dans
+  // l'adresse, ou par le lien du pied de page, puis gardé dans le navigateur
+  // jusqu'à « Quitter le mode organisateur ». Ce n'est pas une protection : il
+  // évite seulement d'encombrer la page des joueurs avec l'outil de
+  // l'organisateur.
+  var ORGA_KEY = "lidfpb_orga_v1";
+  var ORGA_MEMORISE = false;
   var ORGA = (function () {
-    try { return new URLSearchParams(window.location.search).has("orga"); } catch (e) { return false; }
+    var demande = false;
+    try { demande = new URLSearchParams(window.location.search).has("orga"); } catch (e) { /* adresse illisible */ }
+    try {
+      if (demande) localStorage.setItem(ORGA_KEY, "1");
+      ORGA_MEMORISE = localStorage.getItem(ORGA_KEY) === "1";
+    } catch (e) { ORGA_MEMORISE = false; }
+    return demande || ORGA_MEMORISE;
   })();
 
-  // La partie « ?… » de l'adresse : l'équipe affichée, et « orga » qui suit
-  // l'organisateur d'une vue à l'autre.
+  function quitterOrga() {
+    try { localStorage.removeItem(ORGA_KEY); } catch (e) { /* pas bloquant */ }
+    ORGA = false;
+    ORGA_MEMORISE = false;
+    window.location.replace(adresse(etat.cle));
+  }
+
+  // La partie « ?… » de l'adresse : l'équipe affichée, et « orga » quand le
+  // navigateur ne peut pas le garder (stockage refusé) : il suit alors
+  // l'organisateur d'une vue à l'autre. Mémorisé, il quitte l'adresse : un
+  // lien copié pour un joueur ne l'emmène pas en mode organisateur.
   function requete(cle) {
     var params = [];
     if (cle) params.push("equipe=" + encodeURIComponent(cle));
-    if (ORGA) params.push("orga");
+    if (ORGA && !ORGA_MEMORISE) params.push("orga");
     return params.length ? "?" + params.join("&") : "";
   }
 
@@ -1816,7 +1853,8 @@
     var voulue = window.location.pathname + requete(cle);
     if (voulue === window.location.pathname + window.location.search) return;
     // L'état est gardé : il dit si l'on vient de la liste (voir ouvrirEquipe).
-    try { history.replaceState(history.state, "", voulue); } catch (e) { /* adresse inchangée : pas bloquant */ }
+    // Le fragment (« #… », lien d'évitement) reste.
+    try { history.replaceState(history.state, "", voulue + window.location.hash); } catch (e) { /* adresse inchangée : pas bloquant */ }
   }
 
   // Les équipes que l'on peut afficher, par clé : toutes, sauf celles des clubs
@@ -2059,12 +2097,20 @@
     }
     // Compositions non chargées : rien plutôt que d'annoncer à tort une
     // composition non déclarée. Noms seuls, jamais de licence ni de contact
-    // (cf. section RGPD du README).
+    // des joueurs (cf. section RGPD du README) ; le responsable a ses boutons
+    // juste dessous.
     if (!etat.data.compositionsIndisponibles) {
       var compo = el("div", { class: "team-roster" + (team.roster ? "" : " absente") });
       compo.appendChild(el("b", { text: team.roster ? "Joueurs : " : "" }));
       compo.appendChild(document.createTextNode(team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue"));
       carte.appendChild(compo);
+    }
+    // De quoi joindre le responsable de l'équipe : c'est ici que mènent
+    // Parties et le Classement.
+    var contacts = buildContacts(team);
+    if (contacts) {
+      contacts.classList.add("team-contact");
+      carte.appendChild(contacts);
     }
     return carte;
   }
@@ -2079,16 +2125,17 @@
 
   // Ni le nom ni le numéro du responsable ne sont affichés : seulement les
   // boutons, et WhatsApp s'ouvre sur une conversation vide. Sans numéro
-  // exploitable, pas de boutons.
+  // exploitable, pas de boutons. Sert à l'en-tête de l'équipe (son
+  // responsable) et à la fiche de son adversaire.
   function buildContacts(adv) {
     var numero = adv.contact ? normalizePhoneForWhatsapp(adv.contact.tel) : null;
     if (!numero) return null;
-    var qui = "le responsable de " + clubLabel(etat.clubMap, adv.clubCode, adv.numero);
+    var qui = "responsable de " + clubLabel(etat.clubMap, adv.clubCode, adv.numero);
     var ligne = el("div", { class: "fiche-ligne" });
     ligne.appendChild(el("span", { text: "Responsable" }));
-    [["tel", ICON_SVG_TEL, "tel:+" + numero, "Appeler " + qui],
-     ["sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS à " + qui],
-     ["wa", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp à " + qui]].forEach(function (c) {
+    [["tel", ICON_SVG_TEL, "tel:+" + numero, "Appeler le " + qui],
+     ["sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS au " + qui],
+     ["wa", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp au " + qui]].forEach(function (c) {
       var a = el("a", { class: "contact-btn " + c[0], href: c[2], title: c[3], "aria-label": c[3] });
       if (c[0] === "wa") { a.target = "_blank"; a.rel = "noopener"; }
       a.innerHTML = c[1];
@@ -2920,24 +2967,107 @@
     "lien site", "lien questionnaire", "phases finales"
   ];
 
-  // Le modèle de « Prochaine partie », écrit avec les balises : chaque élément
-  // facultatif sur sa ligne, qui disparaît quand il manque.
-  var MODELE_PROCHAINE_PARTIE = [
-    "Bonjour {responsable},",
-    "",
-    "Prochaine partie de *{equipe}* ({serie}) :",
-    "*{date} à {heure}*",
-    "Contre {adversaire}",
-    "Joueurs : {joueurs adversaire}",
-    "📍 {lieu}",
-    "Responsable de {adversaire} : {responsable adversaire}, {tel adversaire}",
-    "",
-    "Bon match ! 💪"
-  ].join("\n");
+  // Le message « Prochaine partie » : celui qu'envoyait la page Parties,
+  // adressé au responsable de l'équipe pour vérifier sa prochaine partie.
+  // Chaque élément absent des données de la ligue est omis plutôt qu'écrit à
+  // vide. masque : numéro adverse masqué, pour l'aperçu seulement.
+  var DAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  var MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+  function formatDateLongue(d) {
+    return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function messageProchainePartie(team, ctx, masque) {
+    var m = prochainePartie(team, ctx.aujourdHui);
+    if (!m) return "";
+    var adv = etat.index[teamKey(team.spec, team.cat, m.clubAdv, m.numAdv)];
+    var resp = team.contact ? prenomDuResponsable(team.contact.responsable) : "";
+    var quand = "est prévue le *" + formatDateLongue(m.date) + " à " + formatHour(m.hour, m.minute) + "*";
+
+    // Un adversaire pas encore désigné se nomme comme sur Parties, sans numéro.
+    var nomAdv = clubFictif(m.clubAdv) ? (etat.clubMap[m.clubAdv] || "Equipe à désigner") : m.adversaire;
+    var rencontre = ["Votre partie", clubLabel(etat.clubMap, team.clubCode, team.numero) + " vs " + nomAdv];
+    // Le point ferme la phrase sur la dernière ligne réellement écrite :
+    // sans lieu connu, c'est la ligne date/heure.
+    rencontre.push(quand + (m.lieu ? "" : "."));
+    if (m.lieu) rencontre.push("à " + m.lieu + ".");
+
+    var blocs = [
+      "Bonjour" + (resp ? " " + resp : "") + ",",
+      rencontre.join("\n"),
+      "Tout est bon de votre côté ?"
+    ];
+
+    var autreResp = adv && adv.contact ? String(adv.contact.responsable || "").trim() : "";
+    var autreTel = adv && adv.contact ? (telLisible(adv.contact.tel) || "") : "";
+    // Masqué, en espaces insécables : le numéro ne se coupe pas en fin de ligne.
+    if (autreTel && masque) autreTel = masquerTel(autreTel).replace(/ /g, "\u00a0");
+    if (autreResp || autreTel) {
+      blocs.push("Responsable adverse : " + (autreResp && autreTel ? autreResp + " (" + autreTel + ")" : (autreResp || autreTel)) + ".");
+    }
+
+    var finales = rappelPhasesFinales(team, m);
+    if (finales) blocs.push(finales);
+
+    // Rappel de contexte en italique WhatsApp (_.._), en fin de message.
+    var contexte = [
+      COMPET_LABELS[m.competRaw] || "",
+      SPEC_LABELS[team.spec] || "",
+      team.serieLabel + (m.meta ? " - " + m.meta : "")
+    ].filter(function (part) { return !!part; }).join(", ");
+    if (contexte) blocs.push("_" + contexte + "_");
+
+    blocs.push("Merci.");
+    return blocs.join("\n\n");
+  }
+
+  // Pendant la phase de poules, on prévient que les phases finales ne se
+  // reportent pas, avec leurs dates (sans les créneaux), lues dans les
+  // parties de 1/4, 1/2 et finale de la même compétition, spécialité et
+  // série. Une phase sans partie datée est omise ; sans aucune, pas de rappel.
+  var RAPPEL_FINALES = [["10", "1/4"], ["11", "1/2"], ["12", "finales"]];
+
+  function rappelPhasesFinales(team, m) {
+    if (m.phaseRaw !== "1") return null;
+    var parties = RAPPEL_FINALES.map(function (phase) {
+      var jours = [];
+      etat.data.rencontres.forEach(function (row) {
+        if (String(row.Phase || "").trim() !== phase[0] ||
+            String(row["Catégorie"] || "").trim() !== team.cat ||
+            String(row["Spécialité"] || "").trim() !== team.spec ||
+            String(row["Compétition"] || "").trim() !== m.competRaw) return;
+        var d = effectiveDate(row);
+        if (!d || !parseHeureRenc(row.heure_renc)) return;
+        var jour = DAY_NAMES[d.getDay()].slice(0, 3) + ". " + d.getDate() + "/" + (d.getMonth() + 1);
+        if (jours.indexOf(jour) === -1) jours.push(jour);
+      });
+      return jours.length ? phase[1] + " : " + jours.join(" et ") : null;
+    }).filter(function (partie) { return !!partie; });
+    if (!parties.length) return null;
+    var liste = parties.length > 1 ? parties.slice(0, -1).join(", ") + " et " + parties[parties.length - 1] : parties[0];
+    return "Noter qu'il n'est pas possible de reporter les phases finales.\n" + liste + ".";
+  }
 
   // Le texte d'exemple de « Perso », montré tant que l'organisateur n'a rien
-  // écrit, et rétabli par son bouton.
-  var EXEMPLE_PERSO = MODELE_PROCHAINE_PARTIE + "\n\nRésultats et classements : {lien site}";
+  // écrit, et rétabli par son bouton : le message « Prochaine partie » en
+  // balises, plus le lien du site.
+  var EXEMPLE_PERSO = [
+    "Bonjour {responsable},",
+    "",
+    "Votre partie",
+    "{equipe officielle} vs {adversaire}",
+    "est prévue le *{date} à {heure}*",
+    "📍 {lieu}",
+    "",
+    "Tout est bon de votre côté ?",
+    "",
+    "Responsable adverse : {responsable adversaire}, {tel adversaire}",
+    "",
+    "Résultats et classements : {lien site}",
+    "",
+    "Merci."
+  ].join("\n");
 
   var PERSO_KEY = "lidfpb_message_perso_v1";
 
@@ -3056,13 +3186,13 @@
         return Object.keys(etat.index).some(function (k) { return !!prochainePartie(etat.index[k], ctx.aujourdHui); });
       },
       concerne: function (team, ctx) { return !!prochainePartie(team, ctx.aujourdHui); },
-      texte: function (team, ctx, masque) { return remplir(MODELE_PROCHAINE_PARTIE, valeurs(team, ctx, masque)); },
+      texte: function (team, ctx, masque) { return messageProchainePartie(team, ctx, masque); },
       note: function (ctx) {
         var n = Object.keys(etat.index).filter(function (k) {
           return equipeAffichee(etat.index[k]) && !!prochainePartie(etat.index[k], ctx.aujourdHui);
         }).length;
         if (!n) return "Aucune équipe affichée n'a de partie à venir : changez les filtres pour en voir.";
-        return pluriel(n, "équipe") + " " + (n > 1 ? "ont" : "a") + " une partie à venir : chacune reçoit la sienne, avec son adversaire et le responsable adverse.";
+        return pluriel(n, "équipe") + " " + (n > 1 ? "ont" : "a") + " une partie à venir : chacune reçoit la sienne, avec la question « Tout est bon de votre côté ? » et le responsable adverse.";
       }
     },
     {
@@ -3303,7 +3433,9 @@
   function afficherSelonAdresse() {
     var demandee = equipeDansLAdresse();
     var cle = demandee && etat.index[demandee] ? demandee : "";
-    if (demandee && !cle) mettreAJourAdresse("");
+    // Une équipe inconnue quitte l'adresse, et « orga » aussi une fois gardé
+    // par le navigateur.
+    mettreAJourAdresse(cle);
     etat.cle = cle;
     if (cle) renderEquipe(cle); else renderListe();
   }
@@ -3468,6 +3600,16 @@
   // ---------------------------------------------------------------
   // Démarrage
   // ---------------------------------------------------------------
+  // Pied de page : le lien d'entrée en mode organisateur, ou, une fois dedans,
+  // le bouton pour en sortir.
+  if (ORGA) {
+    var piedOrga = document.getElementById("piedOrga");
+    piedOrga.innerHTML = "";
+    var quitter = el("button", { type: "button", text: "Quitter le mode organisateur" });
+    quitter.addEventListener("click", quitterOrga);
+    piedOrga.appendChild(quitter);
+  }
+
   // Retour et Avancer du navigateur, entre la liste et une équipe.
   window.addEventListener("popstate", function () {
     if (etat.index) afficherSelonAdresse();

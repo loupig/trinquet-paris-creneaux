@@ -31,18 +31,21 @@ Le comportement de chaque page est décrit par sa spec, dans
 - [`equipe.html`](equipe.html) — « Équipes » : la liste de toutes les
   équipes, avec de quoi joindre chaque responsable ; puis, au toucher, tout
   ce qui concerne une équipe, partageable par un lien, et le choix des
-  équipes suivies. Ouverte en `equipe.html?orga`, la page passe en **mode
-  organisateur** : un bloc pour choisir la communication à envoyer (phases
-  finales, prochaine partie, ou un texte perso à balises) et un avion en
-  papier sur chaque ligne pour l'envoyer sur WhatsApp. Ce mode n'est pas une
-  protection, juste une adresse qui évite d'encombrer la page des joueurs.
+  équipes suivies. Par le lien « Mode organisateur » de son pied de page (ou
+  en `equipe.html?orga`), la page passe en **mode organisateur**, gardé dans
+  le navigateur jusqu'à « Quitter le mode organisateur » : un bloc pour
+  choisir la communication à envoyer (phases finales, prochaine partie, ou un
+  texte perso à balises) et un avion en papier sur chaque ligne pour
+  l'envoyer sur WhatsApp. Ce mode n'est pas une protection, aucun code n'est
+  demandé : il évite seulement d'encombrer la page des joueurs.
   Specs
   [`liste-equipes`](openspec/specs/liste-equipes/spec.md),
   [`communications-equipes`](openspec/specs/communications-equipes/spec.md),
   [`mon-equipe`](openspec/specs/mon-equipe/spec.md) et
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md).
 - [`programme.html`](programme.html) — « Parties », le calendrier complet,
-  avec compositions et contacts des responsables. Spec
+  avec compositions ; le nom de chaque équipe mène à sa page, où sont les
+  contacts de son responsable. Spec
   [`programme`](openspec/specs/programme/spec.md).
 - [`classement.html`](classement.html) — le classement des poules. Specs
   [`classement`](openspec/specs/classement/spec.md) et
@@ -218,6 +221,7 @@ Clés `localStorage` :
 | `lidfpb_api_v1:<url>` | toutes sauf le compteur | Cache d'appels API |
 | `lidfpb_mes_equipes_v1` | Équipes (lue aussi par l'accueil et le Classement) | Équipes suivies |
 | `lidfpb_message_perso_v1` | Équipes, mode organisateur | Texte de la communication « Perso », avec ses balises |
+| `lidfpb_orga_v1` | Équipes | Mode organisateur gardé (`1`) ; absente, la page est celle des joueurs |
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |
 | `lidfpb_equipes_filters_v1` | Équipes | Filtres de la liste (spécialité, série) |
@@ -256,17 +260,17 @@ la date de naissance, à aucun moment exposées par l'API.
   équipes du championnat (choix du demandeur, spec `donnees-api`). Noms
   seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
-  numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,
-  Équipes (liste et page d'une équipe) et Report.
+  numéros sont déjà publiés en clair sur le site de la ligue : sur Équipes
+  (liste, page d'une équipe et fiche de son adversaire) et Report. Parties
+  et le Classement mènent à la page de l'équipe.
   Le numéro n'est jamais écrit dans les pages. Le nom
-  du responsable n'apparaît pas sur Équipes, figure en info-bulle sur
-  Parties et en clair sur Report, et le message WhatsApp prérempli de Parties
-  contient le nom et le numéro du responsable adverse, comme les
-  communications « Prochaine partie » et « Perso » de la page Équipes. Leur
+  du responsable n'apparaît pas sur Équipes et figure en clair sur Report ;
+  les communications « Prochaine partie » et « Perso » de la page Équipes
+  contiennent le nom et le numéro du responsable adverse. Leur
   aperçu masque le numéro (« 06 •• •• •• 78 »), seul le message envoyé le
   porte en entier.
 - **Rien n'est envoyé** : ce que le site retient (équipes suivies, filtres,
-  partie du compteur, texte perso de l'organisateur, cache des données)
+  partie du compteur, texte perso et mode de l'organisateur, cache des données)
   reste dans le navigateur.
 
 Restent ouvertes : la base légale permettant de republier les noms de

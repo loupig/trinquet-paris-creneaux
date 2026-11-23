@@ -60,7 +60,7 @@ Les noms de joueurs SHALL n'apparaître qu'aux endroits suivants, sous la forme 
 - sur Parties et Créneaux, au détail d'une partie ;
 - dans les communications du mode organisateur de la page Équipes (spec `communications-equipes`), dont le message des phases finales (spec `liste-equipes`), pour les équipes qu'elles nomment.
 
-En dehors de ces communications, ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report, dans le message WhatsApp prérempli de Parties, et dans les communications « Prochaine partie » et « Perso » de la page Équipes ; ces messages peuvent aussi donner le nom et le numéro du responsable adverse. Le message des phases finales ne contient ni nom ni numéro de responsable.
+En dehors de ces communications, ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Report, et dans les communications « Prochaine partie » et « Perso » de la page Équipes ; ces messages peuvent aussi donner le nom et le numéro du responsable adverse. Le message des phases finales ne contient ni nom ni numéro de responsable.
 
 #### Scenario: Détail d'une partie
 - **WHEN** un visiteur déplie une partie dont les équipes ont déclaré leurs joueurs
@@ -80,7 +80,7 @@ En dehors de ces communications, ils MUST NOT entrer dans un texte ou une image 
 
 #### Scenario: Communication « Prochaine partie »
 - **WHEN** l'organisateur envoie « Prochaine partie » à une équipe dont l'adversaire a déclaré ses joueurs et son responsable
-- **THEN** le message nomme les joueurs adverses et le responsable adverse avec son numéro, et ne contient aucune licence
+- **THEN** le message nomme le responsable adverse avec son numéro, et ne contient ni joueur ni licence
 
 ### Requirement: Numéro des responsables jamais écrit
 Les pages qui permettent de joindre le responsable d'une équipe SHALL le faire par des boutons ou icônes (Appeler, SMS, WhatsApp) qui ouvrent l'application correspondante. Le numéro du responsable MUST NOT être écrit dans le texte d'aucune page : l'aperçu d'une communication de la page Équipes le masque sauf ses deux derniers chiffres, et seul le message envoyé ou partagé le porte en entier. Sans numéro exploitable, la page ne propose pas ces boutons.

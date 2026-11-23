@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Donner le calendrier complet des championnats, tous lieux et toutes séries, parties passées et à venir, avec pour chaque partie la composition des deux équipes, de quoi joindre leurs responsables et l'accès à l'aide au report.
+Donner le calendrier complet des championnats, tous lieux et toutes séries, parties passées et à venir, avec pour chaque partie la composition des deux équipes, le chemin vers la page de chacune (où l'on joint son responsable) et l'accès à l'aide au report.
 
 ## Requirements
 
@@ -121,11 +121,11 @@ La série ne s'écrit plus en toutes lettres : sa couleur suffit, expliquée par
 - **THEN** au moins cinq parties sont visibles sans défiler
 
 ### Requirement: Légende des parties
-Au-dessus des cartes de jour, la page SHALL afficher une légende sur une ou deux lignes : la couleur de chaque série affichée (« Série 1 », « Série 2 »), les pastilles de poule présentes (« P1 », « P2 » : poule), « 📍 lieu inhabituel » quand une partie affichée en porte un, et « Touchez une partie : joueurs, lieu, contacts ». Elle suit les filtres : une série masquée n'y figure plus. Quand aucune partie ne correspond aux filtres, elle n'est pas affichée. Les couleurs ont leur version sombre (spec `apparence`).
+Au-dessus des cartes de jour, la page SHALL afficher une légende sur une ou deux lignes : la couleur de chaque série affichée (« Série 1 », « Série 2 »), les pastilles de poule présentes (« P1 », « P2 » : poule), « 📍 lieu inhabituel » quand une partie affichée en porte un, et « Touchez une partie : joueurs, lieu, équipes ». Elle suit les filtres : une série masquée n'y figure plus. Quand aucune partie ne correspond aux filtres, elle n'est pas affichée. Les couleurs ont leur version sombre (spec `apparence`).
 
 #### Scenario: Légende par défaut
 - **WHEN** un visiteur ouvre Parties avec toutes les séries
-- **THEN** la légende donne la couleur de la Série 1 et de la Série 2, les pastilles « P1 » et « P2 », et dit qu'on touche une partie pour voir joueurs, lieu et contacts
+- **THEN** la légende donne la couleur de la Série 1 et de la Série 2, les pastilles « P1 » et « P2 », et dit qu'on touche une partie pour voir joueurs, lieu et équipes
 
 #### Scenario: Série masquée
 - **WHEN** le visiteur masque la Série 2
@@ -147,24 +147,20 @@ C'est le seul endroit de la page où figurent les joueurs. Si les compositions n
 - **WHEN** une équipe n'a déclaré aucun joueur connu de la ligue
 - **THEN** sa ligne de détail indique son nom officiel et « composition non disponible »
 
-#### Scenario: Message aux responsables inchangé
-- **WHEN** le visiteur touche l'icône WhatsApp d'une équipe dans le détail
-- **THEN** le message prérempli nomme les équipes par leur nom officiel et le lieu en entier, comme avant ce changement
+### Requirement: Aller à la page d'une équipe
+Dans le détail d'une partie, le nom officiel de chaque équipe SHALL être un lien vers sa page (`equipe.html?equipe=…`), où l'on trouve ses parties et de quoi joindre son responsable (spec `mon-equipe`). Une équipe à désigner (club fictif) n'a pas de lien. Parties MUST NOT porter elle-même d'icône WhatsApp, SMS ou Appeler, ni de message prérempli : le message de vérification d'une partie est la communication « Prochaine partie » de l'organisateur (spec `communications-equipes`).
 
-### Requirement: Contact des responsables d'équipe
-Dans le détail d'une partie, chaque équipe dont le responsable a un numéro exploitable SHALL porter trois icônes, dans l'ordre WhatsApp, SMS et Appeler, vers le numéro de son responsable. Le numéro MUST NOT apparaître dans le texte de la page. Le nom du responsable n'apparaît pas dans le texte, mais il figure dans l'info-bulle des icônes. WhatsApp s'ouvre sur un message prérempli adressé au responsable de cette équipe : salutation par son prénom quand il peut être isolé, rappel de la partie (équipes, date, heure, et lieu s'il est connu), question « Tout est bon de votre côté ? », nom et numéro du responsable adverse s'ils sont connus, pour une partie de poule, rappel que les phases finales ne se reportent pas avec les dates des 1/4, 1/2 et finales de sa série (sans les créneaux), et rappel de la compétition, de la série et de la poule ou de la phase. Sans numéro exploitable, l'équipe n'a pas d'icônes, sans message.
+#### Scenario: Aller à l'équipe qui reçoit
+- **WHEN** le visiteur déplie une partie et touche le nom de l'équipe qui reçoit
+- **THEN** la page de cette équipe s'ouvre, avec les boutons pour joindre son responsable
 
-#### Scenario: Responsable joignable
-- **WHEN** le visiteur déplie une partie dont le responsable de l'équipe qui reçoit a un numéro exploitable
-- **THEN** cette équipe porte les icônes WhatsApp, SMS et Appeler, et aucun numéro n'est écrit dans la page
+#### Scenario: Pas de contact sur Parties
+- **WHEN** le visiteur déplie une partie
+- **THEN** le détail n'a ni icône WhatsApp, ni SMS, ni Appeler
 
-#### Scenario: Message WhatsApp
-- **WHEN** le visiteur touche l'icône WhatsApp d'une équipe
-- **THEN** WhatsApp s'ouvre vers son responsable avec le message de vérification de la partie prérempli
-
-#### Scenario: Pas de numéro
-- **WHEN** le responsable d'une équipe n'a pas de numéro exploitable
-- **THEN** cette équipe n'a pas d'icônes de contact
+#### Scenario: Adversaire à désigner
+- **WHEN** une partie oppose une équipe à une équipe encore à désigner
+- **THEN** seul le nom de l'équipe connue est un lien
 
 ### Requirement: Compter une partie
 Le détail d'une partie sans score SHALL porter le bouton « Compter cette partie », quel que soit son lieu, qui ouvre le compteur de points avec les deux équipes déjà nommées, l'équipe qui reçoit en premier, en 40 points, et la série avec la poule ou la phase. Une partie déjà jouée n'a pas le bouton.
