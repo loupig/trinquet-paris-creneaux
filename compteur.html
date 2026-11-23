@@ -846,7 +846,7 @@
 <header>
   <h1><a href="index.html" class="home-link">Compteur de points</a></h1>
   <h1>Ligue d'Île-de-France</h1>
-  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, sauf le score si tu choisis de le partager.</p>
+  <p class="header-sync">Marque une partie point par point. Tout reste dans ce navigateur : rien n'est envoyé, sauf le score et l'affiche du résultat si tu choisis de les partager.</p>
 </header>
 
 <main id="contenu">
@@ -1722,13 +1722,18 @@
     var avecImage = !!(fichier && navigator.canShare && navigator.canShare({ files: [fichier] }));
     if (avecImage) donnees.files = [fichier];
     // Le partage part d'abord, dans le geste même (Safari l'exige).
+    var echec = false;
     navigator.share(donnees).catch(function (e) {
       if (e && e.name === "AbortError") return;   // partage annulé
+      echec = true;
       aDefaut();
     });
     // Certaines applis, WhatsApp sur iPhone notamment, ne gardent que l'image
-    // et laissent le texte : il est copié aussi, à coller si besoin.
-    if (avecImage) copier(texte).then(function () { info.textContent = "Message copié aussi, à coller si besoin"; }, function () { /* pas bloquant */ });
+    // et laissent le texte : il est copié aussi, à coller si besoin. Si le
+    // partage a échoué entre-temps, le message du repli reste affiché.
+    if (avecImage) copier(texte).then(function () {
+      if (!echec) info.textContent = "Message copié aussi, à coller si besoin";
+    }, function () { /* pas bloquant */ });
   }
 
   // ---------------------------------------------------------------
