@@ -36,7 +36,7 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
   - lien du questionnaire avant `jusquAu` et absent après (`page.clock`) ;
   - lien `decouvrir.html` avec la mention non officielle ;
   - ni licence ni responsable dans le texte ;
-  - la troisième icône ouvre `wa.me/<n>?text=` avec ce message ;
+  - la troisième icône ouvre `api.whatsapp.com/send?phone=<n>&text=` avec ce message (et non `wa.me`, qui perd les emojis sur ordinateur) ;
   - le bouton déplie l'aperçu et Partager/Copier.
 - [x] 1.6 Mettre à jour les scénarios existants :
   - libellé d'onglet « Équipes » ;
@@ -77,7 +77,7 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
   - `messagePhasesFinales(...)` (design, décision 4), qui renvoie `null` sans partie retenue.
 - [x] 4.3 Sortir `boutonPartager(texte)` de `buildPrevenir`, sans changer « Prévenir l'équipe ».
 - [x] 4.4 Le bloc « Message aux équipes » (note, bouton `aria-expanded`, aperçu `<pre>`, Partager/Copier), en tête de la liste, seulement si le message existe.
-- [x] 4.5 La troisième icône (paper-plane-tilt), qui ouvre `wa.me/<n>?text=<message>`, seulement si le message existe.
+- [x] 4.5 La troisième icône (paper-plane-tilt), qui ouvre `api.whatsapp.com/send?phone=<n>&text=<message>`, seulement si le message existe.
 
 ## 5. Onglet « Équipes » et finitions
 
@@ -91,4 +91,4 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
 - [x] 5.4 `npm test` complet, sortie montrée.
 - [x] 5.5 Captures Pixel 7, en clair et en sombre : la liste, une ligne dépliée, le message déplié, la page d'une équipe avec « ← Toutes les équipes ».
 - [x] 5.6 `/code-review` sur le diff, puis `/security-review` (données de l'API, noms de joueurs dans un texte partagé, `localStorage`). Corriger les constats.
-- [ ] 5.7 À l'archivage, passe de vocabulaire dans les specs principales : « page Mes équipes » devient « page Équipes », et l'onglet « Mes équipes » devient « Équipes ». Le bloc de l'accueil n'est pas touché.
+- [x] 5.7 À l'archivage, passe de vocabulaire dans les specs principales : « page Mes équipes » devient « page Équipes », et l'onglet « Mes équipes » devient « Équipes ». Le bloc de l'accueil n'est pas touché.

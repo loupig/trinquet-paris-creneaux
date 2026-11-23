@@ -510,7 +510,7 @@
     cursor: pointer;
     white-space: nowrap;
   }
-  .mes-chip[aria-current="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+  .mes-chip[aria-current="true"], .mes-chip[aria-pressed="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
   .badge {
     font-size: 12px;
     font-weight: 700;
@@ -787,6 +787,55 @@
   .message-equipes { border: 1px solid var(--border); border-radius: 12px; background: var(--card-bg); margin-bottom: 12px; padding: 10px 14px 12px; }
   .message-btn[aria-expanded="true"] .rank-chevron svg { transform: none; }
   .message-btn .rank-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
+  /* Communications de l'organisateur (spec communications-equipes). */
+  .communication-choix { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+  .contact-btn[hidden] { display: none; }
+  .communication-corps { margin-top: 10px; }
+  .communication-corps label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 10px 0 4px; }
+  .message-perso {
+    display: block;
+    width: 100%;
+    min-height: 180px;
+    padding: 9px 10px;
+    font: inherit;
+    /* 16 px : sous cette taille, iOS zoome sur le champ touché. */
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    resize: vertical;
+  }
+  .balises { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .balise-btn {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 9999px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  .balise-inconnue { font-size: 12px; font-weight: 700; color: var(--loss-text); margin-top: 6px; }
+  .balise-inconnue:empty { display: none; }
+  .apercu-equipe {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 10px;
+    font: inherit;
+    /* 16 px, comme le champ : pas de zoom sur iOS. */
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .lien-discret { font: inherit; font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 6px 0; cursor: pointer; text-decoration: underline; }
   .message-apercu {
     margin: 10px 0;
     padding: 10px 12px;
@@ -894,7 +943,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.23</p>
+    <p>Version 2026.11.23.2</p>
   </footer>
 </main>
 
@@ -1244,6 +1293,21 @@
   // direct les garde partout.
   function lienWhatsappAvecTexte(numero, texte) {
     return "https://api.whatsapp.com/send?phone=" + numero + "&text=" + encodeURIComponent(texte);
+  }
+
+  // Copie de programme.html, à garder identique (un test les compare).
+  // "Responsable" est saisi librement par les clubs, sous trois formes
+  // observées : "NOM Prénom" (nom en capitales), "Prénom Nom" en casse
+  // normale, ou le nom seul. On isole le prénom pour un "Bonjour" moins
+  // administratif, en retombant sur la valeur brute dès qu'elle est
+  // ambiguë — mieux vaut un bonjour trop formel qu'un mauvais prénom.
+  function prenomDuResponsable(raw) {
+    var tokens = String(raw || "").trim().split(/\s+/).filter(function (t) { return !!t; });
+    if (!tokens.length) return "";
+    var capitales = tokens.filter(function (t) { return t === t.toUpperCase(); });
+    if (capitales.length === tokens.length) return tokens.join(" ");
+    if (capitales.length === 0) return tokens[0];
+    return tokens.filter(function (t) { return t !== t.toUpperCase(); }).join(" ");
   }
 
   function hasScore(row) {
@@ -1638,8 +1702,26 @@
   // L'adresse désigne toujours l'équipe affichée : elle se partage telle quelle.
   // replaceState plutôt que pushState : Retour ramène à la page d'où l'on vient,
   // pas à l'équipe consultée juste avant.
+  // Mode organisateur (spec communications-equipes) : « orga » dans l'adresse.
+  // Ce n'est pas une protection : il évite seulement d'encombrer la page des
+  // joueurs avec l'outil de l'organisateur.
+  var ORGA = (function () {
+    try { return new URLSearchParams(window.location.search).has("orga"); } catch (e) { return false; }
+  })();
+
+  // La partie « ?… » de l'adresse : l'équipe affichée, et « orga » qui suit
+  // l'organisateur d'une vue à l'autre.
+  function requete(cle) {
+    var params = [];
+    if (cle) params.push("equipe=" + encodeURIComponent(cle));
+    if (ORGA) params.push("orga");
+    return params.length ? "?" + params.join("&") : "";
+  }
+
+  function adresse(cle) { return "equipe.html" + requete(cle); }
+
   function mettreAJourAdresse(cle) {
-    var voulue = window.location.pathname + (cle ? "?equipe=" + encodeURIComponent(cle) : "");
+    var voulue = window.location.pathname + requete(cle);
     if (voulue === window.location.pathname + window.location.search) return;
     // L'état est gardé : il dit si l'on vient de la liste (voir ouvrirEquipe).
     try { history.replaceState(history.state, "", voulue); } catch (e) { /* adresse inchangée : pas bloquant */ }
@@ -2250,12 +2332,14 @@
   // Le message confié à la feuille de partage du téléphone, ou copié sur
   // ordinateur. Commun à « Prévenir l'équipe » et au message des phases
   // finales.
-  function boutonPartager(texte) {
+  function boutonPartager(source) {
+    var lire = typeof source === "function" ? source : function () { return source; };
     var info = el("span", { class: "prevenir-ok", "aria-live": "polite" });
     var partager = el("button", { type: "button", class: "prevenir-btn" });
     partager.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
     partager.appendChild(el("span", { text: navigator.share ? "Partager" : "Copier le message" }));
     partager.addEventListener("click", function () {
+      var texte = lire();
       info.textContent = "";
       if (navigator.share) {
         navigator.share({ text: texte }).catch(function (e) {
@@ -2410,10 +2494,11 @@
     });
   }
 
-  // WhatsApp (conversation vide) et SMS vers le responsable, puis, quand il
-  // existe, le message des phases finales prérempli. Ni le nom ni le numéro du
-  // responsable ne s'affichent : les icônes nomment l'équipe.
-  function buildActions(team, court, message) {
+  // WhatsApp (conversation vide) et SMS vers le responsable, puis, en mode
+  // organisateur, l'avion en papier de la communication choisie : toujours
+  // créé, montré ou caché par majEnvois. Ni le nom ni le numéro du responsable
+  // ne s'affichent : les icônes nomment l'équipe.
+  function buildActions(team, court) {
     var actions = el("div", { class: "rank-actions" });
     var numero = team.contact ? normalizePhoneForWhatsapp(team.contact.tel) : null;
     if (!numero) return actions;
@@ -2422,14 +2507,21 @@
       ["wa", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp" + qui],
       ["sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS" + qui]
     ];
-    if (message) {
-      liens.push(["message contact-message", SVG_ENVOI, lienWhatsappAvecTexte(numero, message),
-                  "Envoyer le message des phases finales" + qui]);
-    }
+    if (ORGA) liens.push(["message contact-message", SVG_ENVOI, "https://api.whatsapp.com/send?phone=" + numero, ""]);
     liens.forEach(function (c) {
-      var a = el("a", { class: "contact-btn " + c[0], href: c[2], title: c[3], "aria-label": c[3] });
+      var a = el("a", { class: "contact-btn " + c[0], href: c[2] });
+      if (c[3]) { a.title = c[3]; a.setAttribute("aria-label", c[3]); }
       if (c[2].indexOf("https://") === 0) { a.target = "_blank"; a.rel = "noopener"; }
       a.innerHTML = c[1];
+      if (c[0].indexOf("contact-message") !== -1) {
+        a.hidden = true;
+        envois.push({ a: a, team: team, court: court, numero: numero });
+        // Une frappe dans « Perso » n'est reportée qu'après 150 ms : au
+        // toucher, le lien est mis à jour avant que WhatsApp s'ouvre.
+        a.addEventListener("click", function () {
+          if (minuteurEnvois) { clearTimeout(minuteurEnvois); minuteurEnvois = null; majEnvois(); }
+        });
+      }
       actions.appendChild(a);
     });
     return actions;
@@ -2447,7 +2539,7 @@
       joueurs.appendChild(el("span", { text: team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue" }));
       plus.appendChild(joueurs);
     }
-    var voir = el("a", { class: "voir-equipe", href: "equipe.html?equipe=" + encodeURIComponent(cle), text: "Voir l'équipe →" });
+    var voir = el("a", { class: "voir-equipe", href: adresse(cle), text: "Voir l'équipe →" });
     voir.addEventListener("click", function (ev) {
       ev.preventDefault();
       ouvrirEquipe(cle, true);
@@ -2455,7 +2547,7 @@
     plus.appendChild(voir);
   }
 
-  function buildLigneEquipe(s, rang, message, n) {
+  function buildLigneEquipe(s, rang, n) {
     var cle = teamKey(s.spec, s.cat, s.clubCode, s.numero);
     var team = etat.index[cle];
     var court = nomCourt(etat.clubMap, team.clubCode, team.numero);
@@ -2475,7 +2567,7 @@
     chevron.innerHTML = SVG_CHEVRON;
     bouton.appendChild(chevron);
     ligne.appendChild(bouton);
-    ligne.appendChild(buildActions(team, court, message));
+    ligne.appendChild(buildActions(team, court));
     item.appendChild(ligne);
 
     var plus = el("div", { class: "rank-plus", id: idPlus });
@@ -2494,14 +2586,14 @@
     return item;
   }
 
-  function buildCarteListe(g, message, compteur) {
+  function buildCarteListe(g, compteur) {
     var carte = el("div", { class: "poule-card" });
     var head = el("div", { class: "poule-head" });
     head.appendChild(el("span", { class: "badge serie-" + g.cat, text: SERIE_LABELS[g.cat] || ("Cat. " + (g.cat || "?")) }));
     head.appendChild(el("span", { text: g.poule ? "Poule " + g.poule : "Hors poule" }));
     carte.appendChild(head);
     g.equipes.forEach(function (s, i) {
-      carte.appendChild(buildLigneEquipe(s, i + 1, message, ++compteur.n));
+      carte.appendChild(buildLigneEquipe(s, i + 1, ++compteur.n));
     });
     return carte;
   }
@@ -2601,6 +2693,7 @@
         (nbJours === 1 ? "un dernier rendez-vous" : (NOMBRES_EN_LETTRES[nbJours] || nbJours) + " rendez-vous") +
         " à ne pas manquer. Venez nombreux encourager les équipes 👏"
     ];
+    var debutParties = lignes.length;
     var groupe = null, precedente = null;
     parties.forEach(function (p) {
       var cle = p.phase + "|" + p.date.getTime();
@@ -2627,6 +2720,8 @@
       }
     });
     if (lieuUnique) lignes.push("", "📍 " + lieuUnique);
+    // Les parties seules, pour la balise {phases finales} des textes perso.
+    var lignesParties = lignes.slice(debutParties).join("\n").trim();
     if (avisEnCours(aujourdHui)) {
       lignes.push("", "💬 *Votre avis compte* : 2 minutes pour préparer la prochaine saison", AVIS.url);
     }
@@ -2634,21 +2729,245 @@
       lignes.push("", "📱 *Résultats, classements et parties sur téléphone* (site non officiel, en bêta, en complément de celui de la ligue) :", lienSite);
     }
     lignes.push("", "À très vite au bord du trinquet ! 💪");
-    return { texte: lignes.join("\n"), premiere: parties[0].date, derniere: parties[parties.length - 1].date };
+    return { texte: lignes.join("\n"), parties: lignesParties, premiere: parties[0].date, derniere: parties[parties.length - 1].date };
   }
 
-  // En tête de la liste : le message à déplier, pour le relire puis le
-  // partager. Pas de fenêtre surgissante (README, « Choix assumés »).
-  function buildMessageEquipes(message) {
-    var bloc = el("section", { class: "message-equipes", "aria-label": "Message des phases finales" });
-    bloc.appendChild(el("div", { class: "prevenir-titre", text: "Prévenir toutes les équipes" }));
-    var quand = formatShortDate(message.premiere) +
-      (message.derniere.getTime() !== message.premiere.getTime() ? " au " + formatShortDate(message.derniere) : "");
+  // ---------------------------------------------------------------
+  // Communications de l'organisateur (spec communications-equipes)
+  // ---------------------------------------------------------------
+  // Les balises qu'un texte peut porter, remplies pour l'équipe de la ligne
+  // par valeurs(). Elles s'écrivent entre accolades ; casse, accents et
+  // espaces en trop n'y changent rien ({Équipe} vaut {equipe}).
+  var BALISES = [
+    "responsable", "equipe", "equipe officielle", "serie", "poule", "rang", "joueurs",
+    "date", "heure", "lieu", "adversaire", "joueurs adversaire", "responsable adversaire", "tel adversaire",
+    "lien site", "lien questionnaire", "phases finales"
+  ];
+
+  // Le modèle de « Prochaine partie », écrit avec les balises : chaque élément
+  // facultatif sur sa ligne, qui disparaît quand il manque.
+  var MODELE_PROCHAINE_PARTIE = [
+    "Bonjour {responsable},",
+    "",
+    "Prochaine partie de *{equipe}* ({serie}) :",
+    "*{date} à {heure}*",
+    "Contre {adversaire}",
+    "Joueurs : {joueurs adversaire}",
+    "📍 {lieu}",
+    "Responsable de {adversaire} : {responsable adversaire}, {tel adversaire}",
+    "",
+    "Bon match ! 💪"
+  ].join("\n");
+
+  // Le texte d'exemple de « Perso », montré tant que l'organisateur n'a rien
+  // écrit, et rétabli par son bouton.
+  var EXEMPLE_PERSO = MODELE_PROCHAINE_PARTIE + "\n\nRésultats et classements : {lien site}";
+
+  var PERSO_KEY = "lidfpb_message_perso_v1";
+
+  // Le texte perso reste dans le navigateur ; sans stockage, il vit le temps
+  // de la visite.
+  var textePerso = null;
+  function lirePerso() {
+    if (textePerso === null) {
+      // Un texte vidé reste vide : seule une absence de texte rend l'exemple.
+      try {
+        var garde = localStorage.getItem(PERSO_KEY);
+        textePerso = garde === null ? EXEMPLE_PERSO : garde;
+      } catch (e) { textePerso = EXEMPLE_PERSO; }
+    }
+    return textePerso;
+  }
+  function ecrirePerso(texte) {
+    textePerso = texte;
+    try { localStorage.setItem(PERSO_KEY, texte); } catch (e) { /* pas bloquant */ }
+  }
+  function retablirPerso() {
+    textePerso = EXEMPLE_PERSO;
+    try { localStorage.removeItem(PERSO_KEY); } catch (e) { /* pas bloquant */ }
+  }
+
+  function nomDeBalise(brut) {
+    return String(brut || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  // « 06 12 34 56 78 » → « 06 •• •• •• 78 » : l'aperçu ne montre jamais un
+  // numéro entier (spec donnees-api).
+  function masquerTel(tel) {
+    var total = (String(tel).match(/\d/g) || []).length, vu = 0;
+    return String(tel).replace(/\d/g, function (d) {
+      vu += 1;
+      return vu <= 2 || vu > total - 2 ? d : "•";
+    });
+  }
+
+  // Les valeurs des balises pour une équipe. masque : numéros masqués, pour
+  // l'aperçu seulement.
+  function valeurs(team, ctx, masque) {
+    var p = pouleDe(etat.standings, team);
+    var m = prochainePartie(team, ctx.aujourdHui);
+    var adv = m ? etat.index[teamKey(team.spec, team.cat, m.clubAdv, m.numAdv)] : null;
+    var tel = adv && adv.contact ? telLisible(adv.contact.tel) : null;
+    return {
+      "responsable": team.contact ? prenomDuResponsable(team.contact.responsable) : "",
+      "equipe": nomCourt(etat.clubMap, team.clubCode, team.numero),
+      "equipe officielle": clubLabel(etat.clubMap, team.clubCode, team.numero),
+      "serie": team.serieLabel,
+      "poule": team.poule,
+      "rang": p ? rangEnClair(p) : "",
+      "joueurs": joueursDuMessage(team.roster),
+      "date": m ? m.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) : "",
+      "heure": m ? formatHour(m.hour, m.minute) : "",
+      "lieu": m ? lieuMessage(m.lieu) : "",
+      "adversaire": m ? (clubFictif(m.clubAdv) ? "à désigner" : nomCourt(etat.clubMap, m.clubAdv, m.numAdv)) : "",
+      "joueurs adversaire": adv ? joueursDuMessage(adv.roster) : "",
+      "responsable adversaire": adv && adv.contact ? String(adv.contact.responsable || "").trim() : "",
+      // Masqué, en espaces insécables : le numéro ne se coupe pas en fin de ligne.
+      "tel adversaire": tel ? (masque ? masquerTel(tel).replace(/ /g, "\u00a0") : tel) : "",
+      "lien site": ctx.lienSite,
+      "lien questionnaire": avisEnCours(ctx.aujourdHui) ? AVIS.url : "",
+      "phases finales": ctx.finales ? ctx.finales.parties : ""
+    };
+  }
+
+  // Remplit les balises, ligne par ligne. Une ligne dont une balise connue est
+  // vide disparaît ; une balise inconnue reste écrite telle quelle. Les lignes
+  // vides en trop qui en résultent sont fusionnées.
+  function remplir(texte, vals) {
+    return String(texte || "").split("\n").map(function (ligne) {
+      var vide = false;
+      var sortie = ligne.replace(/\{([^{}\n]+)\}/g, function (tout, nom) {
+        var k = nomDeBalise(nom);
+        if (!Object.prototype.hasOwnProperty.call(vals, k)) return tout;
+        if (!vals[k]) { vide = true; return ""; }
+        return vals[k];
+      });
+      return vide ? null : sortie;
+    }).filter(function (l) { return l !== null; })
+      .join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  function balisesInconnues(texte) {
+    var vues = [];
+    String(texte || "").replace(/\{([^{}\n]+)\}/g, function (tout, nom) {
+      if (BALISES.indexOf(nomDeBalise(nom)) === -1 && vues.indexOf(tout) === -1) vues.push(tout);
+      return tout;
+    });
+    return vues;
+  }
+
+  // Les communications : quand elles sont proposées, quelles équipes elles
+  // concernent, et leur texte pour une équipe. Ajouter « Fin de poule »,
+  // c'est ajouter une entrée.
+  function toujours() { return true; }
+  var COMMUNICATIONS = [
+    {
+      id: "finales", nom: "Phases finales",
+      proposee: function (ctx) { return !!ctx.finales; },
+      concerne: toujours,
+      texte: function (team, ctx) { return ctx.finales.texte; },
+      note: function (ctx) {
+        var f = ctx.finales;
+        var quand = formatShortDate(f.premiere) +
+          (f.derniere.getTime() !== f.premiere.getTime() ? " au " + formatShortDate(f.derniere) : "");
+        return "Phases finales du " + quand + " : un message avec les parties, les joueurs, le questionnaire d'avis et le site.";
+      }
+    },
+    {
+      id: "prochaine", nom: "Prochaine partie",
+      proposee: function (ctx) {
+        return Object.keys(etat.index).some(function (k) { return !!prochainePartie(etat.index[k], ctx.aujourdHui); });
+      },
+      concerne: function (team, ctx) { return !!prochainePartie(team, ctx.aujourdHui); },
+      texte: function (team, ctx, masque) { return remplir(MODELE_PROCHAINE_PARTIE, valeurs(team, ctx, masque)); },
+      note: function (ctx) {
+        var n = Object.keys(etat.index).filter(function (k) { return !!prochainePartie(etat.index[k], ctx.aujourdHui); }).length;
+        return pluriel(n, "équipe") + " " + (n > 1 ? "ont" : "a") + " une partie à venir : chacune reçoit la sienne, avec son adversaire et le responsable adverse.";
+      }
+    },
+    {
+      id: "perso", nom: "Perso",
+      proposee: toujours,
+      concerne: toujours,
+      texte: function (team, ctx, masque) { return remplir(lirePerso(), valeurs(team, ctx, masque)); },
+      note: function () { return "Votre texte, avec des balises remplies pour chaque équipe. Il est gardé sur cet appareil."; }
+    }
+  ];
+
+  // La communication choisie et l'équipe de l'aperçu valent le temps de la
+  // visite. etatCom : le contexte du dernier rendu de la liste et son bloc.
+  var communicationChoisie = null;
+  var apercuCle = null;
+  var etatCom = null;
+  // Les avions en papier de la liste, tenus à jour sans la redessiner.
+  var envois = [];
+  var minuteurEnvois = null;
+
+  function communicationCourante() {
+    return COMMUNICATIONS.filter(function (c) { return c.id === communicationChoisie; })[0];
+  }
+
+  function majEnvois() {
+    if (!etatCom) return;
+    var com = communicationCourante();
+    envois.forEach(function (e) {
+      var ok = com.concerne(e.team, etatCom.ctx);
+      e.a.hidden = !ok;
+      if (!ok) return;
+      var label = "Envoyer « " + com.nom + " » au responsable de " + e.court;
+      e.a.href = lienWhatsappAvecTexte(e.numero, com.texte(e.team, etatCom.ctx, false));
+      e.a.title = label;
+      e.a.setAttribute("aria-label", label);
+    });
+  }
+
+  function majEnvoisBientot() {
+    clearTimeout(minuteurEnvois);
+    minuteurEnvois = setTimeout(function () { minuteurEnvois = null; majEnvois(); }, 150);
+  }
+
+  // Les équipes que la communication concerne, pour l'aperçu : par série,
+  // puis par nom court ; « Alpha 1 · Série 1 » distingue deux homonymes.
+  function equipesDeLApercu(com) {
+    return Object.keys(etat.index).filter(function (k) { return com.concerne(etat.index[k], etatCom.ctx); })
+      .map(function (k) {
+        var t = etat.index[k];
+        return { cle: k, t: t, nom: nomCourt(etat.clubMap, t.clubCode, t.numero) + " · " + t.serieLabel };
+      })
+      .sort(function (a, b) {
+        return a.t.cat.localeCompare(b.t.cat, "fr", { numeric: true }) || a.nom.localeCompare(b.nom, "fr", { numeric: true });
+      });
+  }
+
+  // Le bloc en tête de la liste : pastilles, note, puis, déplié par « Message
+  // aux équipes », l'éditeur de « Perso », l'aperçu et Partager. Pas de
+  // fenêtre surgissante (README, « Choix assumés »).
+  function buildCommunications() {
+    var ctx = etatCom.ctx;
+    var proposees = COMMUNICATIONS.filter(function (c) { return c.proposee(ctx); });
+    if (!proposees.some(function (c) { return c.id === communicationChoisie; })) communicationChoisie = proposees[0].id;
+    var com = communicationCourante();
+
+    var bloc = el("section", { class: "message-equipes", "aria-label": "Communication aux équipes" });
+    bloc.appendChild(el("div", { class: "prevenir-titre", text: "Communication aux équipes" }));
+    var choix = el("div", { class: "communication-choix", role: "group", "aria-label": "Communication à envoyer" });
+    proposees.forEach(function (c) {
+      var pastille = el("button", { type: "button", class: "mes-chip", "aria-pressed": String(c.id === com.id), text: c.nom });
+      pastille.addEventListener("click", function () {
+        if (c.id === communicationChoisie) return;
+        communicationChoisie = c.id;
+        redessinerCommunications();
+        majEnvois();
+      });
+      choix.appendChild(pastille);
+    });
+    bloc.appendChild(choix);
     bloc.appendChild(el("div", {
       class: "prevenir-note",
-      text: "Phases finales du " + quand + " : un message avec les parties, les joueurs, le questionnaire d'avis et le site. " +
-            "L'avion en papier d'une ligne l'envoie au responsable de l'équipe sur WhatsApp."
+      text: com.note(ctx) + " L'avion en papier d'une ligne l'envoie au responsable de l'équipe sur WhatsApp."
     }));
+
     var bouton = el("button", { type: "button", class: "prevenir-btn message-btn", "aria-expanded": String(messageOuvert), "aria-controls": "message-corps" });
     bouton.appendChild(el("span", { text: "Message aux équipes" }));
     var chevron = el("span", { class: "rank-chevron" });
@@ -2656,15 +2975,84 @@
     bouton.appendChild(chevron);
     bloc.appendChild(bouton);
 
-    var corps = el("div", { id: "message-corps" });
+    var corps = el("div", { id: "message-corps", class: "communication-corps" });
     corps.hidden = !messageOuvert;
-    corps.appendChild(el("pre", { class: "message-apercu", text: message.texte }));
+
+    // L'équipe de l'aperçu : celle déjà choisie si elle est concernée, sinon
+    // la première équipe suivie concernée, sinon la première de la liste.
+    var equipes = equipesDeLApercu(com);
+    var cles = equipes.map(function (e) { return e.cle; });
+    if (cles.indexOf(apercuCle) === -1) {
+      apercuCle = etat.suivies.filter(function (k) { return cles.indexOf(k) !== -1; })[0] || cles[0] || null;
+    }
+    var apercu = el("pre", { class: "message-apercu" });
+    function texteApercu(masque) {
+      var team = apercuCle ? etat.index[apercuCle] : null;
+      return team ? com.texte(team, ctx, masque) : "";
+    }
+    function majApercu() { apercu.textContent = texteApercu(true); }
+
+    if (com.id === "perso") {
+      corps.appendChild(el("label", { for: "message-perso", text: "Texte du message" }));
+      var champ = el("textarea", { id: "message-perso", class: "message-perso", spellcheck: "true" });
+      champ.value = lirePerso();
+      corps.appendChild(champ);
+      var balises = el("div", { class: "balises", role: "group", "aria-label": "Insérer une balise" });
+      BALISES.forEach(function (b) {
+        var btn = el("button", { type: "button", class: "balise-btn", text: "{" + b + "}" });
+        btn.addEventListener("click", function () {
+          champ.setRangeText("{" + b + "}", champ.selectionStart, champ.selectionEnd, "end");
+          champ.focus();
+          surSaisie();
+        });
+        balises.appendChild(btn);
+      });
+      corps.appendChild(balises);
+      var inconnues = el("div", { class: "balise-inconnue", "aria-live": "polite" });
+      corps.appendChild(inconnues);
+      var retablir = el("button", { type: "button", class: "lien-discret", text: "Rétablir l'exemple" });
+      retablir.addEventListener("click", function () {
+        retablirPerso();
+        champ.value = lirePerso();
+        majInconnues();
+        majApercu();
+        majEnvois();
+      });
+      corps.appendChild(retablir);
+      var majInconnues = function () {
+        var liste = balisesInconnues(champ.value);
+        inconnues.textContent = liste.length ? "Balise inconnue : " + liste.join(", ") : "";
+      };
+      var surSaisie = function () {
+        ecrirePerso(champ.value);
+        majInconnues();
+        majApercu();
+        majEnvoisBientot();
+      };
+      champ.addEventListener("input", surSaisie);
+      majInconnues();
+    }
+
+    if (equipes.length) {
+      corps.appendChild(el("label", { for: "apercu-equipe", text: "Aperçu pour" }));
+      var select = el("select", { id: "apercu-equipe", class: "apercu-equipe" });
+      equipes.forEach(function (e) { select.appendChild(el("option", { value: e.cle, text: e.nom })); });
+      select.value = apercuCle;
+      select.addEventListener("change", function () {
+        apercuCle = select.value;
+        majApercu();
+      });
+      corps.appendChild(select);
+    }
+    majApercu();
+    corps.appendChild(apercu);
     var btns = el("div", { class: "prevenir-btns" });
-    var partage = boutonPartager(message.texte);
+    var partage = boutonPartager(function () { return texteApercu(false); });
     btns.appendChild(partage.bouton);
     btns.appendChild(partage.info);
     corps.appendChild(btns);
     bloc.appendChild(corps);
+
     bouton.addEventListener("click", function () {
       messageOuvert = !messageOuvert;
       bouton.setAttribute("aria-expanded", String(messageOuvert));
@@ -2673,19 +3061,45 @@
     return bloc;
   }
 
+  // Changer de pastille ne redessine que le bloc : la liste, ses lignes
+  // dépliées et le défilement ne bougent pas.
+  function redessinerCommunications() {
+    var nouveau = buildCommunications();
+    etatCom.bloc.replaceWith(nouveau);
+    etatCom.bloc = nouveau;
+  }
+
   function renderListe() {
+    // Un rafraîchissement des données peut redessiner la liste pendant que
+    // l'organisateur écrit dans « Perso » : le champ retrouve son curseur.
+    var champ = document.activeElement && document.activeElement.id === "message-perso" ? document.activeElement : null;
+    var curseur = champ ? [champ.selectionStart, champ.selectionEnd] : null;
     var results = document.getElementById("results");
     results.innerHTML = "";
     var chips = buildMesChips("");
     if (chips) results.appendChild(chips);
-    var message = messagePhasesFinales(etat.data.rencontres, startOfDay(new Date()), lienDuSite());
-    if (message) results.appendChild(buildMessageEquipes(message));
+    envois = [];
+    etatCom = null;
+    if (ORGA) {
+      var aujourdHui = startOfDay(new Date());
+      var lienSite = lienDuSite();
+      etatCom = { ctx: { aujourdHui: aujourdHui, lienSite: lienSite,
+                         finales: messagePhasesFinales(etat.data.rencontres, aujourdHui, lienSite) } };
+      etatCom.bloc = buildCommunications();
+      results.appendChild(etatCom.bloc);
+    }
     var liste = el("div", { class: "liste-equipes liste-cartes" });
     var compteur = { n: 0 };
     groupesDeLaListe().forEach(function (g) {
-      liste.appendChild(buildCarteListe(g, message ? message.texte : null, compteur));
+      liste.appendChild(buildCarteListe(g, compteur));
     });
     results.appendChild(liste);
+    majEnvois();
+    var nouveauChamp = curseur ? document.getElementById("message-perso") : null;
+    if (nouveauChamp) {
+      nouveauChamp.focus({ preventScroll: true });
+      nouveauChamp.setSelectionRange(curseur[0], curseur[1]);
+    }
   }
 
   // ---------------------------------------------------------------
@@ -2705,7 +3119,7 @@
   // liste. D'une équipe à l'autre (pastilles), l'adresse est remplacée, et
   // l'état « venu de la liste » est gardé.
   function ouvrirEquipe(cle, depuisListe) {
-    var url = window.location.pathname + "?equipe=" + encodeURIComponent(cle);
+    var url = window.location.pathname + requete(cle);
     try {
       if (depuisListe) history.pushState({ depuisListe: true }, "", url);
       else history.replaceState(history.state, "", url);
@@ -2719,7 +3133,7 @@
   // partagé, la liste s'ajoute à l'historique.
   function revenirALaListe() {
     if (history.state && history.state.depuisListe) { history.back(); return; }
-    try { history.pushState(null, "", window.location.pathname); } catch (e) { /* pas bloquant */ }
+    try { history.pushState(null, "", window.location.pathname + requete("")); } catch (e) { /* pas bloquant */ }
     etat.cle = "";
     renderListe();
     window.scrollTo({ top: 0 });
@@ -2729,7 +3143,7 @@
     var results = document.getElementById("results");
     results.innerHTML = "";
     var team = etat.index[cle];
-    var retour = el("a", { class: "retour-liste", href: "equipe.html", text: "← Toutes les équipes" });
+    var retour = el("a", { class: "retour-liste", href: adresse(""), text: "← Toutes les équipes" });
     retour.addEventListener("click", function (ev) {
       ev.preventDefault();
       revenirALaListe();
