@@ -280,7 +280,6 @@
      page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
      bien au contenu. */
   #contenu { scroll-margin-top: 100vh; }
-  #contenu:focus { outline: none; }
 
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
@@ -3635,7 +3634,10 @@
   document.querySelector(".aller-contenu").addEventListener("click", function (ev) {
     ev.preventDefault();
     var contenu = document.getElementById("contenu");
+    // Focusable le temps du saut seulement : sinon un toucher dans un vide du
+    // contenu y ramènerait le focus.
     contenu.setAttribute("tabindex", "-1");
+    contenu.addEventListener("blur", function () { contenu.removeAttribute("tabindex"); }, { once: true });
     contenu.focus({ preventScroll: true });
   });
 
