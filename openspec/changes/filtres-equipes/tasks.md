@@ -41,4 +41,4 @@
 - [x] 4.2 README : `lidfpb_equipes_filters_v1` et `lidfpb_filters_open_v1` (quatre pages) dans le tableau `localStorage`, `SPEC_LABELS` (avec la page Équipes) dans les constantes.
 - [x] 4.3 `npm test` complet, sortie montrée.
 - [x] 4.4 Captures Pixel 7, en clair et en sombre : le bloc replié avec son résumé, puis déplié.
-- [ ] 4.5 `/code-review`, et `/security-review` pour le `localStorage`. Corriger les constats.
+- [x] 4.5 `/code-review`, et `/security-review` pour le `localStorage`. Corriger les constats.
