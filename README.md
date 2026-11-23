@@ -28,8 +28,11 @@ Le comportement de chaque page est décrit par sa spec, dans
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md),
   [`derniers-resultats`](openspec/specs/derniers-resultats/spec.md) et
   [`affiche-week-end`](openspec/specs/affiche-week-end/spec.md).
-- [`equipe.html`](equipe.html) — « Mes équipes », tout ce qui concerne une
-  équipe, partageable par un lien, et le choix des équipes suivies. Specs
+- [`equipe.html`](equipe.html) — « Équipes » : la liste de toutes les
+  équipes, avec de quoi joindre chaque responsable et le message des phases
+  finales à leur envoyer ; puis, au toucher, tout ce qui concerne une équipe,
+  partageable par un lien, et le choix des équipes suivies. Specs
+  [`liste-equipes`](openspec/specs/liste-equipes/spec.md),
   [`mon-equipe`](openspec/specs/mon-equipe/spec.md) et
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md).
 - [`programme.html`](programme.html) — « Parties », le calendrier complet,
@@ -38,7 +41,7 @@ Le comportement de chaque page est décrit par sa spec, dans
 - [`classement.html`](classement.html) — le classement des poules. Specs
   [`classement`](openspec/specs/classement/spec.md) et
   [`calcul-classement`](openspec/specs/calcul-classement/spec.md), la règle
-  de classement commune à l'accueil, à Mes équipes et au Classement.
+  de classement commune à l'accueil, à la page Équipes et au Classement.
 - [`creneaux.html`](creneaux.html) — les créneaux libres au Trinquet Paris.
   Spec [`creneaux`](openspec/specs/creneaux/spec.md).
 - [`report.html`](report.html) — l'aide au choix d'une date de report, ouverte
@@ -186,17 +189,17 @@ principaux :
 | `CACHE_TTL_MS` | toutes sauf le compteur | Au-delà de cette ancienneté, une entrée de cache est revalidée |
 | `API_CACHE_PREFIX` | toutes sauf le compteur | Préfixe des clés `localStorage` du cache d'appels API |
 | `SERIE_LABELS` | toutes sauf le compteur | Correspondance Catégorie → Série affichée |
-| `PHASE_LABELS` | accueil, Mes équipes, Parties, Créneaux, Report | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
+| `PHASE_LABELS` | accueil, Équipes, Parties, Créneaux, Report | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
 | `FIN_DE_POULE` | Classement | Sort des non-qualifiés par série, pour les zones du Classement : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
-| `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Mes équipes, Classement | Barème, phase classée et nombre de qualifiés : à garder identiques dans les trois pages |
-| `CLUBS_ABREGES` | accueil, Classement, Parties | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les trois pages à la fois, un test compare les quatre |
+| `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Équipes, Classement | Barème, phase classée et nombre de qualifiés : à garder identiques dans les trois pages |
+| `CLUBS_ABREGES` | accueil, Équipes, Classement, Parties | Noms courts des clubs (« MPBA 1 »), tels que les fixe la spec [`noms-clubs`](openspec/specs/noms-clubs/spec.md) : à changer dans la spec et dans les quatre pages à la fois, un test compare les cinq |
 | `PHASE_QUARTS`, `PHASE_DEMIES`, `PHASE_FINALE` | Classement | Numéros de phase des 1/4, 1/2 et de la finale (« 10 », « 11 », « 12 »), comme dans `PHASE_LABELS`, pour le tableau final |
 | `QUARTS`, `DEMIES` | Classement | Croisement des rangs des deux poules d'une série pour la prévision des quarts |
-| `AVIS` | accueil | Lien du questionnaire d'avis (`url`, une adresse `https://`) et dernier jour de la campagne (`jusquAu`, `AAAA-MM-JJ`). Lien vide ou date passée : la carte « Votre avis sur la saison » ne s'affiche pas |
+| `AVIS` | accueil, Équipes | Lien du questionnaire d'avis (`url`, une adresse `https://`) et dernier jour de la campagne (`jusquAu`, `AAAA-MM-JJ`). Lien vide ou date passée : la carte « Votre avis sur la saison » ne s'affiche pas, et le message des phases finales n'a pas le lien. Identique dans les deux pages, un test les compare |
 | `GRID` | Créneaux, Report | Grille de créneaux du trinquet, par jour de semaine |
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
 | `LIEU_VARIANTS` | Créneaux | Libellés `lieu_renc` interrogés côté API pour ce trinquet. L'API ne filtre que par égalité exacte : un nouveau libellé est à ajouter ici |
-| `matchesTrinquetParis()` | Mes équipes, Parties, Créneaux, Report | Reconnaît le Trinquet Paris dans un libellé de lieu |
+| `matchesTrinquetParis()` | Équipes, Parties, Créneaux, Report | Reconnaît le Trinquet Paris dans un libellé de lieu |
 | `MAX_DATES_MESSAGE` | Report | Nombre de dates dans le message de report |
 | `PALETTE` | Compteur | Couleurs d'équipe autorisées |
 
@@ -205,8 +208,7 @@ Clés `localStorage` :
 | Clé | Page | Contenu |
 |---|---|---|
 | `lidfpb_api_v1:<url>` | toutes sauf le compteur | Cache d'appels API |
-| `lidfpb_mes_equipes_v1` | Mes équipes (lue aussi par l'accueil et le Classement) | Équipes suivies |
-| `lidfpb_equipe_vue_v1` | Mes équipes | Dernière équipe consultée |
+| `lidfpb_mes_equipes_v1` | Équipes (lue aussi par l'accueil et le Classement) | Équipes suivies |
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
@@ -236,22 +238,24 @@ déclarés dans la composition d'une de leurs équipes — jamais l'adresse ou
 la date de naissance, à aucun moment exposées par l'API.
 
 - **Noms de joueurs** : entre crochets après chaque équipe sur l'accueil,
-  sous chaque équipe sur Mes équipes, au toucher de la ligne
-  d'une équipe sur le Classement, et au détail d'une partie sur Parties et
-  Créneaux ; jamais dans le texte ni
-  l'image partagés. Noms seuls, sans numéro de licence ni coordonnées.
+  sous chaque équipe sur la page d'une équipe, au toucher de la ligne
+  d'une équipe sur la liste des équipes et sur le Classement, et au détail
+  d'une partie sur Parties et Créneaux. Jamais dans un texte ou une image
+  partagés, sauf le message des phases finales de la page Équipes, adressé
+  aux équipes du championnat (choix du demandeur, spec `donnees-api`). Noms
+  seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
   numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,
-  Mes équipes et Report.
+  Équipes (liste et page d'une équipe) et Report.
   Le numéro n'est jamais écrit dans les pages. Le nom
-  du responsable n'apparaît pas sur Mes équipes, figure en info-bulle sur
+  du responsable n'apparaît pas sur Équipes, figure en info-bulle sur
   Parties et en clair sur Report, et le message WhatsApp prérempli de Parties
   contient le nom et le numéro du responsable adverse.
 - **Rien n'est envoyé** : ce que le site retient (équipes suivies, filtres,
   partie du compteur, cache des données) reste dans le navigateur.
 
 Restent ouvertes : la base légale permettant de republier les noms de
-joueurs, l'alignement des pages sur Mes équipes pour le nom du responsable, et
+joueurs, l'alignement des pages sur la page Équipes pour le nom du responsable, et
 la durée de conservation du cache des données sur l'appareil.
 
 ## Backend (Apps Script)

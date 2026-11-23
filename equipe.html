@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes équipes — LIDFPB</title>
+<title>Équipes — LIDFPB</title>
 <!-- Aperçu de partage : la même carte que Découvrir, quel que soit le lien
      envoyé (spec decouvrir). Sans og:url, le lien ouvre bien cette page. -->
 <meta name="description" content="Votre prochaine partie, votre rang de poule et les créneaux libres du Trinquet Paris, repris chaque heure du site de la ligue. Gratuit, sans compte, sur votre téléphone.">
@@ -132,6 +132,12 @@
     --vert: #009B48;
     --sur-accent: #fff;
     --vert-wa: #1f9d55;
+    --or-text: #8a6d0b;
+    --or-bg: #fbf0cd;
+    --argent-text: #5f636b;
+    --argent-bg: #eceef1;
+    --bronze-text: #8a5524;
+    --bronze-bg: #f6e6d8;
   }
   /* Thème sombre : suit le téléphone, sauf thème clair choisi sur le site (spec apparence). Mêmes
      valeurs dans chaque page qui porte ces variables. */
@@ -170,6 +176,12 @@
       --vert: #2fd17a;
       --sur-accent: #181818;
       --vert-wa: #157a40;
+      --or-text: #f3d27a;
+      --or-bg: #3a2f0d;
+      --argent-text: #d6d6d6;
+      --argent-bg: #2c2e36;
+      --bronze-text: #f0b27a;
+      --bronze-bg: #3a2618;
     }
   }
   /* Thème sombre choisi sur le site : mêmes valeurs que le bloc ci-dessus. */
@@ -207,6 +219,12 @@
     --vert: #2fd17a;
     --sur-accent: #181818;
     --vert-wa: #157a40;
+    --or-text: #f3d27a;
+    --or-bg: #3a2f0d;
+    --argent-text: #d6d6d6;
+    --argent-bg: #2c2e36;
+    --bronze-text: #f0b27a;
+    --bronze-bg: #3a2618;
   }
 
   * { box-sizing: border-box; }
@@ -400,7 +418,7 @@
     z-index: 60;
   }
   .tab-bar a {
-    /* Largeur du libellé, puis le reste partagé : « Mes équipes » tient sur
+    /* Largeur du libellé, puis le reste partagé : « Classement » tient sur
        une ligne dès 360 px. */
     flex: 1 1 auto;
     min-width: 0;
@@ -566,24 +584,6 @@
   .match-score.todo { font-size: 12px; font-weight: 600; color: var(--muted); }
   .match-score.retard { font-size: 12px; font-weight: 700; color: var(--loss-text); text-align: right; line-height: 1.2; }
 
-  /* Le choix de l'équipe vit dans le header : il hérite de son position:sticky
-     et reste accessible pendant tout le défilement. Une liste déroulante native plutôt que des pastilles : une
-     trentaine d'équipes aux noms longs rempliraient l'écran. */
-  header .choix-equipe {
-    display: block;
-    width: 100%;
-    margin: 10px 0 0;
-    font: inherit;
-    /* 16 px : sous cette taille, iOS zoome sur le champ touché. */
-    font-size: 16px;
-    min-height: 44px;
-    font-weight: 600;
-    color: var(--text);
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 10px;
-  }
 
   /* --- Une section de la page --- */
   .section-card {
@@ -709,7 +709,97 @@
   .prevenir-ok { font-size: 12px; font-weight: 600; color: var(--muted); }
   .objectif .forme-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 
-  .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
+
+  /* --- Liste de toutes les équipes (spec liste-equipes) ---
+     Les cartes et les lignes du Classement, recopiées. La ligne porte des
+     liens (WhatsApp, SMS, message) : elle ne peut pas être un seul bouton.
+     Le bouton prend le rang, le nom et le chevron, les icônes suivent. */
+  .serie-titre { margin: 4px 2px 8px; font-size: 14px; font-weight: 700; }
+  .poule-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .poule-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .rank-item + .rank-item { border-top: 1px solid var(--border); }
+  .rank-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .rank-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) 14px;
+    column-gap: 6px;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 6px 6px 12px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .rank-row:focus-visible { outline-offset: -2px; }
+  .rank-pos {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .rank-row.or .rank-pos { color: var(--or-text); background: var(--or-bg); }
+  .rank-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
+  .rank-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
+  .rank-team { font-size: 14px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+  .rank-chevron { display: flex; justify-content: center; color: var(--muted); }
+  .rank-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
+  .rank-item.ouvert, .rank-item.ouvert .rank-plus { background: var(--accent-bg); }
+  .rank-row[aria-expanded="true"] .rank-chevron { color: var(--accent); }
+  .rank-row[aria-expanded="true"] .rank-chevron svg { transform: none; }
+  .rank-actions { display: flex; gap: 4px; padding-right: 10px; }
+  .rank-actions .contact-btn { width: 34px; height: 34px; margin: 0; }
+  .contact-btn.message { color: var(--accent); }
+  /* Sous la colonne du nom : 12px de marge, 22px de rang, 6px d'écart. */
+  .rank-plus { padding: 0 10px 10px 40px; }
+  .rank-nom { font-size: 12px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; overflow-wrap: anywhere; }
+  .rank-joueurs { display: flex; align-items: flex-start; gap: 6px; font-size: 14px; font-weight: 700; line-height: 1.35; }
+  .rank-joueurs svg { flex: none; margin-top: 2px; color: var(--muted); }
+  .rank-joueurs.inconnus { font-weight: 600; font-style: italic; color: var(--muted); }
+  .voir-equipe { display: inline-block; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; padding: 4px 0; }
+  .retour-liste { display: inline-block; margin: 0 2px 10px; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; padding: 4px 0; }
+
+  /* Message des phases finales : un bloc à déplier, jamais une fenêtre. */
+  .message-equipes { border: 1px solid var(--border); border-radius: 12px; background: var(--card-bg); margin-bottom: 12px; padding: 10px 14px 12px; }
+  .message-btn[aria-expanded="true"] .rank-chevron svg { transform: none; }
+  .message-btn .rank-chevron svg { transform: rotate(-90deg); transition: transform 500ms var(--ease); }
+  .message-apercu {
+    margin: 10px 0;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
 
   .skeleton-card {
     background: var(--card-bg);
@@ -774,7 +864,7 @@
     /* L'en-tête s'aligne sur le contenu centré (1400 - 2 x 24 px). */
     header { padding-left: max(16px, calc((100% - 1352px) / 2)); padding-right: max(16px, calc((100% - 1352px) / 2)); }
     .header-bar { left: max(12px, calc((100% - 1352px) / 2 - 4px)); right: max(12px, calc((100% - 1352px) / 2 - 4px)); }
-    .choix-equipe { max-width: 480px; }
+    .liste-cartes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; align-items: start; }
     .colonnes { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
     .colonne > :last-child { margin-bottom: 0; }
   }
@@ -792,10 +882,9 @@
   </div>
 </div>
 <header>
-  <h1><a href="index.html" class="home-link">Mes équipes</a></h1>
+  <h1><a href="index.html" class="home-link">Équipes</a></h1>
   <h1>Ligue d'Île-de-France</h1>
   <p class="header-sync">Source : <a href="https://lidfpb.euskalpilota.fr/rencontres.php" target="_blank" rel="noopener">site de la ligue</a> · synchro horaire · dernière : <strong id="lastSyncText">chargement…</strong></p>
-  <select class="choix-equipe" id="choixEquipe" aria-label="Choisir une équipe"></select>
 </header>
 
 <main id="contenu">
@@ -805,13 +894,13 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.05</p>
+    <p>Version 2026.11.22</p>
   </footer>
 </main>
 
 <nav class="tab-bar" aria-label="Navigation principale">
   <a href="index.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg><span>Accueil</span></a>
-  <a href="equipe.html" class="active" aria-current="page"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M164.47,195.63a8,8,0,0,1-6.7,12.37H10.23a8,8,0,0,1-6.7-12.37,95.83,95.83,0,0,1,47.22-37.71,60,60,0,1,1,66.5,0A95.83,95.83,0,0,1,164.47,195.63Zm87.91-.15a95.87,95.87,0,0,0-47.13-37.56A60,60,0,0,0,144.7,54.59a4,4,0,0,0-1.33,6A75.83,75.83,0,0,1,147,150.53a4,4,0,0,0,1.07,5.53,112.32,112.32,0,0,1,29.85,30.83,23.92,23.92,0,0,1,3.65,16.47,4,4,0,0,0,3.95,4.64h60.3a8,8,0,0,0,7.73-5.93A8.22,8.22,0,0,0,252.38,195.48Z"/></svg><span>Mes équipes</span></a>
+  <a href="equipe.html" class="active" aria-current="page"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M164.47,195.63a8,8,0,0,1-6.7,12.37H10.23a8,8,0,0,1-6.7-12.37,95.83,95.83,0,0,1,47.22-37.71,60,60,0,1,1,66.5,0A95.83,95.83,0,0,1,164.47,195.63Zm87.91-.15a95.87,95.87,0,0,0-47.13-37.56A60,60,0,0,0,144.7,54.59a4,4,0,0,0-1.33,6A75.83,75.83,0,0,1,147,150.53a4,4,0,0,0,1.07,5.53,112.32,112.32,0,0,1,29.85,30.83,23.92,23.92,0,0,1,3.65,16.47,4,4,0,0,0,3.95,4.64h60.3a8,8,0,0,0,7.73-5.93A8.22,8.22,0,0,0,252.38,195.48Z"/></svg><span>Équipes</span></a>
   <a href="programme.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"/></svg><span>Parties</span></a>
   <a href="classement.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M112.41,102.53a8,8,0,0,1,5.06-10.12l12-4A8,8,0,0,1,140,96v40a8,8,0,0,1-16,0V107.1l-1.47.49A8,8,0,0,1,112.41,102.53ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16h8V104A16,16,0,0,1,40,88H80V56A16,16,0,0,1,96,40h64a16,16,0,0,1,16,16v72h40a16,16,0,0,1,16,16v56h8A8,8,0,0,1,248,208Zm-72-64v56h40V144ZM96,200h64V56H96Zm-56,0H80V104H40Z"/></svg><span>Classement</span></a>
   <a href="creneaux.html"><svg viewBox="0 0 256 256" fill="currentColor" width="21" height="21" aria-hidden="true"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></svg><span>Créneaux</span></a>
@@ -834,9 +923,6 @@
   // Les équipes suivies, sous la même clé qu'index.html et classement.html,
   // qui les lisent. C'est ici, et seulement ici, qu'on les choisit.
   var MES_EQUIPES_KEY = "lidfpb_mes_equipes_v1";
-  // La dernière équipe consultée, pour la retrouver en revenant par l'onglet.
-  // Elle reste dans le navigateur : rien n'est envoyé nulle part.
-  var EQUIPE_VUE_KEY = "lidfpb_equipe_vue_v1";
   // Nombre de dernières parties jouées montrées dans la forme.
   var FORME_NB = 5;
 
@@ -1534,16 +1620,7 @@
     if (etat.suivies.indexOf(cle) === -1) suivies.push(cle);
     etat.suivies = suivies;
     ecrireMesEquipes(suivies);
-    renderChoix(etat.cle);
     renderEquipe(etat.cle);
-  }
-
-  function lireEquipeVue() {
-    try { return localStorage.getItem(EQUIPE_VUE_KEY) || ""; } catch (e) { return ""; /* stockage indisponible */ }
-  }
-
-  function ecrireEquipeVue(cle) {
-    try { localStorage.setItem(EQUIPE_VUE_KEY, cle); } catch (e) { /* pas bloquant */ }
   }
 
   function equipeDansLAdresse() {
@@ -1556,7 +1633,8 @@
   function mettreAJourAdresse(cle) {
     var voulue = window.location.pathname + (cle ? "?equipe=" + encodeURIComponent(cle) : "");
     if (voulue === window.location.pathname + window.location.search) return;
-    try { history.replaceState(null, "", voulue); } catch (e) { /* adresse inchangée : pas bloquant */ }
+    // L'état est gardé : il dit si l'on vient de la liste (voir ouvrirEquipe).
+    try { history.replaceState(history.state, "", voulue); } catch (e) { /* adresse inchangée : pas bloquant */ }
   }
 
   // Les équipes que l'on peut afficher, par clé : toutes, sauf celles des clubs
@@ -1567,17 +1645,6 @@
       if (!clubFictif(t.clubCode)) index[teamKey(t.spec, t.cat, t.clubCode, t.numero)] = t;
     });
     return index;
-  }
-
-  // Dans l'ordre : l'équipe demandée, la dernière consultée, puis la première
-  // équipe suivie encore présente. Une clé inconnue (lien d'une autre saison,
-  // équipe disparue) est ignorée sans message.
-  function choisirEquipe(index, demandee, vue, suivies) {
-    var candidates = [demandee, vue].concat(suivies);
-    for (var i = 0; i < candidates.length; i++) {
-      if (candidates[i] && index[candidates[i]]) return candidates[i];
-    }
-    return "";
   }
 
   // ---------------------------------------------------------------
@@ -2172,6 +2239,29 @@
     return Promise.reject(new Error("presse-papiers indisponible"));
   }
 
+  // Le message confié à la feuille de partage du téléphone, ou copié sur
+  // ordinateur. Commun à « Prévenir l'équipe » et au message des phases
+  // finales.
+  function boutonPartager(texte) {
+    var info = el("span", { class: "prevenir-ok", "aria-live": "polite" });
+    var partager = el("button", { type: "button", class: "prevenir-btn" });
+    partager.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
+    partager.appendChild(el("span", { text: navigator.share ? "Partager" : "Copier le message" }));
+    partager.addEventListener("click", function () {
+      info.textContent = "";
+      if (navigator.share) {
+        navigator.share({ text: texte }).catch(function (e) {
+          if (e && e.name === "AbortError") return;   // partage annulé
+          copier(texte).then(function () { info.textContent = "Message copié"; });
+        });
+        return;
+      }
+      copier(texte).then(function () { info.textContent = "Message copié, à coller"; },
+                         function () { info.textContent = "Copie impossible sur ce navigateur"; });
+    });
+    return { bouton: partager, info: info };
+  }
+
   // WhatsApp directement vers le responsable de l'équipe quand la ligue en
   // a un numéro (ni le nom ni le numéro ne s'affichent), et dans tous les cas
   // la feuille de partage du téléphone, ou la copie sur ordinateur, pour
@@ -2205,24 +2295,9 @@
       wa.appendChild(el("span", { text: "Au responsable" }));
       btns.appendChild(wa);
     }
-    var info = el("span", { class: "prevenir-ok", "aria-live": "polite" });
-    var partager = el("button", { type: "button", class: "prevenir-btn" });
-    partager.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg>';
-    partager.appendChild(el("span", { text: navigator.share ? "Partager" : "Copier le message" }));
-    partager.addEventListener("click", function () {
-      info.textContent = "";
-      if (navigator.share) {
-        navigator.share({ text: texte }).catch(function (e) {
-          if (e && e.name === "AbortError") return;   // partage annulé
-          copier(texte).then(function () { info.textContent = "Message copié"; });
-        });
-        return;
-      }
-      copier(texte).then(function () { info.textContent = "Message copié, à coller"; },
-                         function () { info.textContent = "Copie impossible sur ce navigateur"; });
-    });
-    btns.appendChild(partager);
-    btns.appendChild(info);
+    var partage = boutonPartager(texte);
+    btns.appendChild(partage.bouton);
+    btns.appendChild(partage.info);
     bloc.appendChild(btns);
     return bloc;
   }
@@ -2247,19 +2322,413 @@
     return carte;
   }
 
+  // ---------------------------------------------------------------
+  // Liste de toutes les équipes (spec liste-equipes)
+  // ---------------------------------------------------------------
+  // Table des noms courts : copie de celle du Classement, de Parties et de
+  // l'accueil, à garder identique (spec noms-clubs, qui est la référence). Un
+  // club absent garde le nom de la ligue ; on n'invente pas d'abréviation.
+  var CLUBS_ABREGES = {
+    "CHAVILLE PELOTE BASQUE": "Chaville",
+    "CHATILLON PELOTE BASQUE": "Chatillon",
+    "PARIS EUSKAL PILOTA": "PEP",
+    "METRO PELOTE BASQUE ANTONY": "MPBA",
+    "CLUB DE PELOTE BASQUE DE PARIS": "CPBP",
+    "LEVALLOIS SC": "LSC",
+    "PARIS PELOTE BASQUE 13": "PPB13",
+    "PARIS TALDEA": "Taldea"
+  };
+
+  // Une équipe sous son nom court : « MPBA 1 ». Seules la liste et le message
+  // des phases finales l'emploient ; le reste de la page garde le nom officiel.
+  function nomCourt(clubMap, code, equipe) {
+    var name = clubMap[code] || ("Club " + code);
+    var court = CLUBS_ABREGES[name.toUpperCase().trim()] || name;
+    var eq = String(equipe || "").trim();
+    return eq ? (court + " " + eq) : court;
+  }
+
+  // Questionnaire d'avis sur la saison : copie de l'accueil, à garder
+  // identique. Son lien n'entre dans le message que jusqu'à la fin de la
+  // campagne.
+  var AVIS = { url: "https://forms.gle/8z2xRRQsG6ahpDm58", jusquAu: "2026-12-31" };
+
+  var PODIUM = { 1: " or", 2: " argent", 3: " bronze" };
+  // Tracés Phosphor (licence MIT) : chevron, joueurs, et l'avion en papier de
+  // l'envoi du message. Textes fixes, jamais une donnée de l'API.
+  var SVG_CHEVRON = '<svg viewBox="0 0 256 256" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>';
+  var SVG_JOUEURS = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg>';
+  var SVG_ENVOI = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z"/></svg>';
+
+  // Lignes dépliées, par équipe : elles le restent quand la liste est
+  // redessinée (rafraîchissement, retour depuis une équipe), le temps de la
+  // visite. Rien n'est gardé.
+  var deplies = {};
+  // De même pour le message des phases finales.
+  var messageOuvert = false;
+
+  // Les équipes par série et par poule, dans l'ordre du classement de chaque
+  // poule. Une équipe sans partie de poule va dans « Hors poule » de sa série.
+  function groupesDeLaListe() {
+    var groupes = {};
+    function groupe(spec, cat, poule) {
+      var k = [spec, cat, poule].join("|");
+      return groupes[k] || (groupes[k] = { spec: spec, cat: cat, poule: poule, equipes: [] });
+    }
+    // Des copies, au nom court : les équipes pas encore classées se rangent
+    // dans l'ordre de ce qui est affiché. Le classement lui-même n'en dépend pas.
+    var placees = {};
+    etat.standings.forEach(function (s) {
+      var cle = teamKey(s.spec, s.cat, s.clubCode, s.numero);
+      if (!etat.index[cle] || placees[cle]) return;
+      var copie = Object.assign({}, s, { label: nomCourt(etat.clubMap, s.clubCode, s.numero) });
+      groupe(s.spec, s.cat, s.poule).equipes.push(copie);
+      placees[cle] = true;
+    });
+    Object.keys(etat.index).forEach(function (cle) {
+      if (placees[cle]) return;
+      var t = etat.index[cle];
+      groupe(t.spec, t.cat, "").equipes.push({ spec: t.spec, cat: t.cat, clubCode: t.clubCode, numero: t.numero, jouees: 0, label: nomCourt(etat.clubMap, t.clubCode, t.numero) });
+    });
+    return Object.keys(groupes).map(function (k) {
+      var g = groupes[k];
+      g.equipes = trierClassement(g.equipes);
+      return g;
+    }).sort(function (a, b) {
+      return a.spec.localeCompare(b.spec, "fr", { numeric: true }) ||
+             a.cat.localeCompare(b.cat, "fr", { numeric: true }) ||
+             (a.poule === "" ? 1 : 0) - (b.poule === "" ? 1 : 0) ||
+             a.poule.localeCompare(b.poule, "fr", { numeric: true });
+    });
+  }
+
+  // WhatsApp (conversation vide) et SMS vers le responsable, puis, quand il
+  // existe, le message des phases finales prérempli. Ni le nom ni le numéro du
+  // responsable ne s'affichent : les icônes nomment l'équipe.
+  function buildActions(team, court, message) {
+    var actions = el("div", { class: "rank-actions" });
+    var numero = team.contact ? normalizePhoneForWhatsapp(team.contact.tel) : null;
+    if (!numero) return actions;
+    var qui = " au responsable de " + court;
+    var liens = [
+      ["wa", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp" + qui],
+      ["sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS" + qui]
+    ];
+    if (message) {
+      liens.push(["message contact-message", SVG_ENVOI, "https://wa.me/" + numero + "?text=" + encodeURIComponent(message),
+                  "Envoyer le message des phases finales" + qui]);
+    }
+    liens.forEach(function (c) {
+      var a = el("a", { class: "contact-btn " + c[0], href: c[2], title: c[3], "aria-label": c[3] });
+      if (c[2].indexOf("https://") === 0) { a.target = "_blank"; a.rel = "noopener"; }
+      a.innerHTML = c[1];
+      actions.appendChild(a);
+    });
+    return actions;
+  }
+
+  // Le dépli : nom officiel, joueurs, et le lien vers la page de l'équipe.
+  // Rempli à la première ouverture, pour qu'aucun nom de joueur ne soit dans
+  // la page tant qu'on n'a rien touché.
+  function remplirDepli(plus, team, cle) {
+    if (plus.childNodes.length) return;
+    plus.appendChild(el("div", { class: "rank-nom", text: clubLabel(etat.clubMap, team.clubCode, team.numero) }));
+    if (!etat.data.compositionsIndisponibles) {
+      var joueurs = el("div", { class: "rank-joueurs" + (team.roster ? "" : " inconnus") });
+      joueurs.innerHTML = SVG_JOUEURS;
+      joueurs.appendChild(el("span", { text: team.roster ? team.roster.join(", ") : "Composition non déclarée à la ligue" }));
+      plus.appendChild(joueurs);
+    }
+    var voir = el("a", { class: "voir-equipe", href: "equipe.html?equipe=" + encodeURIComponent(cle), text: "Voir l'équipe →" });
+    voir.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      ouvrirEquipe(cle, true);
+    });
+    plus.appendChild(voir);
+  }
+
+  function buildLigneEquipe(s, rang, message, n) {
+    var cle = teamKey(s.spec, s.cat, s.clubCode, s.numero);
+    var team = etat.index[cle];
+    var court = nomCourt(etat.clubMap, team.clubCode, team.numero);
+    var idPlus = "equipe-plus-" + n;
+    var item = el("div", { class: "rank-item" });
+    var ligne = el("div", { class: "rank-ligne" });
+    var bouton = el("button", {
+      type: "button",
+      class: "rank-row" + (s.jouees ? (PODIUM[rang] || "") : ""),
+      "aria-controls": idPlus,
+      "aria-label": s.jouees ? "Rang " + rang + ", " + court : court + ", pas encore classée"
+    });
+    bouton.appendChild(el("span", { class: "rank-pos", text: s.jouees ? String(rang) : "–" }));
+    // Le numéro d'équipe ne passe jamais seul à la ligne.
+    bouton.appendChild(el("span", { class: "rank-team", text: court.replace(/ (\d+)$/, " $1") }));
+    var chevron = el("span", { class: "rank-chevron" });
+    chevron.innerHTML = SVG_CHEVRON;
+    bouton.appendChild(chevron);
+    ligne.appendChild(bouton);
+    ligne.appendChild(buildActions(team, court, message));
+    item.appendChild(ligne);
+
+    var plus = el("div", { class: "rank-plus", id: idPlus });
+    item.appendChild(plus);
+    function montrerDepli(ouvert) {
+      if (ouvert) remplirDepli(plus, team, cle);
+      bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
+      item.classList.toggle("ouvert", ouvert);
+      plus.hidden = !ouvert;
+    }
+    montrerDepli(!!deplies[cle]);
+    bouton.addEventListener("click", function () {
+      if (deplies[cle]) delete deplies[cle]; else deplies[cle] = true;
+      montrerDepli(!!deplies[cle]);
+    });
+    return item;
+  }
+
+  function buildCarteListe(g, message, compteur) {
+    var carte = el("div", { class: "poule-card" });
+    var head = el("div", { class: "poule-head" });
+    head.appendChild(el("span", { class: "badge serie-" + g.cat, text: SERIE_LABELS[g.cat] || ("Cat. " + (g.cat || "?")) }));
+    head.appendChild(el("span", { text: g.poule ? "Poule " + g.poule : "Hors poule" }));
+    carte.appendChild(head);
+    g.equipes.forEach(function (s, i) {
+      carte.appendChild(buildLigneEquipe(s, i + 1, message, ++compteur.n));
+    });
+    return carte;
+  }
+
+  // ---------------------------------------------------------------
+  // Message des phases finales (spec liste-equipes)
+  // ---------------------------------------------------------------
+  // Les libellés de PHASE_LABELS, au pluriel, pour l'en-tête d'un jour de
+  // phase finale : « 1/2 finales, dimanche 29 novembre ».
+  var PHASES_AU_PLURIEL = {
+    "7": "1/32es de finale",
+    "8": "1/16es de finale",
+    "9": "1/8es de finale",
+    "10": "Quarts de finale",
+    "11": "1/2 finales",
+    "12": "Finales"
+  };
+  var NOMBRES_EN_LETTRES = { 2: "deux", 3: "trois", 4: "quatre", 5: "cinq" };
+
+  // « PARIS (Trinquet Paris - 75016) » → « Trinquet Paris (75016) ».
+  function lieuMessage(lieu) {
+    var brut = String(lieu || "").trim();
+    var m = /\(([^)]+)\)/.exec(brut);
+    if (!m) return brut;
+    var parts = m[1].split(" - ");
+    return parts.length > 1 ? parts[0].trim() + " (" + parts.slice(1).join(" - ").trim() + ")" : parts[0].trim();
+  }
+
+  // « Hugues SAINT-PIERRE » → « Hugues Saint-Pierre » : chaque mot et chaque
+  // partie d'un nom composé avec sa majuscule, le reste en minuscules.
+  function nomPropre(nom) {
+    return String(nom || "").trim().toLocaleLowerCase("fr")
+      .replace(/(^|[\s'’-])([^\s'’-])/g, function (tout, avant, lettre) { return avant + lettre.toLocaleUpperCase("fr"); });
+  }
+
+  // « A & B », « A, B & C ».
+  function joueursDuMessage(roster) {
+    var noms = (roster || []).map(nomPropre).filter(Boolean);
+    if (noms.length < 2) return noms.join("");
+    return noms.slice(0, -1).join(", ") + " & " + noms[noms.length - 1];
+  }
+
+  function equipeDuMessage(spec, cat, club, numero) {
+    if (clubFictif(club)) return "à désigner";
+    var team = etat.index[teamKey(spec, cat, club, numero)];
+    var nom = nomCourt(etat.clubMap, club, numero);
+    var joueurs = team ? joueursDuMessage(team.roster) : "";
+    return joueurs ? nom + " (" + joueurs + ")" : nom;
+  }
+
+  function avisEnCours(aujourdHui) {
+    return /^https:\/\//.test(AVIS.url) && aujourdHui <= new Date(AVIS.jusquAu + "T23:59:59");
+  }
+
+  function lienDuSite() {
+    try { return new URL("decouvrir.html", window.location.href).href; } catch (e) { return ""; }
+  }
+
+  // Le message des phases finales, mis en forme pour WhatsApp, ou null quand
+  // aucune partie de phase finale ne reste à jouer dans une série aux poules
+  // finies. Renvoie aussi le premier et le dernier jour, pour la note du bloc.
+  function messagePhasesFinales(rencontres, aujourdHui, lienSite) {
+    // Même clé de série que masquerFinalesPrematurees.
+    function serie(r) {
+      return [r["Compétition"], r["Spécialité"], r["Catégorie"]]
+        .map(function (v) { return String(v || "").trim(); }).join("|");
+    }
+    var poulesEnCours = {};
+    rencontres.forEach(function (r) {
+      if (estPhaseDePoules(r) && !hasScore(r)) poulesEnCours[serie(r)] = true;
+    });
+    var parties = rencontres.filter(function (r) {
+      return PHASES_A_DESIGNER.indexOf(String(r.Phase || "").trim()) !== -1 && !hasScore(r) && !poulesEnCours[serie(r)];
+    }).map(function (r) {
+      var t = parseHeureRenc(r.heure_renc);
+      return { r: r, date: effectiveDate(r), hour: t ? t.hour : null, minute: t ? t.minute : 0, phase: String(r.Phase).trim() };
+    }).filter(function (p) { return p.date && p.date >= aujourdHui; });
+    if (!parties.length) return null;
+    // Par jour, puis par phase (un seul en-tête par phase et par jour, même
+    // quand les séries s'entrecroisent), puis par heure.
+    parties.sort(function (a, b) {
+      return a.date - b.date || Number(a.phase) - Number(b.phase) ||
+             (a.hour === null ? 99 : a.hour) * 60 + a.minute - ((b.hour === null ? 99 : b.hour) * 60 + b.minute);
+    });
+
+    var lieux = {};
+    parties.forEach(function (p) { lieux[lieuMessage(p.r.lieu_renc)] = true; });
+    var lieuUnique = Object.keys(lieux).length === 1 ? Object.keys(lieux)[0] : null;
+    var jours = {};
+    parties.forEach(function (p) { jours[p.date.getTime()] = true; });
+    var nbJours = Object.keys(jours).length;
+
+    var lignes = [
+      "🙏 *Merci à toutes et à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
+      "",
+      "La saison touche à sa fin et il reste " +
+        (nbJours === 1 ? "un dernier rendez-vous" : (NOMBRES_EN_LETTRES[nbJours] || nbJours) + " rendez-vous") +
+        " à ne pas manquer. Venez nombreux encourager les équipes 👏"
+    ];
+    var groupe = null, precedente = null;
+    parties.forEach(function (p) {
+      var cle = p.phase + "|" + p.date.getTime();
+      if (cle !== groupe) {
+        groupe = cle;
+        precedente = null;
+        lignes.push("", (p.phase === "12" ? "🏆" : "🏟️") + " *" + PHASES_AU_PLURIEL[p.phase] + ", " +
+                    p.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) + "*");
+      }
+      var r = p.r;
+      var spec = String(r["Spécialité"] || "").trim(), cat = String(r["Catégorie"] || "").trim();
+      var heure = p.hour !== null ? formatHour(p.hour, p.minute) : "heure à venir";
+      var serie = SERIE_LABELS[cat] || ("Cat. " + (cat || "?"));
+      var lieu = lieuUnique === null && lieuMessage(r.lieu_renc) ? " · " + lieuMessage(r.lieu_renc) : "";
+      if (clubFictif(r.club_rec) && clubFictif(r.club_vis)) {
+        if (precedente === "detail") lignes.push("");
+        lignes.push("• " + heure + " : " + (PHASE_LABELS[p.phase] || "").toLocaleLowerCase("fr") + " " + serie + lieu);
+        precedente = "puce";
+      } else {
+        lignes.push("", "*" + heure + " · " + serie + lieu + "*",
+                    equipeDuMessage(spec, cat, String(r.club_rec || "").trim(), String(r.equip_rec || "").trim()),
+                    "vs " + equipeDuMessage(spec, cat, String(r.club_vis || "").trim(), String(r.equip_vis || "").trim()));
+        precedente = "detail";
+      }
+    });
+    if (lieuUnique) lignes.push("", "📍 " + lieuUnique);
+    if (avisEnCours(aujourdHui)) {
+      lignes.push("", "💬 *Votre avis compte* : 2 minutes pour préparer la prochaine saison", AVIS.url);
+    }
+    if (lienSite) {
+      lignes.push("", "📱 *Résultats, classements et parties sur téléphone* (site non officiel, en bêta, en complément de celui de la ligue) :", lienSite);
+    }
+    lignes.push("", "À très vite au bord du trinquet ! 💪");
+    return { texte: lignes.join("\n"), premiere: parties[0].date, derniere: parties[parties.length - 1].date };
+  }
+
+  // En tête de la liste : le message à déplier, pour le relire puis le
+  // partager. Pas de fenêtre surgissante (README, « Choix assumés »).
+  function buildMessageEquipes(message) {
+    var bloc = el("section", { class: "message-equipes", "aria-label": "Message des phases finales" });
+    bloc.appendChild(el("div", { class: "prevenir-titre", text: "Prévenir toutes les équipes" }));
+    var quand = formatShortDate(message.premiere) +
+      (message.derniere.getTime() !== message.premiere.getTime() ? " au " + formatShortDate(message.derniere) : "");
+    bloc.appendChild(el("div", {
+      class: "prevenir-note",
+      text: "Phases finales du " + quand + " : un message avec les parties, les joueurs, le questionnaire d'avis et le site. " +
+            "L'avion en papier d'une ligne l'envoie au responsable de l'équipe sur WhatsApp."
+    }));
+    var bouton = el("button", { type: "button", class: "prevenir-btn message-btn", "aria-expanded": String(messageOuvert), "aria-controls": "message-corps" });
+    bouton.appendChild(el("span", { text: "Message aux équipes" }));
+    var chevron = el("span", { class: "rank-chevron" });
+    chevron.innerHTML = SVG_CHEVRON;
+    bouton.appendChild(chevron);
+    bloc.appendChild(bouton);
+
+    var corps = el("div", { id: "message-corps" });
+    corps.hidden = !messageOuvert;
+    corps.appendChild(el("pre", { class: "message-apercu", text: message.texte }));
+    var btns = el("div", { class: "prevenir-btns" });
+    var partage = boutonPartager(message.texte);
+    btns.appendChild(partage.bouton);
+    btns.appendChild(partage.info);
+    corps.appendChild(btns);
+    bloc.appendChild(corps);
+    bouton.addEventListener("click", function () {
+      messageOuvert = !messageOuvert;
+      bouton.setAttribute("aria-expanded", String(messageOuvert));
+      corps.hidden = !messageOuvert;
+    });
+    return bloc;
+  }
+
+  function renderListe() {
+    var results = document.getElementById("results");
+    results.innerHTML = "";
+    var chips = buildMesChips("");
+    if (chips) results.appendChild(chips);
+    var message = messagePhasesFinales(etat.data.rencontres, startOfDay(new Date()), lienDuSite());
+    if (message) results.appendChild(buildMessageEquipes(message));
+    var liste = el("div", { class: "liste-equipes liste-cartes" });
+    var compteur = { n: 0 };
+    groupesDeLaListe().forEach(function (g) {
+      liste.appendChild(buildCarteListe(g, message ? message.texte : null, compteur));
+    });
+    results.appendChild(liste);
+  }
+
+  // ---------------------------------------------------------------
+  // Navigation entre la liste et une équipe
+  // ---------------------------------------------------------------
+  // L'adresse décide : une équipe connue, sa page ; sinon la liste. Une
+  // équipe inconnue (lien d'une autre saison) sort de l'adresse, sans message.
+  function afficherSelonAdresse() {
+    var demandee = equipeDansLAdresse();
+    var cle = demandee && etat.index[demandee] ? demandee : "";
+    if (demandee && !cle) mettreAJourAdresse("");
+    etat.cle = cle;
+    if (cle) renderEquipe(cle); else renderListe();
+  }
+
+  // Depuis la liste, l'équipe s'ajoute à l'historique : Retour ramène à la
+  // liste. D'une équipe à l'autre (pastilles), l'adresse est remplacée, et
+  // l'état « venu de la liste » est gardé.
+  function ouvrirEquipe(cle, depuisListe) {
+    var url = window.location.pathname + "?equipe=" + encodeURIComponent(cle);
+    try {
+      if (depuisListe) history.pushState({ depuisListe: true }, "", url);
+      else history.replaceState(history.state, "", url);
+    } catch (e) { /* adresse inchangée : pas bloquant */ }
+    etat.cle = cle;
+    renderEquipe(cle);
+    window.scrollTo({ top: 0 });
+  }
+
+  // Venu de la liste, on y retourne par l'historique ; arrivé par un lien
+  // partagé, la liste s'ajoute à l'historique.
+  function revenirALaListe() {
+    if (history.state && history.state.depuisListe) { history.back(); return; }
+    try { history.pushState(null, "", window.location.pathname); } catch (e) { /* pas bloquant */ }
+    etat.cle = "";
+    renderListe();
+    window.scrollTo({ top: 0 });
+  }
+
   function renderEquipe(cle) {
     var results = document.getElementById("results");
     results.innerHTML = "";
-    var team = cle ? etat.index[cle] : null;
+    var team = etat.index[cle];
+    var retour = el("a", { class: "retour-liste", href: "equipe.html", text: "← Toutes les équipes" });
+    retour.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      revenirALaListe();
+    });
+    results.appendChild(retour);
     var chips = buildMesChips(cle);
     if (chips) results.appendChild(chips);
-    if (!team) {
-      results.appendChild(el("div", {
-        class: "empty-state",
-        text: "Choisissez votre équipe dans la liste plus haut, puis touchez « ☆ Suivre » : vous la retrouverez ici et en tête de l'accueil."
-      }));
-      return;
-    }
 
     // Trois colonnes sur grand écran (l'équipe, ses parties, le reste à
     // jouer de la poule), empilées dans cet ordre sur téléphone.
@@ -2291,59 +2760,11 @@
       if (k === cle) chip.setAttribute("aria-current", "true");
       chip.addEventListener("click", function () {
         if (k === etat.cle) return;
-        montrer(k);
-        window.scrollTo({ top: 0 });
+        ouvrirEquipe(k, !etat.cle);
       });
       rang.appendChild(chip);
     });
     return rang;
-  }
-
-  // Les équipes suivies d'abord, puis toutes les équipes par série, triées par
-  // club puis par numéro. Une équipe suivie figure donc deux fois.
-  function renderChoix(cle) {
-    var select = document.getElementById("choixEquipe");
-    select.innerHTML = "";
-    select.appendChild(el("option", { value: "", text: "Choisir une équipe…", disabled: "" }));
-
-    var toutes = Object.keys(etat.index).map(function (k) { return { cle: k, t: etat.index[k] }; })
-      .sort(function (a, b) {
-        return a.t.spec.localeCompare(b.t.spec, "fr", { numeric: true }) ||
-               a.t.cat.localeCompare(b.t.cat, "fr", { numeric: true }) ||
-               a.t.clubNom.localeCompare(b.t.clubNom, "fr") ||
-               a.t.numero.localeCompare(b.t.numero, "fr", { numeric: true });
-      });
-    function nom(e) { return clubLabel(etat.clubMap, e.t.clubCode, e.t.numero); }
-
-    var mes = toutes.filter(function (e) { return etat.suivies.indexOf(e.cle) !== -1; });
-    if (mes.length) {
-      var groupeMes = el("optgroup", { label: "Mes équipes" });
-      mes.forEach(function (e) {
-        groupeMes.appendChild(el("option", { value: e.cle, text: nom(e) + " · " + e.t.serieLabel }));
-      });
-      select.appendChild(groupeMes);
-    }
-
-    var groupe = null, groupeCle = null;
-    toutes.forEach(function (e) {
-      var k = e.t.spec + "|" + e.t.cat;
-      if (k !== groupeCle) {
-        groupeCle = k;
-        groupe = el("optgroup", { label: e.t.serieLabel });
-        select.appendChild(groupe);
-      }
-      groupe.appendChild(el("option", { value: e.cle, text: nom(e) }));
-    });
-    select.value = cle;
-  }
-
-  // Affiche une équipe à partir des données en mémoire : aucun appel réseau.
-  function montrer(cle) {
-    etat.cle = cle;
-    if (cle) ecrireEquipeVue(cle);
-    mettreAJourAdresse(cle);
-    document.getElementById("choixEquipe").value = cle;
-    renderEquipe(cle);
   }
 
   var etat = { data: null, clubMap: null, index: null, standings: null, suivies: [], cle: "" };
@@ -2382,10 +2803,9 @@
       }));
       etat.standings = buildStandings(data.rencontres, etat.clubMap);
       etat.suivies = lireMesEquipes();
-      // Après un rafraîchissement, l'équipe déjà affichée reste à l'écran.
-      var cle = choisirEquipe(etat.index, etat.cle || equipeDansLAdresse(), lireEquipeVue(), etat.suivies);
-      renderChoix(cle);
-      montrer(cle);
+      // L'adresse désigne toujours ce qui est à l'écran : après un
+      // rafraîchissement, la même vue revient.
+      afficherSelonAdresse();
     }
 
     // 1) Ce que le cache sait déjà est affiché tout de suite, sans attendre le
@@ -2431,10 +2851,9 @@
   // ---------------------------------------------------------------
   // Démarrage
   // ---------------------------------------------------------------
-  document.getElementById("choixEquipe").addEventListener("change", function (ev) {
-    if (!etat.index) return;
-    montrer(ev.target.value);
-    window.scrollTo({ top: 0 });
+  // Retour et Avancer du navigateur, entre la liste et une équipe.
+  window.addEventListener("popstate", function () {
+    if (etat.index) afficherSelonAdresse();
   });
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
   document.getElementById("backToTopBtn").addEventListener("click", function () {
