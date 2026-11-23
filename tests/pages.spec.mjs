@@ -730,8 +730,8 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
     await expect(recap).toHaveText("Série 1 · aucun lieu · Poules · +1");
   });
 
-  test("le script du pli et du résumé est le même dans les trois pages", async () => {
-    const scripts = await Promise.all(["programme", "classement", "creneaux"].map(async (n) => {
+  test("le script du pli et du résumé est le même dans les quatre pages", async () => {
+    const scripts = await Promise.all(["programme", "classement", "creneaux", "equipe"].map(async (n) => {
       const html = await readFile(new URL(`../${n}.html`, import.meta.url), "utf8");
       const debut = html.indexOf('var CLE_PLI = "lidfpb_filters_open_v1";');
       expect(debut, n).toBeGreaterThan(-1);
@@ -764,7 +764,7 @@ test.describe("Filtres repliés : résumé de ce qui est filtré", () => {
 // Spec programme, « Filtres mémorisés sur l'appareil » : le bloc est replié
 // par défaut sur les trois pages, et le pli est commun.
 test.describe("Filtres repliés par défaut", () => {
-  for (const url of ["programme.html", "classement.html", "creneaux.html"]) {
+  for (const url of ["programme.html", "classement.html", "creneaux.html", "equipe.html"]) {
     test(`${url} : première visite, bloc replié qui dit « Tout est affiché »`, async ({ page }) => {
       await page.goto(url);
       await attendreChargement(page);
@@ -936,6 +936,10 @@ test("noms courts identiques d'une page à l'autre, et à la spec", async () => 
   // Le lien du questionnaire d'avis : celui de l'accueil, dans le message des
   // phases finales de la page Équipes.
   expect(await constante("equipe.html", "AVIS")).toEqual(await constante("index.html", "AVIS"));
+  // Les libellés des spécialités, identiques dans les quatre pages qui filtrent.
+  for (const f of ["equipe.html", "classement.html", "programme.html"]) {
+    expect(await constante(f, "SPEC_LABELS"), f).toEqual(await constante("index.html", "SPEC_LABELS"));
+  }
   // Le lieu court de Parties est celui de l'accueil, au caractère près.
   const lieuCourt = async (f) => {
     const html = await readFile(new URL(`../${f}`, import.meta.url), "utf8");
@@ -2937,6 +2941,92 @@ test.describe("Équipes : communications de l'organisateur", () => {
     // Par la pastille d'une équipe suivie aussi.
     await page.locator(".mes-chips .mes-chip").click();
     await expect(page).toHaveURL(/&orga$/);
+  });
+});
+
+// Spec liste-equipes, « Filtres de la liste » et « Communications limitées
+// aux équipes affichées » : le bloc Filtres du Classement, sur la liste.
+test.describe("Équipes : filtres de la liste", () => {
+  const cartes = (page) => page.locator(".liste-equipes .poule-card");
+  const serie = (page, n) => page.locator(`#filterSeries .filter-chip[data-serie='${n}']`);
+  // La série 1 recopiée dans une deuxième spécialité.
+  const deuxSpecialites = (d) => d.concat(d.filter((r) => r["Catégorie"] === "1").map((r) => ({ ...r, oid: "s3-" + r.oid, "Spécialité": "3" })));
+
+  test("série 1 masquée : seules les cartes de série 2 restent, choix retrouvé", async ({ page }) => {
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await expect(cartes(page)).toHaveCount(4);
+    const rangsAvant = await cartes(page).nth(2).locator(".rank-team").allTextContents();
+    await page.locator("#filtersToggle").click();
+    await serie(page, 1).click();
+    await expect(cartes(page)).toHaveCount(2);
+    await expect(cartes(page).locator(".badge")).toHaveText(["Série 2", "Série 2"]);
+    expect(await cartes(page).first().locator(".rank-team").allTextContents()).toEqual(rangsAvant);
+    await page.locator("#filtersToggle").click();
+    await expect(page.locator(".filters-recap")).toHaveText("Série 2");
+    await page.reload();
+    await attendreChargement(page);
+    await expect(cartes(page)).toHaveCount(2);
+  });
+
+  test("aucune série : le message, et pas de bloc sur la page d'une équipe", async ({ page }) => {
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await page.locator("#filtersToggle").click();
+    await serie(page, 1).click();
+    await serie(page, 2).click();
+    await expect(cartes(page)).toHaveCount(0);
+    await expect(page.locator("#results")).toContainText("Aucune équipe ne correspond aux filtres.");
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(EQUIPE_SUIVIE));
+    await attendreChargement(page);
+    await expect(page.locator(".recap-card")).toBeHidden();
+  });
+
+  test("le pli du bloc est partagé avec le Classement", async ({ page }) => {
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    await page.locator("#filtersToggle").click();
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await expect(page.locator("#filtersToggle")).toHaveAttribute("aria-expanded", "true");
+  });
+
+  test("deux spécialités : nommées sur les cartes et dans l'aperçu ; une seule : rien", async ({ page }) => {
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    await expect(page.locator(".liste-equipes .poule-head .poule-sub")).toHaveCount(0);
+
+    await servirTables(page, { rencontres: deuxSpecialites });
+    await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("lidfpb_api_v1:")).forEach((k) => localStorage.removeItem(k)));
+    await page.reload();
+    await attendreChargement(page);
+    await expect(cartes(page)).toHaveCount(6);
+    await expect(page.locator("#filterSpecs .filter-chip")).toHaveText(["Trinquet / P.G Pleine Masculin", "Spécialité 3"]);
+    await expect(cartes(page).first().locator(".poule-sub")).toHaveText("Trinquet / P.G Pleine Masculin");
+    await expect(cartes(page).last().locator(".poule-sub")).toHaveText("Spécialité 3");
+    const bloc = page.locator(".message-equipes");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await expect(bloc.locator("#apercu-equipe option", { hasText: "Spécialité 3" }).first()).toBeAttached();
+    // La spécialité masquée sort de la liste.
+    await page.locator("#filtersToggle").click();
+    await page.locator("#filterSpecs .filter-chip", { hasText: "Spécialité 3" }).click();
+    await expect(cartes(page)).toHaveCount(4);
+    await expect(bloc.locator("#apercu-equipe option", { hasText: "Spécialité 3" })).toHaveCount(0);
+  });
+
+  test("organisateur, série 1 masquée : la communication ne vise que la série 2", async ({ page }) => {
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    await expect(page.locator(".contact-message:visible")).toHaveCount(24);
+    await page.locator("#filtersToggle").click();
+    await serie(page, 1).click();
+    await expect(page.locator(".contact-message:visible")).toHaveCount(12);
+    const bloc = page.locator(".message-equipes");
+    await expect(bloc).toContainText("12 équipes ont une partie à venir");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    const options = await bloc.locator("#apercu-equipe option").allTextContents();
+    expect(options).toHaveLength(12);
+    expect(options.every((o) => o.includes("Série 2"))).toBe(true);
   });
 });
 

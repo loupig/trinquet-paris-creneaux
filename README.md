@@ -195,6 +195,7 @@ principaux :
 | `CACHE_TTL_MS` | toutes sauf le compteur | Au-delà de cette ancienneté, une entrée de cache est revalidée |
 | `API_CACHE_PREFIX` | toutes sauf le compteur | Préfixe des clés `localStorage` du cache d'appels API |
 | `SERIE_LABELS` | toutes sauf le compteur | Correspondance Catégorie → Série affichée |
+| `SPEC_LABELS` | accueil, Équipes, Parties, Classement | Libellés des spécialités (« Trinquet / P.G Pleine Masculin »), pour les filtres et les en-têtes : à garder identiques dans les quatre pages |
 | `PHASE_LABELS` | accueil, Équipes, Parties, Créneaux, Report | Libellés des phases (Poules, Barrage, 1/32e… Finale), mapping communiqué par la ligue |
 | `FIN_DE_POULE` | Classement | Sort des non-qualifiés par série, pour les zones du Classement : le dernier descend (Série 1 → 2, Série 2 → 3), l'avant-dernier de Série 2 joue un barrage. À tenir à jour si la ligue change la règle |
 | `PTS_VICTOIRE`, `PHASE_POULES`, `QUALIFIES_PAR_POULE` | accueil, Équipes, Classement | Barème, phase classée et nombre de qualifiés : à garder identiques dans les trois pages |
@@ -219,8 +220,9 @@ Clés `localStorage` :
 | `lidfpb_message_perso_v1` | Équipes, mode organisateur | Texte de la communication « Perso », avec ses balises |
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |
+| `lidfpb_equipes_filters_v1` | Équipes | Filtres de la liste (spécialité, série) |
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
-| `lidfpb_filters_open_v1` | Parties, Classement, Créneaux | Pli du bloc Filtres, commun aux trois pages : `1` ouvert à la main, `0` replié à la main ; absente, le bloc est replié |
+| `lidfpb_filters_open_v1` | Parties, Classement, Créneaux, Équipes | Pli du bloc Filtres, commun aux quatre pages : `1` ouvert à la main, `0` replié à la main ; absente, le bloc est replié |
 | `lidfpb_compteur_v1` | Compteur | Partie en cours |
 | `lidfpb_decouvert_v1` | Accueil, Découvrir | Présentation déjà vue : l'accueil n'y renvoie plus |
 | `lidfpb_avis_vu_v1` | Accueil | Carte « Votre avis sur la saison » fermée ou suivie : elle ne revient plus |

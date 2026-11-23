@@ -710,6 +710,98 @@
   .objectif .forme-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 
 
+  /* --- Bloc Filtres de la liste : recopié du Classement (spec liste-equipes,
+     « Filtres de la liste »). --- */
+  .recap-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .recap-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+
+  /* Le bloc Filtres se replie : on ne le règle qu'une fois, alors qu'il pousse
+     la liste hors de l'écran à chaque chargement. Ouvert par défaut, l'état
+     est retenu et commun à toutes les pages. */
+  .filters-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .filters-toggle svg {
+    flex: none;
+    color: var(--muted);
+    transition: transform 500ms var(--ease);
+  }
+  .filters-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  /* Résumé des filtres, sous le titre du bloc replié : une ligne, coupée si
+     elle déborde. */
+  .filters-toggle > span { min-width: 0; }
+  .filters-recap {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .filters-recap[hidden] { display: none; }
+  .filters-body { margin-top: 8px; }
+  .filters-body[hidden] { display: none; }
+
+  .filter-subtitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    margin: 12px 0 6px;
+  }
+  .filter-subtitle:first-of-type { margin-top: 0; }
+  .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* Onze clubs aux noms longs : en pastilles ils rempliraient cinq lignes.
+     Une liste déroulante native tient sur une ligne et se manipule mieux au
+     pouce, et un club à la fois est le besoin réel. */
+  .filter-select {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
+  .filter-chip {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .filter-chip.active { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+  .filter-chip.serie-1.active { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
+  .filter-chip.serie-2.active { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
+  .recap-card[hidden] { display: none; }
+  .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
+
   /* --- Liste de toutes les équipes (spec liste-equipes) ---
      Les cartes et les lignes du Classement, recopiées. La ligne porte des
      liens (WhatsApp, SMS, message) : elle ne peut pas être un seul bouton.
@@ -732,6 +824,7 @@
     font-size: 14px;
     font-weight: 700;
   }
+  .poule-head .poule-sub { font-weight: 600; color: var(--muted); font-size: 12px; }
   .rank-item + .rank-item { border-top: 1px solid var(--border); }
   .rank-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
   .rank-row {
@@ -937,13 +1030,26 @@
 </header>
 
 <main id="contenu">
+  <div class="recap-card" hidden>
+    <button type="button" class="filters-toggle" id="filtersToggle" aria-expanded="false" aria-controls="filtersBody"><span>Filtres</span><svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button>
+    <div class="filters-body" id="filtersBody" hidden>
+    <div class="filter-subtitle">Spécialité</div>
+    <div class="filter-group" id="filterSpecs" data-recap-vide="aucune spécialité"></div>
+    <div class="filter-subtitle">Série</div>
+    <div class="filter-group" id="filterSeries" data-recap-vide="aucune série">
+      <button type="button" class="filter-chip serie-1" data-serie="1">Série 1</button>
+      <button type="button" class="filter-chip serie-2" data-serie="2">Série 2</button>
+    </div>
+    </div>
+  </div>
+
   <div id="banner-slot"></div>
   <div id="results"></div>
 
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.23.2</p>
+    <p>Version 2026.11.23.3</p>
   </footer>
 </main>
 
@@ -2452,6 +2558,81 @@
   var SVG_JOUEURS = '<svg viewBox="0 0 256 256" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></svg>';
   var SVG_ENVOI = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z"/></svg>';
 
+  // ---------------------------------------------------------------
+  // Filtres de la liste (spec liste-equipes) : recopiés du Classement, sans
+  // découpage ni club. Le pli du bloc est commun aux quatre pages (script à
+  // part, plus bas).
+  // ---------------------------------------------------------------
+  var SPEC_LABELS = { "2": "Trinquet / P.G Pleine Masculin" };
+  var FILTER_CACHE_KEY = "lidfpb_equipes_filters_v1";
+  var filterState = { specs: {}, series: { "1": true, "2": true } };
+
+  function loadFilterState() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(FILTER_CACHE_KEY));
+      if (saved && saved.specs) filterState.specs = saved.specs;
+      if (saved && saved.series) filterState.series = saved.series;
+    } catch (e) { /* stockage indisponible ou corrompu : valeurs par défaut */ }
+  }
+
+  function saveFilterState() {
+    try { localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(filterState)); } catch (e) { /* pas bloquant */ }
+  }
+
+  // Une spécialité ou une série inconnue de l'état est affichée.
+  function equipeAffichee(t) {
+    return filterState.specs[t.spec] !== false && filterState.series[t.cat] !== false;
+  }
+
+  // Plus d'une spécialité dans les données : les cartes et l'aperçu la nomment.
+  function specsMultiples() {
+    var vues = {};
+    Object.keys(etat.index).forEach(function (k) { vues[etat.index[k].spec] = true; });
+    return Object.keys(vues).length > 1;
+  }
+
+  function libelleSpec(spec) { return SPEC_LABELS[spec] || ("Spécialité " + (spec || "?")); }
+
+  // Les pastilles de spécialité, d'après toutes les équipes, jamais les
+  // équipes déjà filtrées. Une valeur inconnue de l'état démarre active.
+  function renderSpecChips() {
+    var container = document.getElementById("filterSpecs");
+    var vues = {};
+    Object.keys(etat.index).forEach(function (k) { vues[etat.index[k].spec] = true; });
+    container.innerHTML = "";
+    Object.keys(vues).sort(function (a, b) { return a.localeCompare(b, "fr", { numeric: true }); })
+      .forEach(function (spec) {
+        if (!Object.prototype.hasOwnProperty.call(filterState.specs, spec)) filterState.specs[spec] = true;
+        var chip = el("button", {
+          type: "button",
+          class: "filter-chip" + (filterState.specs[spec] ? " active" : ""),
+          text: libelleSpec(spec)
+        });
+        chip.addEventListener("click", function () {
+          filterState.specs[spec] = !filterState.specs[spec];
+          chip.classList.toggle("active", filterState.specs[spec]);
+          saveFilterState();
+          if (etat.index && !etat.cle) renderListe();
+        });
+        container.appendChild(chip);
+      });
+    saveFilterState();
+  }
+
+  function setupFilters() {
+    loadFilterState();
+    document.querySelectorAll("#filterSeries .filter-chip").forEach(function (chip) {
+      var serie = chip.getAttribute("data-serie");
+      chip.classList.toggle("active", filterState.series[serie] !== false);
+      chip.addEventListener("click", function () {
+        filterState.series[serie] = filterState.series[serie] === false;
+        chip.classList.toggle("active", filterState.series[serie]);
+        saveFilterState();
+        if (etat.index && !etat.cle) renderListe();
+      });
+    });
+  }
+
   // Lignes dépliées, par équipe : elles le restent quand la liste est
   // redessinée (rafraîchissement, retour depuis une équipe), le temps de la
   // visite. Rien n'est gardé.
@@ -2482,11 +2663,13 @@
       var t = etat.index[cle];
       groupe(t.spec, t.cat, "").equipes.push({ spec: t.spec, cat: t.cat, clubCode: t.clubCode, numero: t.numero, jouees: 0, label: nomCourt(etat.clubMap, t.clubCode, t.numero) });
     });
+    // Le classement est fait sur toute la poule, puis les filtres écartent des
+    // cartes entières : aucun rang ne bouge.
     return Object.keys(groupes).map(function (k) {
       var g = groupes[k];
       g.equipes = trierClassement(g.equipes);
       return g;
-    }).sort(function (a, b) {
+    }).filter(equipeAffichee).sort(function (a, b) {
       return a.spec.localeCompare(b.spec, "fr", { numeric: true }) ||
              a.cat.localeCompare(b.cat, "fr", { numeric: true }) ||
              (a.poule === "" ? 1 : 0) - (b.poule === "" ? 1 : 0) ||
@@ -2591,6 +2774,7 @@
     var head = el("div", { class: "poule-head" });
     head.appendChild(el("span", { class: "badge serie-" + g.cat, text: SERIE_LABELS[g.cat] || ("Cat. " + (g.cat || "?")) }));
     head.appendChild(el("span", { text: g.poule ? "Poule " + g.poule : "Hors poule" }));
+    if (specsMultiples()) head.appendChild(el("span", { class: "poule-sub", text: libelleSpec(g.spec) }));
     carte.appendChild(head);
     g.equipes.forEach(function (s, i) {
       carte.appendChild(buildLigneEquipe(s, i + 1, ++compteur.n));
@@ -2882,7 +3066,9 @@
       concerne: function (team, ctx) { return !!prochainePartie(team, ctx.aujourdHui); },
       texte: function (team, ctx, masque) { return remplir(MODELE_PROCHAINE_PARTIE, valeurs(team, ctx, masque)); },
       note: function (ctx) {
-        var n = Object.keys(etat.index).filter(function (k) { return !!prochainePartie(etat.index[k], ctx.aujourdHui); }).length;
+        var n = Object.keys(etat.index).filter(function (k) {
+          return equipeAffichee(etat.index[k]) && !!prochainePartie(etat.index[k], ctx.aujourdHui);
+        }).length;
         return pluriel(n, "équipe") + " " + (n > 1 ? "ont" : "a") + " une partie à venir : chacune reçoit la sienne, avec son adversaire et le responsable adverse.";
       }
     },
@@ -2930,13 +3116,18 @@
   // Les équipes que la communication concerne, pour l'aperçu : par série,
   // puis par nom court ; « Alpha 1 · Série 1 » distingue deux homonymes.
   function equipesDeLApercu(com) {
-    return Object.keys(etat.index).filter(function (k) { return com.concerne(etat.index[k], etatCom.ctx); })
+    var multiples = specsMultiples();
+    return Object.keys(etat.index).filter(function (k) {
+      return equipeAffichee(etat.index[k]) && com.concerne(etat.index[k], etatCom.ctx);
+    })
       .map(function (k) {
         var t = etat.index[k];
-        return { cle: k, t: t, nom: nomCourt(etat.clubMap, t.clubCode, t.numero) + " · " + t.serieLabel };
+        return { cle: k, t: t, nom: nomCourt(etat.clubMap, t.clubCode, t.numero) + " · " + t.serieLabel +
+                                  (multiples ? " · " + libelleSpec(t.spec) : "") };
       })
       .sort(function (a, b) {
-        return a.t.cat.localeCompare(b.t.cat, "fr", { numeric: true }) || a.nom.localeCompare(b.nom, "fr", { numeric: true });
+        return a.t.spec.localeCompare(b.t.spec, "fr", { numeric: true }) ||
+               a.t.cat.localeCompare(b.t.cat, "fr", { numeric: true }) || a.nom.localeCompare(b.nom, "fr", { numeric: true });
       });
   }
 
@@ -2990,7 +3181,9 @@
       var team = apercuCle ? etat.index[apercuCle] : null;
       return team ? com.texte(team, ctx, masque) : "";
     }
-    function majApercu() { apercu.textContent = texteApercu(true); }
+    function majApercu() {
+      apercu.textContent = equipes.length ? texteApercu(true) : "Aucune équipe affichée n'est concernée.";
+    }
 
     if (com.id === "perso") {
       corps.appendChild(el("label", { for: "message-perso", text: "Texte du message" }));
@@ -3070,6 +3263,8 @@
   }
 
   function renderListe() {
+    document.querySelector(".recap-card").hidden = false;
+    renderSpecChips();
     // Un rafraîchissement des données peut redessiner la liste pendant que
     // l'organisateur écrit dans « Perso » : le champ retrouve son curseur.
     var champ = document.activeElement && document.activeElement.id === "message-perso" ? document.activeElement : null;
@@ -3090,10 +3285,12 @@
     }
     var liste = el("div", { class: "liste-equipes liste-cartes" });
     var compteur = { n: 0 };
-    groupesDeLaListe().forEach(function (g) {
+    var groupes = groupesDeLaListe();
+    groupes.forEach(function (g) {
       liste.appendChild(buildCarteListe(g, compteur));
     });
     results.appendChild(liste);
+    if (!groupes.length) results.appendChild(el("div", { class: "empty-state", text: "Aucune équipe ne correspond aux filtres." }));
     majEnvois();
     var nouveauChamp = curseur ? document.getElementById("message-perso") : null;
     if (nouveauChamp) {
@@ -3140,6 +3337,8 @@
   }
 
   function renderEquipe(cle) {
+    // La page d'une équipe n'a pas de filtres.
+    document.querySelector(".recap-card").hidden = true;
     var results = document.getElementById("results");
     results.innerHTML = "";
     var team = etat.index[cle];
@@ -3278,10 +3477,98 @@
     if (etat.index) afficherSelonAdresse();
   });
   document.getElementById("refreshBtn").addEventListener("click", function () { run(true); });
+  setupFilters();
   document.getElementById("backToTopBtn").addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
   run(false);
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+
+  // Le pli du bloc Filtres est commun à toutes les pages : replié dans la vue
+  // « par date », il le reste après la bascule vers « par équipe ».
+  var CLE_PLI = "lidfpb_filters_open_v1";
+  var bouton = document.getElementById("filtersToggle");
+  var corps = document.getElementById("filtersBody");
+  if (!bouton || !corps) return;
+
+  // Replié, le bloc garde sous son titre ce qui est filtré : seulement ce qui
+  // s'écarte du réglage par défaut, et au plus RECAP_MAX éléments, la suite
+  // comptée (« +2 »). Dans un groupe, la liste la plus courte l'emporte :
+  // « sans 17h » plutôt que les six autres heures.
+  var RECAP_MAX = 3;
+  var recap = document.createElement("span");
+  recap.className = "filters-recap";
+  bouton.querySelector("span").appendChild(recap);
+
+  function libelle(e) { return e.getAttribute("data-recap") || e.textContent.trim(); }
+
+  function elementsRecap() {
+    var liste = [];
+    corps.querySelectorAll(".filter-group").forEach(function (g) {
+      // Une pastille cachée (heure impossible pour les jours choisis) ne
+      // compte pas.
+      var chips = [].slice.call(g.querySelectorAll(".filter-chip")).filter(function (c) { return !c.hidden; });
+      var actives = chips.filter(function (c) { return c.classList.contains("active"); });
+      var autres = chips.filter(function (c) { return !c.classList.contains("active"); });
+      if (g.hasAttribute("data-recap-choix")) {
+        // Un seul choix parmi plusieurs : rien à dire tant que c'est le défaut.
+        actives.forEach(function (c) { if (!c.hasAttribute("data-recap-defaut")) liste.push(libelle(c)); });
+      } else if (g.hasAttribute("data-recap-bascule")) {
+        // Une pastille seule qui s'allume, comme « Masquer les parties passées ».
+        actives.forEach(function (c) { liste.push(libelle(c)); });
+      } else if (!actives.length && chips.length) {
+        liste.push(g.getAttribute("data-recap-vide") || "rien");
+      } else if (autres.length && autres.length < actives.length) {
+        liste.push("sans " + autres.map(libelle).join(", "));
+      } else if (autres.length) {
+        actives.forEach(function (c) { liste.push(libelle(c)); });
+      }
+    });
+    corps.querySelectorAll(".filter-checkbox").forEach(function (l) {
+      var coche = l.querySelector("input").checked;
+      var texte = l.getAttribute(coche ? "data-recap" : "data-recap-off");
+      if (texte) liste.push(texte);
+    });
+    return liste;
+  }
+
+  function majRecap() {
+    var liste = elementsRecap();
+    var texte = liste.length ? liste.slice(0, RECAP_MAX).join(" · ") : "Tout est affiché";
+    if (liste.length > RECAP_MAX) texte += " · +" + (liste.length - RECAP_MAX);
+    recap.textContent = texte;
+  }
+
+  function appliquer(ouvert) {
+    bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
+    corps.hidden = !ouvert;
+    recap.hidden = ouvert;
+    if (!ouvert) majRecap();
+  }
+
+  // Les pastilles changent au toucher, ou sont reconstruites à l'arrivée des
+  // données : le résumé suit dans les deux cas.
+  if (window.MutationObserver) {
+    new MutationObserver(majRecap).observe(corps, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
+  }
+  corps.addEventListener("change", majRecap);
+
+  // Replié par défaut, pour laisser l'écran aux résultats : seul un geste du
+  // visiteur l'ouvre, et il reste ouvert sur les trois pages tant qu'il ne
+  // l'a pas refermé.
+  var ouvert = false;
+  try { if (localStorage.getItem(CLE_PLI) === "1") ouvert = true; } catch (e) { /* stockage indisponible : on reste replié */ }
+  appliquer(ouvert);
+
+  bouton.addEventListener("click", function () {
+    ouvert = !ouvert;
+    appliquer(ouvert);
+    try { localStorage.setItem(CLE_PLI, ouvert ? "1" : "0"); } catch (e) { /* pas bloquant */ }
+  });
 })();
 </script>
 
