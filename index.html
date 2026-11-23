@@ -574,18 +574,6 @@
   .headline-value { font-size: 24px; font-weight: 700; line-height: 1.1; }
   .headline-unit { font-size: 14px; font-weight: 600; color: var(--muted); }
 
-  /* --- Pastille de série --- */
-  .badge {
-    font-size: 12px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 9999px;
-    border: 1px solid;
-    white-space: nowrap;
-  }
-  .badge.serie-1 { color: var(--serie1-text); background: var(--serie1-bg); border-color: var(--serie1-border); }
-  .badge.serie-2 { color: var(--serie2-text); background: var(--serie2-bg); border-color: var(--serie2-border); }
-
   /* Le chevron des lignes qui se déplient, comme sur Parties et Classement :
      « › » replié, « ⌄ » déplié. */
   .chevron { flex: none; display: flex; color: var(--muted); }
@@ -683,19 +671,24 @@
   .match-where { margin-top: 4px; font-size: 12px; color: var(--muted); }
 
   /* --- Mes équipes ---
-     Les lignes du Classement : le rang dans un rond, aux couleurs du podium,
-     le nom court, puis la prochaine partie. Au toucher, les joueurs et le
-     lien vers la page de l'équipe. Sans équipe suivie, la tuile entière
-     invite à en suivre une. */
+     Une ligne par équipe, comme au Classement et sur Parties : le rang dans
+     un rond aux couleurs du podium, le nom court, le jour de la prochaine
+     partie, la série en liseré. Au toucher, le rang en clair, l'adversaire,
+     les joueurs et le lien vers la page de l'équipe. Sans équipe suivie, la
+     tuile entière invite à en suivre une. */
   .tile-head a.tile-go { text-decoration: none; }
   .tile-body.equipes { padding: 0; }
+  .mes-item { border-left: 4px solid transparent; }
   .mes-item + .mes-item { border-top: 1px solid var(--border); }
+  .mes-item.serie-1 { border-left-color: var(--serie1-text); background: color-mix(in srgb, var(--serie1-text) 6%, var(--card-bg)); }
+  .mes-item.serie-2 { border-left-color: var(--serie2-text); background: color-mix(in srgb, var(--serie2-text) 6%, var(--card-bg)); }
+  .mes-item.ouverte { background: var(--accent-bg); }
   .mes-row {
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 7px 10px 7px 12px;
+    padding: 7px 10px 7px 8px;
     font: inherit;
     color: inherit;
     text-align: left;
@@ -704,7 +697,6 @@
     cursor: pointer;
   }
   .mes-row:focus-visible { outline-offset: -2px; }
-  .mes-row[aria-expanded="true"], .mes-plus { background: var(--accent-bg); }
   .rank-pos {
     flex: none;
     width: 24px;
@@ -721,12 +713,14 @@
   .mes-row.or .rank-pos { color: var(--or-text); background: var(--or-bg); }
   .mes-row.argent .rank-pos { color: var(--argent-text); background: var(--argent-bg); }
   .mes-row.bronze .rank-pos { color: var(--bronze-text); background: var(--bronze-bg); }
-  .mes-main { flex: 1 1 auto; min-width: 0; }
-  .mes-nom { display: block; font-size: 14px; font-weight: 700; }
-  .mes-info { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.4; }
+  /* Le nom cède la place au jour de la prochaine partie : coupé s'il le
+     faut, pour que la ligne reste une ligne. */
+  .mes-nom { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mes-quand { flex: none; font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  /* Sous la colonne du nom : 8px de marge, 24px de rang, 8px d'écart. */
+  .mes-plus { padding: 0 12px 10px 40px; }
+  .mes-info { font-size: 12px; color: var(--muted); line-height: 1.45; margin-bottom: 6px; }
   .mes-info strong { color: var(--text); font-weight: 700; }
-  /* Sous la colonne du nom : 12px de marge, 24px de rang, 8px d'écart. */
-  .mes-plus { padding: 0 12px 10px 44px; }
   .rank-joueurs {
     display: flex;
     align-items: flex-start;
@@ -918,7 +912,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.23</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.23.2</p>
   </footer>
 </main>
 
@@ -1818,8 +1812,9 @@
   }
 
   // Le choix des équipes suivies se fait sur la page Équipes, à côté de
-  // l'équipe affichée : ici, leur résumé, à la façon des lignes du
-  // Classement. Au toucher, leurs joueurs et le lien vers leur page.
+  // l'équipe affichée : ici, une ligne par équipe, à la façon du Classement
+  // et de Parties. Au toucher, le rang en clair, la prochaine partie avec
+  // son adversaire, les joueurs et le lien vers la page de l'équipe.
   function buildMesEquipes(mes, aVenir, standings, clubMap, joueurs) {
     var suivis = suiviMesEquipes(mes, aVenir, standings, clubMap);
     if (!suivis.length) {
@@ -1835,26 +1830,24 @@
     bloc.appendChild(head);
     var body = el("div", { class: "tile-body equipes" });
     suivis.forEach(function (s) {
-      var item = el("div", { class: "mes-item" });
-      var prochaine = s.prochaine
-        ? formatShortDate(s.prochaine.date) + " " + formatHour(s.prochaine.hour, s.prochaine.minute) + " contre " + s.adversaire
-        : "plus de partie programmée";
+      var item = el("div", { class: "mes-item serie-" + s.cat });
+      var quand = s.prochaine ? formatShortDate(s.prochaine.date) + " " + formatHour(s.prochaine.hour, s.prochaine.minute) : "";
+      var prochaine = s.prochaine ? quand + " contre " + s.adversaire : "plus de partie programmée";
       var row = el("button", {
         type: "button", class: "mes-row" + (s.rangNum ? (PODIUM[s.rangNum] || "") : ""),
         "aria-label": [s.court, s.serieLabel, s.rang || "pas encore classée", prochaine].join(", ")
       });
       row.appendChild(el("span", { class: "rank-pos", text: s.rangNum ? String(s.rangNum) : "–" }));
-      var main = el("span", { class: "mes-main" });
-      main.appendChild(el("span", { class: "mes-nom", text: s.court }));
-      var info = el("span", { class: "mes-info" });
-      info.appendChild(el("strong", { text: s.rang || "pas encore classée" }));
-      info.appendChild(document.createTextNode(" · " + prochaine));
-      main.appendChild(info);
-      row.appendChild(main);
-      row.appendChild(el("span", { class: "badge serie-" + s.cat, text: s.serieLabel }));
+      row.appendChild(el("span", { class: "mes-nom", text: s.court }));
+      row.appendChild(el("span", { class: "mes-quand", text: s.prochaine ? quand : "plus de partie" }));
 
-      // Les joueurs déclarés à la ligue, comme au Classement, puis la page.
+      // Au toucher : rang, série et adversaire en clair, puis les joueurs
+      // déclarés à la ligue, comme au Classement, et la page de l'équipe.
       var plus = el("div", { class: "mes-plus" });
+      var info = el("div", { class: "mes-info" });
+      info.appendChild(el("strong", { text: s.rang || "pas encore classée" }));
+      info.appendChild(document.createTextNode(" · " + s.serieLabel + " · " + (s.prochaine ? "prochaine partie " + prochaine : prochaine)));
+      plus.appendChild(info);
       var noms = joueurs ? joueurs(s.clubCode, s.cat, s.numero) : null;
       var ligne = el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus") });
       ligne.innerHTML = SVG_JOUEURS;

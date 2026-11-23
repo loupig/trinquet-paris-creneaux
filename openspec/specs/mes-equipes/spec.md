@@ -44,11 +44,11 @@ Le choix SHALL être conservé dans le navigateur du visiteur d'une visite à l'
 - **THEN** aucun appel réseau n'est émis à cette occasion
 
 ### Requirement: Bloc Mes équipes de l'accueil
-Pour chaque équipe suivie, le bloc « Mes équipes » de l'accueil SHALL tenir sur une ligne à la façon du Classement : son rang de poule dans un rond, aux couleurs du podium pour les trois premiers (« – » sans rang), son nom court, puis son rang en clair (par exemple « 3e sur 6, poule 2 »), calculé comme sur la page Classement, et sa prochaine partie à venir (jour, heure, adversaire), même au-delà de dimanche, enfin sa série en pastille et un chevron. Une équipe sans partie jouée est indiquée « pas encore classée ». Une équipe sans partie à venir est indiquée « plus de partie programmée ». Toucher la ligne déplie, sur un fond teinté, les joueurs déclarés à la ligue pour l'équipe (« Composition non déclarée à la ligue » sans composition) et le lien « Voir l'équipe → », qui ouvre la page Équipes sur cette équipe ; un second toucher replie. Un lien « Gérer → » ouvre la page Équipes pour suivre ou retirer des équipes. Le bloc ne permet pas de choisir ses équipes lui-même.
+Pour chaque équipe suivie, le bloc « Mes équipes » de l'accueil SHALL tenir sur une seule ligne, à la façon du Classement et de Parties : son rang de poule dans un rond, aux couleurs du podium pour les trois premiers (« – » sans rang), son nom court (coupé s'il ne tient pas), le jour et l'heure de sa prochaine partie à venir, même au-delà de dimanche (« plus de partie » sans partie à venir), et un chevron ; la série est la couleur du liseré et du fond de la ligne. Toucher la ligne déplie, sur un fond teinté, le rang en clair (par exemple « 3e sur 6, poule 2 »), calculé comme sur la page Classement, la série et la prochaine partie avec son adversaire, puis les joueurs déclarés à la ligue pour l'équipe (« Composition non déclarée à la ligue » sans composition) et le lien « Voir l'équipe → », qui ouvre la page Équipes sur cette équipe ; un second toucher replie. Une équipe sans partie jouée est indiquée « pas encore classée ». Une équipe sans partie à venir est indiquée « plus de partie programmée ». Un lien « Gérer → » ouvre la page Équipes pour suivre ou retirer des équipes. Le bloc ne permet pas de choisir ses équipes lui-même.
 
 #### Scenario: Équipe en cours de saison
 - **WHEN** une équipe suivie est 3e de sa poule de 6 et joue dimanche à 16h
-- **THEN** le bloc affiche « 3 » dans un rond couleur bronze, son rang « 3e sur 6, poule 2 » et sa prochaine partie « dim. 11 oct. 16h » avec l'adversaire
+- **THEN** sa ligne affiche « 3 » dans un rond couleur bronze, son nom et « dim. 11 oct. 16h », et au toucher « 3e sur 6, poule 2 · Série 1 · prochaine partie dim. 11 oct. 16h contre » l'adversaire
 
 #### Scenario: Ouvrir une équipe suivie
 - **WHEN** le visiteur touche la ligne d'une équipe suivie sur l'accueil, puis « Voir l'équipe → »
@@ -56,11 +56,11 @@ Pour chaque équipe suivie, le bloc « Mes équipes » de l'accueil SHALL tenir 
 
 #### Scenario: Équipe pas encore classée
 - **WHEN** une équipe suivie n'a encore joué aucune partie
-- **THEN** le bloc indique « pas encore classée » à la place du rang
+- **THEN** son rond porte « – », et le détail indique « pas encore classée » à la place du rang
 
 #### Scenario: Plus de partie
 - **WHEN** une équipe suivie n'a plus aucune partie à venir
-- **THEN** le bloc indique « plus de partie programmée »
+- **THEN** sa ligne indique « plus de partie », et le détail « plus de partie programmée »
 
 #### Scenario: Équipe disparue des données
 - **WHEN** une équipe suivie n'existe plus dans les rencontres publiées

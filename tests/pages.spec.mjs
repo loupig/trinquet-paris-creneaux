@@ -1643,17 +1643,20 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
     await expect(bloc.locator(".mes-row")).toHaveCount(1);
     await expect(bloc.locator("input")).toHaveCount(0);   // plus de choix sur l'accueil
     await expect(bloc.getByRole("link", { name: "Gérer →" })).toHaveAttribute("href", "equipe.html");
-    // Comme au Classement : le rang dans son rond, puis le nom et le résumé.
+    // Une seule ligne, comme au Classement : le rang dans son rond, le nom, le
+    // jour de la prochaine partie, la série en liseré.
     const ligne = bloc.locator(".mes-row");
+    await expect(bloc.locator(".mes-item")).toHaveClass(/serie-1/);
     await expect(ligne.locator(".rank-pos")).toHaveText(/^[1-6]$/);
     await expect(ligne.locator(".mes-nom")).toHaveText("Charlie 1");
-    await expect(ligne.locator(".mes-info")).toContainText(/e sur 6, poule 1 · /);
-    await expect(ligne.locator(".badge")).toHaveText("Série 1");
-    // Les joueurs au toucher, avec le lien vers la page de l'équipe.
-    await expect(bloc.locator(".rank-joueurs")).toBeHidden();
+    await expect(ligne.locator(".mes-quand")).toHaveText(/^\S+\. \d+ \S+ \d+h(\d\d)?$/);
+    expect(await ligne.evaluate((b) => b.getBoundingClientRect().height)).toBeLessThan(44);
+    // Au toucher : rang, série et adversaire en clair, joueurs, page de l'équipe.
+    await expect(bloc.locator(".mes-plus")).toBeHidden();
     await expect(ligne).toHaveAttribute("aria-expanded", "false");
     await ligne.click();
     await expect(ligne).toHaveAttribute("aria-expanded", "true");
+    await expect(bloc.locator(".mes-info")).toHaveText(/^\de sur 6, poule 1 · Série 1 · prochaine partie .+ contre \S+\s1$/);
     await expect(bloc.locator(".rank-joueurs")).toHaveText("Ane Joueur100005, Bixente Joueur100006");
     await bloc.getByRole("link", { name: "Voir l'équipe →" }).click();
     await expect(page).toHaveURL(/equipe\.html\?equipe=/);
