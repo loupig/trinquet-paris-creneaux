@@ -52,19 +52,23 @@ Quand la ligue a un numéro exploitable pour le responsable d'une équipe, sa li
 - **THEN** sa ligne n'a ni icône WhatsApp, ni icône SMS, ni icône d'envoi du message
 
 ### Requirement: Message des phases finales
-Tant qu'au moins une partie de phase finale reste à jouer, aujourd'hui ou plus tard, dans une série dont les poules sont finies, la liste SHALL être précédée d'un bouton « Message aux équipes ». Il déplie dans la page, sans fenêtre surgissante, le message des phases finales et un bouton qui le confie à la feuille de partage de l'appareil, ou le copie quand il n'y en a pas. Sinon, ni le bouton ni le message n'apparaissent.
+En mode organisateur (spec `communications-equipes`), tant qu'au moins une partie de phase finale reste à jouer, aujourd'hui ou plus tard, dans une série dont les poules sont finies, le bloc des communications SHALL proposer « Phases finales », dont l'aperçu montre le message des phases finales et un bouton qui le confie à la feuille de partage de l'appareil, ou le copie quand il n'y en a pas. Sinon, cette communication n'est pas proposée. Sans mode organisateur, la page ne montre ni le message ni son bouton.
 
 #### Scenario: Poules finies, demies à venir
-- **WHEN** les poules des deux séries sont finies et que les demies se jouent dimanche
-- **THEN** la page porte « Message aux équipes », qui déplie le message et un bouton Partager
+- **WHEN** l'organisateur ouvre la page alors que les poules des deux séries sont finies et que les demies se jouent dimanche
+- **THEN** « Phases finales » est proposée et choisie, et son aperçu montre le message et un bouton Partager
 
 #### Scenario: Poules en cours
 - **WHEN** une partie de poule de chaque série reste sans score
-- **THEN** la page ne porte pas « Message aux équipes »
+- **THEN** « Phases finales » n'est pas proposée
 
 #### Scenario: Saison finie
 - **WHEN** toutes les parties de phase finale ont un score ou une date passée
-- **THEN** la page ne porte pas « Message aux équipes »
+- **THEN** « Phases finales » n'est pas proposée
+
+#### Scenario: Visiteur ordinaire
+- **WHEN** un joueur ouvre la page sans `orga`, poules finies et demies à venir
+- **THEN** il ne voit ni le message des phases finales ni son bouton
 
 ### Requirement: Contenu du message des phases finales
 Le message SHALL donner, mis en forme pour WhatsApp, dans cet ordre : un remerciement pour le championnat ; les parties de phase finale à venir, par phase et par jour, chacune avec son heure, sa série et ses deux équipes en noms courts suivies de leurs joueurs ; le lieu ; le lien du questionnaire d'avis tant que sa campagne dure (spec `accueil`) ; le lien de la page Découvrir, présentée comme non officielle, en bêta, en complément du site de la ligue.
@@ -104,12 +108,16 @@ Quand toutes les parties du message se jouent au même lieu, le message SHALL le
 - **THEN** le message porte une seule fois « 📍 Trinquet Paris (75016) »
 
 ### Requirement: Envoyer le message à une équipe
-Tant que le message des phases finales existe, chaque ligne dont le responsable a un numéro exploitable SHALL porter une troisième icône, qui ouvre WhatsApp vers ce numéro avec le message prérempli. Rien n'est envoyé par le site lui-même : le visiteur valide l'envoi dans WhatsApp.
+En mode organisateur, quand « Phases finales » est la communication choisie, chaque ligne dont le responsable a un numéro exploitable SHALL porter une troisième icône, qui ouvre WhatsApp vers ce numéro avec le message prérempli. Rien n'est envoyé par le site lui-même : le visiteur valide l'envoi dans WhatsApp.
 
 #### Scenario: Envoyer à PEP 2
-- **WHEN** le visiteur touche l'icône d'envoi du message sur la ligne de PEP 2
+- **WHEN** l'organisateur, « Phases finales » choisie, touche l'icône d'envoi du message sur la ligne de PEP 2
 - **THEN** WhatsApp s'ouvre vers le responsable de PEP 2 avec le message des phases finales prérempli
 
 #### Scenario: Pas de message
 - **WHEN** les poules sont en cours
-- **THEN** aucune ligne ne porte l'icône d'envoi du message
+- **THEN** aucune ligne ne porte l'icône d'envoi du message des phases finales
+
+#### Scenario: Sans mode organisateur
+- **WHEN** un joueur ouvre la page sans `orga`, poules finies et demies à venir
+- **THEN** aucune ligne ne porte d'icône d'envoi
