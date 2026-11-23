@@ -125,19 +125,19 @@ Chaque partie retenue SHALL porter une seule étiquette, celle du critère le pl
 - **THEN** la partie apparaît une seule fois, avec l'étiquette « 1/2 finale »
 
 ### Requirement: Contenu d'une affiche
-Chaque partie du bloc SHALL indiquer, sur une première ligne, le jour et l'heure, les deux équipes sous leur nom court et la série, et sur une seconde ligne le lieu, sous le nom court de la salle (« Trinquet Paris »). Une partie à voir porte en plus, en tête de cette seconde ligne, l'étiquette qui explique sa sélection ; une partie déjà jouée ne prend pas les étiquettes tirées du classement (choc de tête, qualification), qui compte déjà son résultat. Une partie déjà jouée met son score à la place du « vs », l'équipe perdante en retrait, comme dans les résultats ; un score publié qui n'est pas un nombre (forfait…) s'affiche tel que la ligue l'écrit, sans perdant. Une partie d'un jour passé encore sans score garde le « vs » et porte, à la place du lieu, « Score pas encore publié par la ligue ». Une partie jouée sans heure dans les données n'affiche que son jour. Quand plus aucune partie n'est à venir, le message de fin de calendrier suit les parties jouées.
+Chaque partie du bloc SHALL tenir, sous son jour, sur la ligne de la page Parties (spec `accueil`, « Lignes des parties comme sur Parties ») : l'heure, la pastille de poule ou de phase, les deux équipes sous leur nom court, la série en couleur de la ligne. Le lieu n'est sur la ligne, sous le nom court de la salle précédé de 📍, que s'il n'est pas le lieu le plus fréquent du calendrier ; il est en entier au détail, au toucher. Une partie à voir porte, sous les équipes, l'étiquette qui explique sa sélection ; une partie déjà jouée ne prend pas les étiquettes tirées du classement (choc de tête, qualification), qui compte déjà son résultat. Une partie déjà jouée a son score à droite, l'équipe perdante en retrait, comme dans les résultats ; un score publié qui n'est pas un nombre (forfait…) s'affiche tel que la ligue l'écrit, sans perdant. Une partie d'un jour passé encore sans score n'a pas de score et porte, sous les équipes, « Score pas encore publié par la ligue ». Une partie jouée sans heure dans les données n'affiche pas d'heure. Quand plus aucune partie n'est à venir, le message de fin de calendrier suit les parties jouées.
 
 #### Scenario: Lecture d'une affiche
 - **WHEN** un visiteur ouvre l'accueil et qu'une partie de la fenêtre répond à un critère
-- **THEN** il voit dans la même entrée quand, qui, où, et pourquoi elle est à voir, sans défilement horizontal sur un écran de 390 px
+- **THEN** il voit dans la même entrée quand, qui et pourquoi elle est à voir, et où au toucher, sans défilement horizontal sur un écran de 390 px
 
 #### Scenario: Lecture d'une partie jouée
 - **WHEN** une partie de la fenêtre a un score
-- **THEN** sa première ligne donne le jour, l'heure, le score entre les deux équipes, le perdant en retrait, et la série
+- **THEN** sa ligne donne l'heure, les deux équipes, le perdant en retrait, et le score à droite, sous son jour
 
 #### Scenario: Lecture d'une partie ordinaire
 - **WHEN** une partie de la fenêtre ne répond à aucun critère
-- **THEN** sa seconde ligne donne le lieu, sans étiquette
+- **THEN** sa ligne ne porte rien sous les équipes si elle se joue au lieu habituel
 
 ### Requirement: Accès au programme
 La vue « D'ici dimanche » SHALL mener au programme complet par le lien « Tout le programme → » du pied du bloc. Le bloc n'est pas un lien entier : ses onglets sont des boutons (spec `derniers-resultats`).
@@ -169,19 +169,19 @@ Le bloc « D'ici dimanche » SHALL toujours figurer sur l'accueil, en onglet du 
 - **THEN** le bloc reste affiché, avec le message de fin de calendrier à la place des parties
 
 ### Requirement: Parties de mes équipes repérées
-Dans le bloc « D'ici dimanche », une partie jouée par l'une des équipes suivies SHALL se distinguer des autres par un repère visuel en marge, sans ajouter d'étiquette ni changer l'étiquette « à voir », et sans quitter l'ordre chronologique.
+Dans le bloc « D'ici dimanche », une partie jouée par l'une des équipes suivies SHALL se distinguer des autres par le nom de l'équipe suivie à l'accent, sans ajouter d'étiquette ni changer l'étiquette « à voir », et sans quitter l'ordre chronologique. La marge porte déjà la couleur de la série.
 
 #### Scenario: Ma partie ce dimanche
 - **WHEN** une équipe suivie joue dimanche et que cette partie n'est pas à voir
-- **THEN** sa ligne porte le repère de marge, sans étiquette
+- **THEN** le nom de l'équipe suivie est à l'accent, sans étiquette
 
 #### Scenario: Ma partie est aussi à voir
 - **WHEN** une partie d'une équipe suivie est aussi un derby
-- **THEN** elle porte à la fois le repère de marge et l'étiquette « Derby »
+- **THEN** elle porte à la fois le nom à l'accent et l'étiquette « Derby »
 
 #### Scenario: Sans équipe suivie
 - **WHEN** le visiteur ne suit aucune équipe
-- **THEN** aucune ligne ne porte de repère, et le bloc est identique à aujourd'hui
+- **THEN** aucun nom n'est à l'accent
 
 ### Requirement: Partage des parties
 Quand le bloc compte au moins une partie, il SHALL proposer sous la liste un bouton « Partager », qui partage une image et un texte.

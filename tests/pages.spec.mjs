@@ -1636,14 +1636,29 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
     expect(await suivies(page)).toEqual([ALPHA]);
   });
 
-  test("l'accueil résume les équipes suivies et mène à leur page", async ({ page }) => {
+  test("l'accueil résume les équipes suivies, déplie leurs joueurs et mène à leur page", async ({ page }) => {
     await page.goto("index.html");
     await attendreChargement(page);
     const bloc = page.locator(".mes-equipes");
     await expect(bloc.locator(".mes-row")).toHaveCount(1);
     await expect(bloc.locator("input")).toHaveCount(0);   // plus de choix sur l'accueil
     await expect(bloc.getByRole("link", { name: "Gérer →" })).toHaveAttribute("href", "equipe.html");
-    await bloc.locator(".mes-row").click();
+    // Une seule ligne, comme au Classement : le rang dans son rond, le nom, le
+    // jour de la prochaine partie, la série en liseré.
+    const ligne = bloc.locator(".mes-row");
+    await expect(bloc.locator(".mes-item")).toHaveClass(/serie-1/);
+    await expect(ligne.locator(".rank-pos")).toHaveText(/^[1-6]$/);
+    await expect(ligne.locator(".mes-nom")).toHaveText("Charlie 1");
+    await expect(ligne.locator(".mes-quand")).toHaveText(/^\S+\. \d+ \S+ \d+h(\d\d)?$/);
+    expect(await ligne.evaluate((b) => b.getBoundingClientRect().height)).toBeLessThan(44);
+    // Au toucher : rang, série et adversaire en clair, joueurs, page de l'équipe.
+    await expect(bloc.locator(".mes-plus")).toBeHidden();
+    await expect(ligne).toHaveAttribute("aria-expanded", "false");
+    await ligne.click();
+    await expect(ligne).toHaveAttribute("aria-expanded", "true");
+    await expect(bloc.locator(".mes-info")).toHaveText(/^\de sur 6, poule 1 · Série 1 · prochaine partie .+ contre \S+\s1$/);
+    await expect(bloc.locator(".rank-joueurs")).toHaveText("Ane Joueur100005, Bixente Joueur100006");
+    await bloc.getByRole("link", { name: "Voir l'équipe →" }).click();
     await expect(page).toHaveURL(/equipe\.html\?equipe=/);
     await expect(page.locator(".suivre-btn")).toHaveText("★ Suivie");
   });
@@ -1702,8 +1717,8 @@ test.describe("Accueil : partage des parties d'ici dimanche", () => {
   });
 });
 
-// Les tests du bloc de la semaine lisent les équipes et les scores : sans
-// compositions, aucune équipe ne porte de joueurs entre crochets.
+// Les tests du bloc de la semaine lisent les équipes et les scores, sans
+// compositions : les joueurs ont leurs propres scénarios.
 function sansCompositions(table) {
   return table === "engagements" || table === "licencies" ? [] : (tables[table] || []);
 }
@@ -1760,20 +1775,27 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     const lignes = page.locator("#vue-resultats .resultat");
     await expect(lignes).toHaveCount(3);   // ni le quart à désigner, ni la partie reportée
     await expect(page.locator("#vue-ici")).toBeHidden();
+    // Sous leur jour, comme sur Parties.
+    await expect(page.locator("#vue-resultats .jour-tete")).toHaveText(["Vendredi 30 oct.", "Samedi 31 oct.", "Dimanche 1 nov."]);
 
-    await expect(lignes.nth(0)).toContainText("ven. 30 oct.");
-    await expect(lignes.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
+    // La ligne de Parties : heure, poule, équipes, score à droite, série en couleur.
+    await expect(lignes.nth(0)).toHaveClass(/serie-1/);
+    await expect(lignes.nth(0).locator(".match-row-time")).toHaveText("19h30");
+    await expect(lignes.nth(0).locator(".poule-tag")).toHaveText("P1");
+    await expect(lignes.nth(0).locator(".match-row-teams")).toHaveText("Alpha 1 vs Bravo 1");
+    await expect(lignes.nth(0).locator(".match-row-score")).toHaveText("40-25");
     await expect(lignes.nth(0).locator(".perdant")).toHaveText("Bravo 1");
     await expect(lignes.nth(0)).not.toHaveClass(/mine/);
 
-    await expect(lignes.nth(1).locator(".score")).toHaveText("F-40");
+    await expect(lignes.nth(1).locator(".match-row-score")).toHaveText("F-40");
     await expect(lignes.nth(1).locator(".perdant")).toHaveCount(0);
     await expect(lignes.nth(1)).not.toContainText("pas encore publié");
 
-    await expect(lignes.nth(2)).toContainText("dim. 1 nov.");
-    await expect(lignes.nth(2).locator(".score")).toHaveText("vs");
-    await expect(lignes.nth(2)).toContainText("Score pas encore publié par la ligue");
-    await expect(lignes.nth(2)).toHaveClass(/mine/);   // Charlie 1 est suivie
+    await expect(lignes.nth(2).locator(".match-row-score")).toHaveCount(0);
+    await expect(lignes.nth(2).locator(".match-attente")).toHaveText("Score pas encore publié par la ligue");
+    // Charlie 1 est suivie : la partie est repérée, son nom à l'accent.
+    await expect(lignes.nth(2)).toHaveClass(/mine/);
+    await expect(lignes.nth(2).locator(".moi")).toHaveText("Charlie 1");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
@@ -1788,12 +1810,16 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.getByRole("link", { name: "Tout le programme →" })).toHaveAttribute("href", "programme.html");
     await expect(page.getByRole("button", { name: "Partager", exact: true })).toBeVisible();
 
-    const parties = page.locator("#vue-ici .affiche");
+    const parties = page.locator("#vue-ici .match-item");
     await expect(parties).toHaveCount(2);
     await expect(parties.nth(0)).toContainText("Bravo 1 vs Delta 1");   // la partie du jour reste à venir
-    // Chaque partie dit où elle se joue, à voir ou non.
-    await expect(parties.locator(".affiche-lieu")).toHaveText(["Trinquet Paris", "Trinquet Paris"]);
-    await expect(parties.nth(0).locator(".affiche-tag")).toHaveCount(0);
+    await expect(page.locator("#vue-ici .jour-tete").first()).toHaveText("Lundi 2 nov.");
+    await expect(page.locator("#vue-ici .jour-tete").first()).toHaveClass(/aujourdhui/);
+    // Toutes au lieu habituel : rien sous les équipes, le lieu est au détail.
+    await expect(parties.locator(".match-sous")).toHaveCount(0);
+    await expect(parties.nth(0).locator(".match-row-score")).toHaveCount(0);
+    await parties.nth(0).locator(".match-row").click();
+    await expect(parties.nth(0).locator(".match-where")).toHaveText("Série 1 · Poule 1 · PARIS (Trinquet Paris - 75016)");
   });
 
   test("le vendredi, le bloc s'ouvre sur « D'ici dimanche », les résultats restent à un toucher", async ({ page }) => {
@@ -1806,7 +1832,7 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     // Depuis le vendredi d'avant : le 30, le forfait, le dimanche et le lundi sans score.
     await page.getByRole("tab", { name: "Résultats du week-end" }).click();
     await expect(page.locator("#vue-resultats .resultat")).toHaveCount(4);
-    await expect(page.locator("#vue-resultats")).toContainText("Alpha 140-25Bravo 1");
+    await expect(page.locator("#vue-resultats .resultat").first()).toContainText("Alpha 1 vs Bravo 1");
   });
 
   test("le dimanche, « D'ici dimanche » garde les parties jouées depuis vendredi, avec leur score", async ({ page }) => {
@@ -1820,15 +1846,15 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
 
     // Vendredi joué, samedi forfait, dimanche encore à venir ; ni le quart à
     // désigner ni la partie reportée.
-    const parties = page.locator("#vue-ici .affiche");
+    const parties = page.locator("#vue-ici .match-item");
     await expect(parties).toHaveCount(3);
-    await expect(parties.nth(0)).toContainText("ven. 30 oct.");
-    await expect(parties.nth(0).locator(".next-teams")).toHaveText("Alpha 140-25Bravo 1");
+    await expect(page.locator("#vue-ici .jour-tete").first()).toHaveText("Vendredi 30 oct.");
+    await expect(parties.nth(0).locator(".match-row-teams")).toHaveText("Alpha 1 vs Bravo 1");
+    await expect(parties.nth(0).locator(".match-row-score")).toHaveText("40-25");
     await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
-    await expect(parties.nth(0).locator(".affiche-lieu")).toHaveText("Trinquet Paris");
-    await expect(parties.nth(1).locator(".score")).toHaveText("F-40");
+    await expect(parties.nth(1).locator(".match-row-score")).toHaveText("F-40");
     await expect(parties.nth(1).locator(".perdant")).toHaveCount(0);
-    await expect(parties.nth(2).locator(".next-teams")).toHaveText("Charlie 1 vs Delta 1");
+    await expect(parties.nth(2).locator(".match-row-teams")).toHaveText("Charlie 1 vs Delta 1");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
     await page.getByRole("button", { name: "Partager", exact: true }).click();
@@ -1859,12 +1885,14 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await attendreChargement(page);
     await page.getByRole("tab", { name: "D'ici dim. 8 nov." }).click();
 
-    const parties = page.locator("#vue-ici .affiche");
+    const parties = page.locator("#vue-ici .match-item");
     await expect(parties).toHaveCount(2);
-    await expect(parties.nth(0)).toContainText("lun. 2 nov. 19h30");
-    await expect(parties.nth(0).locator(".next-teams")).toHaveText("Bravo 120-40Delta 1");
+    await expect(page.locator("#vue-ici .jour-tete").first()).toHaveText("Lundi 2 nov.");
+    await expect(parties.nth(0).locator(".match-row-time")).toHaveText("19h30");
+    await expect(parties.nth(0).locator(".match-row-teams")).toHaveText("Bravo 1 vs Delta 1");
+    await expect(parties.nth(0).locator(".match-row-score")).toHaveText("20-40");
     await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
-    await expect(parties.nth(1).locator(".next-teams")).toHaveText("Alpha 1 vs Charlie 1");
+    await expect(parties.nth(1).locator(".match-row-teams")).toHaveText("Alpha 1 vs Charlie 1");
   });
 
   test("le dimanche soir, week-end fini : ses scores en tête, puis le week-end suivant", async ({ page }) => {
@@ -1882,16 +1910,16 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
 
     // Le mardi et le week-end suivant ne sont pas cachés par les scores.
     await expect(page.getByRole("tab", { name: "D'ici dim. 8 nov." })).toHaveAttribute("aria-selected", "true");
-    const parties = page.locator("#vue-ici .affiche");
+    const parties = page.locator("#vue-ici .match-item");
     await expect(parties).toHaveCount(5);
-    await expect(parties.nth(0).locator(".score")).toHaveText("40-25");
-    // Pas de « 0h » pour une partie sans heure, et le score attendu à la place du lieu.
-    await expect(parties.nth(1).locator(".next-when")).toHaveText("sam. 31 oct.");
-    await expect(parties.nth(1).locator(".score")).toHaveText("vs");
-    await expect(parties.nth(1).locator(".affiche-lieu")).toHaveText("Score pas encore publié par la ligue");
-    await expect(parties.nth(2).locator(".score")).toHaveText("40-35");
-    await expect(parties.nth(3)).toContainText("mar. 3 nov.");
-    await expect(parties.nth(3).locator(".next-teams")).toHaveText("Bravo 1 vs Delta 1");
+    await expect(parties.nth(0).locator(".match-row-score")).toHaveText("40-25");
+    // Pas de « 0h » pour une partie sans heure, et le score attendu sous les équipes.
+    await expect(parties.nth(1).locator(".match-row-time")).toHaveText("");
+    await expect(parties.nth(1).locator(".match-row-score")).toHaveCount(0);
+    await expect(parties.nth(1).locator(".match-attente")).toHaveText("Score pas encore publié par la ligue");
+    await expect(parties.nth(2).locator(".match-row-score")).toHaveText("40-35");
+    await expect(page.locator("#vue-ici .jour-tete")).toHaveText(["Vendredi 30 oct.", "Samedi 31 oct.", "Dimanche 1 nov.", "Mardi 3 nov.", "Samedi 7 nov."]);
+    await expect(parties.nth(3).locator(".match-row-teams")).toHaveText("Bravo 1 vs Delta 1");
     await expect(page.locator("#vue-ici")).not.toContainText("Plus aucune rencontre");
   });
 
@@ -2009,6 +2037,8 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.getByRole("tab")).toHaveCount(0);
     await expect(page.locator("#tiles .tile-title")).toHaveText(["Mes équipes", "Prochaines parties", "Championnats"]);
     await expect(page.locator("#vue-ici")).toContainText("Plus aucune rencontre à venir");
+    // Le corps des parties n'a pas de marge : le message garde la sienne.
+    expect(await page.locator("#vue-ici .fin-calendrier").evaluate((e) => getComputedStyle(e).paddingLeft)).toBe("14px");
   });
 });
 
@@ -2069,9 +2099,7 @@ test.describe("Accueil : alerte des parties en double", () => {
 });
 
 test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
-  const NOMS = /^ \[Ane Joueur\d+, Bixente Joueur\d+\]$/;
-
-  test("accueil : les joueurs entre crochets après chaque équipe, jamais dans le partage", async ({ page }) => {
+  test("accueil : les joueurs au toucher d'une partie, jamais dans le partage", async ({ page }) => {
     await page.addInitScript(() => {
       navigator.canShare = (d) => !!(d && d.files);
       navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
@@ -2092,14 +2120,23 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     await attendreChargement(page);
     await ouvrirDIciDimanche(page);
 
-    const equipes = page.locator("#vue-ici .next-teams").first();
-    await expect(equipes).toHaveText(/^\S+ 1 \[Ane Joueur\d+, Bixente Joueur\d+\] vs \S+ 1 \[Ane Joueur\d+, Bixente Joueur\d+\]$/);
-    await expect(equipes.locator(".joueurs")).toHaveText([NOMS, NOMS]);
+    // Sur la ligne, les noms courts seuls ; les joueurs au toucher.
+    const partie = page.locator("#vue-ici .match-item").first();
+    await expect(partie.locator(".match-row-teams")).toHaveText(/^\S+\s1 vs \S+\s1$/);
+    await expect(partie.locator(".match-detail")).toBeHidden();
+    await partie.locator(".match-row").click();
+    await expect(partie.locator(".match-row")).toHaveAttribute("aria-expanded", "true");
+    await expect(partie).toHaveClass(/ouverte/);
+    await expect(partie.locator(".roster-line")).toHaveText([
+      /^\S+ \(éq\. 1\) : Ane Joueur\d+, Bixente Joueur\d+$/, /^\S+ \(éq\. 1\) : Ane Joueur\d+, Bixente Joueur\d+$/
+    ]);
+    await expect(partie.locator(".lien-equipe").first()).toHaveAttribute("href", /^equipe\.html\?equipe=/);
+    // Un second toucher replie la partie.
+    await partie.locator(".match-row").click();
+    await expect(partie.locator(".match-detail")).toBeHidden();
     // Plus de réglage : ni bouton, ni clé sur l'appareil.
     await expect(page.getByRole("button", { name: "Joueurs", exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_joueurs_v1"))).toBeNull();
-    // Les noms passent à la ligne, sans déborder ni être coupés.
-    expect(await equipes.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
     const avecNoms = await partager();
@@ -2119,23 +2156,27 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     await page.reload();
     await attendreChargement(page);
     await ouvrirDIciDimanche(page);
-    await expect(page.locator(".next-teams .joueurs")).toHaveCount(0);
+    const sansCompo = page.locator("#vue-ici .match-item").first();
+    await sansCompo.locator(".match-row").click();
+    await expect(sansCompo.locator(".roster-noms")).toHaveText([" : composition non disponible", " : composition non disponible"]);
     const sansNoms = await partager();
     expect(sansNoms.texte).toBe(avecNoms.texte);
     expect(sansNoms.hauteur).toBe(avecNoms.hauteur);
   });
 
-  test("accueil : une partie jouée met le score entre les deux équipes et leurs joueurs", async ({ page }) => {
-    const partie = (oid, date, rec, vis, a, b) => ({
+  test("accueil : lieu inhabituel sur la ligne, quart à désigner sans joueurs ni lien", async ({ page }) => {
+    const partie = (oid, date, rec, vis, a, b, lieu) => ({
       oid: String(oid), "Compétition": "20270301", "Spécialité": "2", "Catégorie": "1", "Phase": "1", "Poule": "1",
       club_rec: rec, equip_rec: "1", club_vis: vis, equip_vis: "1",
-      lieu_renc: "PARIS (Trinquet Paris - 75016)", date_renc: date, heure_renc: "1930", report: "", date_rep: "",
+      lieu_renc: lieu || "PARIS (Trinquet Paris - 75016)", date_renc: date, heure_renc: "1930", report: "", date_rep: "",
       score_cr: a, score_cv: b
     });
     await page.route("**/script.google.com/**", (route) => {
       const table = new URL(route.request().url()).searchParams.get("table");
       const data = table === "rencontres"
-        ? [partie(1, "30102026", codeClub(0), codeClub(1), "40", "25"), partie(2, "01112026", codeClub(2), codeClub(3), "", "")]
+        ? [partie(1, "30102026", codeClub(0), codeClub(1), "40", "25"),
+           partie(2, "01112026", codeClub(2), codeClub(3), "", "", "PARIS (Trinquet de la Cavalerie - 75015)"),
+           Object.assign(partie(3, "01112026", "9998", codeClub(4), "", ""), { Phase: "10", Poule: "", heure_renc: "2100" })]
         : (tables[table] || []);
       route.fulfill({
         status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
@@ -2146,10 +2187,20 @@ test.describe("Joueurs des équipes : accueil, Parties et Classement", () => {
     await page.goto("index.html");
     await attendreChargement(page);
 
-    const parties = page.locator("#vue-ici .next-teams");
-    await expect(parties.nth(0)).toHaveText("Alpha 1 [Ane Joueur100001, Bixente Joueur100002]40-25Bravo 1 [Ane Joueur100003, Bixente Joueur100004]");
-    await expect(parties.nth(0).locator(".perdant")).toHaveText("Bravo 1");
-    await expect(parties.nth(1)).toHaveText("Charlie 1 [Ane Joueur100005, Bixente Joueur100006] vs Delta 1 [Ane Joueur100007, Bixente Joueur100008]");
+    const parties = page.locator("#vue-ici .match-item");
+    await expect(parties).toHaveCount(3);
+    await expect(parties.nth(0).locator(".match-sous")).toHaveCount(0);
+    // La Cavalerie n'est pas le lieu habituel : elle le dit sur la ligne.
+    await expect(parties.nth(1).locator(".match-lieu")).toHaveText("📍 Trinquet de la Cavalerie");
+    // Le quart, pas encore tiré tant que les poules ne sont pas finies :
+    // pastille de phase, étiquette, et au détail ni joueurs ni lien.
+    await expect(parties.nth(2).locator(".poule-tag")).toHaveText("1/4");
+    await expect(parties.nth(2).locator(".match-tag")).toHaveText("1/4 de finale");
+    await parties.nth(2).locator(".match-row").click();
+    await expect(parties.nth(2).locator(".roster-line")).toHaveCount(2);
+    await expect(parties.nth(2).locator(".roster-noms")).toHaveCount(0);
+    await expect(parties.nth(2).locator(".lien-equipe")).toHaveCount(0);
+    await expect(parties.nth(2).locator(".match-where")).toHaveText("Série 1 · 1/4 de finale · PARIS (Trinquet Paris - 75016)");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
@@ -2934,6 +2985,14 @@ test.describe("Équipes : communications de l'organisateur", () => {
     await bloc.getByRole("button", { name: "Rétablir l'exemple" }).click();
     await expect(bloc.getByLabel("Texte du message")).toHaveValue(/^Bonjour \{responsable\},/);
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_message_perso_v1"))).toBeNull();
+    // L'exemple, pour Alpha 1 qui n'a plus de partie : aucune ligne ne parle
+    // d'une partie qui n'existe pas.
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Alpha 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toHaveText(/^Bonjour Responsable,\n\nRésultats et classements : http\S+\n\nMerci\.$/);
+    // Pour Charlie 1, la partie en noms courts des deux côtés.
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Charlie 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toContainText("Votre prochaine partie : Charlie 1 vs Foxtrot 1");
+    await expect(bloc.locator(".message-apercu")).toContainText("Tout est bon de votre côté pour le ");
   });
 
   test("« Perso » sans stockage : la page fonctionne pour la visite", async ({ page }) => {
@@ -3059,6 +3118,35 @@ test.describe("Équipes : communications de l'organisateur", () => {
     // Par la pastille d'une équipe suivie aussi.
     await page.locator(".mes-chips .mes-chip").click();
     await expect(page).toHaveURL(/&orga$/);
+  });
+
+  test("stockage refusé : depuis Parties, le nom d'une équipe garde le mode organisateur", async ({ page }) => {
+    await page.addInitScript(() => {
+      const get = Storage.prototype.getItem, set = Storage.prototype.setItem;
+      Storage.prototype.getItem = function (k) { if (k === "lidfpb_orga_v1") throw new Error("refusé"); return get.call(this, k); };
+      Storage.prototype.setItem = function (k, v) { if (k === "lidfpb_orga_v1") throw new Error("refusé"); return set.call(this, k, v); };
+    });
+    await page.goto("programme.html?orga");
+    await attendreChargement(page);
+    const item = page.locator(".match-item.serie-1").filter({ hasText: "Charlie 1 vs Foxtrot 1" });
+    await item.locator(".match-row").click();
+    const lien = item.locator(".lien-equipe").first();
+    await expect(lien).toHaveAttribute("href", "equipe.html?equipe=" + encodeURIComponent(CHARLIE) + "&orga");
+    await lien.click();
+    await attendreChargement(page);
+    await expect(page.locator(".team-name")).toHaveText("Charlie (éq. 1)");
+    await expect(page.getByRole("button", { name: "Quitter le mode organisateur" })).toBeVisible();
+  });
+
+  test("« Mode organisateur » depuis la page d'une équipe y reste", async ({ page }) => {
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(CHARLIE));
+    await attendreChargement(page);
+    await page.getByRole("link", { name: "Mode organisateur" }).click();
+    await attendreChargement(page);
+    await expect(page.locator(".team-name")).toHaveText("Charlie (éq. 1)");
+    await expect(page.getByRole("button", { name: "Quitter le mode organisateur" })).toBeVisible();
+    // Gardé : « orga » quitte l'adresse, l'équipe y reste.
+    await expect(page).toHaveURL(new RegExp("equipe\\.html\\?equipe=" + encodeURIComponent(CHARLIE).replace(/\|/g, "\\|") + "$"));
   });
 });
 

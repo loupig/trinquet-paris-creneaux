@@ -79,16 +79,20 @@ Le pied de page de l'accueil SHALL porter un lien « Présenter le site à un jo
 - **WHEN** un visiteur qui suit déjà une équipe ouvre l'accueil
 - **THEN** l'accueil s'affiche directement
 
-### Requirement: Joueurs des équipes entre crochets
-Dans les deux vues du bloc de la semaine (résultats et « D'ici dimanche »), chaque équipe SHALL être suivie, entre crochets, des joueurs déclarés à la ligue pour elle (composition de l'engagement, comme sur la page Équipes) : « Alpha 1 [Ane Exemple, Bixente Exemple] vs Bravo 1 [Ane Autre, Bixente Autre] », le score remplaçant « vs » pour une partie jouée. Les noms sont en retrait, sans gras ; avec eux, la ligne des équipes passe à la ligne plutôt que d'être coupée. Une équipe sans composition connue, ou encore à désigner, n'a pas de crochets. Il n'y a aucun réglage : les noms sont toujours affichés. Ils n'entrent jamais dans le texte ni l'image partagés.
+### Requirement: Lignes des parties comme sur Parties
+Dans les deux vues du bloc de la semaine (résultats et « D'ici dimanche »), les parties SHALL être regroupées sous leur jour (« Vendredi 20 nov. », le jour même à l'accent) et chacune SHALL tenir sur la ligne de la page Parties (spec `programme`), en plus serré : l'heure (rien pour une partie jouée sans heure dans les données), la pastille de sa poule à la teinte de la poule (« P1 ») ou, hors poule, de sa phase (« 1/4 »), les deux équipes sous leur nom court séparées par « vs », le score à droite pour une partie jouée, et un chevron ; la série est la couleur du liseré et du fond de la ligne. Sous les équipes ne paraît que ce qui sort de l'ordinaire : l'étiquette d'une partie à voir (spec `affiche-week-end`), le lieu précédé de 📍 quand ce n'est pas le lieu le plus fréquent du calendrier, ou « Score pas encore publié par la ligue ». Toucher la ligne déplie, sur un fond teinté, pour chaque équipe son nom complet, qui mène à sa page, suivi de ses joueurs déclarés à la ligue (« composition non disponible » sans composition connue ; ni joueurs ni lien pour une équipe à désigner), puis la série, la poule ou la phase et le lieu complet ; un second toucher replie. Il n'y a aucun réglage, et les noms n'entrent jamais dans le texte ni l'image partagés.
 
 #### Scenario: Lecture d'une partie
-- **WHEN** un visiteur ouvre l'accueil et qu'Alpha 1 et Bravo 1 ont déclaré leurs joueurs
-- **THEN** la partie se lit « Alpha 1 [Ane Exemple, Bixente Exemple] vs Bravo 1 [Ane Autre, Bixente Autre] », sans débordement à 390 px
+- **WHEN** un visiteur ouvre l'accueil et qu'Alpha 1 reçoit Bravo 1 vendredi à 19h30 en poule 1 de la série 1, au lieu habituel
+- **THEN** sous « Vendredi 20 nov. », la ligne se lit « 19h30 P1 Alpha 1 vs Bravo 1 », au liseré de la série 1, sans lieu ni noms de joueurs, et sans débordement à 390 px
 
-#### Scenario: Équipe sans composition
-- **WHEN** l'une des deux équipes n'a déclaré aucune composition
-- **THEN** seule l'autre porte des crochets
+#### Scenario: Voir les joueurs
+- **WHEN** le visiteur touche la ligne
+- **THEN** elle se déplie sur « Alpha (éq. 1) : Ane Exemple, Bixente Exemple », « Bravo (éq. 1) : Ane Autre, Bixente Autre » et « Série 1 · Poule 1 · PARIS (Trinquet Paris - 75016) », et un second toucher la replie
+
+#### Scenario: Lieu inhabituel
+- **WHEN** une partie se joue au Trinquet de la Cavalerie alors que la plupart se jouent au Trinquet Paris
+- **THEN** sa ligne porte « 📍 Trinquet de la Cavalerie » sous les équipes
 
 #### Scenario: Partage
 - **WHEN** le visiteur touche « Partager »
