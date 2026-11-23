@@ -80,7 +80,7 @@ Le pied de page de l'accueil SHALL porter un lien « Présenter le site à un jo
 - **THEN** l'accueil s'affiche directement
 
 ### Requirement: Joueurs des équipes entre crochets
-Dans les deux vues du bloc de la semaine (résultats et « D'ici dimanche »), chaque équipe SHALL être suivie, entre crochets, des joueurs déclarés à la ligue pour elle (composition de l'engagement, comme sur Mes équipes) : « Alpha 1 [Ane Exemple, Bixente Exemple] vs Bravo 1 [Ane Autre, Bixente Autre] », le score remplaçant « vs » pour une partie jouée. Les noms sont en retrait, sans gras ; avec eux, la ligne des équipes passe à la ligne plutôt que d'être coupée. Une équipe sans composition connue, ou encore à désigner, n'a pas de crochets. Il n'y a aucun réglage : les noms sont toujours affichés. Ils n'entrent jamais dans le texte ni l'image partagés.
+Dans les deux vues du bloc de la semaine (résultats et « D'ici dimanche »), chaque équipe SHALL être suivie, entre crochets, des joueurs déclarés à la ligue pour elle (composition de l'engagement, comme sur la page Équipes) : « Alpha 1 [Ane Exemple, Bixente Exemple] vs Bravo 1 [Ane Autre, Bixente Autre] », le score remplaçant « vs » pour une partie jouée. Les noms sont en retrait, sans gras ; avec eux, la ligne des équipes passe à la ligne plutôt que d'être coupée. Une équipe sans composition connue, ou encore à désigner, n'a pas de crochets. Il n'y a aucun réglage : les noms sont toujours affichés. Ils n'entrent jamais dans le texte ni l'image partagés.
 
 #### Scenario: Lecture d'une partie
 - **WHEN** un visiteur ouvre l'accueil et qu'Alpha 1 et Bravo 1 ont déclaré leurs joueurs

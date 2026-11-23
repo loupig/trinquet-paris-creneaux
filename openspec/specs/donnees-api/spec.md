@@ -7,7 +7,7 @@ Fixer comment les pages obtiennent les données de la ligue, comment elles réag
 ## Requirements
 
 ### Requirement: Source des données
-Les pages Accueil, Mes équipes, Parties, Classement, Créneaux et Report SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
+Les pages Accueil, Équipes, Parties, Classement, Créneaux et Report SHALL lire, en lecture seule, une copie synchronisée des données publiées par la ligue, et indiquer dans leur en-tête la source (« site de la ligue », avec un lien) et la date de la dernière synchronisation de cette copie. Quand cette date est inconnue, l'en-tête indique « information indisponible ». La page Report ouverte sans partie désignée ne lit rien et indique « sans objet ». Aucune page ne modifie quoi que ce soit sur le site de la ligue.
 
 #### Scenario: Date de synchronisation
 - **WHEN** un visiteur ouvre la page Classement et que les données sont chargées
@@ -55,11 +55,12 @@ Les compositions d'équipe et les contacts des responsables SHALL être des donn
 ### Requirement: Noms de joueurs seuls
 Les noms de joueurs SHALL n'apparaître qu'aux endroits suivants, sous la forme « Prénom Nom » :
 - sur l'accueil, entre crochets après chaque équipe ;
-- sur Mes équipes, sous chaque équipe ;
-- sur le Classement, au toucher de la ligne d'une équipe ;
-- sur Parties et Créneaux, au détail d'une partie.
+- sur la page d'une équipe (page Équipes), sous chaque équipe ;
+- sur la liste de toutes les équipes (page Équipes) et sur le Classement, au toucher de la ligne d'une équipe ;
+- sur Parties et Créneaux, au détail d'une partie ;
+- dans le message des phases finales de la page Équipes (spec `liste-equipes`), pour les équipes de ses parties.
 
-Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report, et dans le message WhatsApp prérempli de Parties ; ce message donne aussi le nom et le numéro du responsable adverse.
+En dehors du message des phases finales, ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT afficher de numéro de licence, d'adresse, de date de naissance ni aucune autre coordonnée d'un joueur. Le nom du responsable d'une équipe, qui n'est pas un joueur à ce titre, peut apparaître : en clair sur Report, en info-bulle sur Parties et Report, et dans le message WhatsApp prérempli de Parties ; ce message donne aussi le nom et le numéro du responsable adverse. Le message des phases finales ne contient ni nom ni numéro de responsable.
 
 #### Scenario: Détail d'une partie
 - **WHEN** un visiteur déplie une partie dont les équipes ont déclaré leurs joueurs
@@ -68,6 +69,14 @@ Ils MUST NOT entrer dans un texte ou une image à partager. Une page MUST NOT af
 #### Scenario: Pages sans joueurs
 - **WHEN** un visiteur consulte le Report ou le Compteur, ou partage les parties de l'accueil
 - **THEN** aucun nom de joueur issu des données de la ligue n'y apparaît
+
+#### Scenario: Message des phases finales
+- **WHEN** le visiteur partage le message des phases finales d'une demie dont les équipes ont déclaré leurs joueurs
+- **THEN** le message nomme ces joueurs, et ne contient ni licence, ni nom ou numéro de responsable
+
+#### Scenario: Liste repliée
+- **WHEN** un visiteur ouvre la liste de toutes les équipes sans toucher aucune ligne ni le bouton « Message aux équipes »
+- **THEN** aucun nom de joueur n'est visible
 
 ### Requirement: Numéro des responsables jamais écrit
 Les pages qui permettent de joindre le responsable d'une équipe SHALL le faire par des boutons ou icônes (Appeler, SMS, WhatsApp) qui ouvrent l'application correspondante. Le numéro du responsable MUST NOT être écrit dans le texte d'aucune page. Sans numéro exploitable, la page ne propose pas ces boutons.
@@ -81,7 +90,7 @@ Tant qu'une série a encore au moins une partie de poule sans score, le site SHA
 
 #### Scenario: Quart renseigné avant la fin des poules
 - **WHEN** la ligue a inscrit deux équipes sur un 1/4 de la série 1 et qu'une partie de poule de la série 1 n'a pas encore de score
-- **THEN** ce 1/4 s'affiche entre « Equipe à désigner » et « Equipe à désigner », sans joueurs, et n'apparaît pas dans la page Mes équipes de ces deux équipes
+- **THEN** ce 1/4 s'affiche entre « Equipe à désigner » et « Equipe à désigner », sans joueurs, et n'apparaît pas dans la page Équipes de ces deux équipes
 
 #### Scenario: Poules terminées
 - **WHEN** toutes les parties de poule de la série ont un score

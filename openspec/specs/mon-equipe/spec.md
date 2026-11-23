@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Donner à chaque équipe engagée une page qui réunit tout ce qui la concerne : ses parties, son classement de poule, son bilan, sa forme et sa composition. La page est accessible par l'onglet « Mes équipes », se partage par un lien, et c'est là que le visiteur choisit les équipes qu'il suit (spec `mes-equipes`).
+Donner à chaque équipe engagée une page qui réunit tout ce qui la concerne : ses parties, son classement de poule, son bilan, sa forme et sa composition. La page est accessible par l'onglet « Équipes », se partage par un lien, et c'est là que le visiteur choisit les équipes qu'il suit (spec `mes-equipes`).
 
 ## Requirements
 
 ### Requirement: Équipe affichée
-La page SHALL porter sur une seule équipe, choisie dans cet ordre : l'équipe désignée dans l'adresse de la page, sinon la dernière équipe consultée sur cet appareil, sinon la première équipe suivie. Sans aucune des trois, la page MUST se limiter à la liste de choix et à une invitation à choisir une équipe. Une équipe désignée qui n'existe pas dans les rencontres publiées est traitée comme absente, sans message d'erreur.
+La page SHALL porter sur l'équipe désignée dans l'adresse de la page. Sans équipe dans l'adresse, la page MUST montrer la liste de toutes les équipes (spec `liste-equipes`), et non la dernière équipe consultée ni une équipe suivie. Une équipe désignée qui n'existe pas dans les rencontres publiées est traitée comme absente : la page montre la liste, sans message d'erreur.
 
 #### Scenario: Lien partagé
 - **WHEN** un visiteur ouvre un lien de la page qui désigne une équipe
@@ -15,41 +15,19 @@ La page SHALL porter sur une seule équipe, choisie dans cet ordre : l'équipe d
 
 #### Scenario: Retour par l'onglet
 - **WHEN** un visiteur a consulté une équipe, puis revient plus tard sur la page par l'onglet, sans équipe dans l'adresse
-- **THEN** la page montre cette même équipe
+- **THEN** la page montre la liste de toutes les équipes
 
 #### Scenario: Première visite d'un visiteur qui suit des équipes
 - **WHEN** un visiteur qui suit deux équipes ouvre la page pour la première fois, sans équipe dans l'adresse
-- **THEN** la page montre la première de ses équipes suivies
+- **THEN** la page montre la liste de toutes les équipes, sous les pastilles de ses deux équipes suivies
 
 #### Scenario: Première visite sans équipe suivie
 - **WHEN** un visiteur qui ne suit aucune équipe ouvre la page pour la première fois, sans équipe dans l'adresse
-- **THEN** la page montre seulement la liste de choix et une invitation à choisir une équipe
+- **THEN** la page montre la liste de toutes les équipes, sans pastilles
 
 #### Scenario: Équipe introuvable
 - **WHEN** l'adresse désigne une équipe absente des rencontres publiées
-- **THEN** la page se comporte comme si aucune équipe n'était désignée, sans message d'erreur
-
-### Requirement: Choix de l'équipe
-La page SHALL proposer, en tête, une liste déroulante de toutes les équipes engagées, hors clubs fictifs de la ligue (dont « Equipe à désigner »). Les équipes suivies y figurent d'abord, dans un groupe « Mes équipes », puis toutes les équipes, regroupées par série et triées par club puis par numéro. Choisir une équipe MUST l'afficher sans recharger les données et mettre à jour l'adresse de la page, pour que le lien se partage tel quel.
-
-#### Scenario: Changer d'équipe
-- **WHEN** le visiteur choisit une autre équipe dans la liste
-- **THEN** la page montre cette équipe, l'adresse la désigne, et aucun appel réseau n'est émis
-
-#### Scenario: Équipes suivies en tête
-- **WHEN** le visiteur suit une équipe de 2e série et ouvre la liste
-- **THEN** cette équipe apparaît dans le groupe « Mes équipes », en tête de liste, et aussi à sa place dans sa série
-
-#### Scenario: Pas d'équipe fictive
-- **WHEN** le visiteur parcourt la liste
-- **THEN** « Equipe à désigner » n'y figure pas
-
-### Requirement: Dernière équipe mémorisée sur l'appareil
-La dernière équipe consultée SHALL être conservée dans le navigateur du visiteur d'une visite à l'autre. Elle MUST ne jamais être transmise à un serveur. Si le stockage du navigateur est indisponible, la page fonctionne sans cette mémoire et sans message d'erreur.
-
-#### Scenario: Stockage indisponible
-- **WHEN** le navigateur refuse le stockage local et que le visiteur ouvre la page sans équipe dans l'adresse
-- **THEN** la page s'affiche normalement, avec la liste de choix et l'invitation
+- **THEN** la page montre la liste de toutes les équipes, sans message d'erreur
 
 ### Requirement: Prochaine partie
 La page SHALL mettre en avant la prochaine partie à venir de l'équipe, toutes phases confondues : jour, heure, adversaire et lieu. Quand cette partie n'a pas de score et se joue au Trinquet Paris, elle MUST porter le bouton « Chercher une date de report », qui mène à la page de report de cette partie. Elle porte aussi le bouton « Compter cette partie », qui ouvre le compteur de points avec les deux équipes déjà nommées, l'équipe qui reçoit en premier, en 40 points, et la série avec la poule ou la phase. Une équipe sans partie à venir est indiquée « plus de partie programmée ».
@@ -75,7 +53,7 @@ La carte « Prochaine partie » SHALL porter un bouton « Ajouter à mon agenda 
 - son titre nomme les deux équipes, celle qui reçoit en premier, et la série ;
 - il commence au jour et à l'heure de la partie, en heure de Paris, au jour du report quand la partie a été reportée, et dure 1 h 30 ;
 - son lieu est celui de la partie ;
-- sa description donne la série et la poule ou la phase, et un lien vers la page Mes équipes de l'équipe affichée ;
+- sa description donne la série et la poule ou la phase, et un lien vers la page Équipes de l'équipe affichée ;
 - il porte un rappel 24 heures avant ;
 - son identifiant est tiré de celui de la partie, pour qu'un nouvel ajout de la même partie remplace l'événement dans les agendas qui le permettent.
 
@@ -117,11 +95,11 @@ La page SHALL lister toutes les parties de l'équipe, toutes phases confondues, 
 - **THEN** elle figure en fin de liste, avec « date à venir »
 
 ### Requirement: Aller à l'équipe adverse
-Dans la carte « Prochaine partie » et dans la liste des parties, le nom de l'adversaire SHALL être un lien vers la page Mes équipes de cet adversaire. Le lien ouvre une nouvelle page, pour que le bouton Retour ramène à l'équipe d'où l'on vient. Un adversaire pas encore désigné (club fictif de la ligue, « Equipe à désigner ») n'a pas de lien.
+Dans la carte « Prochaine partie » et dans la liste des parties, le nom de l'adversaire SHALL être un lien vers la page Équipes de cet adversaire. Le lien ouvre une nouvelle page, pour que le bouton Retour ramène à l'équipe d'où l'on vient. Un adversaire pas encore désigné (club fictif de la ligue, « Equipe à désigner ») n'a pas de lien.
 
 #### Scenario: Consulter un adversaire
 - **WHEN** le visiteur, sur la page de son équipe, touche le nom d'un adversaire dans la liste des parties
-- **THEN** la page Mes équipes s'affiche pour cet adversaire, et Retour ramène à son équipe
+- **THEN** la page Équipes s'affiche pour cet adversaire, et Retour ramène à son équipe
 
 #### Scenario: Adversaire à désigner
 - **WHEN** une partie de phase finale oppose l'équipe à « Equipe à désigner »
@@ -272,3 +250,9 @@ Sous la liste de ses parties, la page SHALL proposer un bloc « Prévenir l'équ
 - **WHEN** toutes les parties de l'équipe ont un score
 - **THEN** le bloc « Prévenir l'équipe » n'apparaît pas
 
+### Requirement: Retour à la liste des équipes
+La page d'une équipe SHALL porter en tête un lien « ← Toutes les équipes », qui montre la liste sans recharger les données et retire l'équipe de l'adresse.
+
+#### Scenario: Revenir à la liste
+- **WHEN** le visiteur, sur la page de Charlie 1, touche « ← Toutes les équipes »
+- **THEN** la liste de toutes les équipes s'affiche, l'adresse ne désigne plus d'équipe, et aucun appel réseau n'est émis
