@@ -678,8 +678,8 @@
     margin-bottom: 4px;
   }
   .match-detail .roster-empty { color: var(--muted); }
-  /* WhatsApp et SMS devant le nom d'une équipe : conversation vierge, ou message
-     de vérification de la partie en mode organisateur. */
+  /* WhatsApp et SMS devant le nom d'une équipe, conversation vierge ; en mode
+     organisateur, l'avion en papier envoie le message de vérification. */
   .wa-icon {
     flex: 0 0 auto;
     display: inline-flex;
@@ -689,7 +689,7 @@
   }
   .wa-icon svg { display: block; }
   .wa-icon.icon-whatsapp { color: #25D366; }
-  .wa-icon.icon-sms { color: var(--accent); }
+  .wa-icon.icon-sms, .wa-icon.icon-envoi { color: var(--accent); }
   /* Le nom d'une équipe mène à sa page. */
   .lien-equipe { color: var(--accent); font-weight: 600; text-decoration: none; }
   .lien-equipe:hover { text-decoration: underline; }
@@ -1475,6 +1475,7 @@
   // Pictogrammes SVG inline (pas de dépendance externe, cf. philosophie du site).
   var ICON_SVG_WHATSAPP = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M187.58,144.84l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88,40,40,0,0,0,40-40A8,8,0,0,0,187.58,144.84ZM152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155l14.61-9.74,23,11.48A24,24,0,0,1,152,176ZM128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"/></svg>';
   var ICON_SVG_SMS = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16"><path d="M216,48H40A16,16,0,0,0,24,64V224a15.85,15.85,0,0,0,9.24,14.5A16.13,16.13,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l.09-.07L83,208H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,224h0ZM216,192H80a8,8,0,0,0-5.23,1.95L40,224V64H216ZM88,112a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H96A8,8,0,0,1,88,112Zm0,32a8,8,0,0,1,8-8h64a8,8,0,1,1,0,16H96A8,8,0,0,1,88,144Z"/></svg>';
+  var ICON_SVG_ENVOI = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z"/></svg>';
 
   // Copie de programme.html, à garder identique (un test les compare).
   // "Responsable" est saisi librement par les clubs, sous trois formes
@@ -1527,11 +1528,6 @@
     return "https://api.whatsapp.com/send?phone=" + numero + "&text=" + encodeURIComponent(texte);
   }
 
-  // Le même message en SMS, qui n'a ni gras ni italique : sans * ni _.._.
-  function texteSms(message) {
-    return message.replace(/\*/g, "").replace(/(^|\n)_([^\n]*)_(?=\n|$)/g, "$1$2");
-  }
-
   // Pendant la phase de poules, on prévient que les phases finales ne se
   // reportent pas, avec leurs dates (sans les créneaux), lues dans les
   // parties de 1/4, 1/2 et finale de la même compétition, spécialité et
@@ -1575,24 +1571,26 @@
   }
 
   // WhatsApp et SMS vers le responsable d'une équipe, devant son nom, quand
-  // la ligue a un numéro exploitable. Pour tous : une conversation vierge. En
-  // mode organisateur, pour une partie à jouer : le message de vérification
-  // prérempli, le même que « Prochaine partie » sur la page Équipes. Ni le nom
+  // la ligue a un numéro exploitable : une conversation vierge. En mode
+  // organisateur, pour une partie à jouer, une troisième icône, l'avion en
+  // papier de la page Équipes, ouvre WhatsApp avec le message de
+  // vérification de cette partie, le même que « Prochaine partie ». Ni le nom
   // ni le numéro du responsable ne sont écrits dans la page.
   function buildContactIcons(match, side, other) {
     var numero = side.contact ? normalizePhoneForWhatsapp(side.contact.tel) : null;
     if (!numero) return [];
-    var message = ORGA && !match.score ? messageDeLaPartie(match, side, other) : null;
     var qui = " au responsable de " + side.court;
     var icones = [
-      ["icon-whatsapp", ICON_SVG_WHATSAPP, message ? lienWhatsappAvecTexte(numero, message) : "https://wa.me/" + numero,
-       (message ? "Envoyer le message de la partie sur WhatsApp" : "Écrire sur WhatsApp") + qui],
-      ["icon-sms", ICON_SVG_SMS, "sms:+" + numero + (message ? "?&body=" + encodeURIComponent(texteSms(message)) : ""),
-       (message ? "Envoyer le message de la partie par SMS" : "Envoyer un SMS") + qui]
+      ["icon-whatsapp", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp" + qui],
+      ["icon-sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS" + qui]
     ];
+    if (ORGA && !match.score) {
+      icones.push(["icon-envoi", ICON_SVG_ENVOI, lienWhatsappAvecTexte(numero, messageDeLaPartie(match, side, other)),
+                   "Envoyer le message de la partie" + qui]);
+    }
     return icones.map(function (c) {
       var a = el("a", { class: "wa-icon " + c[0], href: c[2], title: c[3], "aria-label": c[3] });
-      if (c[0] === "icon-whatsapp") { a.target = "_blank"; a.rel = "noopener"; }
+      if (c[0] !== "icon-sms") { a.target = "_blank"; a.rel = "noopener"; }
       a.innerHTML = c[1];
       return a;
     });

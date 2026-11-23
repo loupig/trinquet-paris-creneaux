@@ -159,19 +159,20 @@ Dans le détail d'une partie, le nom officiel de chaque équipe SHALL être un l
 - **THEN** seul le nom de l'équipe connue est un lien
 
 ### Requirement: Écrire aux responsables d'équipe
-Dans le détail d'une partie, chaque équipe dont le responsable a un numéro exploitable SHALL porter, devant son nom, deux icônes : WhatsApp et SMS, vers le numéro de son responsable. Pour tout visiteur, elles ouvrent une conversation vierge. En mode organisateur (spec `communications-equipes`, le même mode que la page Équipes), pour une partie sans score, elles ouvrent la conversation avec le message de vérification de la partie prérempli, adressé au responsable de cette équipe : le même texte que la communication « Prochaine partie » de la page Équipes, en SMS sans le gras ni l'italique de WhatsApp. Pas d'icône Appeler : l'appel est sur la page de l'équipe. Le numéro et le nom du responsable MUST NOT apparaître dans le texte de la page. Sans numéro exploitable, l'équipe n'a pas d'icônes. Le pied de page porte le lien « Mode organisateur », ou « Quitter le mode organisateur », comme celui de la page Équipes.
+Dans le détail d'une partie, chaque équipe dont le responsable a un numéro exploitable SHALL porter, devant son nom, deux icônes : WhatsApp et SMS, vers le numéro de son responsable, qui ouvrent une conversation vierge. En mode organisateur (spec `communications-equipes`, le même mode que la page Équipes), pour une partie sans score, une troisième icône, l'avion en papier de la page Équipes, ouvre WhatsApp vers ce responsable avec le message de vérification de cette partie prérempli : le même texte que la communication « Prochaine partie » de la page Équipes. Rien n'est envoyé par le site lui-même. Pas d'icône Appeler : l'appel est sur la page de l'équipe. Le numéro et le nom du responsable MUST NOT apparaître dans le texte de la page. Sans numéro exploitable, l'équipe n'a pas d'icônes. Le pied de page porte le lien « Mode organisateur », ou « Quitter le mode organisateur », comme celui de la page Équipes.
 
 #### Scenario: Visiteur ordinaire
 - **WHEN** un joueur déplie une partie dont le responsable de l'équipe visiteuse a un numéro exploitable
-- **THEN** cette équipe porte les icônes WhatsApp et SMS, qui ouvrent une conversation sans texte, et aucun numéro n'est écrit dans la page
+- **THEN** cette équipe porte les icônes WhatsApp et SMS, qui ouvrent une conversation sans texte, sans avion en papier, et aucun numéro n'est écrit dans la page
 
 #### Scenario: Organisateur
-- **WHEN** l'organisateur, en mode organisateur, déplie la partie à venir Charlie 1 – Foxtrot 1 et touche l'icône WhatsApp de Charlie 1
+- **WHEN** l'organisateur, en mode organisateur, déplie la partie à venir Charlie 1 – Foxtrot 1 et touche l'avion en papier de Charlie 1
 - **THEN** WhatsApp s'ouvre vers le responsable de Charlie 1 avec le même message que « Prochaine partie » pour Charlie 1 sur la page Équipes
+- **AND** les icônes WhatsApp et SMS ouvrent toujours une conversation sans texte
 
 #### Scenario: Partie jouée
 - **WHEN** l'organisateur déplie une partie qui a un score
-- **THEN** les icônes ouvrent une conversation sans texte
+- **THEN** ses équipes n'ont pas d'avion en papier
 
 #### Scenario: Pas de numéro
 - **WHEN** le responsable d'une équipe n'a pas de numéro exploitable

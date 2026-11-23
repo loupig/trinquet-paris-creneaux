@@ -1069,7 +1069,7 @@ test.describe("Parties : une ligne par partie", () => {
     const wa = jouee.getByRole("link", { name: "Écrire sur WhatsApp au responsable de Bravo 1" });
     await expect(wa).toHaveAttribute("href", "https://wa.me/33600000101");
     await expect(jouee.getByRole("link", { name: "Envoyer un SMS au responsable de Bravo 1" })).toHaveAttribute("href", "sms:+33600000101");
-    await expect(jouee.locator("a[href^='tel:'], a[href*='text=']")).toHaveCount(0);
+    await expect(jouee.locator("a[href^='tel:'], a[href*='text='], a.icon-envoi")).toHaveCount(0);
     expect(await page.locator("main").innerText()).not.toMatch(/0600000|06 00|Responsable Bravo/);
     await expect(page.getByRole("link", { name: "Mode organisateur" })).toHaveAttribute("href", "programme.html?orga");
     await liens.nth(1).click();
@@ -2981,7 +2981,7 @@ test.describe("Équipes : communications de l'organisateur", () => {
     await expect(bloc.getByLabel("Texte du message")).toHaveValue("");
   });
 
-  test("Parties en organisateur : WhatsApp et SMS portent le même message que « Prochaine partie »", async ({ page }) => {
+  test("Parties en organisateur : l'avion en papier envoie le même message que « Prochaine partie »", async ({ page }) => {
     await page.goto("equipe.html?orga");
     await attendreChargement(page);
     const surEquipes = await ligne(page, "Charlie").getByRole("link", { name: "Envoyer « Prochaine partie » au responsable de Charlie 1" }).getAttribute("href");
@@ -2991,17 +2991,17 @@ test.describe("Équipes : communications de l'organisateur", () => {
     const item = page.locator(".match-item.serie-1").filter({ hasText: "Charlie 1 vs Foxtrot 1" });
     await expect(item).toHaveCount(1);
     await item.locator(".match-row").click();
-    const wa = item.getByRole("link", { name: "Envoyer le message de la partie sur WhatsApp au responsable de Charlie 1" });
-    await expect(wa).toHaveAttribute("href", surEquipes);
+    const envoi = item.getByRole("link", { name: "Envoyer le message de la partie au responsable de Charlie 1" });
+    await expect(envoi).toHaveAttribute("href", surEquipes);
     expect(new URL(surEquipes).searchParams.get("text")).toBe(prochaine("06 00 00 01 05"));
-    // En SMS, le même texte sans le gras ni l'italique de WhatsApp.
-    const sms = await item.getByRole("link", { name: "Envoyer le message de la partie par SMS au responsable de Charlie 1" }).getAttribute("href");
-    expect(sms.startsWith("sms:+33600000102?&body=")).toBe(true);
-    expect(decodeURIComponent(sms.split("body=")[1])).toBe(prochaine("06 00 00 01 05").replace(/\*/g, "").replace(/\n_(.*)_\n/, "\n$1\n"));
-    // Une partie jouée : conversation vierge, même en organisateur.
+    // WhatsApp et SMS restent vierges.
+    await expect(item.getByRole("link", { name: "Écrire sur WhatsApp au responsable de Charlie 1" })).toHaveAttribute("href", "https://wa.me/33600000102");
+    await expect(item.getByRole("link", { name: "Envoyer un SMS au responsable de Charlie 1" })).toHaveAttribute("href", "sms:+33600000102");
+    // Une partie jouée : pas d'avion en papier.
     const jouee = page.locator(".match-item").filter({ has: page.locator(".match-row-score") }).first();
     await jouee.locator(".match-row").click();
-    await expect(jouee.locator("a.icon-whatsapp").first()).toHaveAttribute("href", /^https:\/\/wa\.me\/\d+$/);
+    await expect(jouee.locator("a.icon-whatsapp").first()).toBeVisible();
+    await expect(jouee.locator("a.icon-envoi")).toHaveCount(0);
     // Quitter depuis Parties vaut aussi pour la page Équipes.
     await page.getByRole("button", { name: "Quitter le mode organisateur" }).click();
     await attendreChargement(page);

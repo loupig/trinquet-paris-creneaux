@@ -45,9 +45,9 @@ Le comportement de chaque page est décrit par sa spec, dans
   [`mon-equipe`](openspec/specs/mon-equipe/spec.md) et
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md).
 - [`programme.html`](programme.html) — « Parties », le calendrier complet,
-  avec compositions, WhatsApp et SMS vers les responsables (message de
-  vérification prérempli en mode organisateur) et, par le nom de chaque
-  équipe, sa page. Spec
+  avec compositions, WhatsApp et SMS vers les responsables (plus, en mode
+  organisateur, l'avion en papier qui envoie le message de vérification de
+  la partie) et, par le nom de chaque équipe, sa page. Spec
   [`programme`](openspec/specs/programme/spec.md).
 - [`classement.html`](classement.html) — le classement des poules. Specs
   [`classement`](openspec/specs/classement/spec.md) et
@@ -268,7 +268,7 @@ la date de naissance, à aucun moment exposées par l'API.
   Le numéro n'est jamais écrit dans les pages. Le nom
   du responsable n'apparaît pas sur Équipes et figure en clair sur Report ;
   les communications « Prochaine partie » et « Perso » de la page Équipes,
-  et le même message prérempli sur Parties en mode organisateur, contiennent
+  et le même message envoyé de Parties en mode organisateur, contiennent
   le nom et le numéro du responsable adverse. Leur
   aperçu masque le numéro (« 06 •• •• •• 78 »), seul le message envoyé le
   porte en entier.

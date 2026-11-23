@@ -27,7 +27,7 @@ La page Équipes SHALL passer en mode organisateur quand son adresse porte le pa
 
 #### Scenario: Même mode sur Parties
 - **WHEN** l'organisateur passe en mode organisateur sur la page Équipes, puis ouvre Parties
-- **THEN** Parties est en mode organisateur : ses icônes WhatsApp et SMS portent le message de vérification de la partie
+- **THEN** Parties est en mode organisateur : chaque partie à jouer a l'avion en papier qui envoie son message de vérification
 
 #### Scenario: Visiteur ordinaire
 - **WHEN** un joueur ouvre `equipe.html` par l'onglet, sans être jamais passé en mode organisateur
@@ -60,7 +60,7 @@ En mode organisateur, la ligne d'une équipe dont le responsable a un numéro ex
 - **THEN** sa ligne n'a pas d'icône d'envoi, mais garde WhatsApp et SMS
 
 ### Requirement: Communication « Prochaine partie »
-La communication « Prochaine partie » SHALL concerner les équipes qui ont une partie à venir, et leur envoyer le message de vérification de cette partie, le même que celui des icônes de Parties en mode organisateur (spec `programme`), mis en forme pour WhatsApp, dans cet ordre :
+La communication « Prochaine partie » SHALL concerner les équipes qui ont une partie à venir, et leur envoyer le message de vérification de cette partie, le même que celui de l'avion en papier de Parties en mode organisateur (spec `programme`), mis en forme pour WhatsApp, dans cet ordre :
 - « Bonjour » et le prénom du responsable quand il peut être isolé ;
 - « Votre partie », l'équipe et son adversaire en noms officiels (« Charlie (éq. 1) vs Foxtrot (éq. 1) »), « est prévue le » avec le jour, la date et l'année et l'heure en gras, puis « à » et le lieu tel que la ligue l'écrit, s'il est connu ; le point ferme la dernière ligne écrite ;
 - « Tout est bon de votre côté ? » ;
