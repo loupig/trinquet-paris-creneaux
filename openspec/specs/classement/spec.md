@@ -43,7 +43,7 @@ Chaque carte de classement SHALL commencer par un en-tête de colonnes : « # »
 - son goal average total, signé ;
 - en gras, sa moyenne de points par partie à deux décimales, qui est le critère de tri.
 
-Les nombres sont alignés à droite, en chiffres de même largeur. Toucher la ligne SHALL déplier sous elle, dans cet ordre : le nom officiel de l'équipe (« METRO PELOTE BASQUE ANTONY (éq. 1) »), ses joueurs, puis son détail (parties jouées, gagnées, perdues, nuls s'il y en a, points, points marqués et encaissés, goal average total et moyen). La toucher à nouveau le replie. Plusieurs lignes peuvent être dépliées en même temps. La ligne est un bouton, qui annonce si elle est dépliée. Partout ailleurs sur la page (tableau des quarts, simulateur, chemin vers les quarts), les équipes sont aussi nommées par leur nom court.
+Les nombres sont alignés à droite, en chiffres de même largeur. Toucher la ligne SHALL déplier sous elle, dans cet ordre : le nom officiel de l'équipe (« METRO PELOTE BASQUE ANTONY (éq. 1) »), ses joueurs, son détail (parties jouées, gagnées, perdues, nuls s'il y en a, points, points marqués et encaissés, goal average total et moyen), puis un lien « Voir l'équipe → » vers sa page, où l'on joint son responsable (spec `mon-equipe`). La toucher à nouveau le replie. Plusieurs lignes peuvent être dépliées en même temps. La ligne est un bouton, qui annonce si elle est dépliée. Partout ailleurs sur la page (tableau des quarts, simulateur, chemin vers les quarts), les équipes sont aussi nommées par leur nom court.
 
 Que la ligne se déplie MUST se voir sans l'avoir essayé :
 - chaque ligne finit par un chevron « › », celui du bloc Filtres replié ;
@@ -63,8 +63,12 @@ Une équipe sans partie jouée a « 0 » parties, « – » dans les autres colo
 
 #### Scenario: Déplier le détail
 - **WHEN** le visiteur touche la ligne de cette équipe
-- **THEN** son chevron passe de « › » à « ⌄ », et sous la ligne apparaissent son nom officiel, ses joueurs, puis un détail qui commence par « 3 parties · 2 G · 1 P · 7 pts »
+- **THEN** son chevron passe de « › » à « ⌄ », et sous la ligne apparaissent son nom officiel, ses joueurs, un détail qui commence par « 3 parties · 2 G · 1 P · 7 pts », puis « Voir l'équipe → »
 - **AND** un second toucher le replie
+
+#### Scenario: Aller à la page de l'équipe
+- **WHEN** le visiteur déplie la ligne d'une équipe et touche « Voir l'équipe → »
+- **THEN** la page Équipes s'ouvre sur cette équipe
 
 #### Scenario: L'action se devine
 - **WHEN** un visiteur ouvre le Classement pour la première fois

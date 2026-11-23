@@ -754,6 +754,8 @@
   .rank-joueurs.inconnus { font-weight: 600; font-style: italic; color: var(--muted); }
   .rank-detail { font-size: 12px; line-height: 1.4; margin-top: 3px; }
   .rank-nom { font-size: 12px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; overflow-wrap: anywhere; }
+  /* Même lien que dans la liste de la page Équipes. */
+  .voir-equipe { display: inline-block; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; padding: 4px 0; }
 
   /* Zones de fin de poule : un liseré plus large que celui des poules (3px),
      aux couleurs des sorts de fin de poule. Le rang reste écrit et la légende dit
@@ -1176,7 +1178,7 @@
   <footer>
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
-    <p>Version 2026.11.23</p>
+    <p>Version 2026.11.23.2</p>
   </footer>
 </main>
 
@@ -1765,6 +1767,13 @@
       detail = "aucune partie jouée";
     }
     plus.appendChild(el("div", { class: "rank-detail", text: detail }));
+    // La page de l'équipe : ses parties, sa prochaine partie et de quoi
+    // joindre son responsable. Même clé que equipe.html, sans la poule.
+    plus.appendChild(el("a", {
+      class: "voir-equipe",
+      href: "equipe.html?equipe=" + encodeURIComponent([team.spec, team.cat, team.clubCode, team.numero].join("|")),
+      text: "Voir l'équipe →"
+    }));
     item.appendChild(plus);
 
     function montrer(ouvert) {

@@ -212,6 +212,17 @@ Pour chaque partie sans score de l'équipe, toutes phases confondues, la page SH
 - **WHEN** une partie de l'équipe a un score
 - **THEN** elle n'a pas de fiche d'adversaire
 
+### Requirement: Contact du responsable de l'équipe
+Sous la composition de l'équipe affichée, la page SHALL proposer trois boutons pour joindre le responsable de l'équipe déclaré à la ligue : Appeler, SMS et WhatsApp, comme ceux de la fiche de l'adversaire. C'est là que mènent les noms d'équipe de Parties et « Voir l'équipe → » du Classement. WhatsApp MUST s'ouvrir sur une conversation vide, sans message prérempli. La page MUST NOT afficher le numéro ni le nom du responsable. Sans numéro exploitable, aucun bouton n'apparaît, sans message d'erreur.
+
+#### Scenario: Responsable joignable
+- **WHEN** un visiteur arrive sur la page d'Alpha 1 depuis Parties, et que son responsable a un numéro déclaré à la ligue
+- **THEN** la carte de l'équipe porte les boutons Appeler, SMS et WhatsApp vers ce numéro, sans numéro ni nom écrit
+
+#### Scenario: Pas de numéro
+- **WHEN** l'équipe affichée n'a pas de numéro de responsable exploitable
+- **THEN** sa carte s'affiche sans boutons de contact
+
 ### Requirement: Contact du responsable adverse
 Sur la fiche de l'adversaire, la page SHALL proposer trois boutons pour joindre le responsable de l'équipe adverse déclaré à la ligue : Appeler, SMS et WhatsApp. WhatsApp MUST s'ouvrir sur une conversation vide, sans message prérempli. La page MUST NOT afficher le numéro ni le nom du responsable. Sans numéro exploitable, aucun bouton n'apparaît, sans message d'erreur.
 
