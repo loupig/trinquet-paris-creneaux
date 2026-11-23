@@ -1710,18 +1710,25 @@
     var texte = textePartage();
     var info = document.getElementById("partageInfo");
     info.textContent = "";
-    if (navigator.share) {
-      var donnees = { text: texte };
-      if (fichier && navigator.canShare && navigator.canShare({ files: [fichier] })) donnees.files = [fichier];
-      navigator.share(donnees).catch(function (e) {
-        if (e && e.name === "AbortError") return;   // partage annulé
-        copier(texte).then(function () { info.textContent = "Score copié"; });
-      });
-      return;
+    // Texte copié, affiche téléchargée : sans feuille de partage, ou quand
+    // elle refuse l'envoi autrement que par une annulation.
+    function aDefaut() {
+      if (fichier) telecharger(fichier);
+      copier(texte).then(function () { info.textContent = fichier ? "Score copié, affiche téléchargée" : "Score copié, à coller"; },
+                         function () { info.textContent = fichier ? "Affiche téléchargée" : "Copie impossible sur ce navigateur"; });
     }
-    if (fichier) telecharger(fichier);
-    copier(texte).then(function () { info.textContent = fichier ? "Score copié, affiche téléchargée" : "Score copié, à coller"; },
-                       function () { info.textContent = fichier ? "Affiche téléchargée" : "Copie impossible sur ce navigateur"; });
+    if (!navigator.share) { aDefaut(); return; }
+    var donnees = { text: texte };
+    var avecImage = !!(fichier && navigator.canShare && navigator.canShare({ files: [fichier] }));
+    if (avecImage) donnees.files = [fichier];
+    // Le partage part d'abord, dans le geste même (Safari l'exige).
+    navigator.share(donnees).catch(function (e) {
+      if (e && e.name === "AbortError") return;   // partage annulé
+      aDefaut();
+    });
+    // Certaines applis, WhatsApp sur iPhone notamment, ne gardent que l'image
+    // et laissent le texte : il est copié aussi, à coller si besoin.
+    if (avecImage) copier(texte).then(function () { info.textContent = "Message copié aussi, à coller si besoin"; }, function () { /* pas bloquant */ });
   }
 
   // ---------------------------------------------------------------

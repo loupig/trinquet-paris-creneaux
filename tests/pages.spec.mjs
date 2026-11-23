@@ -297,7 +297,8 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(reglages).toHaveAttribute("open", "");
   });
 
-  test("fin de partie : le résultat part avec l'affiche du graphe en PNG", async ({ page }) => {
+  test("fin de partie : le résultat part avec l'affiche du graphe en PNG", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.addInitScript(() => {
       navigator.canShare = (d) => !!(d && d.files && d.files.every((f) => f.type === "image/png"));
       navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
@@ -326,6 +327,24 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     expect(partage.nom).toBe("resultat-trinquet.png");
     expect([partage.l, partage.h]).toEqual([1080, 1350]);   // portrait 4:5
     expect(partage.texte).toMatch(/^\*Bera 30 – 29 Ahetze\*/);
+    // WhatsApp sur iPhone peut ne garder que l'image : le message est copié aussi.
+    await expect(page.locator("#partageInfo")).toHaveText("Message copié aussi, à coller si besoin");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(partage.texte);
+  });
+
+  test("fin de partie : feuille de partage en échec, affiche téléchargée", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => {
+      navigator.canShare = () => true;
+      navigator.share = () => Promise.reject(new DOMException("refusé", "NotAllowedError"));
+    });
+    await page.goto("compteur.html");
+    await page.getByRole("button", { name: "30 points" }).click();
+    for (let i = 0; i < 30; i++) await page.locator(".score-btn").nth(0).click();
+    const telechargement = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Partager le résultat" }).click();
+    expect((await telechargement).suggestedFilename()).toBe("resultat-trinquet.png");
+    await expect(page.locator("#partageInfo")).toHaveText("Score copié, affiche téléchargée");
   });
 
   test("fin de partie sur ordinateur : message copié, affiche téléchargée", async ({ page, context }) => {
