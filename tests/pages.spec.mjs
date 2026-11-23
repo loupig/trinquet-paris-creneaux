@@ -2037,6 +2037,8 @@ test.describe("Accueil : la semaine, résultats et parties d'ici dimanche", () =
     await expect(page.getByRole("tab")).toHaveCount(0);
     await expect(page.locator("#tiles .tile-title")).toHaveText(["Mes équipes", "Prochaines parties", "Championnats"]);
     await expect(page.locator("#vue-ici")).toContainText("Plus aucune rencontre à venir");
+    // Le corps des parties n'a pas de marge : le message garde la sienne.
+    expect(await page.locator("#vue-ici .fin-calendrier").evaluate((e) => getComputedStyle(e).paddingLeft)).toBe("14px");
   });
 });
 
@@ -2983,6 +2985,14 @@ test.describe("Équipes : communications de l'organisateur", () => {
     await bloc.getByRole("button", { name: "Rétablir l'exemple" }).click();
     await expect(bloc.getByLabel("Texte du message")).toHaveValue(/^Bonjour \{responsable\},/);
     expect(await page.evaluate(() => localStorage.getItem("lidfpb_message_perso_v1"))).toBeNull();
+    // L'exemple, pour Alpha 1 qui n'a plus de partie : aucune ligne ne parle
+    // d'une partie qui n'existe pas.
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Alpha 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toHaveText(/^Bonjour Responsable,\n\nRésultats et classements : http\S+\n\nMerci\.$/);
+    // Pour Charlie 1, la partie en noms courts des deux côtés.
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Charlie 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toContainText("Votre prochaine partie : Charlie 1 vs Foxtrot 1");
+    await expect(bloc.locator(".message-apercu")).toContainText("Tout est bon de votre côté pour le ");
   });
 
   test("« Perso » sans stockage : la page fonctionne pour la visite", async ({ page }) => {
@@ -3108,6 +3118,35 @@ test.describe("Équipes : communications de l'organisateur", () => {
     // Par la pastille d'une équipe suivie aussi.
     await page.locator(".mes-chips .mes-chip").click();
     await expect(page).toHaveURL(/&orga$/);
+  });
+
+  test("stockage refusé : depuis Parties, le nom d'une équipe garde le mode organisateur", async ({ page }) => {
+    await page.addInitScript(() => {
+      const get = Storage.prototype.getItem, set = Storage.prototype.setItem;
+      Storage.prototype.getItem = function (k) { if (k === "lidfpb_orga_v1") throw new Error("refusé"); return get.call(this, k); };
+      Storage.prototype.setItem = function (k, v) { if (k === "lidfpb_orga_v1") throw new Error("refusé"); return set.call(this, k, v); };
+    });
+    await page.goto("programme.html?orga");
+    await attendreChargement(page);
+    const item = page.locator(".match-item.serie-1").filter({ hasText: "Charlie 1 vs Foxtrot 1" });
+    await item.locator(".match-row").click();
+    const lien = item.locator(".lien-equipe").first();
+    await expect(lien).toHaveAttribute("href", "equipe.html?equipe=" + encodeURIComponent(CHARLIE) + "&orga");
+    await lien.click();
+    await attendreChargement(page);
+    await expect(page.locator(".team-name")).toHaveText("Charlie (éq. 1)");
+    await expect(page.getByRole("button", { name: "Quitter le mode organisateur" })).toBeVisible();
+  });
+
+  test("« Mode organisateur » depuis la page d'une équipe y reste", async ({ page }) => {
+    await page.goto("equipe.html?equipe=" + encodeURIComponent(CHARLIE));
+    await attendreChargement(page);
+    await page.getByRole("link", { name: "Mode organisateur" }).click();
+    await attendreChargement(page);
+    await expect(page.locator(".team-name")).toHaveText("Charlie (éq. 1)");
+    await expect(page.getByRole("button", { name: "Quitter le mode organisateur" })).toBeVisible();
+    // Gardé : « orga » quitte l'adresse, l'équipe y reste.
+    await expect(page).toHaveURL(new RegExp("equipe\\.html\\?equipe=" + encodeURIComponent(CHARLIE).replace(/\|/g, "\\|") + "$"));
   });
 });
 

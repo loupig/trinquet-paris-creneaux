@@ -7,7 +7,7 @@ Permettre à l'organisateur de choisir, sur la page Équipes, la communication �
 ## Requirements
 
 ### Requirement: Mode organisateur
-La page Équipes SHALL passer en mode organisateur quand son adresse porte le paramètre `orga`, avec ou sans valeur, ou quand le visiteur touche « Mode organisateur » dans son pied de page (un lien vers `equipe.html?orga`). Le mode est alors gardé dans le navigateur (clé `lidfpb_orga_v1`) : les visites suivantes de la page Équipes, même par l'onglet, sont en mode organisateur, et `orga` quitte l'adresse, pour qu'un lien copié n'y emmène pas un joueur. En mode organisateur, le pied de page porte « Quitter le mode organisateur » à la place du lien : le toucher oublie le mode et rouvre la vue affichée sans lui. Quand le navigateur refuse le stockage, le mode vaut pour la visite : passer de la liste à une équipe, ou d'une équipe à l'autre, MUST alors garder `orga` dans l'adresse. Ce mode seul montre le bloc des communications et l'icône d'envoi des lignes. Hors de ce mode, la page n'a ni bloc des communications ni icône d'envoi. Le mode est le même sur Parties (spec `programme`), qui a le même lien et le même bouton dans son pied de page : entré ou quitté sur l'une des deux pages, il l'est sur l'autre. Ce n'est pas une protection : aucun code n'est demandé.
+La page Équipes SHALL passer en mode organisateur quand son adresse porte le paramètre `orga`, avec ou sans valeur, ou quand le visiteur touche « Mode organisateur » dans son pied de page (un lien vers `equipe.html?orga`, qui garde l'équipe affichée s'il y en a une). Le mode est alors gardé dans le navigateur (clé `lidfpb_orga_v1`) : les visites suivantes de la page Équipes, même par l'onglet, sont en mode organisateur, et `orga` quitte l'adresse, pour qu'un lien copié n'y emmène pas un joueur. En mode organisateur, le pied de page porte « Quitter le mode organisateur » à la place du lien : le toucher oublie le mode et rouvre la vue affichée sans lui. Quand le navigateur refuse le stockage, le mode vaut pour la visite : passer de la liste à une équipe, ou d'une équipe à l'autre, et ouvrir une équipe depuis le détail d'une partie sur Parties, MUST alors garder `orga` dans l'adresse. Ce mode seul montre le bloc des communications et l'icône d'envoi des lignes. Hors de ce mode, la page n'a ni bloc des communications ni icône d'envoi. Le mode est le même sur Parties (spec `programme`), qui a le même lien et le même bouton dans son pied de page : entré ou quitté sur l'une des deux pages, il l'est sur l'autre. Ce n'est pas une protection : aucun code n'est demandé.
 
 #### Scenario: Ouvrir en organisateur
 - **WHEN** l'organisateur ouvre `equipe.html?orga`
@@ -16,6 +16,10 @@ La page Équipes SHALL passer en mode organisateur quand son adresse porte le pa
 #### Scenario: Par le pied de page
 - **WHEN** l'organisateur touche « Mode organisateur » en bas de la page Équipes
 - **THEN** la page passe en mode organisateur, et l'adresse ne porte plus `orga`
+
+#### Scenario: Depuis la page d'une équipe
+- **WHEN** l'organisateur touche « Mode organisateur » en bas de la page de Charlie 1
+- **THEN** la page de Charlie 1 se rouvre en mode organisateur
 
 #### Scenario: Mode gardé
 - **WHEN** l'organisateur, passé en mode organisateur, revient plus tard sur la page Équipes par l'onglet
@@ -80,11 +84,15 @@ Chaque élément inconnu est omis.
 - **THEN** la communication n'a pas de ligne pour le responsable adverse
 
 ### Requirement: Communication « Perso »
-La communication « Perso » SHALL être un texte que l'organisateur écrit dans le bloc, avec des boutons qui insèrent chaque balise à l'endroit du curseur. Le texte est gardé dans le navigateur, jamais envoyé à un serveur, et revient à la visite suivante. Un bouton rétablit le texte d'exemple. Une balise inconnue est signalée sous le champ et laissée telle quelle.
+La communication « Perso » SHALL être un texte que l'organisateur écrit dans le bloc, avec des boutons qui insèrent chaque balise à l'endroit du curseur. Le texte est gardé dans le navigateur, jamais envoyé à un serveur, et revient à la visite suivante. Un bouton rétablit le texte d'exemple, dans l'esprit du message « Prochaine partie » : chacune de ses lignes qui parle de la prochaine partie porte une balise de cette partie, pour disparaître du message d'une équipe qui n'a plus de partie à venir, et il nomme les deux équipes sous leur nom court. Une balise inconnue est signalée sous le champ et laissée telle quelle.
 
 #### Scenario: Texte gardé
 - **WHEN** l'organisateur écrit un texte perso, ferme la page puis la rouvre en mode organisateur
 - **THEN** « Perso » porte son texte
+
+#### Scenario: Exemple pour une équipe sans partie à venir
+- **WHEN** l'organisateur envoie le texte d'exemple à une équipe qui n'a plus de partie à venir
+- **THEN** le message n'a que la salutation, le lien vers le site et « Merci. », sans ligne sur une partie
 
 #### Scenario: Balise inconnue
 - **WHEN** le texte porte `{capitaine}`
