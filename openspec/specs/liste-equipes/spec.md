@@ -22,7 +22,7 @@ Ouverte sans équipe dans l'adresse, la page Équipes SHALL montrer toutes les �
 - **THEN** l'en-tête de chaque carte nomme sa spécialité, en plus de la série et de la poule
 
 ### Requirement: Ligne d'une équipe dans la liste
-Chaque équipe SHALL tenir sur une ligne, dans l'ordre du classement de sa poule (spec `calcul-classement`) : son rang (« – » si elle n'a pas joué), les trois premiers colorés or, argent et bronze comme au Classement, puis son nom court suivi de son numéro (spec `noms-clubs`), jamais tronqué, et un chevron. Au toucher, la ligne déplie son nom officiel, ses joueurs, et un lien « Voir l'équipe → ».
+Chaque équipe SHALL tenir sur une ligne, dans l'ordre du classement de sa poule (spec `calcul-classement`), le même que sur la page de l'équipe et au Classement, y compris entre équipes à égalité ou pas encore classées, départagées par leur nom officiel : son rang (« – » si elle n'a pas joué), les trois premiers colorés or, argent et bronze comme au Classement, puis son nom court suivi de son numéro (spec `noms-clubs`), jamais tronqué, et un chevron. Au toucher, la ligne déplie son nom officiel, ses joueurs, et un lien « Voir l'équipe → ».
 
 #### Scenario: Ligne repliée
 - **WHEN** l'équipe 2 de « PARIS EUSKAL PILOTA » est 3e de sa poule

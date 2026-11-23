@@ -280,6 +280,7 @@
      page, ce qui le glisserait sous l'en-tête collant. Le focus, lui, passe
      bien au contenu. */
   #contenu { scroll-margin-top: 100vh; }
+  #contenu:focus { outline: none; }
 
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
@@ -1048,7 +1049,7 @@
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
     <p class="pied-orga" id="piedOrga"><a href="equipe.html?orga">Mode organisateur</a></p>
-    <p>Version 2026.11.23.6</p>
+    <p>Version 2026.11.23.7</p>
   </footer>
 </main>
 
@@ -2689,20 +2690,20 @@
       var k = [spec, cat, poule].join("|");
       return groupes[k] || (groupes[k] = { spec: spec, cat: cat, poule: poule, equipes: [] });
     }
-    // Des copies, au nom court : les équipes pas encore classées se rangent
-    // dans l'ordre de ce qui est affiché. Le classement lui-même n'en dépend pas.
+    // Le tri départage sur le nom officiel (label), comme la page de l'équipe
+    // et le Classement : une égalité, ou des équipes pas encore classées, y
+    // gardent le même ordre. Le nom court n'est que l'affichage.
     var placees = {};
     etat.standings.forEach(function (s) {
       var cle = teamKey(s.spec, s.cat, s.clubCode, s.numero);
       if (!etat.index[cle] || placees[cle]) return;
-      var copie = Object.assign({}, s, { label: nomCourt(etat.clubMap, s.clubCode, s.numero) });
-      groupe(s.spec, s.cat, s.poule).equipes.push(copie);
+      groupe(s.spec, s.cat, s.poule).equipes.push(s);
       placees[cle] = true;
     });
     Object.keys(etat.index).forEach(function (cle) {
       if (placees[cle]) return;
       var t = etat.index[cle];
-      groupe(t.spec, t.cat, "").equipes.push({ spec: t.spec, cat: t.cat, clubCode: t.clubCode, numero: t.numero, jouees: 0, label: nomCourt(etat.clubMap, t.clubCode, t.numero) });
+      groupe(t.spec, t.cat, "").equipes.push({ spec: t.spec, cat: t.cat, clubCode: t.clubCode, numero: t.numero, jouees: 0, label: clubLabel(etat.clubMap, t.clubCode, t.numero) });
     });
     // Le classement est fait sur toute la poule, puis les filtres écartent des
     // cartes entières : aucun rang ne bouge.
@@ -3627,6 +3628,16 @@
       window.location.assign("equipe.html?" + (etat.cle ? "equipe=" + encodeURIComponent(etat.cle) + "&" : "") + "orga");
     });
   }
+
+  // « Aller au contenu » donne le focus au contenu sans passer par l'adresse :
+  // un #contenu ajouterait une entrée d'historique sans état, et
+  // « ← Toutes les équipes » ne saurait plus que l'on vient de la liste.
+  document.querySelector(".aller-contenu").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    var contenu = document.getElementById("contenu");
+    contenu.setAttribute("tabindex", "-1");
+    contenu.focus({ preventScroll: true });
+  });
 
   // Retour et Avancer du navigateur, entre la liste et une équipe.
   window.addEventListener("popstate", function () {

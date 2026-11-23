@@ -915,7 +915,7 @@
 
   <footer>
     <p><a href="decouvrir.html">Présenter le site à un joueur</a></p>
-    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.23</p>
+    <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème</a> · <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a> · Version 2026.11.23.2</p>
   </footer>
 </main>
 
@@ -1851,11 +1851,16 @@
       info.appendChild(el("strong", { text: s.rang || "pas encore classée" }));
       info.appendChild(document.createTextNode(" · " + s.serieLabel + " · " + (s.prochaine ? "prochaine partie " + prochaine : prochaine)));
       plus.appendChild(info);
-      var noms = joueurs ? joueurs(s.clubCode, s.cat, s.numero) : null;
-      var ligne = el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus") });
-      ligne.innerHTML = SVG_JOUEURS;
-      ligne.appendChild(el("span", { text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
-      plus.appendChild(ligne);
+      // Compositions non chargées (joueurs à null) : pas de ligne, plutôt que
+      // d'annoncer « non déclarée » une équipe qui a peut-être déclaré ses
+      // joueurs. « Non déclarée » reste pour une équipe absente des engagements.
+      if (joueurs) {
+        var noms = joueurs(s.clubCode, s.cat, s.numero);
+        var ligne = el("div", { class: "rank-joueurs" + (noms ? "" : " inconnus") });
+        ligne.innerHTML = SVG_JOUEURS;
+        ligne.appendChild(el("span", { text: noms ? noms.join(", ") : "Composition non déclarée à la ligue" }));
+        plus.appendChild(ligne);
+      }
       plus.appendChild(el("a", { class: "voir-equipe", href: "equipe.html?equipe=" + encodeURIComponent(s.cle), text: "Voir l'équipe →" }));
       depliante(item, row, plus);
       body.appendChild(item);
