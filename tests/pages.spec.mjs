@@ -297,6 +297,50 @@ test.describe("Compteur : mode match, fin de partie et partage", () => {
     await expect(reglages).toHaveAttribute("open", "");
   });
 
+  test("fin de partie : le résultat part avec l'affiche du graphe en PNG", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.canShare = (d) => !!(d && d.files && d.files.every((f) => f.type === "image/png"));
+      navigator.share = (d) => { window.__partage = d; return Promise.resolve(); };
+    });
+    await page.goto("compteur.html");
+    await page.locator(".team-name").nth(0).fill("Bera");
+    await page.locator(".team-name").nth(1).fill("Ahetze");
+    await page.getByRole("button", { name: "30 points" }).click();
+    const bera = page.locator(".score-btn").nth(0);
+    const ahetze = page.locator(".score-btn").nth(1);
+    for (let i = 0; i < 29; i++) { await bera.click(); await ahetze.click(); }
+
+    // En cours de partie, « Partager le score » reste le message seul.
+    await page.getByRole("button", { name: "Partager le score" }).click();
+    expect(await page.evaluate(() => window.__partage.files)).toBeUndefined();
+
+    await bera.click();                                   // 30-29
+    await page.getByRole("button", { name: "Partager le résultat" }).click();
+    const partage = await page.evaluate(async () => {
+      const d = window.__partage;
+      const f = d.files && d.files[0];
+      const image = f && await createImageBitmap(f);
+      return { texte: d.text, nom: f && f.name, type: f && f.type, l: image && image.width, h: image && image.height };
+    });
+    expect(partage.type).toBe("image/png");
+    expect(partage.nom).toBe("resultat-trinquet.png");
+    expect([partage.l, partage.h]).toEqual([1080, 1350]);   // portrait 4:5
+    expect(partage.texte).toMatch(/^\*Bera 30 – 29 Ahetze\*/);
+  });
+
+  test("fin de partie sur ordinateur : message copié, affiche téléchargée", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => { delete Navigator.prototype.share; });
+    await page.goto("compteur.html");
+    await page.getByRole("button", { name: "30 points" }).click();
+    for (let i = 0; i < 30; i++) await page.locator(".score-btn").nth(1).click();
+    const telechargement = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Partager le résultat" }).click();
+    expect((await telechargement).suggestedFilename()).toBe("resultat-trinquet.png");
+    await expect(page.locator("#partageInfo")).toHaveText("Score copié, affiche téléchargée");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("Victoire de Équipe 2");
+  });
+
   test("plein écran à la demande, thème sombre gardé, Quitter et Retour referment", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("compteur.html");

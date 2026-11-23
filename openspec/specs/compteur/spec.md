@@ -109,6 +109,21 @@ Dès qu'un point est marqué, la page SHALL permettre de partager le score, par 
 - **WHEN** le navigateur ne propose pas de feuille de partage
 - **THEN** le message est copié et la page indique « Score copié, à coller »
 
+### Requirement: Affiche du résultat
+Partie gagnée, « Partager le résultat » SHALL joindre au message une image PNG en portrait (1080 × 1350, le format qu'une discussion WhatsApp affiche en grand), quand le téléphone sait partager une image. L'affiche donne le vainqueur, les deux équipes et leur score, la partie de championnat quand elle est connue, le score visé, la durée de jeu, les égalités et les changements de leader, le graphe des scores avec sa légende, quelques lignes pour le lire et le plus gros écart. Elle est toujours en clair, quel que soit le thème du téléphone, et un nom trop long y est raccourci plutôt que de déborder. En cours de partie, « Partager le score » reste le message seul. Quand le navigateur partage du texte mais pas d'image, le résultat part en message seul ; sans feuille de partage, ordinateur surtout, le message est copié et l'affiche téléchargée, pour WhatsApp Web.
+
+#### Scenario: Affiche envoyée au groupe
+- **WHEN** à la fin d'une partie gagnée 30-29 par Bera contre Ahetze, sur un téléphone qui partage les images, le visiteur touche « Partager le résultat »
+- **THEN** la feuille de partage reçoit une image PNG de 1080 × 1350 et le message « *Bera 30 – 29 Ahetze* »
+
+#### Scenario: Navigateur sans partage d'image
+- **WHEN** le navigateur partage du texte mais pas d'image
+- **THEN** « Partager le résultat » envoie le message seul
+
+#### Scenario: Sur ordinateur
+- **WHEN** le navigateur ne propose pas de feuille de partage et la partie est gagnée
+- **THEN** le message est copié, l'affiche est téléchargée, et la page indique « Score copié, affiche téléchargée »
+
 ### Requirement: Annuler le dernier point
 La page SHALL permettre d'annuler le dernier point marqué, sans confirmation, autant de fois qu'il y a de points. Le bouton est inactif quand aucun point n'est marqué.
 
@@ -218,7 +233,7 @@ La page SHALL retrouver, après un rechargement ou une fermeture du navigateur, 
 - **THEN** il retrouve 25-21, les mêmes équipes, le même graphe, et le temps depuis le dernier point reste juste
 
 ### Requirement: Rien ne quitte le navigateur
-La page MUST NOT appeler l'API de la ligue ni envoyer de données à un service, et le dit en en-tête. Seul le message de score quitte la page, et seulement quand le visiteur le partage lui-même.
+La page MUST NOT appeler l'API de la ligue ni envoyer de données à un service, et le dit en en-tête. Seuls le message de score et, en fin de partie, l'affiche du résultat quittent la page, et seulement quand le visiteur les partage lui-même.
 
 #### Scenario: Utilisation hors des données de la ligue
 - **WHEN** le visiteur marque une partie complète sans la partager
