@@ -944,6 +944,15 @@ test("noms courts identiques d'une page à l'autre, et à la spec", async () => 
     return m[0];
   };
   expect(await lieuCourt("programme.html")).toBe(await lieuCourt("index.html"));
+  // Le prénom du responsable : celui de Parties, dans les communications de
+  // la page Équipes.
+  const prenom = async (f) => {
+    const html = await readFile(new URL(`../${f}`, import.meta.url), "utf8");
+    const m = html.match(/function prenomDuResponsable\(raw\) \{[\s\S]*?\n  \}/);
+    expect(m, `prenomDuResponsable dans ${f}`).not.toBeNull();
+    return m[0];
+  };
+  expect(await prenom("equipe.html")).toBe(await prenom("programme.html"));
   const spec = await readFile(new URL("../openspec/specs/noms-clubs/spec.md", import.meta.url), "utf8");
   const table = {};
   for (const l of spec.split("\n")) {
@@ -2648,7 +2657,7 @@ test.describe("Équipes : message des phases finales", () => {
       navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
     });
     await finDePoules(page, MARDI);
-    await page.goto("equipe.html");
+    await page.goto("equipe.html?orga");
     await attendreChargement(page);
 
     const bloc = page.locator(".message-equipes");
@@ -2670,15 +2679,15 @@ test.describe("Équipes : message des phases finales", () => {
   test("chaque ligne envoie le message à son responsable sur WhatsApp", async ({ page }) => {
     await page.clock.setFixedTime(MARDI);
     await finDePoules(page, MARDI);
-    await page.goto("equipe.html");
+    await page.goto("equipe.html?orga");
     await attendreChargement(page);
     const pep = page.locator(".liste-equipes .rank-item").filter({ has: page.locator(".rank-team", { hasText: /^PEP\s1$/ }) }).first();
-    const envoi = pep.getByRole("link", { name: "Envoyer le message des phases finales au responsable de PEP 1" });
+    const envoi = pep.getByRole("link", { name: "Envoyer « Phases finales » au responsable de PEP 1" });
     // api.whatsapp.com et non wa.me, dont la redirection perd les emojis sur
     // ordinateur.
     await expect(envoi).toHaveAttribute("href", "https://api.whatsapp.com/send?phone=33600000100&text=" + encodeURIComponent(attendu(true)));
     await expect(envoi).toHaveAttribute("target", "_blank");
-    await expect(page.locator(".contact-message")).toHaveCount(24);
+    await expect(page.locator(".contact-message:visible")).toHaveCount(24);
     // Rien n'est déplié : aucun joueur à l'écran.
     await expect(page.locator(".liste-equipes")).not.toContainText("Joueur");
   });
@@ -2687,7 +2696,7 @@ test.describe("Équipes : message des phases finales", () => {
     const JANVIER = new Date(2027, 0, 5, 10, 0);
     await page.clock.setFixedTime(JANVIER);
     await finDePoules(page, JANVIER);
-    await page.goto("equipe.html");
+    await page.goto("equipe.html?orga");
     await attendreChargement(page);
     const bloc = page.locator(".message-equipes");
     await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
@@ -2708,7 +2717,7 @@ test.describe("Équipes : message des phases finales", () => {
           partie(MARDI, "2", "11", 5, "1400", codeClub(2), codeClub(3))
         ])
     });
-    await page.goto("equipe.html");
+    await page.goto("equipe.html?orga");
     await attendreChargement(page);
     const bloc = page.locator(".message-equipes");
     await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
@@ -2732,6 +2741,202 @@ test.describe("Équipes : message des phases finales", () => {
     await expect(page.locator(".liste-equipes .rank-item")).toHaveCount(24);
     await expect(page.locator(".message-equipes")).toHaveCount(0);
     await expect(page.locator(".contact-message")).toHaveCount(0);
+    // En organisateur, « Phases finales » n'est plus proposée.
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    await expect(page.locator(".communication-choix button")).not.toContainText(["Phases finales"]);
+  });
+
+  test("sans orga, poules finies : ni bloc ni avion en papier, WhatsApp et SMS restent", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    await finDePoules(page, MARDI);
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    await expect(page.locator(".message-equipes")).toHaveCount(0);
+    await expect(page.locator(".contact-message")).toHaveCount(0);
+    await expect(page.locator(".liste-equipes .contact-btn.wa")).toHaveCount(24);
+    await expect(page.locator(".liste-equipes .contact-btn.sms")).toHaveCount(24);
+  });
+
+  test("en organisateur, poules finies : « Phases finales » est choisie", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    await finDePoules(page, MARDI);
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const choix = page.locator(".communication-choix button");
+    await expect(choix).toHaveText(["Phases finales", "Prochaine partie", "Perso"]);
+    await expect(choix.first()).toHaveAttribute("aria-pressed", "true");
+  });
+});
+
+// Spec communications-equipes : en organisateur, choisir la communication que
+// l'avion en papier envoie. Données fictives ordinaires (poules en cours) :
+// Charlie 1 reçoit Foxtrot 1 à 19h30 dans quelques jours.
+test.describe("Équipes : communications de l'organisateur", () => {
+  const CHARLIE = "2|1|3750003|1";
+  // Alpha 1 (série 1) n'a plus de partie à venir.
+  const sansPartieAlpha = (d) => d.filter((r) => !(r["Catégorie"] === "1" && !r.score_cr && (r.club_rec === codeClub(0) || r.club_vis === codeClub(0))));
+  const ligne = (page, nom) => page.locator(".liste-equipes .poule-card").first().locator(".rank-item").filter({ has: page.locator(".rank-team", { hasText: new RegExp("^" + nom + "\\s1$") }) });
+  function prochaineDeCharlie() {
+    const parse = (s) => new Date(+s.slice(-4), +s.slice(-6, -4) - 1, +s.slice(0, -6));
+    const r = tables.rencontres.find((x) => x["Catégorie"] === "1" && !x.score_cr && x.club_rec === codeClub(2) && x.club_vis === codeClub(5));
+    return parse(r.date_renc).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  }
+  function joueurs(i, cat) {
+    const e = tables.engagements.find((x) => x["Numéro club"] === "03-750-" + String(i + 1).padStart(3, "0") && x["Catégorie"] === cat);
+    return [e["Licence&nbsp;1"], e["Licence&nbsp;2"]].map((l) => {
+      const p = tables.licencies.find((x) => x.Licence === l);
+      return p.prenom + " " + p.nom;
+    }).join(" & ");
+  }
+  const prochaine = (tel) => [
+    "Bonjour Responsable,",
+    "",
+    "Prochaine partie de *Charlie 1* (Série 1) :",
+    "*" + prochaineDeCharlie() + " à 19h30*",
+    "Contre Foxtrot 1",
+    "Joueurs : " + joueurs(5, "1"),
+    "📍 Trinquet Paris (75016)",
+    "Responsable de Foxtrot 1 : Responsable Foxtrot, " + tel,
+    "",
+    "Bon match ! 💪"
+  ].join("\n");
+
+  test("poules en cours : « Prochaine partie » choisie, remplie pour chaque équipe", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (donnees) => { window.__partage = donnees; return Promise.resolve(); };
+    });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const choix = page.locator(".communication-choix button");
+    await expect(choix).toHaveText(["Prochaine partie", "Perso"]);
+    await expect(choix.first()).toHaveAttribute("aria-pressed", "true");
+
+    // L'avion en papier de Charlie 1 envoie sa prochaine partie, numéro entier.
+    const envoi = ligne(page, "Charlie").getByRole("link", { name: "Envoyer « Prochaine partie » au responsable de Charlie 1" });
+    await expect(envoi).toHaveAttribute("href", "https://api.whatsapp.com/send?phone=33600000102&text=" + encodeURIComponent(prochaine("06 00 00 01 05")));
+
+    // Aperçu pour Charlie 1 : le numéro adverse masqué, sauf ses deux derniers chiffres.
+    const bloc = page.locator(".message-equipes");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Charlie 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toHaveText(prochaine("06\u00a0••\u00a0••\u00a0••\u00a005"));
+    const texte = await page.locator("main").innerText();
+    expect(texte).not.toMatch(/06 00 00 01 05|0600000105/);
+    // Partager envoie le texte entier.
+    await bloc.getByRole("button", { name: "Partager" }).click();
+    expect(await page.evaluate(() => window.__partage.text)).toBe(prochaine("06 00 00 01 05"));
+  });
+
+  test("une équipe sans partie à venir n'a pas d'avion en papier", async ({ page }) => {
+    await servirTables(page, { rencontres: sansPartieAlpha });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const alpha = ligne(page, "Alpha");
+    await expect(alpha.locator(".contact-message")).toBeHidden();
+    await expect(alpha.locator(".contact-btn.wa")).toBeVisible();
+    await expect(ligne(page, "Bravo").locator(".contact-message")).toBeVisible();
+    // Changer de communication met les avions à jour : « Perso » va à tous.
+    await page.locator(".communication-choix").getByRole("button", { name: "Perso" }).click();
+    await expect(alpha.getByRole("link", { name: "Envoyer « Perso » au responsable de Alpha 1" })).toBeVisible();
+  });
+
+  test("« Perso » : balises, ligne vide supprimée, balise inconnue, texte gardé", async ({ page }) => {
+    await servirTables(page, { rencontres: sansPartieAlpha });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.locator(".communication-choix").getByRole("button", { name: "Perso" }).click();
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    const champ = bloc.getByLabel("Texte du message");
+    // 16 px : sous cette taille, iOS zoome sur le champ touché.
+    expect(await champ.evaluate((e) => getComputedStyle(e).fontSize)).toBe("16px");
+    await champ.fill("Salut {responsable} !\nContre {adversaire} le {date}\nVu {capitaine}\nFin");
+    // Une balise insérée au curseur, en fin de texte.
+    await champ.evaluate((e) => e.setSelectionRange(e.value.length, e.value.length));
+    await bloc.getByRole("button", { name: "{equipe}" }).click();
+    await expect(champ).toHaveValue("Salut {responsable} !\nContre {adversaire} le {date}\nVu {capitaine}\nFin{equipe}");
+    await expect(bloc).toContainText("Balise inconnue : {capitaine}");
+
+    // Alpha 1 n'a plus de partie : la ligne « Contre … » disparaît.
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Alpha 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toHaveText("Salut Responsable !\nVu {capitaine}\nFinAlpha 1");
+    const envoi = ligne(page, "Charlie").getByRole("link", { name: "Envoyer « Perso » au responsable de Charlie 1" });
+    await expect(envoi).toHaveAttribute("href", "https://api.whatsapp.com/send?phone=33600000102&text=" +
+      encodeURIComponent("Salut Responsable !\nContre Foxtrot 1 le " + prochaineDeCharlie() + "\nVu {capitaine}\nFinCharlie 1"));
+
+    // Le texte revient à la visite suivante, puis « Rétablir l'exemple ».
+    await page.reload();
+    await attendreChargement(page);
+    await bloc.locator(".communication-choix").getByRole("button", { name: "Perso" }).click();
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await expect(bloc.getByLabel("Texte du message")).toHaveValue(/^Salut \{responsable\}/);
+    await bloc.getByRole("button", { name: "Rétablir l'exemple" }).click();
+    await expect(bloc.getByLabel("Texte du message")).toHaveValue(/^Bonjour \{responsable\},/);
+    expect(await page.evaluate(() => localStorage.getItem("lidfpb_message_perso_v1"))).toBeNull();
+  });
+
+  test("« Perso » sans stockage : la page fonctionne pour la visite", async ({ page }) => {
+    await page.addInitScript(() => {
+      const get = Storage.prototype.getItem, set = Storage.prototype.setItem;
+      Storage.prototype.getItem = function (k) { if (k === "lidfpb_message_perso_v1") throw new Error("refusé"); return get.call(this, k); };
+      Storage.prototype.setItem = function (k, v) { if (k === "lidfpb_message_perso_v1") throw new Error("refusé"); return set.call(this, k, v); };
+    });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.locator(".communication-choix").getByRole("button", { name: "Perso" }).click();
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await bloc.getByLabel("Texte du message").fill("Coucou {equipe}");
+    await bloc.getByLabel("Aperçu pour").selectOption({ label: "Charlie 1 · Série 1" });
+    await expect(bloc.locator(".message-apercu")).toHaveText("Coucou Charlie 1");
+  });
+
+  test("« Perso » vidé reste vide, et un rafraîchissement garde le curseur", async ({ page }) => {
+    // Au second appel, la ligue publie une partie de moins : la liste est redessinée.
+    let publie = 0;
+    await servirTables(page, { rencontres: (d) => (publie++ ? d.slice(0, -1) : d) });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.locator(".communication-choix").getByRole("button", { name: "Perso" }).click();
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    const champ = bloc.getByLabel("Texte du message");
+    await champ.fill("Bonjour");
+    await champ.evaluate((e) => e.setSelectionRange(3, 3));
+    // Rafraîchissement sans quitter le champ, comme celui qui suit le cache.
+    const avant = publie;
+    await page.evaluate(() => document.getElementById("refreshBtn").click());
+    await expect.poll(() => publie).toBeGreaterThan(avant);
+    await attendreChargement(page);
+    await expect(champ).toBeFocused();
+    await page.keyboard.type("X");
+    await expect(champ).toHaveValue("BonXjour");
+
+    await champ.fill("");
+    await page.reload();
+    await attendreChargement(page);
+    await bloc.locator(".communication-choix").getByRole("button", { name: "Perso" }).click();
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await expect(bloc.getByLabel("Texte du message")).toHaveValue("");
+  });
+
+  test("orga reste dans l'adresse, de la liste à une équipe et retour", async ({ page }) => {
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const charlie = ligne(page, "Charlie");
+    await charlie.locator(".rank-row").click();
+    const voir = charlie.getByRole("link", { name: "Voir l'équipe →" });
+    await expect(voir).toHaveAttribute("href", "equipe.html?equipe=" + encodeURIComponent(CHARLIE) + "&orga");
+    await voir.click();
+    await expect(page).toHaveURL(/\?equipe=[^&]+&orga$/);
+    await expect(page.getByRole("link", { name: "← Toutes les équipes" })).toHaveAttribute("href", "equipe.html?orga");
+    await page.getByRole("link", { name: "← Toutes les équipes" }).click();
+    await expect(page).toHaveURL(/equipe\.html\?orga$/);
+    await expect(page.locator(".message-equipes")).toBeVisible();
+    // Par la pastille d'une équipe suivie aussi.
+    await page.locator(".mes-chips .mes-chip").click();
+    await expect(page).toHaveURL(/&orga$/);
   });
 });
 

@@ -29,10 +29,16 @@ Le comportement de chaque page est décrit par sa spec, dans
   [`derniers-resultats`](openspec/specs/derniers-resultats/spec.md) et
   [`affiche-week-end`](openspec/specs/affiche-week-end/spec.md).
 - [`equipe.html`](equipe.html) — « Équipes » : la liste de toutes les
-  équipes, avec de quoi joindre chaque responsable et le message des phases
-  finales à leur envoyer ; puis, au toucher, tout ce qui concerne une équipe,
-  partageable par un lien, et le choix des équipes suivies. Specs
+  équipes, avec de quoi joindre chaque responsable ; puis, au toucher, tout
+  ce qui concerne une équipe, partageable par un lien, et le choix des
+  équipes suivies. Ouverte en `equipe.html?orga`, la page passe en **mode
+  organisateur** : un bloc pour choisir la communication à envoyer (phases
+  finales, prochaine partie, ou un texte perso à balises) et un avion en
+  papier sur chaque ligne pour l'envoyer sur WhatsApp. Ce mode n'est pas une
+  protection, juste une adresse qui évite d'encombrer la page des joueurs.
+  Specs
   [`liste-equipes`](openspec/specs/liste-equipes/spec.md),
+  [`communications-equipes`](openspec/specs/communications-equipes/spec.md),
   [`mon-equipe`](openspec/specs/mon-equipe/spec.md) et
   [`mes-equipes`](openspec/specs/mes-equipes/spec.md).
 - [`programme.html`](programme.html) — « Parties », le calendrier complet,
@@ -200,6 +206,7 @@ principaux :
 | `WEEKS_AHEAD` | Créneaux | Horizon d'affichage |
 | `LIEU_VARIANTS` | Créneaux | Libellés `lieu_renc` interrogés côté API pour ce trinquet. L'API ne filtre que par égalité exacte : un nouveau libellé est à ajouter ici |
 | `matchesTrinquetParis()` | Équipes, Parties, Créneaux, Report | Reconnaît le Trinquet Paris dans un libellé de lieu |
+| `prenomDuResponsable()` | Parties, Équipes | Isole le prénom d'un responsable saisi librement, pour les « Bonjour » des messages : identique dans les deux pages, un test les compare |
 | `MAX_DATES_MESSAGE` | Report | Nombre de dates dans le message de report |
 | `PALETTE` | Compteur | Couleurs d'équipe autorisées |
 
@@ -209,6 +216,7 @@ Clés `localStorage` :
 |---|---|---|
 | `lidfpb_api_v1:<url>` | toutes sauf le compteur | Cache d'appels API |
 | `lidfpb_mes_equipes_v1` | Équipes (lue aussi par l'accueil et le Classement) | Équipes suivies |
+| `lidfpb_message_perso_v1` | Équipes, mode organisateur | Texte de la communication « Perso », avec ses balises |
 | `lidfpb_programme_filters_v1`, `lidfpb_parties_filters_v1` | Parties | Filtres (la seconde, héritée de l'ancienne vue par équipe) |
 | `lidfpb_classement_filters_v1` | Classement | Filtres |
 | `lidfpb_trinquet_paris_filters_v1` | Créneaux | Filtres |
@@ -241,8 +249,9 @@ la date de naissance, à aucun moment exposées par l'API.
   sous chaque équipe sur la page d'une équipe, au toucher de la ligne
   d'une équipe sur la liste des équipes et sur le Classement, et au détail
   d'une partie sur Parties et Créneaux. Jamais dans un texte ou une image
-  partagés, sauf le message des phases finales de la page Équipes, adressé
-  aux équipes du championnat (choix du demandeur, spec `donnees-api`). Noms
+  partagés, sauf les communications du mode organisateur de la page
+  Équipes (phases finales, prochaine partie, texte perso), adressées aux
+  équipes du championnat (choix du demandeur, spec `donnees-api`). Noms
   seuls, sans numéro de licence ni coordonnées.
 - **Contacts des responsables d'équipe** (Appeler, SMS, WhatsApp), dont les
   numéros sont déjà publiés en clair sur le site de la ligue : sur Parties,
@@ -250,9 +259,13 @@ la date de naissance, à aucun moment exposées par l'API.
   Le numéro n'est jamais écrit dans les pages. Le nom
   du responsable n'apparaît pas sur Équipes, figure en info-bulle sur
   Parties et en clair sur Report, et le message WhatsApp prérempli de Parties
-  contient le nom et le numéro du responsable adverse.
+  contient le nom et le numéro du responsable adverse, comme les
+  communications « Prochaine partie » et « Perso » de la page Équipes. Leur
+  aperçu masque le numéro (« 06 •• •• •• 78 »), seul le message envoyé le
+  porte en entier.
 - **Rien n'est envoyé** : ce que le site retient (équipes suivies, filtres,
-  partie du compteur, cache des données) reste dans le navigateur.
+  partie du compteur, texte perso de l'organisateur, cache des données)
+  reste dans le navigateur.
 
 Restent ouvertes : la base légale permettant de republier les noms de
 joueurs, l'alignement des pages sur la page Équipes pour le nom du responsable, et
