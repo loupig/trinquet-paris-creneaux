@@ -66,4 +66,4 @@ Vérification par `npm test` (syntaxe, puis pages dans Chromium sur les données
   - la section RGPD (noms et numéros dans les communications).
 - [x] 5.3 `npm test` complet, sortie montrée.
 - [x] 5.4 Captures Pixel 7, en clair et en sombre : le bloc sur « Prochaine partie » avec l'aperçu, et « Perso » avec l'éditeur et une balise inconnue.
-- [ ] 5.5 `/code-review` sur le diff, puis `/security-review` (texte saisi, numéros, `localStorage`). Corriger les constats.
+- [x] 5.5 `/code-review` sur le diff, puis `/security-review` (texte saisi, numéros, `localStorage`). Corriger les constats.
