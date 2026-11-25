@@ -1048,7 +1048,7 @@
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
     <p class="pied-orga" id="piedOrga"><a href="equipe.html?orga">Mode organisateur</a></p>
-    <p>Version 2026.11.23.7</p>
+    <p>Version 2026.11.25</p>
   </footer>
 </main>
 
@@ -2877,6 +2877,21 @@
     try { return new URL("decouvrir.html", window.location.href).href; } catch (e) { return ""; }
   }
 
+  // À qui s'adresse le remerciement : le genre des championnats du message,
+  // lu dans le libellé de leur spécialité (« … Masculin », « … Féminin »).
+  // Championnats mêlés, ou spécialité sans libellé connu : les deux.
+  function aQuiLeMerci(parties) {
+    var genres = {};
+    parties.forEach(function (p) {
+      var libelle = SPEC_LABELS[String(p.r["Spécialité"] || "").trim()] || "";
+      genres[/féminin/i.test(libelle) ? "f" : (/masculin/i.test(libelle) ? "m" : "?")] = true;
+    });
+    var g = Object.keys(genres);
+    if (g.length === 1 && g[0] === "m") return "à tous";
+    if (g.length === 1 && g[0] === "f") return "à toutes";
+    return "à toutes et à tous";
+  }
+
   // Le message des phases finales, mis en forme pour WhatsApp, ou null quand
   // aucune partie de phase finale ne reste à jouer dans une série aux poules
   // finies. Renvoie aussi le premier et le dernier jour, pour la note du bloc.
@@ -2912,7 +2927,7 @@
     var nbJours = Object.keys(jours).length;
 
     var lignes = [
-      "🙏 *Merci à toutes et à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
+      "🙏 *Merci " + aQuiLeMerci(parties) + " pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
       "",
       "La saison touche à sa fin et il reste " +
         (nbJours === 1 ? "un dernier rendez-vous" : (NOMBRES_EN_LETTRES[nbJours] || nbJours) + " rendez-vous") +

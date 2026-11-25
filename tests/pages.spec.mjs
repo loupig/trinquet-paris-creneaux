@@ -2822,7 +2822,7 @@ test.describe("Équipes : message des phases finales", () => {
   }
   const MARDI = new Date(2026, 11, 1, 10, 0);
   const attendu = (avecAvis) => [
-    "🙏 *Merci à toutes et à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
+    "🙏 *Merci à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
     "",
     "La saison touche à sa fin et il reste deux rendez-vous à ne pas manquer. Venez nombreux encourager les équipes 👏",
     "",
@@ -2884,6 +2884,22 @@ test.describe("Équipes : message des phases finales", () => {
 
     await bloc.getByRole("button", { name: "Partager" }).click();
     expect(await page.evaluate(() => window.__partage.text)).toBe(attendu(true));
+  });
+
+  test("championnat au genre inconnu : « Merci à toutes et à tous »", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    // La finale de Série 2 passe dans une spécialité sans libellé connu.
+    await servirTables(page, {
+      rencontres: (d) => d.filter((r) => r.Phase === "1")
+        .map((r) => r.score_cr ? r : { ...r, score_cr: "40", score_cv: "20" })
+        .concat([partie(MARDI, "1", "12", 12, "1700", "9998", "9998"),
+                 { ...partie(MARDI, "2", "12", 12, "1600", "9998", "9998"), "Spécialité": "9" }])
+    });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await expect(bloc.locator(".message-apercu")).toHaveText(/^🙏 \*Merci à toutes et à tous pour ce championnat/);
   });
 
   test("chaque ligne envoie le message à son responsable sur WhatsApp", async ({ page }) => {
