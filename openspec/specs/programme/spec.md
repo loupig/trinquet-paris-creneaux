@@ -159,7 +159,7 @@ Dans le détail d'une partie, le nom officiel de chaque équipe SHALL être un l
 - **THEN** seul le nom de l'équipe connue est un lien
 
 ### Requirement: Écrire aux responsables d'équipe
-Dans le détail d'une partie, chaque équipe dont le responsable a un numéro exploitable SHALL porter, devant son nom, deux icônes : WhatsApp et SMS, vers le numéro de son responsable, qui ouvrent une conversation vierge. En mode organisateur (spec `communications-equipes`, le même mode que la page Équipes), pour une partie sans score, une troisième icône, l'avion en papier de la page Équipes, ouvre WhatsApp vers ce responsable avec le message de vérification de cette partie prérempli : le même texte que la communication « Prochaine partie » de la page Équipes. Rien n'est envoyé par le site lui-même. Pas d'icône Appeler : l'appel est sur la page de l'équipe. Le numéro et le nom du responsable MUST NOT apparaître dans le texte de la page. Sans numéro exploitable, l'équipe n'a pas d'icônes. Le pied de page porte le lien « Mode organisateur », ou « Quitter le mode organisateur », comme celui de la page Équipes.
+Dans le détail d'une partie, chaque équipe dont le responsable a un numéro exploitable SHALL porter, devant son nom, deux icônes : WhatsApp et SMS, vers le numéro de son responsable, qui ouvrent une conversation vierge. En mode organisateur (spec `communications-equipes`, le même mode que la page Équipes), pour une partie à jouer (sans score, du jour ou à venir), une troisième icône, l'avion en papier de la page Équipes, ouvre WhatsApp vers ce responsable avec le message de vérification de cette partie prérempli : le même texte que la communication « Prochaine partie » de la page Équipes. Rien n'est envoyé par le site lui-même. Pas d'icône Appeler : l'appel est sur la page de l'équipe. Le numéro et le nom du responsable MUST NOT apparaître dans le texte de la page. Sans numéro exploitable, l'équipe n'a pas d'icônes. Le pied de page porte le lien « Mode organisateur », ou « Quitter le mode organisateur », comme celui de la page Équipes.
 
 #### Scenario: Visiteur ordinaire
 - **WHEN** un joueur déplie une partie dont le responsable de l'équipe visiteuse a un numéro exploitable
@@ -173,6 +173,10 @@ Dans le détail d'une partie, chaque équipe dont le responsable a un numéro ex
 #### Scenario: Partie jouée
 - **WHEN** l'organisateur déplie une partie qui a un score
 - **THEN** ses équipes n'ont pas d'avion en papier
+
+#### Scenario: Partie passée sans score publié
+- **WHEN** l'organisateur déplie une partie de la semaine dernière dont la ligue n'a pas encore publié le score
+- **THEN** ses équipes n'ont pas d'avion en papier, qui annoncerait la partie comme prévue à une date passée
 
 #### Scenario: Pas de numéro
 - **WHEN** le responsable d'une équipe n'a pas de numéro exploitable

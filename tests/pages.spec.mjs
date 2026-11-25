@@ -163,7 +163,10 @@ for (const p of [...PAGES, { nom: "Compteur", url: "compteur.html" }]) {
     });
     expect(contour).toBe("solid 2px");
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/#contenu$/);
+    // Sur Équipes, le lien donne le focus au contenu sans passer par l'adresse,
+    // pour ne pas ajouter d'étape à l'historique (spec apparence).
+    if (p.nom === "Équipes") await expect(page.locator("#contenu")).toBeFocused();
+    else await expect(page).toHaveURL(/#contenu$/);
     // Le défilement vers l'ancre se fait à l'image suivante.
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     expect(await page.evaluate(() => {
@@ -1726,6 +1729,21 @@ test.describe("Suivre ses équipes depuis Mes équipes", () => {
     await expect(page.locator(".suivre-btn")).toHaveText("★ Suivie");
   });
 
+  test("compositions non chargées : pas de « non déclarée » à tort dans Mes équipes", async ({ page }) => {
+    await page.route("**/script.google.com/**", (route) => {
+      if (new URL(route.request().url()).searchParams.get("table") !== "engagements") return route.fallback();
+      route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ error: "délai dépassé" }) });
+    });
+    await page.goto("index.html");
+    await attendreChargement(page);
+    const bloc = page.locator(".mes-equipes");
+    await bloc.locator(".mes-row").click();
+    await expect(bloc.locator(".mes-info")).toBeVisible();
+    await expect(bloc.locator(".rank-joueurs")).toHaveCount(0);
+    await expect(bloc).not.toContainText("non déclarée");
+  });
+
   test("sans équipe suivie, l'accueil invite à en suivre une", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("lidfpb_mes_equipes_v1", "[]"));
     await page.goto("index.html");
@@ -2637,6 +2655,43 @@ test.describe("Équipes : liste de toutes les équipes", () => {
     expect(appels.n).toBe(0);
   });
 
+  test("« Aller au contenu » sur une équipe : « ← Toutes les équipes » revient bien à la liste", async ({ page }) => {
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const alpha = carte(page, 0).locator(".rank-item").first();
+    await alpha.locator(".rank-row").click();
+    await alpha.getByRole("link", { name: "Voir l'équipe →" }).click();
+    await expect(page.locator(".suivre-btn")).toBeVisible();
+    const longueur = await page.evaluate(() => history.length);
+    await page.locator("a.aller-contenu").focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#contenu")).toBeFocused();
+    expect(await page.evaluate(() => history.length)).toBe(longueur);   // pas d'étape ajoutée
+    await page.getByRole("link", { name: "← Toutes les équipes" }).click();
+    await expect(page.locator(".liste-equipes")).toBeVisible();
+    // Retour ne rouvre pas l'équipe : la liste est revenue par l'historique.
+    expect(await page.evaluate(() => history.length)).toBe(longueur);
+  });
+
+  test("équipes pas encore classées : même ordre qu'au Classement, par nom officiel", async ({ page }) => {
+    // Deux clubs dont le nom court ne suit pas l'ordre du nom officiel :
+    // PARIS TALDEA (« Taldea ») passe avant PILOTARI au nom officiel, après au nom court.
+    const noms = { "Alpha": "PARIS TALDEA", "Bravo": "PILOTARI" };
+    await servirTables(page, {
+      clubs: (d) => d.map((c) => noms[c["Nom club"]] ? { ...c, "Nom club": noms[c["Nom club"]] } : c),
+      rencontres: (d) => d.map((r) => ({ ...r, score_cr: "", score_cv: "" }))
+    });
+    const ordre = (p) => p.locator(".poule-card").first().locator(".rank-team").allTextContents();
+    await page.goto("classement.html");
+    await attendreChargement(page);
+    const auClassement = (await ordre(page)).map((t) => t.replace(/\s+/g, " ").trim());
+    await page.goto("equipe.html");
+    await attendreChargement(page);
+    const dansLaListe = (await ordre(page.locator(".liste-equipes"))).map((t) => t.replace(/\s+/g, " ").trim());
+    expect(auClassement.indexOf("Taldea 1")).toBeLessThan(auClassement.indexOf("PILOTARI 1"));
+    expect(dansLaListe).toEqual(auClassement);
+  });
+
   test("« ← Toutes les équipes » depuis un lien partagé", async ({ page }) => {
     await page.goto("equipe.html?equipe=" + encodeURIComponent(ALPHA));
     await attendreChargement(page);
@@ -2767,7 +2822,7 @@ test.describe("Équipes : message des phases finales", () => {
   }
   const MARDI = new Date(2026, 11, 1, 10, 0);
   const attendu = (avecAvis) => [
-    "🙏 *Merci à toutes et à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
+    "🙏 *Merci à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
     "",
     "La saison touche à sa fin et il reste deux rendez-vous à ne pas manquer. Venez nombreux encourager les équipes 👏",
     "",
@@ -2829,6 +2884,22 @@ test.describe("Équipes : message des phases finales", () => {
 
     await bloc.getByRole("button", { name: "Partager" }).click();
     expect(await page.evaluate(() => window.__partage.text)).toBe(attendu(true));
+  });
+
+  test("championnat au genre non défini : « Merci à tous »", async ({ page }) => {
+    await page.clock.setFixedTime(MARDI);
+    // La finale de Série 2 passe dans une spécialité sans libellé connu.
+    await servirTables(page, {
+      rencontres: (d) => d.filter((r) => r.Phase === "1")
+        .map((r) => r.score_cr ? r : { ...r, score_cr: "40", score_cv: "20" })
+        .concat([partie(MARDI, "1", "12", 12, "1700", "9998", "9998"),
+                 { ...partie(MARDI, "2", "12", 12, "1600", "9998", "9998"), "Spécialité": "9" }])
+    });
+    await page.goto("equipe.html?orga");
+    await attendreChargement(page);
+    const bloc = page.locator(".message-equipes");
+    await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
+    await expect(bloc.locator(".message-apercu")).toHaveText(/^🙏 \*Merci à tous pour ce championnat/);
   });
 
   test("chaque ligne envoie le message à son responsable sur WhatsApp", async ({ page }) => {
@@ -3124,6 +3195,14 @@ test.describe("Équipes : communications de l'organisateur", () => {
     await jouee.locator(".match-row").click();
     await expect(jouee.locator("a.icon-whatsapp").first()).toBeVisible();
     await expect(jouee.locator("a.icon-envoi")).toHaveCount(0);
+    // Une partie passée dont le score n'est pas publié n'est plus « prévue » :
+    // pas d'avion en papier non plus.
+    const passee = page.locator(".match-item.serie-1").filter({ hasText: "Alpha 1 vs Echo 1" });
+    await expect(passee).toHaveCount(1);
+    await expect(passee.locator(".match-row-score")).toHaveCount(0);
+    await passee.locator(".match-row").click();
+    await expect(passee.locator("a.icon-whatsapp").first()).toBeVisible();
+    await expect(passee.locator("a.icon-envoi")).toHaveCount(0);
     // Quitter depuis Parties vaut aussi pour la page Équipes.
     await page.getByRole("button", { name: "Quitter le mode organisateur" }).click();
     await attendreChargement(page);

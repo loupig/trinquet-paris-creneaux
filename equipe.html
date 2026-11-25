@@ -1048,7 +1048,7 @@
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
     <p class="pied-orga" id="piedOrga"><a href="equipe.html?orga">Mode organisateur</a></p>
-    <p>Version 2026.11.23.6</p>
+    <p>Version 2026.11.25</p>
   </footer>
 </main>
 
@@ -2689,20 +2689,20 @@
       var k = [spec, cat, poule].join("|");
       return groupes[k] || (groupes[k] = { spec: spec, cat: cat, poule: poule, equipes: [] });
     }
-    // Des copies, au nom court : les équipes pas encore classées se rangent
-    // dans l'ordre de ce qui est affiché. Le classement lui-même n'en dépend pas.
+    // Le tri départage sur le nom officiel (label), comme la page de l'équipe
+    // et le Classement : une égalité, ou des équipes pas encore classées, y
+    // gardent le même ordre. Le nom court n'est que l'affichage.
     var placees = {};
     etat.standings.forEach(function (s) {
       var cle = teamKey(s.spec, s.cat, s.clubCode, s.numero);
       if (!etat.index[cle] || placees[cle]) return;
-      var copie = Object.assign({}, s, { label: nomCourt(etat.clubMap, s.clubCode, s.numero) });
-      groupe(s.spec, s.cat, s.poule).equipes.push(copie);
+      groupe(s.spec, s.cat, s.poule).equipes.push(s);
       placees[cle] = true;
     });
     Object.keys(etat.index).forEach(function (cle) {
       if (placees[cle]) return;
       var t = etat.index[cle];
-      groupe(t.spec, t.cat, "").equipes.push({ spec: t.spec, cat: t.cat, clubCode: t.clubCode, numero: t.numero, jouees: 0, label: nomCourt(etat.clubMap, t.clubCode, t.numero) });
+      groupe(t.spec, t.cat, "").equipes.push({ spec: t.spec, cat: t.cat, clubCode: t.clubCode, numero: t.numero, jouees: 0, label: clubLabel(etat.clubMap, t.clubCode, t.numero) });
     });
     // Le classement est fait sur toute la poule, puis les filtres écartent des
     // cartes entières : aucun rang ne bouge.
@@ -2877,6 +2877,20 @@
     try { return new URL("decouvrir.html", window.location.href).href; } catch (e) { return ""; }
   }
 
+  // À qui s'adresse le remerciement : le genre des championnats du message,
+  // lu dans le libellé de leur spécialité. « … Féminin » : « à toutes » ;
+  // tout autre libellé, ou spécialité sans libellé connu : « à tous ». Un
+  // message qui mêle championnats féminin et masculin : les deux.
+  function aQuiLeMerci(parties) {
+    var feminin = false, autre = false;
+    parties.forEach(function (p) {
+      var libelle = SPEC_LABELS[String(p.r["Spécialité"] || "").trim()] || "";
+      if (/féminin/i.test(libelle)) feminin = true; else autre = true;
+    });
+    if (feminin && autre) return "à toutes et à tous";
+    return feminin ? "à toutes" : "à tous";
+  }
+
   // Le message des phases finales, mis en forme pour WhatsApp, ou null quand
   // aucune partie de phase finale ne reste à jouer dans une série aux poules
   // finies. Renvoie aussi le premier et le dernier jour, pour la note du bloc.
@@ -2912,7 +2926,7 @@
     var nbJours = Object.keys(jours).length;
 
     var lignes = [
-      "🙏 *Merci à toutes et à tous pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
+      "🙏 *Merci " + aQuiLeMerci(parties) + " pour ce championnat d'Île-de-France de Trinquet Pala Gomme Pleine !*",
       "",
       "La saison touche à sa fin et il reste " +
         (nbJours === 1 ? "un dernier rendez-vous" : (NOMBRES_EN_LETTRES[nbJours] || nbJours) + " rendez-vous") +
@@ -3627,6 +3641,19 @@
       window.location.assign("equipe.html?" + (etat.cle ? "equipe=" + encodeURIComponent(etat.cle) + "&" : "") + "orga");
     });
   }
+
+  // « Aller au contenu » donne le focus au contenu sans passer par l'adresse :
+  // un #contenu ajouterait une entrée d'historique sans état, et
+  // « ← Toutes les équipes » ne saurait plus que l'on vient de la liste.
+  document.querySelector(".aller-contenu").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    var contenu = document.getElementById("contenu");
+    // Focusable le temps du saut seulement : sinon un toucher dans un vide du
+    // contenu y ramènerait le focus.
+    contenu.setAttribute("tabindex", "-1");
+    contenu.addEventListener("blur", function () { contenu.removeAttribute("tabindex"); }, { once: true });
+    contenu.focus({ preventScroll: true });
+  });
 
   // Retour et Avancer du navigateur, entre la liste et une équipe.
   window.addEventListener("popstate", function () {

@@ -859,7 +859,7 @@
     <p><a href="https://github.com/loupig/trinquet-paris-creneaux/issues" target="_blank" rel="noopener">Signaler un problème / suggestion</a></p>
     <p>Développé par <a href="https://github.com/loupig" target="_blank" rel="noopener">pilou</a></p>
     <p class="pied-orga" id="piedOrga"><a href="programme.html?orga">Mode organisateur</a></p>
-    <p>Version 2026.11.23.3</p>
+    <p>Version 2026.11.23.4</p>
   </footer>
 </main>
 
@@ -1584,7 +1584,8 @@
       ["icon-whatsapp", ICON_SVG_WHATSAPP, "https://wa.me/" + numero, "Écrire sur WhatsApp" + qui],
       ["icon-sms", ICON_SVG_SMS, "sms:+" + numero, "Envoyer un SMS" + qui]
     ];
-    if (ORGA && !match.score) {
+    // Une partie passée sans score publié n'est plus « prévue » : pas d'avion.
+    if (ORGA && !match.score && match.date >= startOfDay(new Date())) {
       icones.push(["icon-envoi", ICON_SVG_ENVOI, lienWhatsappAvecTexte(numero, messageDeLaPartie(match, side, other)),
                    "Envoyer le message de la partie" + qui]);
     }

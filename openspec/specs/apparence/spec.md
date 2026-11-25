@@ -105,7 +105,7 @@ Les icônes dessinées des pages de l'application (barre d'onglets, en-tête, bo
 - **THEN** l'icône de l'onglet « Parties » est pleine, celles des quatre autres onglets au trait
 
 ### Requirement: Focus visible au clavier
-Sur les pages de l'application, tout élément atteint au clavier SHALL porter un contour de 2 px dans la couleur d'accent, visible en clair comme en sombre. Le premier arrêt de la touche Tab MUST être le lien « Aller au contenu », caché tant qu'il n'a pas le focus. Il mène au contenu de la page, dont le haut reste visible sous l'en-tête, et le Tab suivant reste dans ce contenu.
+Sur les pages de l'application, tout élément atteint au clavier SHALL porter un contour de 2 px dans la couleur d'accent, visible en clair comme en sombre. Le premier arrêt de la touche Tab MUST être le lien « Aller au contenu », caché tant qu'il n'a pas le focus. Il mène au contenu de la page, dont le haut reste visible sous l'en-tête, et le Tab suivant reste dans ce contenu. Sur la page Équipes, il n'ajoute pas d'étape à l'historique du navigateur : « ← Toutes les équipes » ramène toujours à la liste d'où l'on vient.
 
 #### Scenario: Lien d'évitement
 - **WHEN** un visiteur au clavier ouvre la page Créneaux et appuie sur Tab
