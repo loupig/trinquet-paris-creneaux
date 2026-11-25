@@ -75,7 +75,7 @@ En mode organisateur (spec `communications-equipes`), tant qu'au moins une parti
 - **THEN** il ne voit ni le message des phases finales ni son bouton
 
 ### Requirement: Contenu du message des phases finales
-Le message SHALL donner, mis en forme pour WhatsApp, dans cet ordre : un remerciement pour le championnat, « Merci à tous » pour un championnat masculin, « Merci à toutes » pour un championnat féminin, d'après le libellé de sa spécialité (`SPEC_LABELS`), et « Merci à toutes et à tous » quand le message mêle les deux ou que la spécialité n'a pas de libellé connu ; les parties de phase finale à venir, par phase et par jour, chacune avec son heure, sa série et ses deux équipes en noms courts suivies de leurs joueurs ; le lieu ; le lien du questionnaire d'avis tant que sa campagne dure (spec `accueil`) ; le lien de la page Découvrir, présentée comme non officielle, en bêta, en complément du site de la ligue.
+Le message SHALL donner, mis en forme pour WhatsApp, dans cet ordre : un remerciement pour le championnat, « Merci à toutes » pour un championnat féminin, d'après le libellé de sa spécialité (`SPEC_LABELS`), « Merci à tous » pour tout autre championnat, y compris une spécialité sans libellé connu, et « Merci à toutes et à tous » quand le message mêle championnats féminin et masculin ; les parties de phase finale à venir, par phase et par jour, chacune avec son heure, sa série et ses deux équipes en noms courts suivies de leurs joueurs ; le lieu ; le lien du questionnaire d'avis tant que sa campagne dure (spec `accueil`) ; le lien de la page Découvrir, présentée comme non officielle, en bêta, en complément du site de la ligue.
 
 #### Scenario: Championnat masculin
 - **WHEN** toutes les parties du message sont de la spécialité « Trinquet / P.G Pleine Masculin »
@@ -83,7 +83,7 @@ Le message SHALL donner, mis en forme pour WhatsApp, dans cet ordre : un remerci
 
 #### Scenario: Spécialité sans libellé connu
 - **WHEN** une des parties du message est d'une spécialité absente de `SPEC_LABELS`
-- **THEN** le message commence par « Merci à toutes et à tous »
+- **THEN** le message commence par « Merci à tous »
 
 #### Scenario: Demie désignée
 - **WHEN** PEP 2, avec Ane Etxeberri et Peio Larralde, reçoit Chatillon 3 en 1/2 finale de Série 2, dimanche 29 novembre à 14h, au Trinquet Paris

@@ -2878,18 +2878,17 @@
   }
 
   // À qui s'adresse le remerciement : le genre des championnats du message,
-  // lu dans le libellé de leur spécialité (« … Masculin », « … Féminin »).
-  // Championnats mêlés, ou spécialité sans libellé connu : les deux.
+  // lu dans le libellé de leur spécialité. « … Féminin » : « à toutes » ;
+  // tout autre libellé, ou spécialité sans libellé connu : « à tous ». Un
+  // message qui mêle championnats féminin et masculin : les deux.
   function aQuiLeMerci(parties) {
-    var genres = {};
+    var feminin = false, autre = false;
     parties.forEach(function (p) {
       var libelle = SPEC_LABELS[String(p.r["Spécialité"] || "").trim()] || "";
-      genres[/féminin/i.test(libelle) ? "f" : (/masculin/i.test(libelle) ? "m" : "?")] = true;
+      if (/féminin/i.test(libelle)) feminin = true; else autre = true;
     });
-    var g = Object.keys(genres);
-    if (g.length === 1 && g[0] === "m") return "à tous";
-    if (g.length === 1 && g[0] === "f") return "à toutes";
-    return "à toutes et à tous";
+    if (feminin && autre) return "à toutes et à tous";
+    return feminin ? "à toutes" : "à tous";
   }
 
   // Le message des phases finales, mis en forme pour WhatsApp, ou null quand

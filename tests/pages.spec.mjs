@@ -2886,7 +2886,7 @@ test.describe("Équipes : message des phases finales", () => {
     expect(await page.evaluate(() => window.__partage.text)).toBe(attendu(true));
   });
 
-  test("championnat au genre inconnu : « Merci à toutes et à tous »", async ({ page }) => {
+  test("championnat au genre non défini : « Merci à tous »", async ({ page }) => {
     await page.clock.setFixedTime(MARDI);
     // La finale de Série 2 passe dans une spécialité sans libellé connu.
     await servirTables(page, {
@@ -2899,7 +2899,7 @@ test.describe("Équipes : message des phases finales", () => {
     await attendreChargement(page);
     const bloc = page.locator(".message-equipes");
     await bloc.getByRole("button", { name: /Message aux équipes/ }).click();
-    await expect(bloc.locator(".message-apercu")).toHaveText(/^🙏 \*Merci à toutes et à tous pour ce championnat/);
+    await expect(bloc.locator(".message-apercu")).toHaveText(/^🙏 \*Merci à tous pour ce championnat/);
   });
 
   test("chaque ligne envoie le message à son responsable sur WhatsApp", async ({ page }) => {
