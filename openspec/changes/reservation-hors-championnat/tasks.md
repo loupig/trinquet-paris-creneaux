@@ -22,9 +22,9 @@ Vérification par `npm test` (syntaxe, pages dans Chromium avec `/api/*` simulé
   - créneau réservable (grille, maintenant, 14 jours, championnat, autre réservation) ;
   - course de deux réservations ;
   - quota ;
-  - annulation (joueur, organisateur avec motif) ;
+  - annulation par le joueur (jusqu'à l'heure) et par un organisateur de championnat (motif, jusqu'à 24 heures avant, refusée après) ;
   - refus quand l'API de la ligue ne répond pas ;
-  - tâche horaire de priorité du championnat ;
+  - tâche horaire de priorité du championnat, y compris pour une partie enregistrée par la ligue à moins de 24 heures ;
   - e-mails ;
   - purges à 12 et 24 mois.
 - [ ] 1.4 Tests de sécurité : CSRF (`Origin`, `Content-Type`), limites de débit, aucun e-mail ni licence dans `GET /api/reservations`, empreintes seules en base.
@@ -43,7 +43,7 @@ Vérification par `npm test` (syntaxe, pages dans Chromium avec `/api/*` simulé
 
 - [ ] 3.1 Dans `tests/pages.spec.mjs`, simulation de `/api/*` (visiteur, joueur, joueur avec réservation, organisateur, indisponible).
 - [ ] 3.2 Créneaux :
-  - cases réservées (trois vues : visiteur, auteur, organisateur) ;
+  - cases réservées (trois vues : visiteur, auteur, organisateur) ; bouton d'annulation de l'organisateur absent à moins de 24 heures ;
   - « Réserver ce créneau » non connecté (formulaire dans le dépli) et connecté ;
   - au-delà de 14 jours ;
   - quota ;

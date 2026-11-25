@@ -1,5 +1,7 @@
 # Proposal
 
+> **Statut : documenté, mise en œuvre non planifiée.** On reprendra ce changement quand la ligue sera prête ; rien n'est construit d'ici là.
+>
 > Dépend de `migration-hebergement` : ce changement suppose le site servi par le nouvel hébergeur, avec des fonctions serveur sur la même origine.
 
 ## Why
@@ -15,14 +17,16 @@ Permettre aux licenciés de **réserver eux-mêmes un créneau de ligue libre** 
   - dans les **14 jours** qui viennent ;
   - **une réservation à venir** par licencié à la fois ;
   - annulable par son auteur jusqu'à l'heure du créneau.
-- **Le championnat reste prioritaire** : si une partie de championnat (nouvelle, ou reportée) est programmée sur un créneau réservé, la réservation est annulée et son auteur prévenu par e-mail.
+- **Le championnat reste prioritaire**, de deux façons :
+  - **le site de la ligue fait foi** : une partie de championnat (nouvelle, ou reportée) enregistrée sur un créneau réservé annule la réservation, quel que soit le délai, et son auteur est prévenu par e-mail ;
+  - **un organisateur de championnat peut annuler une réservation jusqu'à 24 heures avant** le créneau, avec un motif, pour y placer une partie avant même qu'elle soit enregistrée par la ligue.
 - **Se connecter par un lien e-mail, rattaché à sa licence** (choix du demandeur) :
   - à la première réservation, le joueur donne son e-mail, son numéro de licence et son nom ;
   - le site vérifie que la licence et le nom correspondent à un licencié d'un club de la ligue, puis envoie un lien de connexion ;
   - pas de mot de passe ;
   - une licence ne se rattache qu'à un seul e-mail.
 - **« Mes réservations »** en tête de la page Créneaux une fois connecté, avec l'annulation, la déconnexion et la suppression du compte.
-- **Organisateurs** : des licences désignées voient le nom de l'auteur de chaque réservation et peuvent l'annuler avec un motif, envoyé par e-mail. Contrairement au « mode organisateur » actuel, c'est un vrai droit, vérifié par le serveur.
+- **Organisateurs de championnat** : des licences désignées voient le nom de l'auteur de chaque réservation et peuvent l'annuler, avec un motif envoyé par e-mail, jusqu'à 24 heures avant le créneau. Contrairement au « mode organisateur » actuel, c'est un vrai droit, vérifié par le serveur.
 - **Ce que voient les autres** : une case réservée affiche « Réservé · hors championnat », sans nom. L'aide au report la montre comme disponible pour une partie de championnat, avec la mention de la réservation qu'elle annulerait.
 - **BREAKING (choix assumé)** : le site n'est plus « sans compte ». La consultation reste sans compte et les préférences restent dans le navigateur ; seul le fait de réserver demande de se connecter.
 
@@ -64,8 +68,8 @@ Permettre aux licenciés de **réserver eux-mêmes un créneau de ligue libre** 
 
 1. **La ligue ouvre-t-elle ses créneaux libres au jeu libre**, et le Trinquet Paris est-il d'accord (accès à la salle, clés, accueil) ? Sans cet accord, rien de ce changement ne doit être construit.
 2. **Le coût** : le créneau est-il gratuit pour un licencié, ou facturé hors du site ?
-3. **Les règles** proposées ici (14 jours, une réservation à la fois, annulation jusqu'à l'heure, championnat prioritaire) : à valider ou à ajuster avant les tests.
-4. **Les organisateurs** : quelles licences ont le droit d'annuler.
+3. **Les règles** proposées ici (14 jours, une réservation à la fois, annulation par le joueur jusqu'à l'heure) : à valider ou à ajuster avant les tests.
+4. **Les organisateurs de championnat** : quelles licences ont le droit d'annuler.
 5. **L'e-mail des licenciés** : si la ligue connaît l'e-mail de chaque licence, envoyer le lien à *cet* e-mail serait une preuve bien plus forte que « licence + nom » (design, question ouverte 1).
 
 ## Hypothèses à valider

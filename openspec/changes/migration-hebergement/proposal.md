@@ -1,5 +1,7 @@
 # Proposal
 
+> **Statut : documenté, mise en œuvre non planifiée.** On reprendra ce changement quand la ligue sera prête ; rien n'est construit d'ici là.
+
 ## Why
 
 La suite prévue est de permettre aux licenciés de la ligue de réserver un créneau de ligue du Trinquet Paris hors championnat (changement `reservation-hors-championnat`). Réserver demande ce que GitHub Pages ne sait pas faire : un serveur qui enregistre les réservations, envoie un lien de connexion par e-mail et garde une session. Le choix retenu par le demandeur est une **migration complète** vers un hébergeur qui sert les pages et ce serveur sous une même adresse.

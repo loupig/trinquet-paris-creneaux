@@ -98,7 +98,7 @@ Voir la question ouverte 1 pour la version forte.
 3. Une transaction vérifie le quota (aucune réservation `active` à venir du compte) et insère. L'index unique tranche entre deux réservations simultanées.
 4. L'e-mail de confirmation part ensuite. S'il échoue, la réservation reste, et la page l'affiche dans « Mes réservations ».
 
-`DELETE /api/reservations/:id` : l'auteur, avant le début ; un organisateur, à tout moment, avec un motif obligatoire.
+`DELETE /api/reservations/:id` : l'auteur, avant le début ; un organisateur de championnat, jusqu'à 24 heures avant le début, avec un motif obligatoire. Les deux délais sont vérifiés par le serveur, en heure de Paris (`regles.js` porte le délai de 24 heures). À moins de 24 heures, seule la tâche de priorité du championnat annule encore une réservation.
 
 `GET /api/reservations?du=…&au=…`, public, pour la grille :
 - `[{date, heure, a_moi}]` pour un visiteur ou un joueur ;
@@ -106,9 +106,13 @@ Voir la question ouverte 1 pour la version forte.
 
 L'appel ne renvoie jamais d'e-mail ni de licence.
 
-### 5. Priorité du championnat : tâche horaire
+### 5. Priorité du championnat : le site de la ligue fait foi
 
-Toutes les heures, et à chaque `GET /api/reservations` dont le cache des rencontres a expiré, le serveur compare les réservations `active` à venir aux parties de championnat du Trinquet Paris. Une collision passe la réservation en `annulee_championnat` et envoie l'e-mail. La synchro Apps Script avec la ligue est elle-même périodique : la spec promet l'annulation « dans l'heure qui suit la publication par la ligue », pas l'heure qui suit la décision de la ligue.
+Deux chemins, qui ne se recouvrent pas :
+- **Avant 24 heures**, un organisateur de championnat peut libérer un créneau à la main (décision 4), pour une partie que la ligue n'a pas encore enregistrée.
+- **À tout moment**, une partie enregistrée sur le site de la ligue annule la réservation. C'est la donnée source : le délai de 24 heures ne s'applique pas à elle.
+
+La tâche horaire porte le second chemin. Toutes les heures, et à chaque `GET /api/reservations` dont le cache des rencontres a expiré, le serveur compare les réservations `active` à venir aux parties de championnat du Trinquet Paris. Une collision passe la réservation en `annulee_championnat` et envoie l'e-mail. La synchro Apps Script avec la ligue est elle-même périodique : la spec promet l'annulation « dans l'heure qui suit la publication par la ligue », pas l'heure qui suit la décision de la ligue.
 
 La page Créneaux, de son côté, affiche la partie et pas la réservation dès qu'elle voit la collision, sans attendre la tâche.
 
@@ -184,6 +188,7 @@ Fournisseur transactionnel européen : **Brevo**, société française, offre gr
 
 - **[La ligue ou le Trinquet Paris n'ouvrent pas les créneaux]** → décision 1 du proposal, préalable à tout code.
 - **[Licence rattachée par un tiers]** → limite connue (décision 3) ; organisateur et version forte en question ouverte 1.
+- **[Partie enregistrée par la ligue à moins de 24 heures]** → la réservation est annulée quand même, le site de la ligue faisant foi ; l'e-mail arrive tard pour le joueur. C'est un choix assumé, à suivre dans les compteurs (`annulations_championnat` à moins de 24 heures).
 - **[Réservation acceptée sur un créneau que la ligue vient de prendre]** → le serveur lit la ligue à 5 minutes près, la ligue publie avec le délai de sa synchro. La réservation est annulée et l'auteur prévenu ; c'est le sens de « championnat prioritaire ».
 - **[E-mail en courrier indésirable]** → SPF, DKIM et DMARC, expéditeur au domaine de la ligue, texte simple ; la page dit où chercher.
 - **[Premier code serveur d'un projet sans build]** → un dossier, sans dépendance à l'exécution, couvert par ses propres tests, avec `/security-review` obligatoire sur tout changement de `serveur/` (CLAUDE.md).

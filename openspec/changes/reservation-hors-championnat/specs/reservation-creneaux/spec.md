@@ -36,11 +36,15 @@ L'auteur d'une réservation SHALL pouvoir l'annuler depuis « Mes réservations 
 - **THEN** la case du dimanche 16h redevient « Libre » pour tous, et il peut réserver un autre créneau
 
 ### Requirement: Priorité du championnat
-Quand une partie de championnat est programmée, ou reportée, sur un créneau réservé, la réservation SHALL être annulée dans l'heure qui suit la publication de la partie par la ligue, et son auteur prévenu par e-mail, avec la date, l'heure et la raison. Il n'est pas compté de réservation à venir pour lui après l'annulation.
+Le site de la ligue SHALL faire foi : quand une partie de championnat y est enregistrée, ou reportée, sur un créneau réservé, la réservation est annulée dans l'heure qui suit sa publication, quel que soit le délai avant le créneau, et son auteur prévenu par e-mail, avec la date, l'heure et la raison. Il n'est pas compté de réservation à venir pour lui après l'annulation.
 
 #### Scenario: Report sur un créneau réservé
 - **WHEN** une partie de série 2 est reportée par la ligue au dimanche 16h, réservé par un joueur
 - **THEN** sa réservation est annulée, il reçoit un e-mail qui l'explique, et la case affiche la partie de championnat
+
+#### Scenario: Partie enregistrée la veille
+- **WHEN** la ligue enregistre sur son site, le samedi, une partie le dimanche 16h, réservé par un joueur
+- **THEN** la réservation est annulée malgré le délai de moins de 24 heures, parce que le site de la ligue fait foi
 
 ### Requirement: Confirmation par e-mail
 Chaque réservation, et chaque annulation qui n'est pas faite par le joueur lui-même, SHALL être confirmée à son auteur par un e-mail qui donne le jour, l'heure, le lieu et le lien vers la page Créneaux. L'e-mail MUST NOT contenir le nom d'un autre joueur.
@@ -57,11 +61,22 @@ Une case réservée SHALL afficher « Réservé · hors championnat » à tout v
 - **THEN** la case affiche « Réservé · hors championnat », et le toucher n'affiche aucun nom
 
 ### Requirement: Vue des organisateurs
-Pour un organisateur connecté, une case réservée SHALL afficher, au toucher, le prénom et le nom de l'auteur et la date de la réservation, avec un bouton « Annuler la réservation » qui demande un motif. L'auteur reçoit le motif par e-mail.
+Pour un organisateur de championnat connecté, une case réservée SHALL afficher, au toucher, le prénom et le nom de l'auteur et la date de la réservation.
 
-#### Scenario: Annulation par un organisateur
-- **WHEN** un organisateur annule une réservation avec le motif « Trinquet fermé ce jour-là »
+#### Scenario: Voir qui a réservé
+- **WHEN** un organisateur de championnat touche une case réservée
+- **THEN** il voit le prénom et le nom de l'auteur et la date de la réservation
+
+### Requirement: Annulation par un organisateur jusqu'à 24 heures avant
+Un organisateur de championnat SHALL pouvoir annuler une réservation, avec un motif, jusqu'à 24 heures avant le début du créneau, pour y placer une partie de championnat, prioritaire. L'auteur reçoit le motif par e-mail. À moins de 24 heures, le bouton « Annuler la réservation » n'est plus proposé et le serveur MUST refuser l'annulation : seule une partie enregistrée sur le site de la ligue annule encore la réservation (« Priorité du championnat »).
+
+#### Scenario: Annulation deux jours avant
+- **WHEN** un organisateur annule le vendredi une réservation du dimanche 16h, avec le motif « Report de la partie de poule 2 »
 - **THEN** le créneau redevient libre et l'auteur reçoit un e-mail qui donne ce motif
+
+#### Scenario: Moins de 24 heures avant
+- **WHEN** un organisateur ouvre le samedi à 18h une réservation du dimanche 16h
+- **THEN** la case ne propose pas « Annuler la réservation », et une annulation envoyée au serveur est refusée
 
 ### Requirement: Données de réservation limitées
 Une réservation SHALL ne retenir que son créneau, son auteur, sa date de création et, si elle est annulée, la date, l'auteur et le motif de l'annulation. Les réservations passées MUST être effacées 12 mois après leur créneau, et un compte sans connexion depuis 24 mois supprimé.

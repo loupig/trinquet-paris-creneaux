@@ -292,6 +292,23 @@ c'est fait proprement.
 L'API REST qu'il expose est documentée dans [`API.md`](API.md), pour qui
 voudrait construire autre chose avec les mêmes données.
 
+## Évolutions prévues
+
+Documentées dans [`openspec/changes/`](openspec/changes/), sans mise en
+œuvre planifiée : on les reprendra quand la ligue sera prête.
+
+- [`migration-hebergement`](openspec/changes/migration-hebergement/proposal.md)
+  — le site tel quel sous un domaine de la ligue, avec une adresse de
+  prévisualisation par PR. L'ancienne adresse redirige et transmet les
+  préférences des joueurs.
+- [`reservation-hors-championnat`](openspec/changes/reservation-hors-championnat/proposal.md)
+  — un licencié réserve lui-même un créneau libre de la ligue, connecté
+  par un lien e-mail rattaché à sa licence. Le championnat reste
+  prioritaire : le site de la ligue fait foi, et un organisateur peut
+  annuler une réservation jusqu'à 24 heures avant. Elle suppose la
+  migration faite, et remettrait en cause le choix « Pas de compte »
+  ci-dessous.
+
 ## Choix assumés
 
 - **Pas de fenêtre surgissante** : un popup d'accueil et un popup d'aide ont
